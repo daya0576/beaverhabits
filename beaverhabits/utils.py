@@ -1,5 +1,4 @@
 import datetime
-import random
 from typing import Callable, List, Optional
 
 from models import CheckedRecord

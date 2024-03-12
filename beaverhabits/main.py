@@ -1,9 +1,11 @@
 import random
-from nicegui import ui
-from components import build_check_box
-from utils import dummy_days, dummy_records
 
-from models import Habit, HabitList
+from nicegui import ui
+
+from .components import build_check_box
+from .utils import dummy_days, dummy_records
+from .models import Habit, HabitList
+
 
 HABIT_LIST_RECORD_COUNT = 5
 
@@ -48,21 +50,23 @@ def habit_list_ui():
                         checkbox.classes(right_classes)
 
 
-habits = HabitList("Habits", on_change=habit_list_ui.refresh)
-for name in ["Order pizz", "Running", "Table Tennis", "Clean", "Call mom"]:
-    pick = lambda: random.randint(0, 3) == 0
-    habit = Habit(name, items=dummy_records(HABIT_LIST_RECORD_COUNT, pick=pick))
-    habits.add(habit)
+def main_page():
+    with ui.column().classes("max-w-screen-lg"):
+        ui.label().bind_text_from(habits, "title").classes("text-semibold text-2xl")
+        # ui.separator().props("color=grey-8 ")
+        habit_list_ui()
+        # add_input = ui.input("New item").classes("mx-12")
+        # add_input.on(
+        #     "keydown.enter", lambda: (habits.add(add_input.value), add_input.set_value(""))
+        # )
 
-dark = ui.dark_mode()
-dark.enable()
-with ui.column().classes("max-w-screen-lg"):
-    ui.label().bind_text_from(habits, "title").classes("text-semibold text-2xl")
-    # ui.separator().props("color=grey-8 ")
-    habit_list_ui()
-    # add_input = ui.input("New item").classes("mx-12")
-    # add_input.on(
-    #     "keydown.enter", lambda: (habits.add(add_input.value), add_input.set_value(""))
-    # )
 
-ui.run()
+if __name__ == "__main__":
+    habits = HabitList("Habits", on_change=habit_list_ui.refresh)
+    for name in ["Order pizz", "Running", "Table Tennis", "Clean", "Call mom"]:
+        pick = lambda: random.randint(0, 3) == 0
+        habit = Habit(name, items=dummy_records(HABIT_LIST_RECORD_COUNT, pick=pick))
+        habits.add(habit)
+
+    main_page()
+    ui.run(dark=True)
