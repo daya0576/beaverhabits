@@ -16,15 +16,18 @@ def habit_list_ui():
 
     with ui.column().classes("gap-2"):
         # compat card
-        row_compat_classes = "px-4 py-0"
+        row_compat_classes = "pl-4 pr-1 py-0.5"
         compat_card = (
             lambda: ui.card().classes(row_compat_classes).classes("shadow-none")
         )
 
         # grid: 5 | 2 2 2 2 2
         grid_classes = "w-full gap-0 items-center"
-        left_classes, right_classes = "col-span-5", "col-span-2 justify-self-center"
         grid = lambda rows: ui.grid(columns=15, rows=rows).classes(grid_classes)
+        left_classes, right_classes = (
+            "col-span-5 break-all",
+            "col-span-2 justify-self-center px-1.5",
+        )
 
         # header
         with grid(2).classes(row_compat_classes):
@@ -32,8 +35,7 @@ def habit_list_ui():
                 ui.label("").classes(left_classes)
                 for date in dummy_days(HABIT_LIST_RECORD_COUNT):
                     label = ui.label(str(date.strftime(fmt))).classes(right_classes)
-                    label.classes("font-bold")
-                    label.style("color: #9e9e9e; font-size: 85%")
+                    label.style("color: #9e9e9e; font-size: 85%; font-weight: 500")
 
         # body
         for habit in habits.items:
@@ -54,15 +56,9 @@ for name in ["Order pizz", "Running", "Table Tennis", "Clean", "Call mom"]:
     habit = Habit(name, items=dummy_records(HABIT_LIST_RECORD_COUNT, pick=pick))
     habits.add(habit)
 
-dark = ui.dark_mode()
-dark.enable()
-with ui.column().classes("max-w-screen-lg"):
+with ui.column().classes("justify-items-center"):
     ui.label().bind_text_from(habits, "title").classes("text-semibold text-2xl")
     # ui.separator().props("color=grey-8 ")
     habit_list_ui()
-    # add_input = ui.input("New item").classes("mx-12")
-    # add_input.on(
-    #     "keydown.enter", lambda: (habits.add(add_input.value), add_input.set_value(""))
-    # )
 
-ui.run()
+ui.run(dark=True, native=True)
