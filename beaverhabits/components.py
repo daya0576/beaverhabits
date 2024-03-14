@@ -1,4 +1,5 @@
 from typing import Callable
+
 from nicegui import ui
 from nicegui.elements.checkbox import Checkbox
 
