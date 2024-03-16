@@ -1,7 +1,7 @@
 import datetime
 from typing import Callable, List, Optional
 
-from models import CheckedRecord
+from .models import CheckedRecord
 
 
 def dummy_days(days: int) -> List[datetime.date]:

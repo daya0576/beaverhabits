@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "beaver-habits"
+name = "beaverhabits"
 version = "0.1.0"
 description = ""
 authors = ["Chanjian Zhu <daya0576@gmail.com>"]
@@ -8,6 +8,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 nicegui = "^1.4.18"
+pydantic-settings = "^2.2.1"
+fastapi-users = {extras = ["sqlalchemy"], version = "^13.0.0"}
 
 
 [tool.poetry.group.dev.dependencies]
@@ -22,3 +24,6 @@ selenium = "^4.18.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+main = "beaverhabits.routes:main"
