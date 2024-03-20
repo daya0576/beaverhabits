@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 from fastapi import FastAPI
 
 from .app.app import init_auth_routes
@@ -8,7 +9,9 @@ from .gui import init_gui_routes
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    logging.info("Creating database and tables")
     await create_db_and_tables()
+    logging.info("Database and tables created")
     yield
 
 

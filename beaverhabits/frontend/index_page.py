@@ -2,7 +2,7 @@ from typing import Callable
 from nicegui import ui
 from nicegui.elements.checkbox import Checkbox
 
-from beaverhabits.models import HabitList
+from beaverhabits.view import HabitList
 from beaverhabits.utils import dummy_days
 
 
@@ -55,7 +55,7 @@ def habit_list_ui(habits: HabitList):
             with compat_card():
                 with grid(1):
                     ui.label(habit.name).classes(left_classes)
-                    for record in habit.items:
+                    for record in habit.records:
                         checkbox = build_check_box(
                             value=record.done, on_change=habit_list_ui.refresh
                         )
@@ -65,6 +65,6 @@ def habit_list_ui(habits: HabitList):
 
 def index_page_ui(habits: HabitList):
     with ui.column().classes("max-w-screen-lg"):
-        ui.label().bind_text_from(habits, "title").classes("text-semibold text-2xl")
+        ui.label("Habits").classes("text-semibold text-2xl")
         # ui.separator().props("color=grey-8 ")
         habit_list_ui(habits)

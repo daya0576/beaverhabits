@@ -1,5 +1,5 @@
 import contextlib
-from typing import Optional, Tuple
+from typing import Optional
 
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users.exceptions import UserAlreadyExists

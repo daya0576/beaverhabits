@@ -6,7 +6,9 @@ from fastapi.responses import RedirectResponse
 
 from nicegui import Client, app, ui
 
-from .app.db import User
+from beaverhabits.app.crud import get_user_habit_list
+
+from .app.db import HabitModel, User
 from .app.auth import (
     user_authenticate,
     user_check_token,
@@ -16,7 +18,7 @@ from .app.auth import (
 from .app.users import current_active_user
 
 from .configs import settings
-from .models import Habit, HabitList
+from .view import HabitList
 from .utils import dummy_records
 from .frontend.index_page import habit_list_ui, index_page_ui
 
@@ -27,20 +29,24 @@ UNRESTRICTED_PAGE_ROUTES = (LOGIN_PATH, REGISTER_PATH)
 
 @ui.page("/")
 async def index_page(
-    request: Request, user: User = Depends(current_active_user)
+    user: User = Depends(current_active_user),
 ) -> None:
-    ui.label(str(request.url_for(index_page.__name__)))
     ui.label(f"Hello, {user.email}")
+
+    habit_items = await get_user_habit_list(user)
+    habits = HabitList(items=habit_items, on_change=habit_list_ui.refresh)
+    index_page_ui(habits)
 
 
 @ui.page("/demo")
 async def demo():
-    habits = HabitList("Habits", on_change=habit_list_ui.refresh)
+    items = []
     for name in ["Order pizz", "Running", "Table Tennis", "Clean", "Call mom"]:
         pick = lambda: random.randint(0, 3) == 0
         days = settings.INDEX_HABIT_ITEM_COUNT
-        habit = Habit(name, items=dummy_records(days, pick=pick))
-        habits.add(habit)
+        habit = HabitModel(name=name, records=dummy_records(days, pick=pick))
+        items.append(habit)
+    habits = HabitList(items=items, on_change=habit_list_ui.refresh)
 
     index_page_ui(habits)
 
@@ -113,7 +119,10 @@ def init_gui_routes(fastapi_app: FastAPI):
                 request.url.path in client_page_routes
                 and request.url.path not in UNRESTRICTED_PAGE_ROUTES
             ):
-                app.storage.user["referrer_path"] = request.url.path
+                root_path = request.scope["root_path"]
+                app.storage.user["referrer_path"] = request.url.path.removeprefix(
+                    root_path
+                )
                 return RedirectResponse(request.url_for(login_page.__name__))
 
         # Remove original authorization header
