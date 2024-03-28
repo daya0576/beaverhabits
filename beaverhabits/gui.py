@@ -1,14 +1,11 @@
 import os
-import random
 from typing import Optional
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 
 from nicegui import Client, app, ui
 
-from beaverhabits.app.crud import get_user_habit_list
-
-from .app.db import HabitModel, User
+from .app.db import User
 from .app.auth import (
     user_authenticate,
     user_check_token,
@@ -18,37 +15,37 @@ from .app.auth import (
 from .app.users import current_active_user
 
 from .configs import settings
-from .view import HabitList
-from .utils import dummy_records
+from .utils import dummy_habit_list
 from .frontend.index_page import habit_list_ui, index_page_ui
+from .frontend.add import add_page_ui, add_ui
+from .storage import session_storage
 
 INDEX_PATH = MOUNT_PATH = "/gui"
 LOGIN_PATH, REGISTER_PATH = "/gui/login", "/gui/register"
-UNRESTRICTED_PAGE_ROUTES = (LOGIN_PATH, REGISTER_PATH)
+UNRESTRICTED_PAGE_ROUTES = (LOGIN_PATH, REGISTER_PATH, "/gui/demo")
 
 
 @ui.page("/")
 async def index_page(
     user: User = Depends(current_active_user),
 ) -> None:
-    ui.label(f"Hello, {user.email}")
-
-    habit_items = await get_user_habit_list(user)
-    habits = HabitList(items=habit_items, on_change=habit_list_ui.refresh)
+    habits = await settings.storage.get_current_habit_list(
+        user, on_change=habit_list_ui.refresh
+    )
     index_page_ui(habits)
+
+
+@ui.page("/add")
+async def add_page(user: User = Depends(current_active_user)) -> None:
+    habits = await view.get_current_habit_list(user, on_change=add_ui.refresh)
+    add_page_ui(habits)
 
 
 @ui.page("/demo")
 async def demo():
-    items = []
-    for name in ["Order pizz", "Running", "Table Tennis", "Clean", "Call mom"]:
-        pick = lambda: random.randint(0, 3) == 0
-        days = settings.INDEX_HABIT_ITEM_COUNT
-        habit = HabitModel(name=name, records=dummy_records(days, pick=pick))
-        items.append(habit)
-    habits = HabitList(items=items, on_change=habit_list_ui.refresh)
-
-    index_page_ui(habits)
+    habit_list = dummy_habit_list()
+    habit_list = session_storage.get_or_create_user_habit_list(User(), habit_list)
+    index_page_ui(habit_list)
 
     # NOTE dark mode will be persistent for each user across tabs and server restarts
     # ui.dark_mode().bind_value(app.storage.user, "dark_mode")
@@ -139,6 +136,6 @@ def init_gui_routes(fastapi_app: FastAPI):
     ui.run_with(
         fastapi_app,
         mount_path=MOUNT_PATH,  # NOTE this can be omitted if you want the paths passed to @ui.page to be at the root
-        storage_secret=settings.STORAGE_SECRET,
+        storage_secret=settings.NICEGUI_STORAGE_SECRET,
         dark=True,
     )

@@ -1,6 +1,7 @@
 import contextlib
 from typing import List
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from .db import HabitModel, User, get_async_session
 
@@ -18,6 +19,10 @@ async def create_user_habit(user: User, name: str) -> HabitModel:
 
 async def get_user_habit_list(user: User) -> List[HabitModel]:
     async with get_async_session_context() as session:
-        stmt = select(HabitModel).where(HabitModel.user == user)
+        stmt = (
+            select(HabitModel)
+            .options(joinedload(HabitModel.records))
+            .where(HabitModel.user == user)
+        )
         result = await session.execute(stmt)
         return [x for x in result.scalars()]
