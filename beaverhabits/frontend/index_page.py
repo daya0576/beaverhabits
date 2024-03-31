@@ -1,25 +1,12 @@
-import asyncio
-from nicegui import events, ui
+from nicegui import ui
+from beaverhabits.frontend.components import HabitCheckBox
+
 from beaverhabits.frontend.layout import layout
-
 from beaverhabits.storage.storage import HabitList
-from .components import HabitCheckBox, habit_check_box
-
 from beaverhabits.utils import dummy_days
 
 
 HABIT_LIST_RECORD_COUNT = 5
-
-
-async def async_task(e: events.ValueChangeEventArguments):
-    ui.notify(f"Asynchronous task started: {e.value}")
-    ui.notify(f"Asynchronous task started: {e.sender.record}")
-    ui.notify(f"Asynchronous task started: {e.sender.habit}")
-    # ui.notify(f"Asynchronous task started: {habit}, {record}")
-    # if record not in habit.records:
-    #     habit.records.append(record)
-    await asyncio.sleep(1)
-    ui.notify("Asynchronous task finished")
 
 
 @ui.refreshable

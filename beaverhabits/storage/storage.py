@@ -8,7 +8,7 @@ from beaverhabits.app.db import User
 
 
 @dataclass
-class CheckedRecord:
+class CheckedRecord(abc.ABC):
     day: datetime.date
     done: bool
 
@@ -19,9 +19,10 @@ class CheckedRecord:
 
 
 @dataclass
-class Habit:
+class Habit(abc.ABC):
     name: str
-    records: list[CheckedRecord] = field(default_factory=list)
+    priority: int = 2
+    records: List[CheckedRecord] = field(default_factory=list)
 
     def get_records_by_date(
         self, days: List[datetime.date]
@@ -33,7 +34,12 @@ class Habit:
             all_records_by_date[x.day] = x
         return all_records_by_date
 
+    @abc.abstractmethod
     def tick(self, record: CheckedRecord) -> None:
+        ...
+
+    @abc.abstractmethod
+    async def update_priority(self, priority: int) -> None:
         ...
 
     def __str__(self):
@@ -43,20 +49,23 @@ class Habit:
 
 
 @dataclass
-class HabitList:
+class HabitList(abc.ABC):
     items: List[Habit] = field(default_factory=list)
     created_at: datetime.datetime = field(default_factory=datetime.datetime.now)
     on_change: Optional[Callable[[], None]] = None
 
-    def add(self, name: str) -> None:
-        self.items.append(Habit(name=name))
+    def sort(self) -> None:
+        self.items = sorted(self.items, key=lambda x: x.priority)
         if self.on_change:
             self.on_change()
 
+    @abc.abstractmethod
+    def add(self, name: str) -> None:
+        ...
+
+    @abc.abstractmethod
     def remove(self, item: Habit) -> None:
-        self.items.remove(item)
-        if self.on_change:
-            self.on_change()
+        ...
 
 
 class Storage(abc.ABC):

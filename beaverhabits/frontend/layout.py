@@ -8,9 +8,14 @@ from beaverhabits.frontend.components import compat_menu, menu_icon_button
 
 @contextmanager
 def layout(root_path: str):
-    with ui.column().classes("max-w-screen-lg"):
+    with ui.column():
         with ui.row().classes("w-full"):
-            ui.label("Habits").classes("text-semibold text-2xl")
+            link = ui.link("Habits", target="/")
+            ui.colors()
+            link.classes(
+                "text-semibold text-2xl dark:text-white no-underline hover:no-underline"
+            )
+
             ui.space()
             # menu_icon_button("sym_r_add")
             with menu_icon_button("sym_r_menu"):
@@ -19,6 +24,6 @@ def layout(root_path: str):
                     compat_menu("Menu2", lambda: True)
                     ui.separator()
                     compat_menu("Logout", lambda: True)
-        # ui.separator().style("background: hsla(0,0%,100%,.1)")
 
-        yield
+        with ui.column().classes("w-full"):
+            yield

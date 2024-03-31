@@ -7,8 +7,7 @@ from beaverhabits.app.db import User
 from beaverhabits.configs import settings
 from beaverhabits.frontend.add_page import add_page_ui, add_ui
 from beaverhabits.frontend.index_page import index_page_ui
-from beaverhabits.storage.session import SessionHabit
-from beaverhabits.storage.storage import HabitList
+from beaverhabits.storage.session import SessionHabit, SessionHabitList
 from beaverhabits.utils import dummy_records
 
 from .storage import session_storage
@@ -21,7 +20,7 @@ def dummy_habit_list():
         days = settings.INDEX_HABIT_ITEM_COUNT
         habit = SessionHabit(name=name, records=dummy_records(days, pick=pick))
         items.append(habit)
-    return HabitList(items=items)
+    return SessionHabitList(items=items)
 
 
 @ui.page("/")
