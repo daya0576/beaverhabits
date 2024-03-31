@@ -1,7 +1,10 @@
-from typing import Callable, Optional
-from nicegui import ui
+import asyncio
+from typing import Any, Callable, Optional
+from nicegui import events, ui
 from nicegui.elements.button import Button
 from nicegui.elements.checkbox import Checkbox
+
+from beaverhabits.storage.storage import CheckedRecord, Habit
 
 
 def compat_menu(name: str, callback: Callable):
@@ -13,16 +16,9 @@ def menu_icon_button(icon_name: str, click: Optional[Callable] = None) -> Button
     return ui.button(icon=icon_name, color=None).props(button_props)
 
 
-def menu_more_button(icon_name: str):
-    with menu_icon_button(icon_name):
-        with ui.menu():
-            compat_menu("Menu1", lambda: True)
-            compat_menu("Menu2", lambda: True)
-            ui.separator()
-            compat_menu("Logout", lambda: True)
-
-
-def habit_check_box(value: bool, on_change: Callable, dense: bool = False) -> Checkbox:
+def habit_check_box(
+    value: bool, on_change: Optional[Callable] = None, dense: bool = False
+) -> Checkbox:
     checkbox = ui.checkbox(value=value, on_change=on_change)
 
     checkbox.props(f'checked-icon="sym_r_done" unchecked-icon="sym_r_close" keep-color')
@@ -32,3 +28,33 @@ def habit_check_box(value: bool, on_change: Callable, dense: bool = False) -> Ch
         checkbox.props("dense")
 
     return checkbox
+
+
+class HabitCheckBox(ui.checkbox):
+    def __init__(
+        self,
+        habit: Habit,
+        record: CheckedRecord,
+        text: str = "",
+        *,
+        value: bool = False,
+    ) -> None:
+        super().__init__(text, value=value, on_change=self._async_task)
+        self.habit = habit
+        self.record = record
+        self._update_style(value)
+        self.bind_value(record, "done")
+
+    def _update_style(self, value: bool):
+        self.props(f'checked-icon="sym_r_done" unchecked-icon="sym_r_close" keep-color')
+        if not value:
+            self.props("color=grey-8")
+        else:
+            self.props("color=currentColor")
+
+    async def _async_task(self, e: events.ValueChangeEventArguments):
+        self._update_style(e.value)
+        # await asyncio.sleep(5)
+        # ui.notify(f"Asynchronous task started: {self.record}")
+        if self.record not in self.habit.records:
+            self.habit.records.append(self.record)

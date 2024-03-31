@@ -1,7 +1,7 @@
 import abc
 from dataclasses import dataclass, field
 import datetime
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, OrderedDict
 
 
 from beaverhabits.app.db import User
@@ -12,11 +12,34 @@ class CheckedRecord:
     day: datetime.date
     done: bool
 
+    def __str__(self):
+        return f"{self.day} {'[x]' if self.done else '[ ]'}"
+
+    __repr__ = __str__
+
 
 @dataclass
 class Habit:
     name: str
     records: list[CheckedRecord] = field(default_factory=list)
+
+    def get_records_by_date(
+        self, days: List[datetime.date]
+    ) -> OrderedDict[datetime.date, CheckedRecord]:
+        all_records_by_date = OrderedDict(
+            (x, CheckedRecord(day=x, done=False)) for x in days
+        )
+        for x in self.records:
+            all_records_by_date[x.day] = x
+        return all_records_by_date
+
+    def tick(self, record: CheckedRecord) -> None:
+        ...
+
+    def __str__(self):
+        return self.name
+
+    __repr__ = __str__
 
 
 @dataclass

@@ -1,6 +1,10 @@
 from enum import Enum
 from pydantic_settings import BaseSettings
 
+import logging
+
+logging.getLogger("niceGUI").setLevel(logging.INFO)
+
 
 class StorageType(Enum):
     SESSION = "session"
@@ -8,6 +12,7 @@ class StorageType(Enum):
 
 
 class Settings(BaseSettings):
+    GUI_MOUNT_PATH: str = "/gui"
     # UI config
     INDEX_HABIT_ITEM_COUNT: int = 5
     # System

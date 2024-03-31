@@ -1,12 +1,25 @@
-from nicegui import ui
+import asyncio
+from nicegui import events, ui
+from beaverhabits.frontend.layout import layout
 
 from beaverhabits.storage.storage import HabitList
-from .components import menu_icon_button, habit_check_box, menu_more_button
+from .components import HabitCheckBox, habit_check_box
 
 from beaverhabits.utils import dummy_days
 
 
 HABIT_LIST_RECORD_COUNT = 5
+
+
+async def async_task(e: events.ValueChangeEventArguments):
+    ui.notify(f"Asynchronous task started: {e.value}")
+    ui.notify(f"Asynchronous task started: {e.sender.record}")
+    ui.notify(f"Asynchronous task started: {e.sender.habit}")
+    # ui.notify(f"Asynchronous task started: {habit}, {record}")
+    # if record not in habit.records:
+    #     habit.records.append(record)
+    await asyncio.sleep(1)
+    ui.notify("Asynchronous task finished")
 
 
 @ui.refreshable
@@ -31,10 +44,11 @@ def habit_list_ui(habits: HabitList):
             "col-span-2 px-1.5 justify-self-center",
         )
 
+        days = dummy_days(HABIT_LIST_RECORD_COUNT)
         with grid(2).classes(row_compat_classes):
             for fmt in ("%a", "%d"):
                 ui.label("").classes(left_classes)
-                for date in dummy_days(HABIT_LIST_RECORD_COUNT):
+                for date in days:
                     label = ui.label(str(date.strftime(fmt))).classes(right_classes)
                     label.style("color: #9e9e9e; font-size: 85%; font-weight: 500")
 
@@ -42,22 +56,11 @@ def habit_list_ui(habits: HabitList):
             with compat_card():
                 with grid(1):
                     ui.label(habit.name).classes(left_classes)
-                    for record in habit.records:
-                        checkbox = habit_check_box(
-                            value=record.done, on_change=habit_list_ui.refresh
-                        )
-                        checkbox.bind_value(record, "done")
+                    for record in habit.get_records_by_date(days).values():
+                        checkbox = HabitCheckBox(habit, record, value=record.done)
                         checkbox.classes(right_classes)
 
 
-def index_page_ui(habits: HabitList):
-    with ui.column().classes("max-w-screen-lg"):
-        with ui.row().classes("w-full"):
-            ui.label("Habits").classes("text-semibold text-2xl")
-            ui.space()
-            # menu_icon_button("sym_r_add")
-            menu_more_button("sym_r_menu")
-
-        # ui.separator().style("background: hsla(0,0%,100%,.1)")
-
+def index_page_ui(habits: HabitList, root_path: str):
+    with layout(root_path):
         habit_list_ui(habits)

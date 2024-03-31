@@ -2,9 +2,19 @@ from typing import Optional
 import nicegui
 from beaverhabits.app.db import User
 
-from beaverhabits.storage.storage import HabitList, Storage
+from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, Storage
 
 KEY_NAME = "user_habit_list"
+
+
+class SessionHabit(Habit):
+    def tick(self, record: CheckedRecord) -> None:
+        if record not in self.records:
+            self.records.append(record)
+
+
+class SessionHabitList(HabitList):
+    ...
 
 
 class SessionStorage(Storage):

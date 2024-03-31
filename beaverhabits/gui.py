@@ -1,55 +1,42 @@
 import os
 from typing import Optional
+
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
-
 from nicegui import Client, app, ui
 
-from .app.db import User
 from .app.auth import (
     user_authenticate,
     user_check_token,
     user_create,
     user_create_token,
 )
+from .app.db import User
 from .app.users import current_active_user
-
 from .configs import settings
-from .utils import dummy_habit_list
+from .frontend.add_page import add_page_ui, add_ui
 from .frontend.index_page import habit_list_ui, index_page_ui
-from .frontend.add import add_page_ui, add_ui
-from .storage import session_storage
 
-INDEX_PATH = MOUNT_PATH = "/gui"
-LOGIN_PATH, REGISTER_PATH = "/gui/login", "/gui/register"
-UNRESTRICTED_PAGE_ROUTES = (LOGIN_PATH, REGISTER_PATH, "/gui/demo")
+INDEX_PATH = MOUNT_PATH = settings.GUI_MOUNT_PATH
+LOGIN_PATH, REGISTER_PATH = f"{MOUNT_PATH}/login", f"{MOUNT_PATH}/register"
+UNRESTRICTED_PAGE_ROUTES = (LOGIN_PATH, REGISTER_PATH, f"{MOUNT_PATH}/demo")
 
 
 @ui.page("/")
 async def index_page(
+    request: Request,
     user: User = Depends(current_active_user),
 ) -> None:
     habits = await settings.storage.get_current_habit_list(
         user, on_change=habit_list_ui.refresh
     )
-    index_page_ui(habits)
+    index_page_ui(habits, request.scope["root_path"])
 
 
 @ui.page("/add")
 async def add_page(user: User = Depends(current_active_user)) -> None:
     habits = await view.get_current_habit_list(user, on_change=add_ui.refresh)
     add_page_ui(habits)
-
-
-@ui.page("/demo")
-async def demo():
-    habit_list = dummy_habit_list()
-    habit_list = session_storage.get_or_create_user_habit_list(User(), habit_list)
-    index_page_ui(habit_list)
-
-    # NOTE dark mode will be persistent for each user across tabs and server restarts
-    # ui.dark_mode().bind_value(app.storage.user, "dark_mode")
-    # ui.checkbox("dark mode").bind_value(app.storage.user, "dark_mode")
 
 
 @ui.page("/login")

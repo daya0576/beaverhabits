@@ -1,8 +1,6 @@
 import datetime
-import random
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, OrderedDict
 
-from beaverhabits.configs import settings
 from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList
 
 
@@ -17,11 +15,5 @@ def dummy_records(days: int, pick: Optional[Callable] = None) -> List[CheckedRec
     ]
 
 
-def dummy_habit_list():
-    items = []
-    for name in ["Order pizz", "Running", "Table Tennis", "Clean", "Call mom"]:
-        pick = lambda: random.randint(0, 3) == 0
-        days = settings.INDEX_HABIT_ITEM_COUNT
-        habit = Habit(name=name, records=dummy_records(days, pick=pick))
-        items.append(habit)
-    return HabitList(items=items)
+def dummy_record_dict(limit: int) -> OrderedDict[datetime.date, CheckedRecord]:
+    return OrderedDict((x, CheckedRecord(day=x, done=False)) for x in dummy_days(limit))

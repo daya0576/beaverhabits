@@ -1,4 +1,5 @@
 from nicegui import ui
+from beaverhabits.frontend.layout import layout
 
 from beaverhabits.storage.storage import HabitList
 
@@ -23,12 +24,12 @@ def add_ui(habit_list: HabitList):
             ).props("flat fab-mini color=grey")
 
 
-def add_page_ui(habit_list: HabitList):
-    with ui.card().classes("w-80 items-stretch"):
-        ui.label("Habits").classes("text-semibold text-2xl")
-        add_ui(habit_list)
-        add_input = ui.input("New item").classes("mx-12")
-        add_input.on(
-            "keydown.enter",
-            lambda: (habit_list.add(add_input.value), add_input.set_value("")),
-        )
+def add_page_ui(habit_list: HabitList, root_path: str):
+    with layout(root_path):
+        with ui.card().classes("w-80 items-stretch"):
+            add_ui(habit_list)
+            add_input = ui.input("New item").classes("mx-12")
+            add_input.on(
+                "keydown.enter",
+                lambda: (habit_list.add(add_input.value), add_input.set_value("")),
+            )

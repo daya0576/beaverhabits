@@ -2,9 +2,11 @@ from contextlib import asynccontextmanager
 import logging
 from fastapi import FastAPI
 
+
 from .app.app import init_auth_routes
 from .app.db import create_db_and_tables
 from .gui import init_gui_routes
+from .demo import init_demo_routes
 
 
 @asynccontextmanager
@@ -26,6 +28,7 @@ def read_root():
 # auth
 init_auth_routes(app)
 init_gui_routes(app)
+init_demo_routes(app)
 
 
 if __name__ == "__main__":
