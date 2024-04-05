@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 import logging
 from fastapi import FastAPI
@@ -9,6 +10,12 @@ from .gui import init_gui_routes
 from .demo import init_demo_routes
 
 
+def startup():
+    loop = asyncio.get_running_loop()
+    loop.set_debug(True)
+    loop.slow_callback_duration = 0.05
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     logging.info("Creating database and tables")
@@ -18,6 +25,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.on_event("startup")(startup)
 
 
 @app.get("/")

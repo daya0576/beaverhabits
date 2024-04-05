@@ -4,14 +4,15 @@ from beaverhabits.frontend.components import HabitCheckBox
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.storage import HabitList
 from beaverhabits.utils import dummy_days
+from beaverhabits.configs import settings
 
 
-HABIT_LIST_RECORD_COUNT = 5
+HABIT_LIST_RECORD_COUNT = settings.INDEX_HABIT_ITEM_COUNT
 
 
 @ui.refreshable
 def habit_list_ui(habits: HabitList):
-    if not habits.items:
+    if not habits.habits:
         ui.label("List is empty.").classes("mx-auto")
         return
 
@@ -39,11 +40,11 @@ def habit_list_ui(habits: HabitList):
                     label = ui.label(str(date.strftime(fmt))).classes(right_classes)
                     label.style("color: #9e9e9e; font-size: 85%; font-weight: 500")
 
-        for habit in habits.items:
+        for habit in habits.habits:
             with compat_card():
                 with grid(1):
                     ui.label(habit.name).classes(left_classes)
-                    for record in habit.get_records_by_date(days).values():
+                    for record in habit.get_records_by_days(days):
                         checkbox = HabitCheckBox(habit, record, value=record.done)
                         checkbox.classes(right_classes)
 

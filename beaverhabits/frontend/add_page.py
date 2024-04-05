@@ -1,34 +1,42 @@
-from nicegui import events, ui
-from beaverhabits.frontend.components import HabitPrioritySelect
+from nicegui import ui
+from beaverhabits.frontend.components import (
+    HabitAddButton,
+    HabitDeleteButton,
+    HabitNameInput,
+    HabitPrioritySelect,
+)
 from beaverhabits.frontend.layout import layout
 
-from beaverhabits.storage.storage import HabitList
+from beaverhabits.storage.storage import HabitList, Priority
 
-PRIORITIES = {1: "P1", 2: "P2", 3: "P3", 4: "P4"}
+
+PRIORITIES = {
+    1: Priority.P1.name,
+    2: Priority.P2.name,
+    3: Priority.P3.name,
+    4: Priority.P4.name,
+    100: "  ",
+}
 
 
 @ui.refreshable
 def add_ui(habit_list: HabitList):
     habit_list = habit_list
-    for item in habit_list.items:
-        with ui.row().classes("items-center"):
-            ui.input(value=item.name).classes("flex-grow").bind_value(
-                item, "name"
-            ).props("dense filled")
+    for item in habit_list.habits:
+        with ui.row().classes("items-center gap-0"):
+            name = HabitNameInput(item)
+            name.props("dense").classes("flex-grow")
 
-            select = HabitPrioritySelect(item, habit_list, PRIORITIES, item.priority)
-            select.props("dense")
+            priority = HabitPrioritySelect(item, habit_list, PRIORITIES, add_ui.refresh)
+            priority.props("dense")
 
-            ui.button(
-                on_click=lambda item=item: habit_list.remove(item), icon="delete"
-            ).props("flat fab-mini color=grey")
+            delete = HabitDeleteButton(item, habit_list, add_ui.refresh)
+            delete.props("flat fab-mini color=grey")
 
 
 def add_page_ui(habit_list: HabitList, root_path: str):
     with layout(root_path):
         add_ui(habit_list)
-        add_input = ui.input("New item").props("dense")
-        add_input.on(
-            "keydown.enter",
-            lambda: (habit_list.add(add_input.value), add_input.set_value("")),
-        )
+
+    add = HabitAddButton(habit_list, add_ui.refresh)
+    add.props("dense")

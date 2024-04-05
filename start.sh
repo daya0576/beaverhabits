@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 if [ "$1" = "prod" ]; then
     echo "Starting Uvicorn server in production mode..."
     # we also use a single worker in production mode so socket.io connections are always handled by the same worker
-    uvicorn beaverhabits.main:app --workers 1 --log-level info --port 80
+    uvicorn beaverhabits.main:app --workers 1 --log-level info --port 8080 --host 0.0.0.0
 elif [ "$1" = "dev" ]; then
     echo "Starting Uvicorn server in development mode..."
     # reload implies workers = 1

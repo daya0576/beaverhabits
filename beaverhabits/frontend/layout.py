@@ -21,7 +21,7 @@ def layout(root_path: str):
             with menu_icon_button("sym_r_menu"):
                 with ui.menu():
                     compat_menu("Add", lambda: ui.open(os.path.join(root_path, "/add")))
-                    compat_menu("Menu2", lambda: True)
+                    # compat_menu("Menu2", lambda: True)
                     ui.separator()
                     compat_menu("Logout", lambda: True)
 

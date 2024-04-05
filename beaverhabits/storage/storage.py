@@ -1,16 +1,20 @@
-import abc
-from dataclasses import dataclass, field
 import datetime
-from typing import Callable, List, Optional, OrderedDict
+import enum
+from typing import List, Optional, Protocol
 
 
 from beaverhabits.app.db import User
 
 
-@dataclass
-class CheckedRecord(abc.ABC):
-    day: datetime.date
-    done: bool
+class CheckedRecord(Protocol):
+    @property
+    def day(self) -> datetime.date: ...
+
+    @property
+    def done(self) -> bool: ...
+
+    @done.setter
+    def done(self, value: bool) -> None: ...
 
     def __str__(self):
         return f"{self.day} {'[x]' if self.done else '[ ]'}"
@@ -18,29 +22,33 @@ class CheckedRecord(abc.ABC):
     __repr__ = __str__
 
 
-@dataclass
-class Habit(abc.ABC):
-    name: str
-    priority: int = 2
-    records: List[CheckedRecord] = field(default_factory=list)
+class Priority(enum.Enum):
+    P1 = 1
+    P2 = 2
+    P3 = 3
+    P4 = 4
+    NONE = 100
 
-    def get_records_by_date(
-        self, days: List[datetime.date]
-    ) -> OrderedDict[datetime.date, CheckedRecord]:
-        all_records_by_date = OrderedDict(
-            (x, CheckedRecord(day=x, done=False)) for x in days
-        )
-        for x in self.records:
-            all_records_by_date[x.day] = x
-        return all_records_by_date
 
-    @abc.abstractmethod
-    def tick(self, record: CheckedRecord) -> None:
-        ...
+class Habit[R: CheckedRecord](Protocol):
+    @property
+    def name(self) -> str: ...
 
-    @abc.abstractmethod
-    async def update_priority(self, priority: int) -> None:
-        ...
+    @name.setter
+    def name(self, value: str) -> None: ...
+
+    @property
+    def priority(self) -> int: ...
+
+    @priority.setter
+    def priority(self, value: int) -> None: ...
+
+    @property
+    def records(self) -> List[R]: ...
+
+    def get_records_by_days(self, days: List[datetime.date]) -> List[R]: ...
+
+    async def tick(self, record: R) -> None: ...
 
     def __str__(self):
         return self.name
@@ -48,37 +56,24 @@ class Habit(abc.ABC):
     __repr__ = __str__
 
 
-@dataclass
-class HabitList(abc.ABC):
-    items: List[Habit] = field(default_factory=list)
-    created_at: datetime.datetime = field(default_factory=datetime.datetime.now)
-    on_change: Optional[Callable[[], None]] = None
+class HabitList[H: Habit](Protocol):
+    @property
+    def habits(self) -> List[H]: ...
 
-    def sort(self) -> None:
-        self.items = sorted(self.items, key=lambda x: x.priority)
-        if self.on_change:
-            self.on_change()
+    async def add(self, name: str) -> None: ...
 
-    @abc.abstractmethod
-    def add(self, name: str) -> None:
-        ...
+    async def remove(self, item: H) -> None: ...
 
-    @abc.abstractmethod
-    def remove(self, item: Habit) -> None:
-        ...
+    def sort(self) -> None: ...
 
 
-class Storage(abc.ABC):
-    @abc.abstractmethod
-    def get_user_habit_list(self, user: User) -> Optional[HabitList]:
-        ...
+class SessionStorage[L: HabitList](Protocol):
+    def get_user_habit_list(self) -> Optional[L]: ...
 
-    @abc.abstractmethod
-    def save_user_habit_list(self, user: User, habit_list: HabitList):
-        ...
+    def save_user_habit_list(self, habit_list: L) -> None: ...
 
-    @abc.abstractmethod
-    def get_or_create_user_habit_list(
-        self, user: User, default_habit_list: HabitList
-    ) -> HabitList:
-        ...
+
+class UserStorage[L: HabitList](Protocol):
+    def get_user_habit_list(self, user: User) -> Optional[L]: ...
+
+    def save_user_habit_list(self, user: User, habit_list: L) -> None: ...

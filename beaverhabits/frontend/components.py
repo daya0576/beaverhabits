@@ -1,5 +1,5 @@
-import asyncio
-from typing import Any, Callable, Dict, List, Optional, Union
+import logging
+from typing import Callable, Dict, List, Optional, Type, Union
 from nicegui import events, ui
 from nicegui.elements.button import Button
 
@@ -41,8 +41,42 @@ class HabitCheckBox(ui.checkbox):
         self._update_style(e.value)
         # await asyncio.sleep(5)
         # ui.notify(f"Asynchronous task started: {self.record}")
-        if self.record not in self.habit.records:
-            self.habit.records.append(self.record)
+        await self.habit.tick(self.record)
+
+
+class HabitNameInput(ui.input):
+    def __init__(self, habit: Habit) -> None:
+        super().__init__(value=habit.name, on_change=self._async_task)
+        self.habit = habit
+
+    async def _async_task(self, e: events.ValueChangeEventArguments):
+        self.habit.name = e.value
+
+
+class HabitDeleteButton(ui.button):
+    def __init__(self, habit: Habit, habit_list: HabitList, refresh: Callable) -> None:
+        super().__init__(on_click=self._async_task, icon="delete")
+        self.habit = habit
+        self.habit_list = habit_list
+        self.refresh = refresh
+
+    async def _async_task(self):
+        await self.habit_list.remove(self.habit)
+        self.refresh()
+
+
+class HabitAddButton(ui.input):
+    def __init__(self, habit_list: HabitList, refresh: Callable) -> None:
+        super().__init__("New item")
+        self.habit_list = habit_list
+        self.refresh = refresh
+        self.on("keydown.enter", self._async_task)
+
+    async def _async_task(self):
+        logging.info(f"Adding new habit: {self.value}")
+        await self.habit_list.add(self.value)
+        self.refresh()
+        self.set_value("")
 
 
 class HabitPrioritySelect(ui.select):
@@ -51,15 +85,15 @@ class HabitPrioritySelect(ui.select):
         habit: Habit,
         habit_list: HabitList,
         options: Union[List, Dict],
-        value: Any = None,
+        refresh: Callable,
     ) -> None:
-        super().__init__(options, on_change=self._async_task, value=value)
+        super().__init__(options, on_change=self._async_task, value=habit.priority)
         self.habit = habit
         self.habit_list = habit_list
         self.bind_value(habit, "priority")
+        self.refresh = refresh
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
-        await self.habit.update_priority(e.value)
-        # await asyncio.sleep(5)
-        # ui.notify(f"Asynchronous task started: {self.habit}")
+        # self.habit.priority = e.value
         self.habit_list.sort()
+        self.refresh()

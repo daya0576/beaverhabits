@@ -1,50 +1,126 @@
-from typing import Optional
+from dataclasses import dataclass, field
+import datetime
+from typing import List, Optional
 import nicegui
-from beaverhabits.app.db import User
 
-from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, Storage
+from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, SessionStorage
 
 KEY_NAME = "user_habit_list"
 
 
-class SessionHabit(Habit):
-    def tick(self, record: CheckedRecord) -> None:
-        if record not in self.records:
-            self.records.append(record)
+@dataclass(init=False)
+class DictStorage:
+    data: dict = field(default_factory=dict, metadata={"exclude": True})
 
-    async def update_priority(self, priority: int) -> None:
-        self.priority = priority
+    def on_update(self, **kwargs):
+        self.data.update(kwargs)
 
+    def on_insert(self, key, item):
+        items = self.data[key]
+        if item not in items:
+            items.append(item)
 
-class SessionHabitList(HabitList):
-    def add(self, name: str) -> None:
-        self.items.append(SessionHabit(name=name))
-        if self.on_change:
-            self.on_change()
-
-    def remove(self, item: Habit) -> None:
-        self.items.remove(item)
-        if self.on_change:
-            self.on_change()
+    @staticmethod
+    def dict_factory(x):
+        exclude_fields = ("data",)
+        return {k: v for (k, v) in x if k not in exclude_fields}
 
 
-class SessionStorage(Storage):
-    def get_user_habit_list(self, user: User) -> Optional[HabitList]:
-        user_habit_list = nicegui.app.storage.user.get(KEY_NAME)
-        if user_habit_list is not None:
-            return user_habit_list
+@dataclass
+class SessionRecord(CheckedRecord, DictStorage):
+    """
+    # Read (d1~d3)
+    persistent    ->     memory      ->     view
+    d0: [x]              d0: [x]
+                                            d1: [ ]
+    d2: [x]              d2: [x]            d2: [x]
+                                            d3: [ ]
 
-    def save_user_habit_list(self, user: User, habit_list: HabitList) -> None:
-        nicegui.app.storage.user[KEY_NAME] = habit_list
+    # Update:
+    view(update)  ->     memory      ->     persistent
+    d1: [ ]
+    d2: [ ]              d2: [ ]            d2: [x]
+    d3: [x]              d3: [x]            d3: [ ]
+    """
 
-    def get_or_create_user_habit_list(
-        self, user: User, default_habit_list: HabitList
-    ) -> HabitList:
-        habit_list = self.get_user_habit_list(user)
+    @property
+    def day(self) -> datetime.date:
+        date = datetime.datetime.strptime(self.data["day"], "%Y-%m-%d")
+        return date.date()
 
-        if habit_list is None and not isinstance(habit_list, SessionHabitList):
-            self.save_user_habit_list(user, default_habit_list)
-            habit_list = default_habit_list
+    @property
+    def done(self) -> bool:
+        return self.data["done"]
 
-        sorted(habit_list.items, key=lambda habit: habit.priority)
-        return habit_list
+    @done.setter
+    def done(self, value: bool) -> None:
+        self.data["done"] = value
+
+
+@dataclass
+class SessionHabit(Habit[SessionRecord], DictStorage):
+    @property
+    def name(self) -> str:
+        return self.data["name"]
+
+    @name.setter
+    def name(self, value: str) -> None:
+        self.data["name"] = value
+
+    @property
+    def priority(self) -> int:
+        return self.data.get("priority", 100)
+
+    @priority.setter
+    def priority(self, value: int) -> None:
+        self.data["priority"] = value
+
+    @property
+    def records(self) -> list[SessionRecord]:
+        return [SessionRecord(d) for d in self.data["records"]]
+
+    def get_records_by_days(self, days: List[datetime.date]) -> List[SessionRecord]:
+        d_r = {r.day: r for r in self.records}
+
+        records = []
+        for day in days:
+            persistent_record = d_r.get(day)
+            if persistent_record:
+                records.append(persistent_record)
+            else:
+                records.append(
+                    SessionRecord({"day": day.strftime("%Y-%m-%d"), "done": False})
+                )
+        return records
+
+    async def tick(self, record: SessionRecord) -> None:
+        if record.day not in {r.day for r in self.records}:
+            self.data["records"].append(record.data)
+
+
+@dataclass
+class SessionHabitList(HabitList[SessionHabit], DictStorage):
+    @property
+    def habits(self) -> list[SessionHabit]:
+        self.sort()
+        return [SessionHabit(d) for d in self.data["habits"]]
+
+    async def add(self, name: str) -> None:
+        self.data["habits"].append({"name": name, "records": []})
+
+    async def remove(self, item: SessionHabit) -> None:
+        self.data["habits"].remove(item.data)
+
+    def sort(self) -> None:
+        self.data["habits"].sort(key=lambda x: x.get("priority") or 100)
+
+
+class NiceGUISessionStorage(SessionStorage[SessionHabitList]):
+    def get_user_habit_list(self) -> Optional[SessionHabitList]:
+        d = nicegui.app.storage.user.get(KEY_NAME)
+        if not d:
+            return None
+        return SessionHabitList(d)
+
+    def save_user_habit_list(self, habit_list: SessionHabitList) -> None:
+        nicegui.app.storage.user[KEY_NAME] = habit_list.data

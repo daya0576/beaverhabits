@@ -124,5 +124,5 @@ def init_gui_routes(fastapi_app: FastAPI):
         fastapi_app,
         mount_path=MOUNT_PATH,  # NOTE this can be omitted if you want the paths passed to @ui.page to be at the root
         storage_secret=settings.NICEGUI_STORAGE_SECRET,
-        dark=True,
+        dark=True
     )

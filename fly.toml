@@ -1,0 +1,28 @@
+# fly.toml app configuration file generated for beaverhabits on 2024-04-01T19:18:59+08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "beaverhabits"
+kill_signal = "SIGINT"
+kill_timeout = 5
+mounts = []
+primary_region = "fra"
+processes = []
+
+[build]
+dockerfile="Dockerfile"
+
+[[services]]
+  internal_port = 8080
+  min_machines_running = 0
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
