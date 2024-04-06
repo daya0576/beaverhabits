@@ -1,7 +1,7 @@
 # Beaver Habit Tracker
 A light-weighted app to track your fleeting life.
 
-<img src='https://github.com/daya0576/beaverhabits/assets/6239652/e39eb897-80a4-48b7-9c62-14c88ef19271' width='300'>
+<img src='https://github.com/daya0576/beaverhabits/assets/6239652/93da4764-0050-4128-8057-f05f767b6e16' width='300'>
 
 # WIP: 
 1. Pages
