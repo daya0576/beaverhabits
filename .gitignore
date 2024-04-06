@@ -152,5 +152,5 @@ cython_debug/
 *.swp
 .nicegui
 test.db
-.idea
+.idea/
 
