@@ -12,6 +12,7 @@ class StorageType(Enum):
 
 
 class Settings(BaseSettings):
+    ENV: str = "dev"
     GUI_MOUNT_PATH: str = "/gui"
     # UI config
     INDEX_HABIT_ITEM_COUNT: int = 5
@@ -20,6 +21,9 @@ class Settings(BaseSettings):
     # Storage
     STORAGE: StorageType = StorageType.SQLITE
     DATABASE_URL: str = "sqlite+aiosqlite:///./test.db"
+
+    def is_dev(self):
+        return self.ENV == "dev"
 
 
 settings = Settings()

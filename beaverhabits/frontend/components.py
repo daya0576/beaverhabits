@@ -4,6 +4,7 @@ from nicegui import events, ui
 from nicegui.elements.button import Button
 
 from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList
+from beaverhabits.frontend import icons
 
 
 def compat_menu(name: str, callback: Callable):
@@ -31,7 +32,9 @@ class HabitCheckBox(ui.checkbox):
         self.bind_value(record, "done")
 
     def _update_style(self, value: bool):
-        self.props(f'checked-icon="sym_r_done" unchecked-icon="sym_r_close" keep-color')
+        self.props(
+            f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
+        )
         if not value:
             self.props("color=grey-8")
         else:
@@ -55,7 +58,7 @@ class HabitNameInput(ui.input):
 
 class HabitDeleteButton(ui.button):
     def __init__(self, habit: Habit, habit_list: HabitList, refresh: Callable) -> None:
-        super().__init__(on_click=self._async_task, icon="delete")
+        super().__init__(on_click=self._async_task, icon=icons.DELETE)
         self.habit = habit
         self.habit_list = habit_list
         self.refresh = refresh

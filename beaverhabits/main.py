@@ -8,6 +8,7 @@ from .app.app import init_auth_routes
 from .app.db import create_db_and_tables
 from .gui import init_gui_routes
 from .demo import init_demo_routes
+from .configs import settings
 
 
 def startup():
@@ -25,7 +26,8 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-app.on_event("startup")(startup)
+if settings.is_dev():
+    app.on_event("startup")(startup)
 
 
 @app.get("/")
