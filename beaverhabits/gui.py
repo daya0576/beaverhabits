@@ -1,9 +1,16 @@
+import datetime
 import os
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 from nicegui import Client, app, ui
+
+from beaverhabits.demo import dummy_habit_list
+from beaverhabits.frontend.add_page import add_page_ui
+from beaverhabits.storage import get_user_storage, session_storage
+from beaverhabits.storage.storage import HabitList
+from beaverhabits.utils import dummy_days
 
 from .app.auth import (
     user_authenticate,
@@ -14,29 +21,63 @@ from .app.auth import (
 from .app.db import User
 from .app.users import current_active_user
 from .configs import settings
-from .frontend.add_page import add_page_ui, add_ui
-from .frontend.index_page import habit_list_ui, index_page_ui
+from .frontend.index_page import index_page_ui
 
-INDEX_PATH = MOUNT_PATH = settings.GUI_MOUNT_PATH
-LOGIN_PATH, REGISTER_PATH = f"{MOUNT_PATH}/login", f"{MOUNT_PATH}/register"
-UNRESTRICTED_PAGE_ROUTES = (LOGIN_PATH, REGISTER_PATH, f"{MOUNT_PATH}/demo")
+DEMO_ROOT_PATH = "/demo"
+GUI_ROOT_PATH = "/gui"
+UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
+
+user_storage = get_user_storage()
 
 
-@ui.page("/")
+def get_or_create_session_habit_list(days: List[datetime.date]) -> HabitList:
+    habit_list = session_storage.get_user_habit_list()
+    if habit_list is not None:
+        return habit_list
+
+    habit_list = dummy_habit_list(days)
+    session_storage.save_user_habit_list(habit_list)
+    return habit_list
+
+
+def get_or_create_user_habit_list(user: User, days: List[datetime.date]) -> HabitList:
+    habit_list = user_storage.get_user_habit_list(user)
+    if habit_list is not None:
+        return habit_list
+
+    habit_list = dummy_habit_list(days)
+    user_storage.save_user_habit_list(user, habit_list)
+    return habit_list
+
+
+@ui.page("/demo")
+async def demo() -> None:
+    days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
+    habit_list = get_or_create_session_habit_list(days)
+    index_page_ui(habit_list, DEMO_ROOT_PATH)
+
+
+@ui.page("/demo/add")
+async def demo_add_page() -> None:
+    days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
+    habit_list = get_or_create_session_habit_list(days)
+    add_page_ui(habit_list, DEMO_ROOT_PATH)
+
+
+@ui.page("/gui")
 async def index_page(
-    request: Request,
     user: User = Depends(current_active_user),
 ) -> None:
-    habits = await settings.storage.get_current_habit_list(
-        user, on_change=habit_list_ui.refresh
-    )
-    index_page_ui(habits, request.scope["root_path"])
+    days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
+    habits = get_or_create_user_habit_list(user, days)
+    index_page_ui(habits, GUI_ROOT_PATH)
 
 
-@ui.page("/add")
+@ui.page("/gui/add")
 async def add_page(user: User = Depends(current_active_user)) -> None:
-    habits = await view.get_current_habit_list(user, on_change=add_ui.refresh)
-    add_page_ui(habits)
+    days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
+    habits = get_or_create_user_habit_list(user, days)
+    add_page_ui(habits, GUI_ROOT_PATH)
 
 
 @ui.page("/login")
@@ -51,7 +92,7 @@ async def login_page() -> Optional[RedirectResponse]:
             ui.notify("email or password wrong!", color="negative")
 
     if await user_check_token(app.storage.user.get("auth_token", None)):
-        return RedirectResponse(INDEX_PATH)
+        return RedirectResponse(GUI_ROOT_PATH)
 
     with ui.card().classes("absolute-center shadow-none w-96"):
         email = ui.input("email").on("keydown.enter", try_login)
@@ -95,9 +136,7 @@ async def register():
 def init_gui_routes(fastapi_app: FastAPI):
     @app.middleware("http")
     async def AuthMiddleware(request: Request, call_next):
-        client_page_routes = (
-            os.path.join(MOUNT_PATH + x) for x in Client.page_routes.values()
-        )
+        client_page_routes = Client.page_routes.values()
         if not await user_check_token(app.storage.user.get("auth_token", None)):
             if (
                 request.url.path in client_page_routes
@@ -120,9 +159,4 @@ def init_gui_routes(fastapi_app: FastAPI):
 
         return await call_next(request)
 
-    ui.run_with(
-        fastapi_app,
-        mount_path=MOUNT_PATH,  # NOTE this can be omitted if you want the paths passed to @ui.page to be at the root
-        storage_secret=settings.NICEGUI_STORAGE_SECRET,
-        dark=True
-    )
+    ui.run_with(fastapi_app, storage_secret=settings.NICEGUI_STORAGE_SECRET, dark=True)

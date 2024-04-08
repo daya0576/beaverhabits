@@ -7,16 +7,7 @@ from beaverhabits.frontend.components import (
 )
 from beaverhabits.frontend.layout import layout
 
-from beaverhabits.storage.storage import HabitList, Priority
-
-
-PRIORITIES = {
-    1: Priority.P1.name,
-    2: Priority.P2.name,
-    3: Priority.P3.name,
-    4: Priority.P4.name,
-    100: "  ",
-}
+from beaverhabits.storage.storage import HabitList
 
 
 @ui.refreshable

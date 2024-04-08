@@ -7,20 +7,25 @@ logging.getLogger("niceGUI").setLevel(logging.INFO)
 
 
 class StorageType(Enum):
-    SESSION = "session"
-    SQLITE = "sqlite"
+    SESSION = "SESSION"
+    SQLITE = "SQLITE"
+    USER_DISK = "USER_DISK"
 
 
 class Settings(BaseSettings):
     ENV: str = "dev"
-    GUI_MOUNT_PATH: str = "/gui"
+
     # UI config
     INDEX_HABIT_ITEM_COUNT: int = 5
-    # System
+
+    # NiceGUI
     NICEGUI_STORAGE_SECRET: str = "dev"
+    GUI_MOUNT_PATH: str = "/gui"
+    DEMO_MOUNT_PATH: str = "/demo"
+
     # Storage
-    STORAGE: StorageType = StorageType.SQLITE
     DATABASE_URL: str = "sqlite+aiosqlite:///./test.db"
+    HABITS_STORAGE: StorageType = StorageType.USER_DISK
 
     def is_dev(self):
         return self.ENV == "dev"

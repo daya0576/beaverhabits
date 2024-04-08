@@ -22,14 +22,6 @@ class CheckedRecord(Protocol):
     __repr__ = __str__
 
 
-class Priority(enum.Enum):
-    P1 = 1
-    P2 = 2
-    P3 = 3
-    P4 = 4
-    NONE = 100
-
-
 class Habit[R: CheckedRecord](Protocol):
     @property
     def name(self) -> str: ...

@@ -1,33 +1,17 @@
 from dataclasses import dataclass, field
 import datetime
-from typing import List, Optional
-import nicegui
+from typing import List
 
-from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, SessionStorage
-
-KEY_NAME = "user_habit_list"
+from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList
 
 
 @dataclass(init=False)
 class DictStorage:
     data: dict = field(default_factory=dict, metadata={"exclude": True})
 
-    def on_update(self, **kwargs):
-        self.data.update(kwargs)
-
-    def on_insert(self, key, item):
-        items = self.data[key]
-        if item not in items:
-            items.append(item)
-
-    @staticmethod
-    def dict_factory(x):
-        exclude_fields = ("data",)
-        return {k: v for (k, v) in x if k not in exclude_fields}
-
 
 @dataclass
-class SessionRecord(CheckedRecord, DictStorage):
+class DictRecord(CheckedRecord, DictStorage):
     """
     # Read (d1~d3)
     persistent    ->     memory      ->     view
@@ -58,7 +42,7 @@ class SessionRecord(CheckedRecord, DictStorage):
 
 
 @dataclass
-class SessionHabit(Habit[SessionRecord], DictStorage):
+class DictHabit(Habit[DictRecord], DictStorage):
     @property
     def name(self) -> str:
         return self.data["name"]
@@ -76,10 +60,10 @@ class SessionHabit(Habit[SessionRecord], DictStorage):
         self.data["star"] = value
 
     @property
-    def records(self) -> list[SessionRecord]:
-        return [SessionRecord(d) for d in self.data["records"]]
+    def records(self) -> list[DictRecord]:
+        return [DictRecord(d) for d in self.data["records"]]
 
-    def get_records_by_days(self, days: List[datetime.date]) -> List[SessionRecord]:
+    def get_records_by_days(self, days: List[datetime.date]) -> List[DictRecord]:
         d_r = {r.day: r for r in self.records}
 
         records = []
@@ -89,38 +73,27 @@ class SessionHabit(Habit[SessionRecord], DictStorage):
                 records.append(persistent_record)
             else:
                 records.append(
-                    SessionRecord({"day": day.strftime("%Y-%m-%d"), "done": False})
+                    DictRecord({"day": day.strftime("%Y-%m-%d"), "done": False})
                 )
         return records
 
-    async def tick(self, record: SessionRecord) -> None:
+    async def tick(self, record: DictRecord) -> None:
         if record.day not in {r.day for r in self.records}:
             self.data["records"].append(record.data)
 
 
 @dataclass
-class SessionHabitList(HabitList[SessionHabit], DictStorage):
+class DictHabitList(HabitList[DictHabit], DictStorage):
     @property
-    def habits(self) -> list[SessionHabit]:
+    def habits(self) -> list[DictHabit]:
         self.sort()
-        return [SessionHabit(d) for d in self.data["habits"]]
+        return [DictHabit(d) for d in self.data["habits"]]
 
     async def add(self, name: str) -> None:
         self.data["habits"].append({"name": name, "records": []})
 
-    async def remove(self, item: SessionHabit) -> None:
+    async def remove(self, item: DictHabit) -> None:
         self.data["habits"].remove(item.data)
 
     def sort(self) -> None:
         self.data["habits"].sort(key=lambda x: x.get("star", False), reverse=True)
-
-
-class NiceGUISessionStorage(SessionStorage[SessionHabitList]):
-    def get_user_habit_list(self) -> Optional[SessionHabitList]:
-        d = nicegui.app.storage.user.get(KEY_NAME)
-        if not d:
-            return None
-        return SessionHabitList(d)
-
-    def save_user_habit_list(self, habit_list: SessionHabitList) -> None:
-        nicegui.app.storage.user[KEY_NAME] = habit_list.data
