@@ -56,6 +56,21 @@ class HabitNameInput(ui.input):
         self.habit.name = e.value
 
 
+class HabitStarCheckbox(ui.checkbox):
+    def __init__(self, habit: Habit, refresh: Callable) -> None:
+        super().__init__("", value=habit.star, on_change=self._async_task)
+        self.habit = habit
+        self.bind_value(habit, "star")
+        self.props(
+            f'checked-icon="{icons.STAR_FULL}" unchecked-icon="{icons.STAR}" keep-color color=grey-8'
+        )
+        self.refresh = refresh
+
+    async def _async_task(self, e: events.ValueChangeEventArguments):
+        self.habit.star = e.value
+        self.refresh()
+
+
 class HabitDeleteButton(ui.button):
     def __init__(self, habit: Habit, habit_list: HabitList, refresh: Callable) -> None:
         super().__init__(on_click=self._async_task, icon=icons.DELETE)

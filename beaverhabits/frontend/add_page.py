@@ -3,7 +3,7 @@ from beaverhabits.frontend.components import (
     HabitAddButton,
     HabitDeleteButton,
     HabitNameInput,
-    HabitPrioritySelect,
+    HabitStarCheckbox,
 )
 from beaverhabits.frontend.layout import layout
 
@@ -25,10 +25,10 @@ def add_ui(habit_list: HabitList):
     for item in habit_list.habits:
         with ui.row().classes("items-center gap-0"):
             name = HabitNameInput(item)
-            name.props("dense").classes("flex-grow")
+            name.props("dense").classes("flex-grow w-64")
 
-            priority = HabitPrioritySelect(item, habit_list, PRIORITIES, add_ui.refresh)
-            priority.props("dense")
+            star = HabitStarCheckbox(item, add_ui.refresh)
+            star.props("flat fab-mini color=grey")
 
             delete = HabitDeleteButton(item, habit_list, add_ui.refresh)
             delete.props("flat fab-mini color=grey")
@@ -39,4 +39,4 @@ def add_page_ui(habit_list: HabitList, root_path: str):
         add_ui(habit_list)
 
     add = HabitAddButton(habit_list, add_ui.refresh)
-    add.props("dense")
+    add.props("dense").classes("w-64")

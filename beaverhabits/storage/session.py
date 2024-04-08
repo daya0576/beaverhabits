@@ -68,12 +68,12 @@ class SessionHabit(Habit[SessionRecord], DictStorage):
         self.data["name"] = value
 
     @property
-    def priority(self) -> int:
-        return self.data.get("priority", 100)
+    def star(self) -> bool:
+        return self.data.get("star", False)
 
-    @priority.setter
-    def priority(self, value: int) -> None:
-        self.data["priority"] = value
+    @star.setter
+    def star(self, value: int) -> None:
+        self.data["star"] = value
 
     @property
     def records(self) -> list[SessionRecord]:
@@ -112,7 +112,7 @@ class SessionHabitList(HabitList[SessionHabit], DictStorage):
         self.data["habits"].remove(item.data)
 
     def sort(self) -> None:
-        self.data["habits"].sort(key=lambda x: x.get("priority") or 100)
+        self.data["habits"].sort(key=lambda x: x.get("star", False), reverse=True)
 
 
 class NiceGUISessionStorage(SessionStorage[SessionHabitList]):
