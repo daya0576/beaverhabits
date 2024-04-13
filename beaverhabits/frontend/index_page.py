@@ -1,5 +1,5 @@
 from nicegui import ui
-from beaverhabits.frontend.components import HabitCheckBox
+from beaverhabits.frontend.components import HabitCheckBox, HabitNameInput, compat_card
 
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.storage import HabitList
@@ -9,6 +9,8 @@ from beaverhabits.configs import settings
 
 HABIT_LIST_RECORD_COUNT = settings.INDEX_HABIT_ITEM_COUNT
 
+row_compat_classes = "pl-4 pr-1 py-0"
+
 
 @ui.refreshable
 def habit_list_ui(habits: HabitList):
@@ -17,11 +19,6 @@ def habit_list_ui(habits: HabitList):
         return
 
     with ui.column().classes("gap-1.5"):
-        # custom padding
-        row_compat_classes = "pl-4 pr-1 py-0"
-        compat_card = (
-            lambda: ui.card().classes(row_compat_classes).classes("shadow-none")
-        )
         # align center vertically
         grid_classes = "w-full gap-0 items-center"
         grid = lambda rows: ui.grid(columns=15, rows=rows).classes(grid_classes)
@@ -43,12 +40,14 @@ def habit_list_ui(habits: HabitList):
         for habit in habits.habits:
             with compat_card():
                 with grid(1):
-                    ui.label(habit.name).classes(left_classes)
+                    name = HabitNameInput(habit)
+                    name.props("borderless").classes(left_classes)
+                    # ui.label(habit.name).classes(left_classes)
                     for record in habit.get_records_by_days(days):
                         checkbox = HabitCheckBox(habit, record, value=record.done)
                         checkbox.classes(right_classes)
 
 
 def index_page_ui(habits: HabitList, root_path: str):
-    with layout(root_path):
+    with layout("Habits", root_path):
         habit_list_ui(habits)

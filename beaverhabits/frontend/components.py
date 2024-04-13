@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import logging
 from typing import Callable, Dict, List, Optional, Type, Union
 from nicegui import events, ui
@@ -7,13 +8,21 @@ from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList
 from beaverhabits.frontend import icons
 
 
+def menu_header(title: str, target: str):
+    link = ui.link(title, target=target)
+    link.classes(
+        "text-semibold text-2xl dark:text-white no-underline hover:no-underline"
+    )
+    return link
+
+
 def compat_menu(name: str, callback: Callable):
     return ui.menu_item(name, callback).classes("items-center")
 
 
 def menu_icon_button(icon_name: str, click: Optional[Callable] = None) -> Button:
     button_props = "flat=true unelevated=true padding=xs backgroup=none"
-    return ui.button(icon=icon_name, color=None).props(button_props)
+    return ui.button(icon=icon_name, color=None, on_click=click).props(button_props)
 
 
 class HabitCheckBox(ui.checkbox):
@@ -51,6 +60,8 @@ class HabitNameInput(ui.input):
     def __init__(self, habit: Habit) -> None:
         super().__init__(value=habit.name, on_change=self._async_task)
         self.habit = habit
+        self.validation = lambda value: "Too long" if len(value) > 18 else None
+        self.props("dense")
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
         self.habit.name = e.value
@@ -89,6 +100,7 @@ class HabitAddButton(ui.input):
         self.habit_list = habit_list
         self.refresh = refresh
         self.on("keydown.enter", self._async_task)
+        self.props("dense")
 
     async def _async_task(self):
         logging.info(f"Adding new habit: {self.value}")
@@ -97,21 +109,8 @@ class HabitAddButton(ui.input):
         self.set_value("")
 
 
-class HabitPrioritySelect(ui.select):
-    def __init__(
-        self,
-        habit: Habit,
-        habit_list: HabitList,
-        options: Union[List, Dict],
-        refresh: Callable,
-    ) -> None:
-        super().__init__(options, on_change=self._async_task, value=habit.priority)
-        self.habit = habit
-        self.habit_list = habit_list
-        self.bind_value(habit, "priority")
-        self.refresh = refresh
-
-    async def _async_task(self, e: events.ValueChangeEventArguments):
-        # self.habit.priority = e.value
-        self.habit_list.sort()
-        self.refresh()
+@contextmanager
+def compat_card():
+    row_compat_classes = "pl-4 pr-1 py-0"
+    with ui.card().classes(row_compat_classes).classes("shadow-none"):
+        yield

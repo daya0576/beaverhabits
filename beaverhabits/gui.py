@@ -1,5 +1,4 @@
 import datetime
-import os
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, Request
@@ -64,6 +63,7 @@ async def demo_add_page() -> None:
     add_page_ui(habit_list, DEMO_ROOT_PATH)
 
 
+@ui.page("/")
 @ui.page("/gui")
 async def index_page(
     user: User = Depends(current_active_user),

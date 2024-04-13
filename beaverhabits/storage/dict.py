@@ -97,3 +97,6 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
 
     def sort(self) -> None:
         self.data["habits"].sort(key=lambda x: x.get("star", False), reverse=True)
+
+    def __len__(self) -> int:
+        return len(self.habits)

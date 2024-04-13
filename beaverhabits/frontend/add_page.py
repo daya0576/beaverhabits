@@ -4,30 +4,36 @@ from beaverhabits.frontend.components import (
     HabitDeleteButton,
     HabitNameInput,
     HabitStarCheckbox,
+    compat_card,
 )
 from beaverhabits.frontend.layout import layout
 
 from beaverhabits.storage.storage import HabitList
 
+grid_classes = "w-full gap-0 items-center"
+
 
 @ui.refreshable
 def add_ui(habit_list: HabitList):
-    habit_list = habit_list
     for item in habit_list.habits:
-        with ui.row().classes("items-center gap-0"):
+        with ui.grid(columns=9, rows=1).classes("w-full gap-0 items-center"):
             name = HabitNameInput(item)
-            name.props("dense").classes("flex-grow w-64")
+            name.classes("col-span-7 break-all")
 
             star = HabitStarCheckbox(item, add_ui.refresh)
             star.props("flat fab-mini color=grey")
+            star.classes("col-span-1")
 
             delete = HabitDeleteButton(item, habit_list, add_ui.refresh)
             delete.props("flat fab-mini color=grey")
+            delete.classes("col-span-1")
 
 
 def add_page_ui(habit_list: HabitList, root_path: str):
-    with layout(root_path):
-        add_ui(habit_list)
+    with layout("Demo", root_path):
+        with ui.column().classes("w-full pl-1 items-center"):
+            add_ui(habit_list)
 
-    add = HabitAddButton(habit_list, add_ui.refresh)
-    add.props("dense").classes("w-64")
+            with ui.grid(columns=9, rows=1).classes("w-full gap-0 items-center"):
+                add = HabitAddButton(habit_list, add_ui.refresh)
+                add.classes("col-span-7")

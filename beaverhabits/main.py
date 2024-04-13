@@ -30,7 +30,7 @@ if settings.is_dev():
     app.on_event("startup")(startup)
 
 
-@app.get("/")
+@app.get("/health")
 def read_root():
     return {"Hello": "World"}
 
