@@ -153,4 +153,5 @@ cython_debug/
 .nicegui
 test.db
 .idea/
+.user/
 
