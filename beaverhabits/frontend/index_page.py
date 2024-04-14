@@ -1,7 +1,9 @@
+import os
 from nicegui import ui
-from beaverhabits.frontend.components import HabitCheckBox, HabitNameInput, compat_card
+from beaverhabits.frontend.components import HabitCheckBox, compat_card
 
 from beaverhabits.frontend.layout import layout
+from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import HabitList
 from beaverhabits.utils import dummy_days
 from beaverhabits.configs import settings
@@ -40,14 +42,17 @@ def habit_list_ui(habits: HabitList):
         for habit in habits.habits:
             with compat_card():
                 with grid(1):
-                    name = HabitNameInput(habit)
-                    name.props("borderless").classes(left_classes)
-                    # ui.label(habit.name).classes(left_classes)
-                    for record in habit.get_records_by_days(days):
-                        checkbox = HabitCheckBox(habit, record, value=record.done)
+                    redirect_page = os.path.join(get_root_path(), "habits", habit.id)
+                    habit_name = ui.link(habit.name, target=redirect_page)
+                    habit_name.classes(
+                        f"{left_classes} dark:text-white no-underline hover:no-underline"
+                    )
+                    d_d = {r.day: r.done for r in habit.records}
+                    for day in days:
+                        checkbox = HabitCheckBox(habit, day, value=d_d.get(day, False))
                         checkbox.classes(right_classes)
 
 
-def index_page_ui(habits: HabitList, root_path: str):
-    with layout("Habits", root_path):
+def index_page_ui(habits: HabitList):
+    with layout():
         habit_list_ui(habits)

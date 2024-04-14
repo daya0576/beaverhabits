@@ -24,6 +24,9 @@ class CheckedRecord(Protocol):
 
 class Habit[R: CheckedRecord](Protocol):
     @property
+    def id(self) -> str | int: ...
+
+    @property
     def name(self) -> str: ...
 
     @name.setter
@@ -38,9 +41,11 @@ class Habit[R: CheckedRecord](Protocol):
     @property
     def records(self) -> List[R]: ...
 
-    def get_records_by_days(self, days: List[datetime.date]) -> List[R]: ...
+    @property
+    def ticked_days(self) -> List[datetime.date]:
+        return [r.day for r in self.records if r.done]
 
-    async def tick(self, record: R) -> None: ...
+    async def tick(self, day: datetime.date, done: bool) -> None: ...
 
     def __str__(self):
         return self.name
@@ -49,6 +54,7 @@ class Habit[R: CheckedRecord](Protocol):
 
 
 class HabitList[H: Habit](Protocol):
+
     @property
     def habits(self) -> List[H]: ...
 
@@ -56,9 +62,9 @@ class HabitList[H: Habit](Protocol):
 
     async def remove(self, item: H) -> None: ...
 
-    def sort(self) -> None: ...
+    async def get_habit_by(self, habit_id: str) -> Optional[H]: ...
 
-    def __len__(self) -> int: ...
+    def sort(self) -> None: ...
 
 
 class SessionStorage[L: HabitList](Protocol):

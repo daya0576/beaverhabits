@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     GUI_MOUNT_PATH: str = "/gui"
     DEMO_MOUNT_PATH: str = "/demo"
 
+    # Quasar custom
+    FIRST_DAY_OF_WEEK: int = 1
+
     # Storage
     DATABASE_URL: str = "sqlite+aiosqlite:///./test.db"
     HABITS_STORAGE: StorageType = StorageType.USER_DISK

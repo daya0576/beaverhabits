@@ -1,15 +1,19 @@
-import datetime
-from typing import List, Optional
+import logging
+from typing import Optional
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from nicegui import Client, app, ui
 
-from beaverhabits.demo import dummy_habit_list
-from beaverhabits.frontend.add_page import add_page_ui
-from beaverhabits.storage import get_user_storage, session_storage
-from beaverhabits.storage.storage import HabitList
-from beaverhabits.utils import dummy_days
+from .views import (
+    get_or_create_session_habit_list,
+    get_or_create_user_habit_list,
+    get_session_habit_list,
+    get_user_habit_list,
+)
+from .frontend.add_page import add_page_ui
+from .storage.meta import GUI_ROOT_PATH
+from .utils import dummy_days
 
 from .app.auth import (
     user_authenticate,
@@ -21,63 +25,70 @@ from .app.db import User
 from .app.users import current_active_user
 from .configs import settings
 from .frontend.index_page import index_page_ui
+from .frontend.habit_page import habit_page_ui
 
-DEMO_ROOT_PATH = "/demo"
-GUI_ROOT_PATH = "/gui"
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
-
-user_storage = get_user_storage()
-
-
-def get_or_create_session_habit_list(days: List[datetime.date]) -> HabitList:
-    habit_list = session_storage.get_user_habit_list()
-    if habit_list is not None:
-        return habit_list
-
-    habit_list = dummy_habit_list(days)
-    session_storage.save_user_habit_list(habit_list)
-    return habit_list
-
-
-def get_or_create_user_habit_list(user: User, days: List[datetime.date]) -> HabitList:
-    habit_list = user_storage.get_user_habit_list(user)
-    if habit_list is not None:
-        return habit_list
-
-    habit_list = dummy_habit_list(days)
-    user_storage.save_user_habit_list(user, habit_list)
-    return habit_list
 
 
 @ui.page("/demo")
 async def demo() -> None:
     days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habit_list = get_or_create_session_habit_list(days)
-    index_page_ui(habit_list, DEMO_ROOT_PATH)
+    index_page_ui(habit_list)
 
 
 @ui.page("/demo/add")
 async def demo_add_page() -> None:
     days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habit_list = get_or_create_session_habit_list(days)
-    add_page_ui(habit_list, DEMO_ROOT_PATH)
+    add_page_ui(habit_list)
 
 
-@ui.page("/")
+@ui.page("/demo/habits/{habit_id}")
+async def demo_habit_page(request: Request, habit_id: str) -> None:
+    habit_list = get_session_habit_list()
+    if habit_list is None:
+        raise HTTPException(status_code=404, detail="Habit list not found")
+
+    habit = await habit_list.get_habit_by(habit_id)
+    if habit is None:
+        logging.warning(f"{request.url} not found")
+        raise HTTPException(status_code=404, detail="Habit not found")
+
+    habit_page_ui(habit)
+
+
 @ui.page("/gui")
+@ui.page("/")
 async def index_page(
     user: User = Depends(current_active_user),
 ) -> None:
     days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habits = get_or_create_user_habit_list(user, days)
-    index_page_ui(habits, GUI_ROOT_PATH)
+    index_page_ui(habits)
 
 
 @ui.page("/gui/add")
 async def add_page(user: User = Depends(current_active_user)) -> None:
     days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habits = get_or_create_user_habit_list(user, days)
-    add_page_ui(habits, GUI_ROOT_PATH)
+    add_page_ui(habits)
+
+
+@ui.page("/gui/habits/{habit_id}")
+async def habit_page(
+    request: Request, habit_id: str, user: User = Depends(current_active_user)
+) -> None:
+    habit_list = get_user_habit_list(user)
+    if habit_list is None:
+        raise HTTPException(status_code=404, detail="Habit list not found")
+
+    habit = await habit_list.get_habit_by(habit_id)
+    if habit is None:
+        logging.warning(f"{request.url} not found")
+        raise HTTPException(status_code=404, detail="Habit not found")
+
+    habit_page_ui(habit)
 
 
 @ui.page("/login")

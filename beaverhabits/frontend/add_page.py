@@ -29,8 +29,8 @@ def add_ui(habit_list: HabitList):
             delete.classes("col-span-1")
 
 
-def add_page_ui(habit_list: HabitList, root_path: str):
-    with layout("Demo", root_path):
+def add_page_ui(habit_list: HabitList):
+    with layout():
         with ui.column().classes("w-full pl-1 items-center"):
             add_ui(habit_list)
 

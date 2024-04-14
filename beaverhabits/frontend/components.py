@@ -1,11 +1,16 @@
 from contextlib import contextmanager
+import datetime
 import logging
-from typing import Callable, Dict, List, Optional, Type, Union
+from typing import Callable, Optional
 from nicegui import events, ui
 from nicegui.elements.button import Button
 
-from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList
+from beaverhabits.storage.dict import DAY_MASK
+from beaverhabits.storage.storage import Habit, HabitList
 from beaverhabits.frontend import icons
+from beaverhabits.configs import settings
+
+strptime = datetime.datetime.strptime
 
 
 def menu_header(title: str, target: str):
@@ -29,16 +34,15 @@ class HabitCheckBox(ui.checkbox):
     def __init__(
         self,
         habit: Habit,
-        record: CheckedRecord,
+        day: datetime.date,
         text: str = "",
         *,
         value: bool = False,
     ) -> None:
         super().__init__(text, value=value, on_change=self._async_task)
         self.habit = habit
-        self.record = record
+        self.day = day
         self._update_style(value)
-        self.bind_value(record, "done")
 
     def _update_style(self, value: bool):
         self.props(
@@ -53,7 +57,7 @@ class HabitCheckBox(ui.checkbox):
         self._update_style(e.value)
         # await asyncio.sleep(5)
         # ui.notify(f"Asynchronous task started: {self.record}")
-        await self.habit.tick(self.record)
+        await self.habit.tick(self.day, e.value)
 
 
 class HabitNameInput(ui.input):
@@ -114,3 +118,22 @@ def compat_card():
     row_compat_classes = "pl-4 pr-1 py-0"
     with ui.card().classes(row_compat_classes).classes("shadow-none"):
         yield
+
+
+class HabitDateInput(ui.date):
+    def __init__(self, habit: Habit) -> None:
+        value = [day.strftime(DAY_MASK) for day in habit.ticked_days]
+        super().__init__(value, on_change=self._async_task)
+        self.props(f"multiple subtitle='{habit.name}'")
+        self.props(f"first-day-of-week='{settings.FIRST_DAY_OF_WEEK}'")
+        self.classes("shadow-none")
+        self.habit = habit
+
+    async def _async_task(self, e: events.ValueChangeEventArguments):
+        old_values = set(self.habit.ticked_days)
+        new_values = set(strptime(x, DAY_MASK).date() for x in e.value)
+
+        for added_item in new_values - old_values:
+            await self.habit.tick(added_item, True)
+        for added_item in old_values - new_values:
+            await self.habit.tick(added_item, False)

@@ -154,4 +154,5 @@ cython_debug/
 test.db
 .idea/
 .user/
+screenshots/
 

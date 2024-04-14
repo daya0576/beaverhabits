@@ -1,8 +1,11 @@
 from dataclasses import dataclass, field
 import datetime
-from typing import List
+from typing import List, Optional
 
 from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList
+from beaverhabits.utils import generate_hash_id
+
+DAY_MASK = "%Y-%m-%d"
 
 
 @dataclass(init=False)
@@ -29,7 +32,7 @@ class DictRecord(CheckedRecord, DictStorage):
 
     @property
     def day(self) -> datetime.date:
-        date = datetime.datetime.strptime(self.data["day"], "%Y-%m-%d")
+        date = datetime.datetime.strptime(self.data["day"], DAY_MASK)
         return date.date()
 
     @property
@@ -43,6 +46,12 @@ class DictRecord(CheckedRecord, DictStorage):
 
 @dataclass
 class DictHabit(Habit[DictRecord], DictStorage):
+    @property
+    def id(self) -> str:
+        if "id" not in self.data:
+            self.data["id"] = generate_hash_id(self.name)
+        return self.data["id"]
+
     @property
     def name(self) -> str:
         return self.data["name"]
@@ -63,23 +72,12 @@ class DictHabit(Habit[DictRecord], DictStorage):
     def records(self) -> list[DictRecord]:
         return [DictRecord(d) for d in self.data["records"]]
 
-    def get_records_by_days(self, days: List[datetime.date]) -> List[DictRecord]:
-        d_r = {r.day: r for r in self.records}
-
-        records = []
-        for day in days:
-            persistent_record = d_r.get(day)
-            if persistent_record:
-                records.append(persistent_record)
-            else:
-                records.append(
-                    DictRecord({"day": day.strftime("%Y-%m-%d"), "done": False})
-                )
-        return records
-
-    async def tick(self, record: DictRecord) -> None:
-        if record.day not in {r.day for r in self.records}:
-            self.data["records"].append(record.data)
+    async def tick(self, day: datetime.date, done: bool) -> None:
+        if record := next((r for r in self.records if r.day == day), None):
+            record.done = done
+        else:
+            data = {"day": day.strftime(DAY_MASK), "done": done}
+            self.data["records"].append(data)
 
 
 @dataclass
@@ -89,14 +87,17 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
         self.sort()
         return [DictHabit(d) for d in self.data["habits"]]
 
+    async def get_habit_by(self, habit_id: str) -> Optional[DictHabit]:
+        for habit in self.habits:
+            if habit.id == habit_id:
+                return habit
+
     async def add(self, name: str) -> None:
-        self.data["habits"].append({"name": name, "records": []})
+        d = {"name": name, "records": [], "id": generate_hash_id(name)}
+        self.data["habits"].append(d)
 
     async def remove(self, item: DictHabit) -> None:
         self.data["habits"].remove(item.data)
 
     def sort(self) -> None:
         self.data["habits"].sort(key=lambda x: x.get("star", False), reverse=True)
-
-    def __len__(self) -> int:
-        return len(self.habits)
