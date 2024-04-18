@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
+from fastapi.routing import APIRoute
 from nicegui import Client, app, ui
 
 from .views import (
@@ -147,7 +148,7 @@ async def register():
 def init_gui_routes(fastapi_app: FastAPI):
     @app.middleware("http")
     async def AuthMiddleware(request: Request, call_next):
-        client_page_routes = Client.page_routes.values()
+        client_page_routes = [route.path for route in app.routes if isinstance(route, APIRoute)]
         if not await user_check_token(app.storage.user.get("auth_token", None)):
             if (
                 request.url.path in client_page_routes
