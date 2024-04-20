@@ -50,7 +50,9 @@ class HabitListModel(TimestampMixin, Base):
     user = relationship("User", back_populates="habit_list")
 
 
-engine = create_async_engine(DATABASE_URL)
+# SSL Mode: https://www.postgresql.org/docs/9.0/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS
+# p.s. asyncpg us ssl instead of sslmode: https://github.com/tortoise/aerich/issues/310
+engine = create_async_engine(DATABASE_URL, connect_args={"ssl": "allow"})
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 
