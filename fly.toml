@@ -6,12 +6,15 @@
 app = "beaverhabits"
 kill_signal = "SIGINT"
 kill_timeout = 5
-mounts = []
 primary_region = "fra"
 processes = []
 
 [build]
 dockerfile="Dockerfile"
+
+[mounts]
+  source = "disk"
+  destination = "/data"
 
 [[services]]
   internal_port = 8080

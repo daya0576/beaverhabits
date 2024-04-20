@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import datetime
-from typing import List, Optional
+from typing import Optional
 
 from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList
 from beaverhabits.utils import generate_hash_id
@@ -84,8 +84,9 @@ class DictHabit(Habit[DictRecord], DictStorage):
 class DictHabitList(HabitList[DictHabit], DictStorage):
     @property
     def habits(self) -> list[DictHabit]:
-        self.sort()
-        return [DictHabit(d) for d in self.data["habits"]]
+        habits = [DictHabit(d) for d in self.data["habits"]]
+        habits.sort(key=lambda x: x.star, reverse=True)
+        return habits
 
     async def get_habit_by(self, habit_id: str) -> Optional[DictHabit]:
         for habit in self.habits:
@@ -98,6 +99,3 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
 
     async def remove(self, item: DictHabit) -> None:
         self.data["habits"].remove(item.data)
-
-    def sort(self) -> None:
-        self.data["habits"].sort(key=lambda x: x.get("star", False), reverse=True)

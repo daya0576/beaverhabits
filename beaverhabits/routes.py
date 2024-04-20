@@ -65,14 +65,14 @@ async def index_page(
     user: User = Depends(current_active_user),
 ) -> None:
     days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
-    habits = get_or_create_user_habit_list(user, days)
+    habits = await get_or_create_user_habit_list(user, days)
     index_page_ui(habits)
 
 
 @ui.page("/gui/add")
 async def add_page(user: User = Depends(current_active_user)) -> None:
     days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
-    habits = get_or_create_user_habit_list(user, days)
+    habits = await get_or_create_user_habit_list(user, days)
     add_page_ui(habits)
 
 
@@ -80,7 +80,7 @@ async def add_page(user: User = Depends(current_active_user)) -> None:
 async def habit_page(
     request: Request, habit_id: str, user: User = Depends(current_active_user)
 ) -> None:
-    habit_list = get_user_habit_list(user)
+    habit_list = await get_user_habit_list(user)
     if habit_list is None:
         raise HTTPException(status_code=404, detail="Habit list not found")
 
@@ -148,7 +148,9 @@ async def register():
 def init_gui_routes(fastapi_app: FastAPI):
     @app.middleware("http")
     async def AuthMiddleware(request: Request, call_next):
-        client_page_routes = [route.path for route in app.routes if isinstance(route, APIRoute)]
+        client_page_routes = [
+            route.path for route in app.routes if isinstance(route, APIRoute)
+        ]
         if not await user_check_token(app.storage.user.get("auth_token", None)):
             if (
                 request.url.path in client_page_routes

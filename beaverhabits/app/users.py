@@ -14,6 +14,8 @@ from .db import User, get_user_db
 
 SECRET = "SECRET"
 
+ONE_MONTH_IN_SECONDS = 60 * 60 * 24 * 30
+
 
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     reset_password_token_secret = SECRET
@@ -41,7 +43,7 @@ bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
 
 def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+    return JWTStrategy(secret=SECRET, lifetime_seconds=ONE_MONTH_IN_SECONDS)
 
 
 auth_backend = AuthenticationBackend(

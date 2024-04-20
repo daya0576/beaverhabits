@@ -1,7 +1,5 @@
 import datetime
-import enum
 from typing import List, Optional, Protocol
-
 
 from beaverhabits.app.db import User
 
@@ -64,8 +62,6 @@ class HabitList[H: Habit](Protocol):
 
     async def get_habit_by(self, habit_id: str) -> Optional[H]: ...
 
-    def sort(self) -> None: ...
-
 
 class SessionStorage[L: HabitList](Protocol):
     def get_user_habit_list(self) -> Optional[L]: ...
@@ -74,6 +70,6 @@ class SessionStorage[L: HabitList](Protocol):
 
 
 class UserStorage[L: HabitList](Protocol):
-    def get_user_habit_list(self, user: User) -> Optional[L]: ...
+    async def get_user_habit_list(self, user: User) -> Optional[L]: ...
 
-    def save_user_habit_list(self, user: User, habit_list: L) -> None: ...
+    async def save_user_habit_list(self, user: User, habit_list: L) -> None: ...

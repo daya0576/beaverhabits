@@ -1,6 +1,5 @@
 from contextlib import contextmanager
 import datetime
-import logging
 from typing import Callable, Optional
 from nicegui import events, ui
 from nicegui.elements.button import Button
@@ -9,6 +8,7 @@ from beaverhabits.storage.dict import DAY_MASK
 from beaverhabits.storage.storage import Habit, HabitList
 from beaverhabits.frontend import icons
 from beaverhabits.configs import settings
+from beaverhabits.logging import logger
 
 strptime = datetime.datetime.strptime
 
@@ -58,6 +58,7 @@ class HabitCheckBox(ui.checkbox):
         # await asyncio.sleep(5)
         # ui.notify(f"Asynchronous task started: {self.record}")
         await self.habit.tick(self.day, e.value)
+        logger.info(f"Day {self.day} ticked: {e.value}")
 
 
 class HabitNameInput(ui.input):
@@ -69,6 +70,7 @@ class HabitNameInput(ui.input):
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
         self.habit.name = e.value
+        logger.info(f"Habit Name changed to {e.value}")
 
 
 class HabitStarCheckbox(ui.checkbox):
@@ -84,6 +86,7 @@ class HabitStarCheckbox(ui.checkbox):
     async def _async_task(self, e: events.ValueChangeEventArguments):
         self.habit.star = e.value
         self.refresh()
+        logger.info(f"Habit Star changed to {e.value}")
 
 
 class HabitDeleteButton(ui.button):
@@ -96,6 +99,7 @@ class HabitDeleteButton(ui.button):
     async def _async_task(self):
         await self.habit_list.remove(self.habit)
         self.refresh()
+        logger.info(f"Deleted habit: {self.habit.name}")
 
 
 class HabitAddButton(ui.input):
@@ -107,10 +111,11 @@ class HabitAddButton(ui.input):
         self.props("dense")
 
     async def _async_task(self):
-        logging.info(f"Adding new habit: {self.value}")
+        logger.info(f"Adding new habit: {self.value}")
         await self.habit_list.add(self.value)
         self.refresh()
         self.set_value("")
+        logger.info(f"Added new habit: {self.value}")
 
 
 @contextmanager
@@ -135,5 +140,7 @@ class HabitDateInput(ui.date):
 
         for added_item in new_values - old_values:
             await self.habit.tick(added_item, True)
+            logger.info(f"Day {added_item} ticked: True")
         for added_item in old_values - new_values:
             await self.habit.tick(added_item, False)
+            logger.info(f"Day {added_item} ticked: False")

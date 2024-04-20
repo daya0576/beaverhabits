@@ -3,11 +3,13 @@ from contextlib import asynccontextmanager
 import logging
 from fastapi import FastAPI
 
-
 from .app.app import init_auth_routes
 from .app.db import create_db_and_tables
 from .routes import init_gui_routes
 from .configs import settings
+from .logging import logger
+
+logger.info("Starting BeaverHabits...")
 
 
 @asynccontextmanager

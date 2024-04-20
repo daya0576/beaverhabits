@@ -8,7 +8,7 @@ logging.getLogger("niceGUI").setLevel(logging.INFO)
 
 class StorageType(Enum):
     SESSION = "SESSION"
-    SQLITE = "SQLITE"
+    USER_DATABASE = "DATABASE"
     USER_DISK = "USER_DISK"
 
 
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # Storage
     DATABASE_URL: str = "sqlite+aiosqlite:///./test.db"
-    HABITS_STORAGE: StorageType = StorageType.USER_DISK
+    HABITS_STORAGE: StorageType = StorageType.USER_DATABASE
 
     def is_dev(self):
         return self.ENV == "dev"

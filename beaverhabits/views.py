@@ -37,15 +37,17 @@ def get_or_create_session_habit_list(days: List[datetime.date]) -> HabitList:
     return habit_list
 
 
-def get_user_habit_list(user: User) -> Optional[HabitList]:
-    return user_storage.get_user_habit_list(user)
+async def get_user_habit_list(user: User) -> Optional[HabitList]:
+    return await user_storage.get_user_habit_list(user)
 
 
-def get_or_create_user_habit_list(user: User, days: List[datetime.date]) -> HabitList:
-    habit_list = get_user_habit_list(user)
+async def get_or_create_user_habit_list(
+    user: User, days: List[datetime.date]
+) -> HabitList:
+    habit_list = await get_user_habit_list(user)
     if habit_list is not None:
         return habit_list
 
     habit_list = dummy_habit_list(days)
-    user_storage.save_user_habit_list(user, habit_list)
+    await user_storage.save_user_habit_list(user, habit_list)
     return habit_list

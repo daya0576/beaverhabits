@@ -1,11 +1,18 @@
 import datetime
-from typing import AsyncGenerator, List
+from typing import AsyncGenerator
 
 from fastapi import Depends
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
-from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String
+from fastapi_users_db_sqlalchemy.generics import GUID
+from sqlalchemy import Column, DateTime, ForeignKey, JSON, func
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    declared_attr,
+    mapped_column,
+    relationship,
+)
 
 from beaverhabits.configs import settings
 
@@ -17,40 +24,30 @@ class Base(DeclarativeBase):
     pass
 
 
-class User(SQLAlchemyBaseUserTableUUID, Base):
-    pass
-
-    habits: Mapped[List["HabitModel"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan"
+class TimestampMixin:
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
     )
 
 
-class HabitModel(Base):
-    __tablename__ = "habit"
+class User(TimestampMixin, SQLAlchemyBaseUserTableUUID, Base):
+
+    habit_list: Mapped["HabitListModel"] = relationship(
+        back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+
+
+class HabitListModel(TimestampMixin, Base):
+    __tablename__ = "habit_list"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(30), nullable=False)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
+    data: Mapped[dict] = mapped_column(JSON, nullable=False)
 
-    user: Mapped["User"] = relationship("User", back_populates="habits")
-    records: Mapped[List["CheckedRecordModel"]] = relationship(back_populates="habit")
-
-    def __repr__(self):
-        return f"<HabitModel(name={self.name})>"
-
-
-class CheckedRecordModel(Base):
-    __tablename__ = "checked_record"
-
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    day: Mapped[datetime.date] = mapped_column(Date, nullable=False)
-    done: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    habit_id = Column(Integer, ForeignKey("habit.id"))
-
-    habit = relationship("HabitModel", back_populates="records")
-
-    def __repr__(self):
-        return f"<CheckedRecordModel(day={self.day}, done={self.done})>"
+    user_id = mapped_column(GUID, ForeignKey("user.id"), index=True)
+    user = relationship("User", back_populates="habit_list")
 
 
 engine = create_async_engine(DATABASE_URL)
