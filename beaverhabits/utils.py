@@ -1,9 +1,10 @@
 import datetime
 import hashlib
-from typing import List
+
+WEEK_DAYS = 7
 
 
-def dummy_days(days: int) -> List[datetime.date]:
+def dummy_days(days: int) -> list[datetime.date]:
     today = datetime.date.today()
     return [today - datetime.timedelta(days=i) for i in reversed(range(days))]
 

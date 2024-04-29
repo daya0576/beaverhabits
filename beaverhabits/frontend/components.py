@@ -1,4 +1,5 @@
-from contextlib import contextmanager
+import calendar
+from dataclasses import dataclass
 import datetime
 from typing import Callable, Optional
 from nicegui import events, ui
@@ -9,6 +10,7 @@ from beaverhabits.storage.storage import Habit, HabitList
 from beaverhabits.frontend import icons
 from beaverhabits.configs import settings
 from beaverhabits.logging import logger
+from beaverhabits.utils import WEEK_DAYS
 
 strptime = datetime.datetime.strptime
 
@@ -78,9 +80,9 @@ class HabitStarCheckbox(ui.checkbox):
         super().__init__("", value=habit.star, on_change=self._async_task)
         self.habit = habit
         self.bind_value(habit, "star")
-        self.props(
-            f'checked-icon="{icons.STAR_FULL}" unchecked-icon="{icons.STAR}" keep-color color=grey-8'
-        )
+        self.props(f'checked-icon="{icons.STAR_FULL}" unchecked-icon="{icons.STAR}"')
+        self.props("flat fab-mini keep-color color=grey-8")
+
         self.refresh = refresh
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
@@ -118,20 +120,16 @@ class HabitAddButton(ui.input):
         logger.info(f"Added new habit: {self.value}")
 
 
-@contextmanager
-def compat_card():
-    row_compat_classes = "pl-4 pr-1 py-0"
-    with ui.card().classes(row_compat_classes).classes("shadow-none"):
-        yield
-
-
 class HabitDateInput(ui.date):
     def __init__(self, habit: Habit) -> None:
         value = [day.strftime(DAY_MASK) for day in habit.ticked_days]
         super().__init__(value, on_change=self._async_task)
-        self.props(f"multiple subtitle='{habit.name}'")
+        self.props(f"multiple")
+        self.props(f"minimal flat=true")
         self.props(f"first-day-of-week='{settings.FIRST_DAY_OF_WEEK}'")
+        # self.props(f"subtitle='{habit.name}'")
         self.classes("shadow-none")
+
         self.habit = habit
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
@@ -144,3 +142,76 @@ class HabitDateInput(ui.date):
         for added_item in old_values - new_values:
             await self.habit.tick(added_item, False)
             logger.info(f"Day {added_item} ticked: False")
+
+
+@dataclass
+class HabitCalendar:
+    """Habit records by weeks"""
+
+    today: datetime.date
+    month_last_day: datetime.date
+
+    headers: list[str]
+    data: list[list[datetime.date]]
+    week_days: list[str]
+
+    @classmethod
+    def build(
+        cls, today: datetime.date, weeks: int, firstweekday: int = calendar.MONDAY
+    ):
+        today = datetime.date.today()
+        month_last_day = cls.get_month_last_day(today)
+
+        data = cls.generate_calendar_days(today, weeks, firstweekday)
+        headers = cls.generate_calendar_headers(data[0])
+        week_day_abbr = [calendar.day_abbr[(firstweekday + i) % 7] for i in range(7)]
+
+        return cls(today, month_last_day, headers, data, week_day_abbr)
+
+    @staticmethod
+    def get_month_last_day(today: datetime.date) -> datetime.date:
+        month_days = calendar.monthrange(today.year, today.month)[1]
+        return datetime.date(today.year, today.month, month_days)
+
+    @staticmethod
+    def generate_calendar_headers(days: list[datetime.date]) -> list[str]:
+        if not days:
+            return []
+
+        result = []
+        month = year = None
+        for day in days:
+            cur_month, cur_year = day.month, day.year
+            if cur_month != month:
+                result.append(calendar.month_abbr[cur_month])
+                month = cur_month
+                continue
+            if cur_year != year:
+                result.append(str(cur_year))
+                year = cur_year
+                continue
+            result.append("")
+
+        return result
+
+    @staticmethod
+    def generate_calendar_days(
+        today: datetime.date,
+        total_days: int,
+        firstweekday: int = calendar.MONDAY,  # 0 = Monday, 6 = Sunday
+    ) -> list[list[datetime.date]]:
+        # First find last day of the month
+        last_date_of_month = HabitCalendar.get_month_last_day(today)
+
+        # Then find the last day of the week
+        lastweekday = (firstweekday - 1) % 7
+        days_delta = (lastweekday - last_date_of_month.weekday()) % 7
+        last_date_of_calendar = last_date_of_month + datetime.timedelta(days=days_delta)
+
+        return [
+            [
+                last_date_of_calendar - datetime.timedelta(days=i, weeks=j)
+                for j in reversed(range(total_days))
+            ]
+            for i in reversed(range(WEEK_DAYS))
+        ]

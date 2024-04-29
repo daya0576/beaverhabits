@@ -9,14 +9,16 @@ A light-weighted app to track your fleeting life.
 1. Pages
    - [x] Index page
    - [x] Habit list page
-   - [ ] Habit detail page, e.g. records over years
+   - [x] Habit detail page, e.g. records over years
+     - [x] Dates view by month
+     - [ ] Calendar heatmap over years
 2. Storage:
    - [x] Session-based disk storage
-   - [ ] User-based disk storage
-   - [ ] User-based sqlite storage
+   - [x] User-based disk storage
+   - [x] User-based sqlite storage
 3. CICD:
    - [x] Custom domain
-   - [ ] Global CDN
+   - [ ] Global CDN with edge instances
    - [ ] Self-hosting support
    - [ ] Unit tests & deployment pipeline
 4. Others:

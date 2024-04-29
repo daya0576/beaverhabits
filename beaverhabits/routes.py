@@ -4,7 +4,8 @@ from typing import Optional
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRoute
-from nicegui import Client, app, ui
+from nicegui import app, ui
+from . import const
 
 from .views import (
     get_or_create_session_habit_list,
@@ -173,4 +174,9 @@ def init_gui_routes(fastapi_app: FastAPI):
 
         return await call_next(request)
 
-    ui.run_with(fastapi_app, storage_secret=settings.NICEGUI_STORAGE_SECRET, dark=True)
+    ui.run_with(
+        fastapi_app,
+        title=const.PAGE_TITLE,
+        storage_secret=settings.NICEGUI_STORAGE_SECRET,
+        dark=True,
+    )

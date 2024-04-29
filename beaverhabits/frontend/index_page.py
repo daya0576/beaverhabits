@@ -1,7 +1,7 @@
 import os
 from nicegui import ui
-from beaverhabits.frontend.components import HabitCheckBox, compat_card
 
+from beaverhabits.frontend.components import HabitCheckBox
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import HabitList
@@ -40,7 +40,7 @@ def habit_list_ui(habits: HabitList):
                     label.style("color: #9e9e9e; font-size: 85%; font-weight: 500")
 
         for habit in habits.habits:
-            with compat_card():
+            with ui.card().classes(row_compat_classes).classes("shadow-none"):
                 with grid(1):
                     redirect_page = os.path.join(get_root_path(), "habits", habit.id)
                     habit_name = ui.link(habit.name, target=redirect_page)

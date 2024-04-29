@@ -52,7 +52,10 @@ class HabitListModel(TimestampMixin, Base):
 
 # SSL Mode: https://www.postgresql.org/docs/9.0/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS
 # p.s. asyncpg us ssl instead of sslmode: https://github.com/tortoise/aerich/issues/310
-engine = create_async_engine(DATABASE_URL, connect_args={"ssl": "allow"})
+connect_args = {}
+if settings.DATABASE_URL.startswith("postgresql"):
+    connect_args = {"ssl": "allow"}
+engine = create_async_engine(DATABASE_URL, connect_args=connect_args)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 

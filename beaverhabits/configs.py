@@ -1,3 +1,4 @@
+import calendar
 from enum import Enum
 from pydantic_settings import BaseSettings
 
@@ -24,7 +25,7 @@ class Settings(BaseSettings):
     DEMO_MOUNT_PATH: str = "/demo"
 
     # Quasar custom
-    FIRST_DAY_OF_WEEK: int = 1
+    FIRST_DAY_OF_WEEK: int = calendar.MONDAY
 
     # Storage
     DATABASE_URL: str = "sqlite+aiosqlite:///./test.db"

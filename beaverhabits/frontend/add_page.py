@@ -4,7 +4,6 @@ from beaverhabits.frontend.components import (
     HabitDeleteButton,
     HabitNameInput,
     HabitStarCheckbox,
-    compat_card,
 )
 from beaverhabits.frontend.layout import layout
 
