@@ -40,7 +40,7 @@ class Habit[R: CheckedRecord](Protocol):
     def records(self) -> List[R]: ...
 
     @property
-    def ticked_days(self) -> List[datetime.date]:
+    def ticked_days(self) -> list[datetime.date]:
         return [r.day for r in self.records if r.done]
 
     async def tick(self, day: datetime.date, done: bool) -> None: ...

@@ -120,28 +120,57 @@ class HabitAddButton(ui.input):
         logger.info(f"Added new habit: {self.value}")
 
 
+TODAY = "today"
+
+
 class HabitDateInput(ui.date):
-    def __init__(self, habit: Habit) -> None:
-        value = [day.strftime(DAY_MASK) for day in habit.ticked_days]
-        super().__init__(value, on_change=self._async_task)
+    def __init__(
+        self, today: datetime.date, habit: Habit, ticked_data: dict[datetime.date, bool]
+    ) -> None:
+        self.today = today
+        self.habit = habit
+        self.ticked_data = ticked_data
+        self.init = True
+        self.default_date = today
+        super().__init__(self.ticked_days, on_change=self._async_task)
+
         self.props(f"multiple")
         self.props(f"minimal flat=true")
+        self.props(f"default-date={self.today.strftime(DAY_MASK)}")
+        logger.info(f"init default-date={today.strftime(DAY_MASK)}")
         self.props(f"first-day-of-week='{settings.FIRST_DAY_OF_WEEK}'")
         # self.props(f"subtitle='{habit.name}'")
         self.classes("shadow-none")
 
-        self.habit = habit
+        self.bind_value_from(self, "ticked_days")
+
+    @property
+    def ticked_days(self) -> list[str]:
+        result = [k.strftime(DAY_MASK) for k, v in self.ticked_data.items() if v]
+        # workaround to disable auto focus
+        result.append(TODAY)
+        # logger.info(result)
+        return result
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
         old_values = set(self.habit.ticked_days)
-        new_values = set(strptime(x, DAY_MASK).date() for x in e.value)
+        new_values = set(strptime(x, DAY_MASK).date() for x in e.value if x != TODAY)
 
-        for added_item in new_values - old_values:
-            await self.habit.tick(added_item, True)
-            logger.info(f"Day {added_item} ticked: True")
-        for added_item in old_values - new_values:
-            await self.habit.tick(added_item, False)
-            logger.info(f"Day {added_item} ticked: False")
+        for day in new_values - old_values:
+            self.props(remove="default-date")
+            self.props(f"default-date={day.strftime(DAY_MASK)}")
+            self.ticked_data[day] = True
+            
+            await self.habit.tick(day, True)
+            logger.info(f"QDate day {day} ticked: True")
+        
+        for day in old_values - new_values:
+            self.props(remove="default-date")
+            self.props(f"default-date={day.strftime(DAY_MASK)}")
+            self.ticked_data[day] = False
+            
+            await self.habit.tick(day, False)
+            logger.info(f"QDate day {day} ticked: False")
 
 
 @dataclass
@@ -215,3 +244,47 @@ class HabitCalendar:
             ]
             for i in reversed(range(WEEK_DAYS))
         ]
+
+
+class CalendarCheckBox(ui.checkbox):
+    def __init__(
+        self,
+        habit: Habit,
+        day: datetime.date,
+        today: datetime.date,
+        ticked_data: dict[datetime.date, bool],
+    ) -> None:
+        self.habit = habit
+        self.day = day
+        self.today = today
+        self.ticked_data = ticked_data
+
+        value = ticked_data.get(day, False)
+        super().__init__("", value=value, on_change=self._async_task)
+
+        self.classes("inline-block")
+        self.props("dense")
+        unchecked_icon, checked_icon = self._icon_svg()
+        self.props(f'unchecked-icon="{unchecked_icon}"')
+        self.props(f'checked-icon="{checked_icon}"')
+
+        self.bind_value_from(self, "ticked")
+
+    @property
+    def ticked(self):
+        return self.ticked_data.get(self.day, False)
+
+    def _icon_svg(self):
+        unchecked_color, checked_color = "rgb(54,54,54)", "rgb(103,150,207)"
+        return (
+            icons.SQUARE.format(color=unchecked_color, text=self.day.day),
+            icons.SQUARE.format(color=checked_color, text=self.day.day),
+        )
+
+    async def _async_task(self, e: events.ValueChangeEventArguments):
+        # Update state data
+        self.ticked_data[self.day] = e.value
+
+        # Update persistent storage
+        await self.habit.tick(self.day, e.value)
+        logger.info(f"Calendar Day {self.day} ticked: {e.value}")

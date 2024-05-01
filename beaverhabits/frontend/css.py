@@ -15,3 +15,11 @@ body.desktop .q-checkbox--dense:not(.disabled):focus .q-checkbox__inner:before, 
     // opacity: 0.5;
 }
 """
+CALENDAR_CSS = """
+.q-date__calendar, .q-date__actions {
+    padding: 0;
+}
+.q-date__calendar {
+    min-height: 0;
+}
+"""
