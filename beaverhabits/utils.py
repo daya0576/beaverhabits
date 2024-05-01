@@ -9,7 +9,7 @@ def dummy_days(days: int) -> list[datetime.date]:
     return [today - datetime.timedelta(days=i) for i in reversed(range(days))]
 
 
-def generate_hash_id(name: str) -> str:
+def generate_short_hash(name: str) -> str:
     h = hashlib.new("sha1")
     h.update(name.encode())
     h.update(str(datetime.datetime.now()).encode())

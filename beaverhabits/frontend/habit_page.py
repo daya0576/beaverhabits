@@ -29,7 +29,7 @@ def habit_page(habit: Habit):
         HabitDateInput(today, habit, ticked_data)
 
     with card():
-        ui.label("Calendar").classes("text-base")
+        ui.label("Calendar").classes("text-lg")
         ui.label().style("height: 8px")
         # Headers
         with ui.row(wrap=False).classes("gap-0"):

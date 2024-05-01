@@ -3,7 +3,7 @@ import datetime
 from typing import Optional
 
 from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList
-from beaverhabits.utils import generate_hash_id
+from beaverhabits.utils import generate_short_hash
 
 DAY_MASK = "%Y-%m-%d"
 MONTH_MASK = "%Y/%m"
@@ -50,7 +50,7 @@ class DictHabit(Habit[DictRecord], DictStorage):
     @property
     def id(self) -> str:
         if "id" not in self.data:
-            self.data["id"] = generate_hash_id(self.name)
+            self.data["id"] = generate_short_hash(self.name)
         return self.data["id"]
 
     @property
@@ -95,7 +95,7 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
                 return habit
 
     async def add(self, name: str) -> None:
-        d = {"name": name, "records": [], "id": generate_hash_id(name)}
+        d = {"name": name, "records": [], "id": generate_short_hash(name)}
         self.data["habits"].append(d)
 
     async def remove(self, item: DictHabit) -> None:

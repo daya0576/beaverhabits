@@ -256,9 +256,7 @@ class CalendarCheckBox(ui.checkbox):
         self.day = day
         self.today = today
         self.ticked_data = ticked_data
-
-        value = ticked_data.get(day, False)
-        super().__init__("", value=value, on_change=self._async_task)
+        super().__init__("", value=self.ticked, on_change=self._async_task)
 
         self.classes("inline-block")
         self.props("dense")
