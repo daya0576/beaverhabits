@@ -5,7 +5,7 @@ from typing import Callable, Optional
 from nicegui import events, ui
 from nicegui.elements.button import Button
 
-from beaverhabits.storage.dict import DAY_MASK
+from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.storage import Habit, HabitList
 from beaverhabits.frontend import icons
 from beaverhabits.configs import settings
@@ -136,8 +136,7 @@ class HabitDateInput(ui.date):
 
         self.props(f"multiple")
         self.props(f"minimal flat=true")
-        self.props(f"default-date={self.today.strftime(DAY_MASK)}")
-        logger.info(f"init default-date={today.strftime(DAY_MASK)}")
+        self.props(f"default-year-month={self.today.strftime(MONTH_MASK)}")
         self.props(f"first-day-of-week='{settings.FIRST_DAY_OF_WEEK}'")
         # self.props(f"subtitle='{habit.name}'")
         self.classes("shadow-none")
@@ -149,7 +148,6 @@ class HabitDateInput(ui.date):
         result = [k.strftime(DAY_MASK) for k, v in self.ticked_data.items() if v]
         # workaround to disable auto focus
         result.append(TODAY)
-        # logger.info(result)
         return result
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
@@ -157,18 +155,18 @@ class HabitDateInput(ui.date):
         new_values = set(strptime(x, DAY_MASK).date() for x in e.value if x != TODAY)
 
         for day in new_values - old_values:
-            self.props(remove="default-date")
-            self.props(f"default-date={day.strftime(DAY_MASK)}")
+            # self.props(remove="default-date")
+            self.props(f"default-year-month={day.strftime(MONTH_MASK)}")
             self.ticked_data[day] = True
-            
+
             await self.habit.tick(day, True)
             logger.info(f"QDate day {day} ticked: True")
-        
+
         for day in old_values - new_values:
-            self.props(remove="default-date")
-            self.props(f"default-date={day.strftime(DAY_MASK)}")
+            # self.props(remove="default-date")
+            self.props(f"default-year-month={day.strftime(MONTH_MASK)}")
             self.ticked_data[day] = False
-            
+
             await self.habit.tick(day, False)
             logger.info(f"QDate day {day} ticked: False")
 

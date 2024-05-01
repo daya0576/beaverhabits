@@ -6,6 +6,7 @@ from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList
 from beaverhabits.utils import generate_hash_id
 
 DAY_MASK = "%Y-%m-%d"
+MONTH_MASK = "%Y/%m"
 
 
 @dataclass(init=False)
