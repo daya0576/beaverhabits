@@ -1,15 +1,16 @@
 import calendar
-from dataclasses import dataclass
 import datetime
+from dataclasses import dataclass
 from typing import Callable, Optional
+
 from nicegui import events, ui
 from nicegui.elements.button import Button
 
+from beaverhabits.configs import settings
+from beaverhabits.frontend import icons
+from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.frontend import icons
-from beaverhabits.configs import settings
-from beaverhabits.logging import logger
 from beaverhabits.utils import WEEK_DAYS
 
 strptime = datetime.datetime.strptime
@@ -135,9 +136,11 @@ class HabitDateInput(ui.date):
         super().__init__(self.ticked_days, on_change=self._async_task)
 
         self.props(f"multiple")
-        self.props(f"minimal flat=true")
+        self.props(f"minimal flat")
         self.props(f"default-year-month={self.today.strftime(MONTH_MASK)}")
-        self.props(f"first-day-of-week='{settings.FIRST_DAY_OF_WEEK}'")
+        qdate_week_first_day = (settings.FIRST_DAY_OF_WEEK + 1) % 7
+        self.props(f"first-day-of-week='{qdate_week_first_day}'")
+        self.props("today-btn")
         # self.props(f"subtitle='{habit.name}'")
         self.classes("shadow-none")
 
@@ -172,7 +175,7 @@ class HabitDateInput(ui.date):
 
 
 @dataclass
-class HabitCalendar:
+class CalendarHeatmap:
     """Habit records by weeks"""
 
     today: datetime.date
@@ -224,11 +227,11 @@ class HabitCalendar:
     @staticmethod
     def generate_calendar_days(
         today: datetime.date,
-        total_days: int,
+        total_weeks: int,
         firstweekday: int = calendar.MONDAY,  # 0 = Monday, 6 = Sunday
     ) -> list[list[datetime.date]]:
         # First find last day of the month
-        last_date_of_month = HabitCalendar.get_month_last_day(today)
+        last_date_of_month = CalendarHeatmap.get_month_last_day(today)
 
         # Then find the last day of the week
         lastweekday = (firstweekday - 1) % 7
@@ -238,7 +241,7 @@ class HabitCalendar:
         return [
             [
                 last_date_of_calendar - datetime.timedelta(days=i, weeks=j)
-                for j in reversed(range(total_days))
+                for j in reversed(range(total_weeks))
             ]
             for i in reversed(range(WEEK_DAYS))
         ]
@@ -251,6 +254,7 @@ class CalendarCheckBox(ui.checkbox):
         day: datetime.date,
         today: datetime.date,
         ticked_data: dict[datetime.date, bool],
+        is_bind_data: bool = True,
     ) -> None:
         self.habit = habit
         self.day = day
@@ -264,7 +268,8 @@ class CalendarCheckBox(ui.checkbox):
         self.props(f'unchecked-icon="{unchecked_icon}"')
         self.props(f'checked-icon="{checked_icon}"')
 
-        self.bind_value_from(self, "ticked")
+        if is_bind_data:
+            self.bind_value_from(self, "ticked")
 
     @property
     def ticked(self):
@@ -284,3 +289,37 @@ class CalendarCheckBox(ui.checkbox):
         # Update persistent storage
         await self.habit.tick(self.day, e.value)
         logger.info(f"Calendar Day {self.day} ticked: {e.value}")
+
+
+def habit_heat_map(
+    habit: Habit,
+    habit_calendar: CalendarHeatmap,
+    ticked_data: dict[datetime.date, bool] | None = None,
+):
+    today = habit_calendar.today
+
+    # Bind to external state data
+    is_bind_data = True
+    if ticked_data is None:
+        ticked_data = {x: True for x in habit.ticked_days}
+        is_bind_data = False
+
+    # Headers
+    with ui.row(wrap=False).classes("gap-0"):
+        for header in habit_calendar.headers:
+            header_lable = ui.label(header).classes("text-gray-300 text-center")
+            header_lable.style("width: 20px; line-height: 18px; font-size: 9px;")
+        ui.label().style("width: 22px;")
+
+    # Day matrix
+    for i, weekday_days in enumerate(habit_calendar.data):
+        with ui.row(wrap=False).classes("gap-0"):
+            for day in weekday_days:
+                if day <= habit_calendar.month_last_day:
+                    CalendarCheckBox(habit, day, today, ticked_data, is_bind_data)
+                else:
+                    ui.label().style("width: 20px; height: 20px;")
+
+            week_day_abbr_label = ui.label(habit_calendar.week_days[i])
+            week_day_abbr_label.classes("indent-1.5 text-gray-300")
+            week_day_abbr_label.style("width: 22px; line-height: 20px; font-size: 9px;")

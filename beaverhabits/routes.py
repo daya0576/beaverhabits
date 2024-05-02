@@ -5,18 +5,8 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRoute
 from nicegui import app, ui
+
 from . import const
-
-from .views import (
-    get_or_create_session_habit_list,
-    get_or_create_user_habit_list,
-    get_session_habit_list,
-    get_user_habit_list,
-)
-from .frontend.add_page import add_page_ui
-from .storage.meta import GUI_ROOT_PATH
-from .utils import dummy_days
-
 from .app.auth import (
     user_authenticate,
     user_check_token,
@@ -26,8 +16,17 @@ from .app.auth import (
 from .app.db import User
 from .app.users import current_active_user
 from .configs import settings
-from .frontend.index_page import index_page_ui
+from .frontend.add_page import add_page_ui
 from .frontend.habit_page import habit_page_ui
+from .frontend.index_page import index_page_ui
+from .storage.meta import GUI_ROOT_PATH
+from .utils import dummy_days
+from .views import (
+    get_or_create_session_habit_list,
+    get_or_create_user_habit_list,
+    get_session_habit_list,
+    get_user_habit_list,
+)
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
 

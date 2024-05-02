@@ -1,4 +1,5 @@
 from nicegui import ui
+
 from beaverhabits.frontend.components import (
     HabitAddButton,
     HabitDeleteButton,
@@ -6,7 +7,6 @@ from beaverhabits.frontend.components import (
     HabitStarCheckbox,
 )
 from beaverhabits.frontend.layout import layout
-
 from beaverhabits.storage.storage import HabitList
 
 grid_classes = "w-full gap-0 items-center"
