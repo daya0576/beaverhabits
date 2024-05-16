@@ -16,6 +16,12 @@ from beaverhabits.utils import WEEK_DAYS
 strptime = datetime.datetime.strptime
 
 
+def link(text: str, target: str):
+    return ui.link(text, target=target).classes(
+        "dark:text-white  no-underline hover:no-underline"
+    )
+
+
 def menu_header(title: str, target: str):
     link = ui.link(title, target=target)
     link.classes(

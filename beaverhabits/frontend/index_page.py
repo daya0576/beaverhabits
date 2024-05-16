@@ -1,7 +1,7 @@
 import os
 from nicegui import ui
 
-from beaverhabits.frontend.components import HabitCheckBox
+from beaverhabits.frontend.components import HabitCheckBox, link
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import HabitList
@@ -43,10 +43,9 @@ def habit_list_ui(habits: HabitList):
             with ui.card().classes(row_compat_classes).classes("shadow-none"):
                 with grid(1):
                     redirect_page = os.path.join(get_root_path(), "habits", habit.id)
-                    habit_name = ui.link(habit.name, target=redirect_page)
-                    habit_name.classes(
-                        f"{left_classes} dark:text-white no-underline hover:no-underline"
-                    )
+                    habit_name = link(habit.name, target=redirect_page)
+                    habit_name.classes(left_classes)
+
                     d_d = {r.day: r.done for r in habit.records}
                     for day in days:
                         checkbox = HabitCheckBox(habit, day, value=d_d.get(day, False))

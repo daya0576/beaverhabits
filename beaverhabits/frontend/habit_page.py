@@ -8,9 +8,11 @@ from beaverhabits.frontend.components import (
     CalendarHeatmap,
     HabitDateInput,
     habit_heat_map,
+    link,
 )
 from beaverhabits.frontend.css import CALENDAR_CSS, CHECK_BOX_CSS
 from beaverhabits.frontend.layout import layout
+from beaverhabits.storage.meta import get_habit_heatmap_path
 from beaverhabits.storage.storage import Habit
 
 WEEKS_TO_DISPLAY = 15
@@ -34,11 +36,8 @@ def habit_page(habit: Habit):
         today = datetime.date.today()
         HabitDateInput(today, habit, ticked_data)
 
-    with ui.dialog() as dialog, ui.card():
-        ui.label("Hello world!")
-        ui.button("Close", on_click=dialog.close)
     with card():
-        ui.label("Last 3 Months").classes("text-base")
+        link("Last 3 Months", get_habit_heatmap_path(habit)).classes("text-base")
         habit_heat_map(habit, habit_calendar, ticked_data=ticked_data)
 
 

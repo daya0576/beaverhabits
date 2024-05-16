@@ -6,6 +6,8 @@ from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRoute
 from nicegui import app, ui
 
+from beaverhabits.frontend.cal_heatmap_page import heatmap_page
+
 from . import const
 from .app.auth import (
     user_authenticate,
@@ -24,8 +26,9 @@ from .utils import dummy_days
 from .views import (
     get_or_create_session_habit_list,
     get_or_create_user_habit_list,
+    get_session_habit,
+    get_user_habit,
     get_session_habit_list,
-    get_user_habit_list,
 )
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
@@ -46,16 +49,8 @@ async def demo_add_page() -> None:
 
 
 @ui.page("/demo/habits/{habit_id}")
-async def demo_habit_page(request: Request, habit_id: str) -> None:
-    habit_list = get_session_habit_list()
-    if habit_list is None:
-        raise HTTPException(status_code=404, detail="Habit list not found")
-
-    habit = await habit_list.get_habit_by(habit_id)
-    if habit is None:
-        logging.warning(f"{request.url} not found")
-        raise HTTPException(status_code=404, detail="Habit not found")
-
+async def demo_habit_page(habit_id: str) -> None:
+    habit = await get_session_habit(habit_id)
     habit_page_ui(habit)
 
 
@@ -77,19 +72,17 @@ async def add_page(user: User = Depends(current_active_user)) -> None:
 
 
 @ui.page("/gui/habits/{habit_id}")
-async def habit_page(
-    request: Request, habit_id: str, user: User = Depends(current_active_user)
-) -> None:
-    habit_list = await get_user_habit_list(user)
-    if habit_list is None:
-        raise HTTPException(status_code=404, detail="Habit list not found")
-
-    habit = await habit_list.get_habit_by(habit_id)
-    if habit is None:
-        logging.warning(f"{request.url} not found")
-        raise HTTPException(status_code=404, detail="Habit not found")
-
+async def habit_page(habit_id: str, user: User = Depends(current_active_user)) -> None:
+    habit = await get_user_habit(user, habit_id)
     habit_page_ui(habit)
+
+
+@ui.page("/gui/habits/{habit_id}/heatmap")
+async def demo_habit_page_heatmap(
+    habit_id: str, user: User = Depends(current_active_user)
+) -> None:
+    habit = await get_user_habit(user, habit_id)
+    heatmap_page(habit)
 
 
 @ui.page("/login")

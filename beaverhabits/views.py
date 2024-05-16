@@ -2,9 +2,11 @@ import datetime
 import random
 from typing import List, Optional
 
+from fastapi import HTTPException
+
 from beaverhabits.app.db import User
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
-from beaverhabits.storage.storage import HabitList
+from beaverhabits.storage.storage import Habit, HabitList
 from beaverhabits.storage import get_user_storage, session_storage
 from beaverhabits.utils import generate_short_hash
 
@@ -26,8 +28,19 @@ def dummy_habit_list(days: List[datetime.date]):
     return DictHabitList({"habits": items})
 
 
-def get_session_habit_list() -> Optional[HabitList]:
-    return session_storage.get_user_habit_list()
+def get_session_habit_list() -> HabitList:
+    habit_list = session_storage.get_user_habit_list()
+    if habit_list is None:
+        raise HTTPException(status_code=404, detail="Habit list not found")
+    return habit_list
+
+
+async def get_session_habit(habit_id: str) -> Habit:
+    habit_list = get_session_habit_list()
+    habit = await habit_list.get_habit_by(habit_id)
+    if habit is None:
+        raise HTTPException(status_code=404, detail="Habit not found")
+    return habit
 
 
 def get_or_create_session_habit_list(days: List[datetime.date]) -> HabitList:
@@ -39,8 +52,23 @@ def get_or_create_session_habit_list(days: List[datetime.date]) -> HabitList:
     return habit_list
 
 
-async def get_user_habit_list(user: User) -> Optional[HabitList]:
-    return await user_storage.get_user_habit_list(user)
+async def get_user_habit_list(user: User) -> HabitList:
+    habit_list = await user_storage.get_user_habit_list(user)
+    if habit_list is None:
+        raise HTTPException(status_code=404, detail="Habit list not found")
+    return habit_list
+
+
+async def get_user_habit(user: User, habit_id: str) -> Habit:
+    habit_list = await get_user_habit_list(user)
+    if habit_list is None:
+        raise HTTPException(status_code=404, detail="Habit list not found")
+
+    habit = await habit_list.get_habit_by(habit_id)
+    if habit is None:
+        raise HTTPException(status_code=404, detail="Habit not found")
+
+    return habit
 
 
 async def get_or_create_user_habit_list(
