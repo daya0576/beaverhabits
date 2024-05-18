@@ -15,6 +15,7 @@ sqlalchemy = {extras = ["asyncio"], version = "^2.0.29"}
 asyncpg = "^0.29.0"
 aiosqlite = "^0.20.0"
 libsass = "^0.23.0"
+pytz = "^2024.1"
 
 [tool.poetry.group.dev.dependencies]
 icecream = "^2.1.3"

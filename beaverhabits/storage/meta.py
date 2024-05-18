@@ -11,6 +11,10 @@ DEMO_ROOT_PATH = "/demo"
 GUI_ROOT_PATH = "/gui"
 
 
+def is_page_demo() -> bool:
+    return context.client.page.path.startswith(DEMO_ROOT_PATH)
+
+
 def get_root_path() -> str:
     path = context.client.page.path
     return DEMO_ROOT_PATH if path.startswith(DEMO_ROOT_PATH) else GUI_ROOT_PATH

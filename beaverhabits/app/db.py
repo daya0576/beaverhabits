@@ -4,12 +4,11 @@ from typing import AsyncGenerator
 from fastapi import Depends
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 from fastapi_users_db_sqlalchemy.generics import GUID
-from sqlalchemy import Column, DateTime, ForeignKey, JSON, func
+from sqlalchemy import DateTime, ForeignKey, JSON, func
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
-    declared_attr,
     mapped_column,
     relationship,
 )

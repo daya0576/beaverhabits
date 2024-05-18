@@ -5,9 +5,9 @@ from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRoute
 from nicegui import app, ui
 
-from beaverhabits.frontend.cal_heatmap_page import heatmap_page
 
 from . import const
+from .utils import dummy_days, get_or_create_user_timezone
 from .app.auth import (
     user_authenticate,
     user_check_token,
@@ -20,9 +20,10 @@ from .configs import settings
 from .frontend.add_page import add_page_ui
 from .frontend.habit_page import habit_page_ui
 from .frontend.index_page import index_page_ui
+from .frontend.cal_heatmap_page import heatmap_page
 from .storage.meta import GUI_ROOT_PATH
-from .utils import dummy_days
 from . import views
+from .logging import logger
 
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
@@ -32,7 +33,7 @@ UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
 async def demo_index_page() -> None:
     days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habit_list = views.get_or_create_session_habit_list(days)
-    index_page_ui(habit_list)
+    await index_page_ui(habit_list)
 
 
 @ui.page("/demo/add")
@@ -55,7 +56,7 @@ async def index_page(
 ) -> None:
     days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habits = await views.get_or_create_user_habit_list(user, days)
-    index_page_ui(habits)
+    await index_page_ui(habits)
 
 
 @ui.page("/gui/add")
@@ -159,6 +160,8 @@ def init_gui_routes(fastapi_app: FastAPI):
         )
 
         return await call_next(request)
+
+    # app.on_connect(get_or_create_user_timezone)
 
     ui.run_with(
         fastapi_app,

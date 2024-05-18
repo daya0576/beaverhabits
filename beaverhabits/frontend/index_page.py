@@ -5,7 +5,10 @@ from beaverhabits.frontend.components import HabitCheckBox, link
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import HabitList
-from beaverhabits.utils import dummy_days
+from beaverhabits.utils import (
+    dummy_days,
+    get_or_create_user_timezone,
+)
 from beaverhabits.configs import settings
 
 
@@ -52,6 +55,6 @@ def habit_list_ui(habits: HabitList):
                         checkbox.classes(right_classes)
 
 
-def index_page_ui(habits: HabitList):
+async def index_page_ui(habits: HabitList):
     with layout():
         habit_list_ui(habits)
