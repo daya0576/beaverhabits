@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users.exceptions import UserAlreadyExists
+from nicegui import app
 
 from beaverhabits.app.schemas import UserCreate
 
@@ -83,3 +84,8 @@ async def user_create(
                     return user
     except UserAlreadyExists:
         raise
+
+
+def user_logout() -> bool:
+    app.storage.user.update({"auth_token": ""})
+    return True
