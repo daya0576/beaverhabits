@@ -1,7 +1,6 @@
-import logging
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRoute
 from nicegui import app, ui
@@ -23,34 +22,29 @@ from .frontend.habit_page import habit_page_ui
 from .frontend.index_page import index_page_ui
 from .storage.meta import GUI_ROOT_PATH
 from .utils import dummy_days
-from .views import (
-    get_or_create_session_habit_list,
-    get_or_create_user_habit_list,
-    get_session_habit,
-    get_user_habit,
-    get_session_habit_list,
-)
+from . import views
+
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
 
 
 @ui.page("/demo")
-async def demo() -> None:
+async def demo_index_page() -> None:
     days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
-    habit_list = get_or_create_session_habit_list(days)
+    habit_list = views.get_or_create_session_habit_list(days)
     index_page_ui(habit_list)
 
 
 @ui.page("/demo/add")
 async def demo_add_page() -> None:
     days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
-    habit_list = get_or_create_session_habit_list(days)
+    habit_list = views.get_or_create_session_habit_list(days)
     add_page_ui(habit_list)
 
 
 @ui.page("/demo/habits/{habit_id}")
 async def demo_habit_page(habit_id: str) -> None:
-    habit = await get_session_habit(habit_id)
+    habit = await views.get_session_habit(habit_id)
     habit_page_ui(habit)
 
 
@@ -60,28 +54,28 @@ async def index_page(
     user: User = Depends(current_active_user),
 ) -> None:
     days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
-    habits = await get_or_create_user_habit_list(user, days)
+    habits = await views.get_or_create_user_habit_list(user, days)
     index_page_ui(habits)
 
 
 @ui.page("/gui/add")
 async def add_page(user: User = Depends(current_active_user)) -> None:
     days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
-    habits = await get_or_create_user_habit_list(user, days)
+    habits = await views.get_or_create_user_habit_list(user, days)
     add_page_ui(habits)
 
 
 @ui.page("/gui/habits/{habit_id}")
 async def habit_page(habit_id: str, user: User = Depends(current_active_user)) -> None:
-    habit = await get_user_habit(user, habit_id)
+    habit = await views.get_user_habit(user, habit_id)
     habit_page_ui(habit)
 
 
 @ui.page("/gui/habits/{habit_id}/heatmap")
-async def demo_habit_page_heatmap(
+async def gui_habit_page_heatmap(
     habit_id: str, user: User = Depends(current_active_user)
 ) -> None:
-    habit = await get_user_habit(user, habit_id)
+    habit = await views.get_user_habit(user, habit_id)
     heatmap_page(habit)
 
 

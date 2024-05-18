@@ -12,7 +12,7 @@ GUI_ROOT_PATH = "/gui"
 
 
 def get_root_path() -> str:
-    path = context.get_client().page.path
+    path = context.client.page.path
     return DEMO_ROOT_PATH if path.startswith(DEMO_ROOT_PATH) else GUI_ROOT_PATH
 
 
@@ -25,5 +25,5 @@ def get_habit_heatmap_path(habit: Habit) -> str:
 
 
 def get_page_title(path: Optional[str] = None) -> str:
-    path = path or context.get_client().page.path
+    path = path or context.client.page.path
     return "Demo" if path.startswith(DEMO_ROOT_PATH) else "Habits"
