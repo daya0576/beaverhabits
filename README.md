@@ -27,3 +27,9 @@ A light-weighted web app to track your fleeting life.
    - [ ] Export & Import
    - [x] User management
    - [ ] User timezone
+
+# Future Plans:
+
+1. Native mobile app
+2. Habit calendar template, e.g. vacations
+3. …
