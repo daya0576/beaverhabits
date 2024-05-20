@@ -10,7 +10,7 @@ A light-weighted web app to track your fleeting life.
 
 [Demo](https://beaverhabits.com/demo) | [Login](https://beaverhabits.com)
 
-# WIP:
+# Work in Progress
 
 1. Pages
    - [x] Index page
@@ -32,7 +32,7 @@ A light-weighted web app to track your fleeting life.
    - [x] User management
    - [ ] User timezone
 
-# Future Plans:
+# Future Plans
 
 1. Native mobile app
 2. Habit calendar template, e.g. vacations
