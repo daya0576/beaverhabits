@@ -6,6 +6,10 @@ A light-weighted web app to track your fleeting life.
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/c0ce98cf-5a44-4bbc-8cd3-c7afb20af671' width='250'>
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/516c19ca-9f55-4c21-9e6d-c8f0361a5eb2' width='250'>
 
+# Start
+
+[Demo](https://beaverhabits.com/demo) | [Login](https://beaverhabits.com)
+
 # WIP:
 
 1. Pages
