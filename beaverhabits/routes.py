@@ -22,7 +22,6 @@ from .frontend.index_page import index_page_ui
 from .frontend.cal_heatmap_page import heatmap_page
 from .storage.meta import GUI_ROOT_PATH
 from . import views
-from .logging import logger
 
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
@@ -78,7 +77,8 @@ async def gui_habit_page_heatmap(
     habit_id: str, user: User = Depends(current_active_user)
 ) -> None:
     habit = await views.get_user_habit(user, habit_id)
-    heatmap_page(habit)
+    today = await get_user_today_date()
+    heatmap_page(today, habit)
 
 
 @ui.page("/login")

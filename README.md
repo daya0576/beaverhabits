@@ -26,11 +26,11 @@ A minimalistic web app to track your fleeting life.
    - [x] Custom domain
    - [ ] Global CDN with edge instances
    - [ ] Self-hosting option
-   - [ ] Unit tests & deployment pipeline
+   - [x] Unit tests & deployment pipeline
 4. Others:
    - [ ] Export & Import
    - [x] User management
-   - [ ] User timezone
+   - [x] User timezone
 
 # Future Plans
 
