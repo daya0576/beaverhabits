@@ -1,4 +1,6 @@
+import datetime
 import os
+from typing import List
 from nicegui import ui
 
 from beaverhabits.frontend.components import HabitCheckBox, link
@@ -7,7 +9,6 @@ from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import HabitList
 from beaverhabits.utils import (
     dummy_days,
-    get_or_create_user_timezone,
 )
 from beaverhabits.configs import settings
 
@@ -18,7 +19,7 @@ row_compat_classes = "pl-4 pr-1 py-0"
 
 
 @ui.refreshable
-def habit_list_ui(habits: HabitList):
+def habit_list_ui(days: List[datetime.date], habits: HabitList):
     if not habits.habits:
         ui.label("List is empty.").classes("mx-auto")
         return
@@ -34,7 +35,6 @@ def habit_list_ui(habits: HabitList):
             "col-span-2 px-1.5 justify-self-center",
         )
 
-        days = dummy_days(HABIT_LIST_RECORD_COUNT)
         with grid(2).classes(row_compat_classes):
             for fmt in ("%a", "%d"):
                 ui.label("").classes(left_classes)
@@ -55,6 +55,6 @@ def habit_list_ui(habits: HabitList):
                         checkbox.classes(right_classes)
 
 
-async def index_page_ui(habits: HabitList):
+async def index_page_ui(days: List[datetime.date], habits: HabitList):
     with layout():
-        habit_list_ui(habits)
+        habit_list_ui(days, habits)

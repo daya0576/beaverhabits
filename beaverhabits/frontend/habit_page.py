@@ -14,6 +14,7 @@ from beaverhabits.frontend.css import CALENDAR_CSS, CHECK_BOX_CSS
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_habit_heatmap_path
 from beaverhabits.storage.storage import Habit
+from beaverhabits.utils import get_user_today_date
 
 WEEKS_TO_DISPLAY = 15
 
@@ -27,13 +28,14 @@ def card():
 
 
 def habit_page(habit: Habit):
-    today = datetime.date.today()
+    today = get_user_today_date()
+
     ticked_data = {x: True for x in habit.ticked_days}
     habit_calendar = CalendarHeatmap.build(today, WEEKS_TO_DISPLAY, calendar.MONDAY)
 
     with card():
         # ui.label("Calendar").classes("text-base")
-        today = datetime.date.today()
+        today = get_user_today_date()
         HabitDateInput(today, habit, ticked_data)
 
     with card():

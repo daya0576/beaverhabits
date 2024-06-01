@@ -9,24 +9,31 @@ from beaverhabits.logging import logger
 WEEK_DAYS = 7
 
 
-def get_user_timezone() -> str:
-    return app.storage.user.get("timezone", "UTC")
-
-
 async def get_or_create_user_timezone() -> str:
-    timezone = app.storage.user.get("timezone")
-    if not timezone:
+    if timezone := app.storage.user.get("timezone"):
+        return timezone
+
+    try:
+        await ui.context.client.connected()
         timezone = await ui.run_javascript(
             "Intl.DateTimeFormat().resolvedOptions().timeZone"
         )
-        logger.info(f"User timezone: {timezone}")
         app.storage.user["timezone"] = timezone
+        logger.info(f"User timezone: {timezone}")
+    except Exception as e:
+        logger.error("Get browser timezone failed", e)
+        return "UTC"
 
     return timezone
 
 
-def dummy_days(days: int) -> list[datetime.date]:
-    today = datetime.date.today()
+async def get_user_today_date() -> datetime.date:
+    timezone = await get_or_create_user_timezone()
+    return datetime.datetime.now(pytz.timezone(timezone)).date()
+
+
+async def dummy_days(days: int) -> list[datetime.date]:
+    today = await get_user_today_date()
     return [today - datetime.timedelta(days=i) for i in reversed(range(days))]
 
 

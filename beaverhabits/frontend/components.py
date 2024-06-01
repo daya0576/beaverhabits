@@ -11,7 +11,7 @@ from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.utils import WEEK_DAYS
+from beaverhabits.utils import WEEK_DAYS, get_user_today_date
 
 strptime = datetime.datetime.strptime
 
@@ -195,7 +195,7 @@ class CalendarHeatmap:
     def build(
         cls, today: datetime.date, weeks: int, firstweekday: int = calendar.MONDAY
     ):
-        today = datetime.date.today()
+        today = get_user_today_date()
         month_last_day = cls.get_month_last_day(today)
 
         data = cls.generate_calendar_days(today, weeks, firstweekday)

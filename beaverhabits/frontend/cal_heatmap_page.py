@@ -8,8 +8,9 @@ from beaverhabits.frontend.components import (
     menu_header,
 )
 from beaverhabits.frontend.css import CHECK_BOX_CSS
-from beaverhabits.storage.meta import get_habit_page_path, get_root_path
+from beaverhabits.storage.meta import get_habit_page_path
 from beaverhabits.storage.storage import Habit
+from beaverhabits.utils import get_user_today_date
 
 WEEKS_TO_DISPLAY = 56
 
@@ -17,7 +18,7 @@ WEEKS_TO_DISPLAY = 56
 def heatmap_page(habit: Habit):
     ui.add_css(CHECK_BOX_CSS)
 
-    today = datetime.date.today()
+    today = get_user_today_date()
     ticked_data = {x: True for x in habit.ticked_days}
     habit_calendar = CalendarHeatmap.build(today, WEEKS_TO_DISPLAY, calendar.MONDAY)
 

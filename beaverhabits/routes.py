@@ -5,9 +5,8 @@ from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRoute
 from nicegui import app, ui
 
-
 from . import const
-from .utils import dummy_days, get_or_create_user_timezone
+from .utils import dummy_days
 from .app.auth import (
     user_authenticate,
     user_check_token,
@@ -31,14 +30,14 @@ UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
 
 @ui.page("/demo")
 async def demo_index_page() -> None:
-    days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
+    days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habit_list = views.get_or_create_session_habit_list(days)
-    await index_page_ui(habit_list)
+    await index_page_ui(days, habit_list)
 
 
 @ui.page("/demo/add")
 async def demo_add_page() -> None:
-    days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
+    days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habit_list = views.get_or_create_session_habit_list(days)
     add_page_ui(habit_list)
 
@@ -54,14 +53,14 @@ async def demo_habit_page(habit_id: str) -> None:
 async def index_page(
     user: User = Depends(current_active_user),
 ) -> None:
-    days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
+    days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habits = await views.get_or_create_user_habit_list(user, days)
-    await index_page_ui(habits)
+    await index_page_ui(days, habits)
 
 
 @ui.page("/gui/add")
 async def add_page(user: User = Depends(current_active_user)) -> None:
-    days = dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
+    days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habits = await views.get_or_create_user_habit_list(user, days)
     add_page_ui(habits)
 
@@ -160,8 +159,6 @@ def init_gui_routes(fastapi_app: FastAPI):
         )
 
         return await call_next(request)
-
-    # app.on_connect(get_or_create_user_timezone)
 
     ui.run_with(
         fastapi_app,
