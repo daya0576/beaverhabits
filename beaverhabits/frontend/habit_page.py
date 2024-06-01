@@ -1,6 +1,7 @@
 import calendar
 import datetime
 from contextlib import contextmanager
+from typing import List
 
 from nicegui import ui
 
@@ -27,15 +28,12 @@ def card():
         yield
 
 
-def habit_page(habit: Habit):
-    today = get_user_today_date()
-
+def habit_page(today: datetime.date, habit: Habit):
     ticked_data = {x: True for x in habit.ticked_days}
     habit_calendar = CalendarHeatmap.build(today, WEEKS_TO_DISPLAY, calendar.MONDAY)
 
     with card():
         # ui.label("Calendar").classes("text-base")
-        today = get_user_today_date()
         HabitDateInput(today, habit, ticked_data)
 
     with card():
@@ -43,9 +41,9 @@ def habit_page(habit: Habit):
         habit_heat_map(habit, habit_calendar, ticked_data=ticked_data)
 
 
-def habit_page_ui(habit: Habit):
+def habit_page_ui(today: datetime.date, habit: Habit):
     ui.add_css(CHECK_BOX_CSS)
     ui.add_css(CALENDAR_CSS)
 
     with layout(title=habit.name):
-        habit_page(habit)
+        habit_page(today, habit)

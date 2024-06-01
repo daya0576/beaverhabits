@@ -6,7 +6,7 @@ from fastapi.routing import APIRoute
 from nicegui import app, ui
 
 from . import const
-from .utils import dummy_days
+from .utils import dummy_days, get_user_today_date
 from .app.auth import (
     user_authenticate,
     user_check_token,
@@ -44,8 +44,9 @@ async def demo_add_page() -> None:
 
 @ui.page("/demo/habits/{habit_id}")
 async def demo_habit_page(habit_id: str) -> None:
+    today = await get_user_today_date()
     habit = await views.get_session_habit(habit_id)
-    habit_page_ui(habit)
+    habit_page_ui(today, habit)
 
 
 @ui.page("/gui")
@@ -67,8 +68,9 @@ async def add_page(user: User = Depends(current_active_user)) -> None:
 
 @ui.page("/gui/habits/{habit_id}")
 async def habit_page(habit_id: str, user: User = Depends(current_active_user)) -> None:
+    today = await get_user_today_date()
     habit = await views.get_user_habit(user, habit_id)
-    habit_page_ui(habit)
+    habit_page_ui(today, habit)
 
 
 @ui.page("/gui/habits/{habit_id}/heatmap")

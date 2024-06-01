@@ -195,7 +195,6 @@ class CalendarHeatmap:
     def build(
         cls, today: datetime.date, weeks: int, firstweekday: int = calendar.MONDAY
     ):
-        today = get_user_today_date()
         month_last_day = cls.get_month_last_day(today)
 
         data = cls.generate_calendar_days(today, weeks, firstweekday)
