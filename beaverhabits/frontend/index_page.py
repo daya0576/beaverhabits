@@ -55,6 +55,6 @@ def habit_list_ui(days: List[datetime.date], habits: HabitList):
                         checkbox.classes(right_classes)
 
 
-async def index_page_ui(days: List[datetime.date], habits: HabitList):
+def index_page_ui(days: List[datetime.date], habits: HabitList):
     with layout():
         habit_list_ui(days, habits)

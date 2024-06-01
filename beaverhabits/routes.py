@@ -31,7 +31,7 @@ UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
 async def demo_index_page() -> None:
     days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habit_list = views.get_or_create_session_habit_list(days)
-    await index_page_ui(days, habit_list)
+    index_page_ui(days, habit_list)
 
 
 @ui.page("/demo/add")
@@ -55,7 +55,7 @@ async def index_page(
 ) -> None:
     days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habits = await views.get_or_create_user_habit_list(user, days)
-    await index_page_ui(days, habits)
+    index_page_ui(days, habits)
 
 
 @ui.page("/gui/add")
