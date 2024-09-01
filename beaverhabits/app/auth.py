@@ -88,4 +88,5 @@ async def user_create(
 
 def user_logout() -> bool:
     app.storage.user.update({"auth_token": ""})
+    app.storage.user.clear()
     return True
