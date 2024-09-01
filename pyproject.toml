@@ -2,7 +2,7 @@
 name = "beaverhabits"
 version = "0.1.0"
 description = ""
-authors = ["Chanjian Zhu <daya0576@gmail.com>"]
+authors = ["Henry Zhu <daya0576@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]

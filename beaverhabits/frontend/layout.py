@@ -22,7 +22,13 @@ def layout(title: str | None = None):
             with menu_icon_button(icons.MENU):
                 with ui.menu():
                     compat_menu("Add", lambda: ui.open(os.path.join(root_path, "add")))
-                    # compat_menu("Menu2", lambda: True)
+                    ui.separator()
+                    compat_menu(
+                        "Export",
+                        lambda: ui.open(
+                            os.path.join(root_path, "export"), new_tab=True
+                        ),
+                    )
                     ui.separator()
                     compat_menu("Logout", lambda: user_logout() and ui.open("/login"))
 

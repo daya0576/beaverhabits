@@ -150,6 +150,7 @@ dmypy.json
 cython_debug/
 
 *.swp
+*.db
 .nicegui
 test.db
 .idea/

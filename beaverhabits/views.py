@@ -1,8 +1,11 @@
+import time
 import datetime
 import random
-from typing import List, Optional
+from typing import List
+import json
 
 from fastapi import HTTPException
+from nicegui import ui
 
 from beaverhabits.app.db import User
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
@@ -79,3 +82,18 @@ async def get_or_create_user_habit_list(
     habit_list = dummy_habit_list(days)
     await user_storage.save_user_habit_list(user, habit_list)
     return habit_list
+
+
+async def export_user_habit_list(user: User) -> None:
+    habit_list = await get_user_habit_list(user)
+    # json to binary
+    if isinstance(habit_list, DictHabitList):
+        data = {
+            "user_email": user.email,
+            **habit_list.data,
+        }
+        binary_data = json.dumps(data).encode()
+        file_name = f"habits_{int(float(time.time()))}.json"
+        ui.download(binary_data, file_name)
+    else:
+        ui.notification("Export failed, please try again later.")

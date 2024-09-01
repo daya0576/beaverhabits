@@ -1,6 +1,6 @@
 # Beaver Habit Tracker
 
-A minimalistic web app to track your fleeting life.
+Self-hosting habit tracker web app to track your fleeting life.
 
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/0418fa41-8985-46ef-b623-333b62b2f92e' width='250'>
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/c0ce98cf-5a44-4bbc-8cd3-c7afb20af671' width='250'>
@@ -8,9 +8,32 @@ A minimalistic web app to track your fleeting life.
 
 # Getting Started
 
-[Demo](https://beaverhabits.com/demo) | [Login](https://beaverhabits.com)
+## Cloud Service
 
-# Work in Progress
+- Demo: https://beaverhabits.com/demo
+- Login: https://beaverhabits.com
+
+## Self-hosting
+
+### Ship with Docker
+
+Example:
+
+```bash
+docker run -d --name beaverhabits \
+  -e FIRST_DAY_OF_WEEK=0
+  -p 8080:8080 \
+  --restart unless-stopped \
+  daya0576/beaverhabits:latest
+```
+
+Options:
+
+- **HABITS_STORAGE**(str): `DATABASE`(default), `USER_DISK`
+- **DATABASE_URL**(str): The database url for storage backend, e.g. `sqlite:///habits.db`
+- **FIRST_DAY_OF_WEEK**(int): `0`(default), `6`
+
+# Features
 
 1. Pages
    - [x] Index page
@@ -24,11 +47,11 @@ A minimalistic web app to track your fleeting life.
    - [x] User-based sqlite storage
 3. CICD:
    - [x] Custom domain
-   - [ ] Global CDN with edge instances
-   - [ ] Self-hosting option
+   - [x] Self-hosting option
    - [x] Unit tests & deployment pipeline
 4. Others:
-   - [ ] Export & Import
+   - [x] Export
+   - [ ] Import
    - [x] User management
    - [x] User timezone
 

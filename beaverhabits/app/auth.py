@@ -50,7 +50,7 @@ async def user_create_token(user: User) -> Optional[str]:
         return None
 
 
-async def user_check_token(token: str) -> bool:
+async def user_check_token(token: str | None) -> bool:
     try:
         async with get_async_session_context() as session:
             async with get_user_db_context(session) as user_db:

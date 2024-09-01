@@ -80,6 +80,11 @@ async def gui_habit_page_heatmap(
     today = await get_user_today_date()
     heatmap_page(today, habit)
 
+@ui.page("/gui/export")
+async def export(
+    user: User = Depends(current_active_user)
+) -> None:
+    await views.export_user_habit_list(user)
 
 @ui.page("/login")
 async def login_page() -> Optional[RedirectResponse]:
@@ -137,6 +142,7 @@ async def register():
 def init_gui_routes(fastapi_app: FastAPI):
     @app.middleware("http")
     async def AuthMiddleware(request: Request, call_next):
+        # Redirect unauthorized request
         client_page_routes = [
             route.path for route in app.routes if isinstance(route, APIRoute)
         ]
@@ -155,7 +161,7 @@ def init_gui_routes(fastapi_app: FastAPI):
         request.scope["headers"] = [
             e for e in request.scope["headers"] if not e[0] == b"authorization"
         ]
-        # # add new authorization header
+        # add new authorization header
         request.scope["headers"].append(
             (b"authorization", f"Bearer {app.storage.user.get('auth_token')}".encode())
         )

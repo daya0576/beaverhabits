@@ -4,7 +4,10 @@ from pydantic_settings import BaseSettings
 
 import logging
 
+import dotenv
+
 logging.getLogger("niceGUI").setLevel(logging.INFO)
+dotenv.load_dotenv()
 
 
 class StorageType(Enum):
@@ -24,12 +27,12 @@ class Settings(BaseSettings):
     GUI_MOUNT_PATH: str = "/gui"
     DEMO_MOUNT_PATH: str = "/demo"
 
-    # Quasar custom
-    FIRST_DAY_OF_WEEK: int = calendar.MONDAY
-
     # Storage
-    DATABASE_URL: str = "sqlite+aiosqlite:///./test.db"
     HABITS_STORAGE: StorageType = StorageType.USER_DATABASE
+    DATABASE_URL: str = "sqlite+aiosqlite:///./habits.db"
+
+    # Customization
+    FIRST_DAY_OF_WEEK: int = calendar.MONDAY
 
     def is_dev(self):
         return self.ENV == "dev"
