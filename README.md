@@ -1,6 +1,11 @@
 # Beaver Habit Tracker
 
-Self-hosting habit tracker web app to track your fleeting life.
+![GitHub Release](https://img.shields.io/github/v/release/daya0576/beaverhabits)
+![Docker Image Size](https://img.shields.io/docker/image-size/daya0576/beaverhabits)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/daya0576/beaverhabits/fly.yml)
+![Uptime Robot ratio (30 days)](https://img.shields.io/uptimerobot/ratio/m787647728-b1a273391c2ad5c526b1c605)
+
+A self hosted habit tracker app to track your fleeting life.
 
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/0418fa41-8985-46ef-b623-333b62b2f92e' width='250'>
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/c0ce98cf-5a44-4bbc-8cd3-c7afb20af671' width='250'>
@@ -21,7 +26,8 @@ Example:
 
 ```bash
 docker run -d --name beaverhabits \
-  -e FIRST_DAY_OF_WEEK=0
+  -e FIRST_DAY_OF_WEEK=0 \
+  -e HABITS_STORAGE=USER_DISK \
   -p 8080:8080 \
   --restart unless-stopped \
   daya0576/beaverhabits:latest
@@ -59,4 +65,3 @@ Options:
 
 1. Native mobile app
 2. Habit calendar template, e.g. vacations
-3. …
