@@ -1,5 +1,10 @@
 # Beaver Habit Tracker
 
+![GitHub Release](https://img.shields.io/github/v/release/daya0576/beaverhabits)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/daya0576/beaverhabits/fly.yml)
+![Docker Image Size](https://img.shields.io/docker/image-size/daya0576/beaverhabits)
+![Uptime Robot ratio (30 days)](https://img.shields.io/uptimerobot/ratio/m787647728-b1a273391c2ad5c526b1c605)
+
 A self hosted habit tracker app to track your fleeting life.
 
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/0418fa41-8985-46ef-b623-333b62b2f92e' width='250'>
