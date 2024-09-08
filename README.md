@@ -1,6 +1,6 @@
 # Beaver Habit Tracker
 
-Self hosted habit tracker app to track your fleeting life.
+A self hosted habit tracker app to track your fleeting life.
 
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/0418fa41-8985-46ef-b623-333b62b2f92e' width='250'>
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/c0ce98cf-5a44-4bbc-8cd3-c7afb20af671' width='250'>
