@@ -21,7 +21,8 @@ Example:
 
 ```bash
 docker run -d --name beaverhabits \
-  -e FIRST_DAY_OF_WEEK=0
+  -e FIRST_DAY_OF_WEEK=0 \
+  -e HABITS_STORAGE=USER_DISK \
   -p 8080:8080 \
   --restart unless-stopped \
   daya0576/beaverhabits:latest
@@ -59,4 +60,3 @@ Options:
 
 1. Native mobile app
 2. Habit calendar template, e.g. vacations
-3. …
