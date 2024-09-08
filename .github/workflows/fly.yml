@@ -1,8 +1,9 @@
 name: Fly Deploy
 on:
   push:
-    branches:
-      - main
+    tags:
+      - v**
+
 jobs:
   pre-deploy-test:
     name: Unit tests
