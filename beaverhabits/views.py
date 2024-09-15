@@ -84,12 +84,12 @@ async def get_or_create_user_habit_list(
     return habit_list
 
 
-async def export_user_habit_list(user: User) -> None:
-    habit_list = await get_user_habit_list(user)
+async def export_user_habit_list(habit_list: HabitList, user_identify: str) -> None:
     # json to binary
     if isinstance(habit_list, DictHabitList):
         data = {
-            "user_email": user.email,
+            "user_email": user_identify,
+            "exported_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             **habit_list.data,
         }
         binary_data = json.dumps(data).encode()

@@ -48,6 +48,15 @@ async def demo_habit_page(habit_id: str) -> None:
     habit_page_ui(today, habit)
 
 
+@ui.page("/demo/export")
+async def demo_export() -> None:
+    habit_list = views.get_session_habit_list()
+    if not habit_list:
+        ui.notify("No habits to export", color="negative")
+        return
+    await views.export_user_habit_list(habit_list, "demo")
+
+
 @ui.page("/gui")
 @ui.page("/")
 async def index_page(
@@ -80,11 +89,15 @@ async def gui_habit_page_heatmap(
     today = await get_user_today_date()
     heatmap_page(today, habit)
 
+
 @ui.page("/gui/export")
-async def export(
-    user: User = Depends(current_active_user)
-) -> None:
-    await views.export_user_habit_list(user)
+async def gui_export(user: User = Depends(current_active_user)) -> None:
+    habit_list = await views.get_user_habit_list(user)
+    if not habit_list:
+        ui.notify("No habits to export", color="negative")
+        return
+    await views.export_user_habit_list(habit_list, user.email)
+
 
 @ui.page("/login")
 async def login_page() -> Optional[RedirectResponse]:
