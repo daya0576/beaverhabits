@@ -5,8 +5,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRoute
 from nicegui import app, ui
 
-from . import const
-from .utils import dummy_days, get_user_today_date
+from . import const, views
 from .app.auth import (
     user_authenticate,
     user_check_token,
@@ -17,12 +16,11 @@ from .app.db import User
 from .app.users import current_active_user
 from .configs import settings
 from .frontend.add_page import add_page_ui
+from .frontend.cal_heatmap_page import heatmap_page
 from .frontend.habit_page import habit_page_ui
 from .frontend.index_page import index_page_ui
-from .frontend.cal_heatmap_page import heatmap_page
 from .storage.meta import GUI_ROOT_PATH
-from . import views
-
+from .utils import dummy_days, get_user_today_date
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
 
