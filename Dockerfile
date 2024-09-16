@@ -10,7 +10,7 @@ RUN apt-get update && \
 RUN python -m pip install --upgrade pip
 # NiceGUI 1.4.20 - Make libsass optional 
 # RUN python -m pip install --upgrade libsass
-python -m pip install --upgrade cffi
+RUN python -m pip install --upgrade cffi
 
 FROM python:3.12-slim AS release
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
