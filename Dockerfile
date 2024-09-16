@@ -10,8 +10,7 @@ RUN apt-get update && \
 RUN python -m pip install --upgrade pip
 # NiceGUI 1.4.20 - Make libsass optional 
 # RUN python -m pip install --upgrade libsass
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+python -m pip install --upgrade cffi
 
 FROM python:3.12-slim AS release
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
@@ -19,6 +18,8 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 LABEL maintainer="Henry Zhu <daya0576@gmail.com>"
 
 WORKDIR /app
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY start.sh .
 COPY beaverhabits ./beaverhabits
