@@ -21,8 +21,8 @@ def menu_component(root_path: str) -> None:
         )
         ui.separator()
 
-        compat_menu("Import", lambda: ui.open(os.path.join(root_path, "import")))
-        ui.separator()
+        # compat_menu("Import", lambda: ui.open(os.path.join(root_path, "import")))
+        # ui.separator()
 
         compat_menu("Logout", lambda: user_logout() and ui.open("/login"))
 
