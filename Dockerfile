@@ -23,5 +23,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY start.sh .
 COPY beaverhabits ./beaverhabits
+RUN mkdir .user
 
 CMD ["sh", "start.sh", "prd"]
