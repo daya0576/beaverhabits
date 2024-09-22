@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRoute
 from nicegui import app, ui
@@ -13,6 +13,7 @@ from .app.auth import (
     user_create_token,
 )
 from .app.db import User
+from .app.crud import get_user_count
 from .app.users import current_active_user
 from .configs import settings
 from .frontend.add_page import add_page_ui
@@ -113,37 +114,51 @@ async def login_page() -> Optional[RedirectResponse]:
 
     with ui.card().classes("absolute-center shadow-none w-96"):
         email = ui.input("email").on("keydown.enter", try_login)
-        password = ui.input("password", password=True, password_toggle_button=True).on(
-            "keydown.enter", try_login
-        )
-        ui.button("Continue", on_click=try_login).props('padding="xs lg"')
-        ui.separator()
-        with ui.row():
-            ui.label("New around here?").classes("text-sm")
-            ui.link("Create account", target="/register").classes("text-sm")
+        email.classes("w-56")
+        
+        password = ui.input("password", password=True, password_toggle_button=True)
+        password.on("keydown.enter", try_login)
+        password.classes("w-56")
+        
+        with ui.element("div").classes("flex mt-4 justify-between items-center"):
+            ui.button("Continue", on_click=try_login).props('padding="xs lg"')
+
+        if not await get_user_count() >= settings.MAX_USER_COUNT > 0:
+            ui.separator()
+            with ui.row():
+                ui.label("New around here?").classes("text-sm")
+                ui.link("Create account", target="/register").classes("text-sm")
 
 
 @ui.page("/register")
 async def register():
+    async def validate_max_user_count():
+        if await get_user_count() >= settings.MAX_USER_COUNT > 0:
+            raise HTTPException(status_code=404, detail="User limit reached")
+
     async def try_register():
         try:
+            await validate_max_user_count()
             user = await user_create(email=email.value, password=password.value)
         except Exception as e:
-            ui.notify(str(e))
+            ui.notify(str(e), color="negative")
         else:
             token = user and await user_create_token(user)
             if token is not None:
                 app.storage.user.update({"auth_token": token})
                 ui.navigate.to(app.storage.user.get("referrer_path", "/"))
 
+    await validate_max_user_count()
+
     with ui.card().classes("absolute-center shadow-none w-96"):
-        email = ui.input("email").on("keydown.enter", try_register)
+        email = ui.input("email").on("keydown.enter", try_register).classes("w-56")
         password = ui.input("password", password=True, password_toggle_button=True).on(
             "keydown.enter", try_register
-        )
+        ).classes("w-56")
 
         with ui.element("div").classes("flex mt-4 justify-between items-center"):
-            ui.button("Register", on_click=try_register)
+            ui.button("Register", on_click=try_register).props('padding="xs lg"')
+
         ui.separator()
         with ui.row():
             ui.label("Already have an account?")

@@ -37,3 +37,12 @@ async def get_user_habit_list(user: User) -> HabitListModel | None:
         result = await session.execute(stmt)
         logger.info(f"[CRUD] User {user.id} habit list query")
         return result.scalar()
+
+
+async def get_user_count() -> int:
+    async with get_async_session_context() as session:
+        stmt = select(User)
+        result = await session.execute(stmt)
+        user_count = len(result.all())
+        logger.info(f"[CRUD] User count query: {user_count}")
+        return user_count

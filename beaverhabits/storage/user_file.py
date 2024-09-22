@@ -2,7 +2,9 @@ from pathlib import Path
 from typing import Optional
 
 from nicegui.storage import PersistentDict
+
 from beaverhabits.app.db import User
+from beaverhabits.configs import USER_DATA_FOLDER
 from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.storage.storage import UserStorage
 
@@ -18,8 +20,8 @@ class UserDiskStorage(UserStorage[DictHabitList]):
 
     async def save_user_habit_list(self, user: User, habit_list: DictHabitList) -> None:
         d = self._get_persistent_dict(user)
-        d["data"] = habit_list.data
+        d[KEY_NAME] = habit_list.data
 
     def _get_persistent_dict(self, user: User) -> PersistentDict:
-        path = Path(f".user/{str(user.email)}.json")
+        path = Path(f"{USER_DATA_FOLDER}/{str(user.email)}.json")
         return PersistentDict(path, encoding="utf-8")

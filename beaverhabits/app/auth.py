@@ -83,7 +83,7 @@ async def user_create(
                     )
                     return user
     except UserAlreadyExists:
-        raise
+        raise Exception("User already exists!")
 
 
 def user_logout() -> bool:
