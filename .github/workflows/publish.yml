@@ -60,7 +60,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64,linux/amd64/v3,linux/arm64
-          push: false
+          push: true
           tags: ${{ steps.prep.outputs.tags }}
 
   verify:
