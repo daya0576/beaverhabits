@@ -3,14 +3,13 @@ FROM python:3.12-slim AS builder
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
     apt-get install -y --no-install-recommends \
-    build-essential \
+    build-essential,libffi-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
 RUN python -m pip install --upgrade pip
 # NiceGUI 1.4.20 - Make libsass optional 
 # RUN python -m pip install --upgrade libsass
-RUN apt install libffi-dev
 RUN python -m pip install --upgrade cffi
 
 FROM python:3.12-slim AS release
