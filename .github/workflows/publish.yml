@@ -1,0 +1,89 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - v**
+
+jobs:
+  pre-deploy-test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip 
+          pip install poetry
+          poetry install --no-interaction --no-ansi
+
+      - name: Test with pytest
+        run: poetry run pytest tests
+
+  docker:
+    needs: pre-deploy-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare
+        run: |
+          DOCKER_IMAGE=daya0576/beaverhabits
+          VERSION=${GITHUB_REF#refs/tags/v}
+          TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:latest"
+
+          echo ::set-output name=tags::${TAGS}
+          echo ::set-output name=docker_image::${DOCKER_IMAGE}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64,linux/amd64/v3,linux/arm64,linux/arm/v7,linux/arm/v6
+          push: true
+          tags: ${{ steps.prep.outputs.tags  }}
+
+  verify:
+    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull and Test Container
+        env:
+          DOCKER_IMAGE: daya0576/beaverhabits
+          VERSION: latest
+        run: |
+          docker pull ${DOCKER_IMAGE}:${VERSION}
+          docker run -d --name test_container ${DOCKER_IMAGE}:${VERSION}
+          sleep 3
+          CONTAINER_OUTPUT=$(docker logs test_container)
+          # Check if the container is still running
+          CONTAINER_STATUS=$(docker inspect -f '{{.State.Running}}' test_container)
+          if [ "${CONTAINER_STATUS}" != "true" ]; then
+            echo "The container is not running!"
+            exit 1
+          fi
+          # Check if the "Error" string is present in the container output
+          if echo "${CONTAINER_OUTPUT}" | grep -i -q "Error"; then
+            echo "Error found in container output!"
+            echo "${CONTAINER_OUTPUT}"
+            exit 1
+          fi
+          docker stop test_container
+          docker rm test_container
