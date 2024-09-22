@@ -31,16 +31,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
       - name: Prepare
+        id: prep
         run: |
-          DOCKER_IMAGE=daya0576/beaverhabits
-          VERSION=${GITHUB_REF#refs/tags/v}
-          TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:latest"
+          DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME  }}/${GITHUB_REPOSITORY#*/}
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:latest"
 
+          fi
+          echo $TAGS
           echo ::set-output name=tags::${TAGS}
-          echo ::set-output name=docker_image::${DOCKER_IMAGE}
 
+      - uses: actions/checkout@v4
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -56,9 +59,9 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/amd64,linux/amd64/v3,linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: linux/amd64,linux/amd64/v3,linux/arm64
           push: true
-          tags: ${{ steps.prep.outputs.tags  }}
+          tags: ${{ steps.prep.outputs.tags }}
 
   verify:
     needs: docker

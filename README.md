@@ -35,9 +35,11 @@ docker run -d --name beaverhabits \
 
 Options:
 
-- **HABITS_STORAGE**(str): `DATABASE`(default), `USER_DISK`
-- **DATABASE_URL**(str): The database url for storage backend, e.g. `sqlite:///habits.db`
-- **FIRST_DAY_OF_WEEK**(int): `0`(default), `6`
+| Name                       | Description                                                                                                                                                                        |
+| :------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **HABITS_STORAGE**(str)    | The `DATABASE` option stores everything in a single SQLite database file named habits.db. On the other hand, the `USER_DISK` option saves habits and records in a local json file. |
+| **FIRST_DAY_OF_WEEK**(int) | By default, the first day of the week is set as Monday. To change it to Sunday, you can set it as `6`.                                                                             |
+| **MAX_USER_COUNT**(int)    | By setting it to `1`, you can prevent others from signing up in the future.                                                                                                        |
 
 # Features
 
