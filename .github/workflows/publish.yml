@@ -32,6 +32,7 @@ jobs:
 
     steps:
       - name: Prepare
+        id: prep
         run: |
           DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME  }}/${GITHUB_REPOSITORY#*/}
           if [[ $GITHUB_REF == refs/tags/* ]]; then
