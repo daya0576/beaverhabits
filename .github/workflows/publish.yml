@@ -39,6 +39,7 @@ jobs:
             TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:latest"
 
           fi
+          echo $TAGS
           echo ::set-output name=tags::${TAGS}
 
       - uses: actions/checkout@v4
