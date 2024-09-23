@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
 import datetime
+from dataclasses import dataclass, field
 from typing import Optional
 
 from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList

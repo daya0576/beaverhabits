@@ -1,4 +1,5 @@
 import datetime
+
 from nicegui.testing import Screen
 
 from beaverhabits.frontend.add_page import add_page_ui

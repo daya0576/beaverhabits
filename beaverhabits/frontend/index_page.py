@@ -1,17 +1,14 @@
 import datetime
 import os
 from typing import List
+
 from nicegui import ui
 
+from beaverhabits.configs import settings
 from beaverhabits.frontend.components import HabitCheckBox, link
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import HabitList
-from beaverhabits.utils import (
-    dummy_days,
-)
-from beaverhabits.configs import settings
-
 
 HABIT_LIST_RECORD_COUNT = settings.INDEX_HABIT_ITEM_COUNT
 

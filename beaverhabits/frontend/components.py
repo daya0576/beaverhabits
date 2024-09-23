@@ -1,6 +1,6 @@
 import calendar
-import datetime
 from dataclasses import dataclass
+import datetime
 from typing import Callable, Optional
 
 from nicegui import events, ui
@@ -11,7 +11,8 @@ from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.utils import WEEK_DAYS, get_user_today_date
+from beaverhabits.utils import WEEK_DAYS
+
 
 strptime = datetime.datetime.strptime
 

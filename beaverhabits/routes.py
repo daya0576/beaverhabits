@@ -12,8 +12,8 @@ from .app.auth import (
     user_create,
     user_create_token,
 )
-from .app.db import User
 from .app.crud import get_user_count
+from .app.db import User
 from .app.users import current_active_user
 from .configs import settings
 from .frontend.add_page import add_page_ui

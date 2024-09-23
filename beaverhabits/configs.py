@@ -1,10 +1,9 @@
 import calendar
-from enum import Enum
-from pydantic_settings import BaseSettings
-
 import logging
+from enum import Enum
 
 import dotenv
+from pydantic_settings import BaseSettings
 
 logging.getLogger("niceGUI").setLevel(logging.INFO)
 dotenv.load_dotenv()

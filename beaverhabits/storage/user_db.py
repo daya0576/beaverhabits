@@ -1,9 +1,10 @@
 from typing import Optional
+
 from nicegui import background_tasks, core
 from nicegui.storage import observables
 
-from beaverhabits.app.db import User
 from beaverhabits.app import crud
+from beaverhabits.app.db import User
 from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.storage.storage import UserStorage
 

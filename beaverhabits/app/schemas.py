@@ -1,11 +1,9 @@
-from typing import List
+import datetime
 import uuid
+from typing import List
 
 from fastapi_users import schemas
-
 from pydantic import BaseModel
-
-import datetime
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):

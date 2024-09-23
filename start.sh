@@ -3,6 +3,9 @@
 # use path of this example as working directory; enables starting this script from anywhere
 cd "$(dirname "$0")"
 
+# create directory for user data
+mkdir -p .user
+
 if [ "$1" = "prd" ]; then
     echo "Starting Uvicorn server in production mode..."
     # we also use a single worker in production mode so socket.io connections are always handled by the same worker
