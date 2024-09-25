@@ -32,7 +32,7 @@ def menu_header(title: str, target: str):
 
 
 def compat_menu(name: str, callback: Callable):
-    return ui.menu_item(name, callback).classes("items-center")
+    return ui.menu_item(name, callback).props("dense").classes("items-center")
 
 
 def menu_icon_button(icon_name: str, click: Optional[Callable] = None) -> Button:

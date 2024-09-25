@@ -1,5 +1,5 @@
-import os
 from contextlib import contextmanager
+import os
 
 from nicegui import ui
 
@@ -21,8 +21,9 @@ def menu_component(root_path: str) -> None:
         )
         ui.separator()
 
-        # compat_menu("Import", lambda: ui.open(os.path.join(root_path, "import")))
-        # ui.separator()
+        if not root_path.startswith("/demo"):
+            compat_menu("Import", lambda: ui.open(os.path.join(root_path, "import")))
+            ui.separator()
 
         compat_menu("Logout", lambda: user_logout() and ui.open("/login"))
 

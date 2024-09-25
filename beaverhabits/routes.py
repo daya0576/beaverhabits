@@ -5,6 +5,8 @@ from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRoute
 from nicegui import app, ui
 
+from beaverhabits.frontend.import_page import import_ui_page
+
 from . import const, views
 from .app.auth import (
     user_authenticate,
@@ -98,6 +100,12 @@ async def gui_export(user: User = Depends(current_active_user)) -> None:
     await views.export_user_habit_list(habit_list, user.email)
 
 
+@ui.page("/gui/import")
+async def gui_import(user: User = Depends(current_active_user)) -> None:
+    habit_list = await views.get_user_habit_list(user)
+    import_ui_page(user, habit_list)
+
+
 @ui.page("/login")
 async def login_page() -> Optional[RedirectResponse]:
     async def try_login():
@@ -115,11 +123,11 @@ async def login_page() -> Optional[RedirectResponse]:
     with ui.card().classes("absolute-center shadow-none w-96"):
         email = ui.input("email").on("keydown.enter", try_login)
         email.classes("w-56")
-        
+
         password = ui.input("password", password=True, password_toggle_button=True)
         password.on("keydown.enter", try_login)
         password.classes("w-56")
-        
+
         with ui.element("div").classes("flex mt-4 justify-between items-center"):
             ui.button("Continue", on_click=try_login).props('padding="xs lg"')
 
@@ -152,9 +160,11 @@ async def register():
 
     with ui.card().classes("absolute-center shadow-none w-96"):
         email = ui.input("email").on("keydown.enter", try_register).classes("w-56")
-        password = ui.input("password", password=True, password_toggle_button=True).on(
-            "keydown.enter", try_register
-        ).classes("w-56")
+        password = (
+            ui.input("password", password=True, password_toggle_button=True)
+            .on("keydown.enter", try_register)
+            .classes("w-56")
+        )
 
         with ui.element("div").classes("flex mt-4 justify-between items-center"):
             ui.button("Register", on_click=try_register).props('padding="xs lg"')
