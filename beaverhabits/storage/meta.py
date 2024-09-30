@@ -1,8 +1,8 @@
 from typing import Optional
+
 from nicegui import context
 
 from beaverhabits.storage.storage import Habit
-
 
 ROOT_PATH_KEY = "root_path"
 ROOT_PATH_DEFAULT = "/"

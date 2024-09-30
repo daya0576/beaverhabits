@@ -1,8 +1,10 @@
 import contextlib
+
 from sqlalchemy import select
 
-from .db import HabitListModel, User, get_async_session
 from beaverhabits.logging import logger
+
+from .db import HabitListModel, User, get_async_session
 
 get_async_session_context = contextlib.asynccontextmanager(get_async_session)
 

@@ -1,8 +1,9 @@
 from typing import Optional
+
 import nicegui
 
-from .storage import SessionStorage
 from .dict import DictHabitList
+from .storage import SessionStorage
 
 KEY_NAME = "user_habit_list"
 

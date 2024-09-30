@@ -1,5 +1,6 @@
 import calendar
 import datetime
+
 from nicegui import ui
 
 from beaverhabits.frontend.components import (

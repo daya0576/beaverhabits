@@ -7,9 +7,8 @@ from nicegui import app
 
 from beaverhabits.app.schemas import UserCreate
 
-from .users import get_jwt_strategy, get_user_manager
 from .db import User, get_async_session, get_user_db
-
+from .users import get_jwt_strategy, get_user_manager
 
 get_async_session_context = contextlib.asynccontextmanager(get_async_session)
 get_user_db_context = contextlib.asynccontextmanager(get_user_db)

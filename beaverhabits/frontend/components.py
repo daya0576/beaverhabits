@@ -11,7 +11,7 @@ from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.utils import WEEK_DAYS, get_user_today_date
+from beaverhabits.utils import WEEK_DAYS
 
 strptime = datetime.datetime.strptime
 
@@ -31,7 +31,7 @@ def menu_header(title: str, target: str):
 
 
 def compat_menu(name: str, callback: Callable):
-    return ui.menu_item(name, callback).classes("items-center")
+    return ui.menu_item(name, callback).props("dense").classes("items-center")
 
 
 def menu_icon_button(icon_name: str, click: Optional[Callable] = None) -> Button:
@@ -141,8 +141,8 @@ class HabitDateInput(ui.date):
         self.default_date = today
         super().__init__(self.ticked_days, on_change=self._async_task)
 
-        self.props(f"multiple")
-        self.props(f"minimal flat")
+        self.props("multiple")
+        self.props("minimal flat")
         self.props(f"default-year-month={self.today.strftime(MONTH_MASK)}")
         qdate_week_first_day = (settings.FIRST_DAY_OF_WEEK + 1) % 7
         self.props(f"first-day-of-week='{qdate_week_first_day}'")

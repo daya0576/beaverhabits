@@ -1,7 +1,7 @@
 import datetime
 import hashlib
-import pytz
 
+import pytz
 from nicegui import app, ui
 
 from beaverhabits.logging import logger
