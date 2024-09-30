@@ -1,6 +1,6 @@
 import calendar
-from dataclasses import dataclass
 import datetime
+from dataclasses import dataclass
 from typing import Callable, Optional
 
 from nicegui import events, ui
@@ -12,7 +12,6 @@ from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.storage import Habit, HabitList
 from beaverhabits.utils import WEEK_DAYS
-
 
 strptime = datetime.datetime.strptime
 
@@ -142,8 +141,8 @@ class HabitDateInput(ui.date):
         self.default_date = today
         super().__init__(self.ticked_days, on_change=self._async_task)
 
-        self.props(f"multiple")
-        self.props(f"minimal flat")
+        self.props("multiple")
+        self.props("minimal flat")
         self.props(f"default-year-month={self.today.strftime(MONTH_MASK)}")
         qdate_week_first_day = (settings.FIRST_DAY_OF_WEEK + 1) % 7
         self.props(f"first-day-of-week='{qdate_week_first_day}'")

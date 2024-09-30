@@ -102,8 +102,7 @@ async def gui_export(user: User = Depends(current_active_user)) -> None:
 
 @ui.page("/gui/import")
 async def gui_import(user: User = Depends(current_active_user)) -> None:
-    habit_list = await views.get_user_habit_list(user)
-    import_ui_page(user, habit_list)
+    import_ui_page(user)
 
 
 @ui.page("/login")
