@@ -61,7 +61,7 @@ Options:
    - [x] Unit tests & deployment pipeline
 4. Others:
    - [x] Export
-   - [ ] Import
+   - [x] [Import](https://github.com/daya0576/beaverhabits/wiki/Import-Habits-and-Records)
    - [x] User management
    - [x] User timezone
 

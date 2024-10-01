@@ -85,13 +85,15 @@ class DictHabit(Habit[DictRecord], DictStorage):
             self.data["records"].append(data)
 
     async def merge(self, other: "DictHabit") -> "DictHabit":
-        self_ticks = {r.data["day"] for r in self.records if r.done}
-        other_ticks = {r.data["day"] for r in other.records if r.done}
+        self_ticks = {r.day for r in self.records if r.done}
+        other_ticks = {r.day for r in other.records if r.done}
         result = sorted(list(self_ticks | other_ticks))
 
         d = {
             "name": self.name,
-            "records": [{"day": day, "done": True} for day in result],
+            "records": [
+                {"day": day.strftime(DAY_MASK), "done": True} for day in result
+            ],
         }
         return DictHabit(d)
 
@@ -104,23 +106,6 @@ class DictHabit(Habit[DictRecord], DictStorage):
 
 @dataclass
 class DictHabitList(HabitList[DictHabit], DictStorage):
-    """Dict storage for HabitList
-
-    Example:
-    {
-        "habits": [
-            {
-                "name": "habit1",
-                "records": [
-                    {"day": "2021-01-01", "done": true},
-                    {"day": "2021-01-02", "done": false}
-                ]
-            },
-            {
-                "name": "habit2",
-                "records": []
-            ...
-    """
 
     @property
     def habits(self) -> list[DictHabit]:

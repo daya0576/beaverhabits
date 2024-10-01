@@ -1,5 +1,7 @@
 import json
 import logging
+import csv
+from io import StringIO
 
 from nicegui import events, ui
 
@@ -12,17 +14,66 @@ from beaverhabits.views import user_storage
 
 
 async def import_from_json(text: str) -> HabitList:
+    """Import from JSON
+
+    Example:
+    {
+        "habits": [
+            {
+                "name": "habit1",
+                "records": [
+                    {"day": "2021-01-01", "done": true},
+                    {"day": "2021-01-02", "done": false}
+                ]
+            },
+            ...
+    """
     habit_list = DictHabitList(json.loads(text))
     if not habit_list.habits:
         raise ValueError("No habits found")
     return habit_list
 
 
+async def import_from_csv(text: str) -> HabitList:
+    """Import from CSV
+
+    Example:
+    Date,a,b,c,d,e,
+    2024-01-22,-1,-1,-1,-1,
+    2024-01-21,2,-1,-1,-1,
+    """
+    data = []
+    reader = csv.DictReader(StringIO(text))
+    for row in reader:
+        data.append(row)
+
+    headers = list(data[0].keys())
+
+    habits = []
+    for habit_name in headers[1:]:
+        if not habit_name:
+            continue
+        habit = {"name": habit_name, "records": []}
+        for row in data:
+            day = row["Date"]
+            done = True if row[habit_name] and int(row[habit_name]) > 0 else False
+            habit["records"].append({"day": day, "done": done})
+        habits.append(habit)
+
+    output = {"habits": habits}
+    return DictHabitList(output)
+
+
 def import_ui_page(user: User):
     async def handle_upload(e: events.UploadEventArguments):
         try:
             text = e.content.read().decode("utf-8")
-            other = await import_from_json(text)
+            if e.name.endswith(".json"):
+                other = await import_from_json(text)
+            elif e.name.endswith(".csv"):
+                other = await import_from_csv(text)
+            else:
+                raise ValueError("Unsupported format")
 
             from_habit_list = await user_storage.get_user_habit_list(user)
             if not from_habit_list:
@@ -68,5 +119,6 @@ def import_ui_page(user: User):
     menu_header("Import", target=get_root_path())
 
     # Upload: https://nicegui.io/documentation/upload
-    ui.upload(on_upload=handle_upload, max_files=1).props("accept=.json")
+    upload = ui.upload(on_upload=handle_upload, max_files=1)
+    upload.props("accept=.json,.csv")
     return
