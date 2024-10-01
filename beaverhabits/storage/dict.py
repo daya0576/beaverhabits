@@ -53,6 +53,10 @@ class DictHabit(Habit[DictRecord], DictStorage):
             self.data["id"] = generate_short_hash(self.name)
         return self.data["id"]
 
+    @id.setter
+    def id(self, value: str) -> None:
+        self.data["id"] = value
+
     @property
     def name(self) -> str:
         return self.data["name"]
@@ -80,9 +84,29 @@ class DictHabit(Habit[DictRecord], DictStorage):
             data = {"day": day.strftime(DAY_MASK), "done": done}
             self.data["records"].append(data)
 
+    async def merge(self, other: "DictHabit") -> "DictHabit":
+        self_ticks = {r.day for r in self.records if r.done}
+        other_ticks = {r.day for r in other.records if r.done}
+        result = sorted(list(self_ticks | other_ticks))
+
+        d = {
+            "name": self.name,
+            "records": [
+                {"day": day.strftime(DAY_MASK), "done": True} for day in result
+            ],
+        }
+        return DictHabit(d)
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, DictHabit) and self.id == other.id
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
 
 @dataclass
 class DictHabitList(HabitList[DictHabit], DictStorage):
+
     @property
     def habits(self) -> list[DictHabit]:
         habits = [DictHabit(d) for d in self.data["habits"]]
@@ -100,3 +124,15 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
 
     async def remove(self, item: DictHabit) -> None:
         self.data["habits"].remove(item.data)
+
+    async def merge(self, other: "DictHabitList") -> "DictHabitList":
+        result = set(self.habits).symmetric_difference(set(other.habits))
+
+        # Merge the habit if it exists
+        for self_habit in self.habits:
+            for other_habit in other.habits:
+                if self_habit == other_habit:
+                    new_habit = await self_habit.merge(other_habit)
+                    result.add(new_habit)
+
+        return DictHabitList({"habits": [h.data for h in result]})
