@@ -14,7 +14,7 @@ def get_sessions_storage() -> SessionStorage:
     return session_storage
 
 
-def get_user_storage() -> UserStorage:
+def get_user_dict_storage() -> UserStorage:
     if settings.HABITS_STORAGE == StorageType.USER_DISK:
         return user_disk_storage
 
@@ -22,5 +22,3 @@ def get_user_storage() -> UserStorage:
         return user_database_storage
 
     raise NotImplementedError("Storage type not implemented")
-    # if self.STORAGE == StorageType.SQLITE:
-    #     return None

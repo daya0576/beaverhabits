@@ -8,12 +8,12 @@ from fastapi import HTTPException
 from nicegui import ui
 
 from beaverhabits.app.db import User
-from beaverhabits.storage import get_user_storage, session_storage
+from beaverhabits.storage import get_user_dict_storage, session_storage
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
 from beaverhabits.storage.storage import Habit, HabitList
 from beaverhabits.utils import generate_short_hash
 
-user_storage = get_user_storage()
+user_storage = get_user_dict_storage()
 
 
 def dummy_habit_list(days: List[datetime.date]):

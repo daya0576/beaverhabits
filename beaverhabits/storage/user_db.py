@@ -36,3 +36,12 @@ class UserDatabaseStorage(UserStorage[DictHabitList]):
 
     async def save_user_habit_list(self, user: User, habit_list: DictHabitList) -> None:
         await crud.update_user_habit_list(user, habit_list.data)
+
+    async def merge_user_habit_list(
+        self, user: User, other: DictHabitList
+    ) -> DictHabitList:
+        current = await self.get_user_habit_list(user)
+        if current is None:
+            return other
+
+        return await current.merge(other)
