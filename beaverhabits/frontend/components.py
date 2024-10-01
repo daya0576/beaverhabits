@@ -185,7 +185,6 @@ class CalendarHeatmap:
     """Habit records by weeks"""
 
     today: datetime.date
-    month_last_day: datetime.date
 
     headers: list[str]
     data: list[list[datetime.date]]
@@ -195,18 +194,11 @@ class CalendarHeatmap:
     def build(
         cls, today: datetime.date, weeks: int, firstweekday: int = calendar.MONDAY
     ):
-        month_last_day = cls.get_month_last_day(today)
-
         data = cls.generate_calendar_days(today, weeks, firstweekday)
         headers = cls.generate_calendar_headers(data[0])
         week_day_abbr = [calendar.day_abbr[(firstweekday + i) % 7] for i in range(7)]
 
-        return cls(today, month_last_day, headers, data, week_day_abbr)
-
-    @staticmethod
-    def get_month_last_day(today: datetime.date) -> datetime.date:
-        month_days = calendar.monthrange(today.year, today.month)[1]
-        return datetime.date(today.year, today.month, month_days)
+        return cls(today, headers, data, week_day_abbr)
 
     @staticmethod
     def generate_calendar_headers(days: list[datetime.date]) -> list[str]:
@@ -235,13 +227,10 @@ class CalendarHeatmap:
         total_weeks: int,
         firstweekday: int = calendar.MONDAY,  # 0 = Monday, 6 = Sunday
     ) -> list[list[datetime.date]]:
-        # First find last day of the month
-        last_date_of_month = CalendarHeatmap.get_month_last_day(today)
-
-        # Then find the last day of the week
+        # Find the last day of the week
         lastweekday = (firstweekday - 1) % 7
-        days_delta = (lastweekday - last_date_of_month.weekday()) % 7
-        last_date_of_calendar = last_date_of_month + datetime.timedelta(days=days_delta)
+        days_delta = (lastweekday - today.weekday()) % 7
+        last_date_of_calendar = today + datetime.timedelta(days=days_delta)
 
         return [
             [
@@ -320,7 +309,7 @@ def habit_heat_map(
     for i, weekday_days in enumerate(habit_calendar.data):
         with ui.row(wrap=False).classes("gap-0"):
             for day in weekday_days:
-                if day <= habit_calendar.month_last_day:
+                if day <= habit_calendar.today:
                     CalendarCheckBox(habit, day, today, ticked_data, is_bind_data)
                 else:
                     ui.label().style("width: 20px; height: 20px;")

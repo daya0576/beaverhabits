@@ -86,14 +86,15 @@ async def get_or_create_user_habit_list(
 
 async def export_user_habit_list(habit_list: HabitList, user_identify: str) -> None:
     # json to binary
+    now = datetime.datetime.now()
     if isinstance(habit_list, DictHabitList):
         data = {
             "user_email": user_identify,
-            "exported_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "exported_at": now.strftime("%Y-%m-%d %H:%M:%S"),
             **habit_list.data,
         }
         binary_data = json.dumps(data).encode()
-        file_name = f"habits_{int(float(time.time()))}.json"
+        file_name = f"beaverhabits_{now.strftime('%Y_%m_%d')}.json"
         ui.download(binary_data, file_name)
     else:
         ui.notification("Export failed, please try again later.")
