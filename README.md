@@ -54,14 +54,14 @@ Options:
 2. Storage:
    - [x] Session-based disk storage
    - [x] User-based disk storage
-   - [x] User-based sqlite storage
+   - [x] User-based database storage
 3. CICD:
    - [x] Custom domain
    - [x] Self-hosting option
    - [x] Unit tests & deployment pipeline
 4. Others:
    - [x] Export
-   - [x] [Import](https://github.com/daya0576/beaverhabits/wiki/Import-Habits-and-Records)
+   - [x] Import
    - [x] User management
    - [x] User timezone
 
