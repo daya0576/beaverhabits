@@ -11,6 +11,7 @@ A self-hosted habit tracking app to save your precious moments in your fleeting 
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/c0ce98cf-5a44-4bbc-8cd3-c7afb20af671' width='250'>
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/516c19ca-9f55-4c21-9e6d-c8f0361a5eb2' width='250'>
 
+
 # Getting Started
 
 ## Cloud Service
@@ -43,6 +44,7 @@ Options:
 | **FIRST_DAY_OF_WEEK**(int) | By default, the first day of the week is set as Monday. To change it to Sunday, you can set it as `6`.                                                                             |
 | **MAX_USER_COUNT**(int)    | By setting it to `1`, you can prevent others from signing up in the future.                                                                                                        |
 
+
 # Features
 
 1. Pages
@@ -65,7 +67,16 @@ Options:
    - [x] User management
    - [x] User timezone
 
+## Streaks
+Here are my table tennis training sessions in the past year :)
+<img width="760" alt="image" src="https://github.com/user-attachments/assets/327f3855-299e-4307-87af-f30b4b4f7c60">
+
+## Import 
+If you want to import from an existing setup, e.g. uhabit. Please check this wiki for more details: https://github.com/daya0576/beaverhabits/wiki/Import-from-Existing-Setup
+
+
 # Future Plans
 
 1. Native mobile app
 2. Habit calendar template, e.g. vacations
+3. ...
