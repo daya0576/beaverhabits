@@ -120,5 +120,6 @@ def import_ui_page(user: User):
 
     # Upload: https://nicegui.io/documentation/upload
     upload = ui.upload(on_upload=handle_upload, max_files=1)
-    upload.props("accept=.json,.csv")
+    upload.props('accept=.json,.csv label="Upload files" flat text-color="black"')
+    upload.classes("w-80 no-shadow")
     return

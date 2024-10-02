@@ -53,7 +53,9 @@ class HabitListModel(TimestampMixin, Base):
 connect_args = {}
 if settings.DATABASE_URL.startswith("postgresql"):
     connect_args = {"ssl": "allow"}
-engine = create_async_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)
+engine = create_async_engine(
+    DATABASE_URL, connect_args=connect_args, pool_pre_ping=True
+)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 
