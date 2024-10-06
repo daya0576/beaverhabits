@@ -1,12 +1,15 @@
+import csv
 import json
 import logging
-import csv
 from io import StringIO
 
 from nicegui import events, ui
 
+from beaverhabits import const
 from beaverhabits.app.db import User
+from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import menu_header
+from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import HabitList
@@ -117,9 +120,14 @@ def import_ui_page(user: User):
             ui.notify(str(error), color="negative", position="top")
 
     menu_header("Import", target=get_root_path())
-
-    # Upload: https://nicegui.io/documentation/upload
-    upload = ui.upload(on_upload=handle_upload, max_files=1)
-    upload.props('accept=.json,.csv label="Upload files" flat text-color="black"')
-    upload.classes("w-80 no-shadow")
-    return
+    with ui.column().classes("gap-2"):
+        with ui.row().classes("gap-1"):
+            ui.label("Restore your existing setup and continue")
+            with ui.link(target=const.IMPORT_WIKI_PAGE, new_tab=True):
+                ui.icon(icons.HELP)
+        
+        # Upload: https://nicegui.io/documentation/upload
+        upload = ui.upload(on_upload=handle_upload, max_files=1)
+        upload.props('accept=.json,.csv color="grey-10" flat')
+        upload.classes("max-w-full")
+    

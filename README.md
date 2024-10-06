@@ -49,12 +49,12 @@ Options:
    - [x] Index page
    - [x] Habit list page
    - [x] Habit detail page
-     - [x] Last three months
-     - [x] Calendar heatmap over years
+     - [x] Calendar
+     - [x] Streaks
 2. Storage:
    - [x] Session-based disk storage
    - [x] User-based disk storage
-   - [x] User-based sqlite storage
+   - [x] User-based db storage
 3. CICD:
    - [x] Custom domain
    - [x] Self-hosting option
