@@ -5,7 +5,7 @@
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/daya0576/beaverhabits/fly.yml)
 ![Uptime Robot ratio (30 days)](https://img.shields.io/uptimerobot/ratio/m787647728-b1a273391c2ad5c526b1c605)
 
-A self hosted habit tracker app to track your fleeting life.
+A self-hosted habit tracking app to save your precious moments in your fleeting life.
 
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/0418fa41-8985-46ef-b623-333b62b2f92e' width='250'>
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/c0ce98cf-5a44-4bbc-8cd3-c7afb20af671' width='250'>
@@ -61,11 +61,21 @@ Options:
    - [x] Unit tests & deployment pipeline
 4. Others:
    - [x] Export
-   - [x] [Import](https://github.com/daya0576/beaverhabits/wiki/Import-Habits-and-Records)
+   - [x] Import
    - [x] User management
    - [x] User timezone
+
+## Streaks
+
+Here are my table tennis training sessions in the past year :)
+<img width="760" alt="image" src="https://github.com/user-attachments/assets/327f3855-299e-4307-87af-f30b4b4f7c60">
+
+## Import
+
+If you want to import from an existing setup, e.g. uhabit. Please check this wiki for more details: https://github.com/daya0576/beaverhabits/wiki/Import-from-Existing-Setup
 
 # Future Plans
 
 1. Native mobile app
 2. Habit calendar template, e.g. vacations
+3. ...
