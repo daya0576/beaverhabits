@@ -72,7 +72,11 @@ Here are my table tennis training sessions in the past year :)
 
 ## Import
 
-If you want to import from an existing setup, e.g. uhabit. Please check this wiki for more details: https://github.com/daya0576/beaverhabits/wiki/Import-from-Existing-Setup
+To import from an existing setup, e.g. uhabit, please check this [wiki](https://github.com/daya0576/beaverhabits/wiki/Import-from-Existing-Setup) for more details.
+
+## Standalone mode for iOS (Web Application)
+Follow this [wiki](https://github.com/daya0576/beaverhabits/wiki/To-Add-Standalone-Mode-for-iOS-(Web-Application)) to add it as an icon on the home screen and make it launch in a separate window
+<img src='https://github.com/user-attachments/assets/a23df5a3-6ad5-467b-a0c5-fe696baf4c8f' width='200'>
 
 # Future Plans
 
