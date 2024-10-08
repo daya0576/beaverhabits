@@ -24,12 +24,13 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+if settings.is_dev():
 
-@app.on_event("startup")
-def startup():
-    loop = asyncio.get_running_loop()
-    loop.set_debug(True)
-    loop.slow_callback_duration = 0.05
+    @app.on_event("startup")
+    def startup():
+        loop = asyncio.get_running_loop()
+        loop.set_debug(True)
+        loop.slow_callback_duration = 0.05
 
 
 @app.get("/health")
