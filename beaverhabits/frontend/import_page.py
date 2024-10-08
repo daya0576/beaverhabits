@@ -125,9 +125,8 @@ def import_ui_page(user: User):
             ui.label("Restore your existing setup and continue")
             with ui.link(target=const.IMPORT_WIKI_PAGE, new_tab=True):
                 ui.icon(icons.HELP)
-        
+
         # Upload: https://nicegui.io/documentation/upload
         upload = ui.upload(on_upload=handle_upload, max_files=1)
         upload.props('accept=.json,.csv color="grey-10" flat')
         upload.classes("max-w-full")
-    
