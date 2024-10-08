@@ -19,6 +19,7 @@ class StorageType(Enum):
 
 class Settings(BaseSettings):
     ENV: str = "dev"
+    SENTRY_DSN: str = ""
 
     # UI config
     INDEX_HABIT_ITEM_COUNT: int = 5
