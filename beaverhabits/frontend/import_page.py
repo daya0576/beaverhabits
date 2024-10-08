@@ -1,17 +1,15 @@
 import csv
+from io import StringIO
 import json
 import logging
-from io import StringIO
 
 from nicegui import events, ui
 
 from beaverhabits import const
 from beaverhabits.app.db import User
 from beaverhabits.frontend import icons
-from beaverhabits.frontend.components import menu_header
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.dict import DictHabitList
-from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import HabitList
 from beaverhabits.views import user_storage
 
@@ -119,14 +117,15 @@ def import_ui_page(user: User):
             logging.exception("Import failed")
             ui.notify(str(error), color="negative", position="top")
 
-    menu_header("Import", target=get_root_path())
-    with ui.column().classes("gap-2"):
-        with ui.row().classes("gap-1"):
-            ui.label("Restore your existing setup and continue")
-            with ui.link(target=const.IMPORT_WIKI_PAGE, new_tab=True):
-                ui.icon(icons.HELP)
+    with layout(title="Import", with_menu=False):
+        with ui.column().classes("gap-2"):
+            # Upload: https://nicegui.io/documentation/upload
+            upload = ui.upload(on_upload=handle_upload, max_files=1)
+            upload.props('accept=.json,.csv color="grey-10" flat')
+            upload.classes("max-w-full")
 
-        # Upload: https://nicegui.io/documentation/upload
-        upload = ui.upload(on_upload=handle_upload, max_files=1)
-        upload.props('accept=.json,.csv color="grey-10" flat')
-        upload.classes("max-w-full")
+            # Note
+            with ui.row().classes("gap-1"):
+                ui.label("Restore your existing setup and continue")
+                with ui.link(target=const.IMPORT_WIKI_PAGE, new_tab=True):
+                    ui.icon(icons.HELP)
