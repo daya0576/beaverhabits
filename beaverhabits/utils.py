@@ -19,6 +19,7 @@ async def fetch_user_timezone() -> None:
 
 
 async def get_or_create_user_timezone() -> str:
+    logger.info("Getting user timezone...")
     if timezone := app.storage.user.get(TIME_ZONE_KEY):
         logger.info(f"User timezone from storage: {timezone}")
         return timezone
