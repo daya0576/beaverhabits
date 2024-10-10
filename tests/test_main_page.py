@@ -1,16 +1,18 @@
 import datetime
 
+from nicegui import app
 from nicegui.testing import Screen
 
 from beaverhabits.frontend.add_page import add_page_ui
 from beaverhabits.frontend.habit_page import habit_page_ui
 from beaverhabits.frontend.index_page import index_page_ui
-from beaverhabits.views import (
-    dummy_habit_list,
-)
+from beaverhabits.views import dummy_habit_list
 
 # Test cases:
 # https://github.com/zauberzeug/nicegui/tree/main/tests
+
+
+app.add_static_files("/statics", "statics")
 
 
 def dummy_today():
