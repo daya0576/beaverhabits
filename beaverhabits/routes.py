@@ -203,6 +203,7 @@ def init_gui_routes(fastapi_app: FastAPI):
 
         return await call_next(request)
 
+    app.add_static_files("/statics", "statics")
     ui.run_with(
         fastapi_app,
         title=const.PAGE_TITLE,

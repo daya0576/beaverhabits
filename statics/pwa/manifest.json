@@ -1,0 +1,12 @@
+{
+  "name": "Beaver",
+  "short_name": "Beaver",
+  "theme_color": "#121212",
+  "background_color": "#121212",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "id": "beaverhabits",
+  "display_override": []
+}
