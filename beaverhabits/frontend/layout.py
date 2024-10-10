@@ -27,7 +27,7 @@ def custom_header():
 
     ui.add_head_html('<link rel="manifest" href="/statics/pwa/manifest.json">')
     ui.add_head_html(
-        '<script>if("serviceWorker" in navigator) { navigator.serviceWorker.register("/statics/pwa/service_worker.js"); };</script>'
+        '<script>if(navigator.standalone === true) { navigator.serviceWorker.register("/statics/pwa/service_worker.js"); };</script>'
     )
 
 

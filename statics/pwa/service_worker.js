@@ -1,4 +1,4 @@
-const CACHE_NAME = 'beaverhabits-v0.2.3';
+const CACHE_NAME = 'beaverhabits';
 const CACHE_URLS = [
     '/media/'
 ];

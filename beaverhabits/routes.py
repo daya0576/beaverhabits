@@ -6,6 +6,7 @@ from fastapi.routing import APIRoute
 from nicegui import app, ui
 
 from beaverhabits.frontend.import_page import import_ui_page
+from beaverhabits.frontend.layout import custom_header
 
 from . import const, views
 from .app.auth import (
@@ -119,6 +120,7 @@ async def login_page() -> Optional[RedirectResponse]:
     if await user_check_token(app.storage.user.get("auth_token", None)):
         return RedirectResponse(GUI_ROOT_PATH)
 
+    custom_header()
     with ui.card().classes("absolute-center shadow-none w-96"):
         email = ui.input("email").on("keydown.enter", try_login)
         email.classes("w-56")
@@ -154,6 +156,8 @@ async def register():
             if token is not None:
                 app.storage.user.update({"auth_token": token})
                 ui.navigate.to(app.storage.user.get("referrer_path", "/"))
+
+    custom_header()
 
     await validate_max_user_count()
 
