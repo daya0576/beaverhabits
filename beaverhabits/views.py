@@ -1,11 +1,12 @@
 import datetime
 import json
 import random
-import time
 from typing import List
 
 from fastapi import HTTPException
 from nicegui import ui
+
+from beaverhabits.logging import logger
 
 from beaverhabits.app.db import User
 from beaverhabits.storage import get_user_dict_storage, session_storage
@@ -75,6 +76,7 @@ async def get_user_habit(user: User, habit_id: str) -> Habit:
 async def get_or_create_user_habit_list(
     user: User, days: List[datetime.date]
 ) -> HabitList:
+    logger.info("Getting user habit list")
     habit_list = await get_user_habit_list(user)
     if habit_list is not None:
         return habit_list

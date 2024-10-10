@@ -3,6 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+import sentry_sdk
 
 from .app.app import init_auth_routes
 from .app.db import create_db_and_tables
@@ -22,6 +23,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
 if settings.is_dev():
 
     @app.on_event("startup")
@@ -39,6 +41,11 @@ def read_root():
 # auth
 init_auth_routes(app)
 init_gui_routes(app)
+
+# sentry
+if settings.SENTRY_DSN:
+    logger.info("Setting up Sentry...")
+    sentry_sdk.init(settings.SENTRY_DSN)
 
 
 if __name__ == "__main__":

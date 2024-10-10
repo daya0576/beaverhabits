@@ -7,24 +7,25 @@ from nicegui import app, ui
 from beaverhabits.logging import logger
 
 WEEK_DAYS = 7
+TIME_ZONE_KEY = "timezone"
+
+
+async def fetch_user_timezone() -> None:
+    timezone = await ui.run_javascript(
+        "Intl.DateTimeFormat().resolvedOptions().timeZone"
+    )
+    app.storage.user[TIME_ZONE_KEY] = timezone
+    logger.info(f"User timezone from browser: {timezone}")
 
 
 async def get_or_create_user_timezone() -> str:
-    if timezone := app.storage.user.get("timezone"):
+    logger.info("Getting user timezone...")
+    if timezone := app.storage.user.get(TIME_ZONE_KEY):
+        logger.info(f"User timezone from storage: {timezone}")
         return timezone
 
-    try:
-        await ui.context.client.connected()
-        timezone = await ui.run_javascript(
-            "Intl.DateTimeFormat().resolvedOptions().timeZone"
-        )
-        app.storage.user["timezone"] = timezone
-        logger.info(f"User timezone: {timezone}")
-    except Exception as e:
-        logger.error("Get browser timezone failed", e)
-        return "UTC"
-
-    return timezone
+    ui.context.client.on_connect(fetch_user_timezone)
+    return "UTC"
 
 
 async def get_user_today_date() -> datetime.date:
