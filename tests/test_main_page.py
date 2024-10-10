@@ -12,9 +12,6 @@ from beaverhabits.views import dummy_habit_list
 # https://github.com/zauberzeug/nicegui/tree/main/tests
 
 
-app.add_static_files("/statics", "statics")
-
-
 def dummy_today():
     return datetime.date(2024, 5, 1)
 
@@ -25,6 +22,8 @@ def dummy_days(count):
 
 
 def test_index_page(screen: Screen) -> None:
+    app.add_static_files("/statics", "statics")
+
     days = dummy_days(7)
     habits = dummy_habit_list(days)
 
@@ -35,6 +34,8 @@ def test_index_page(screen: Screen) -> None:
 
 
 def test_add_page(screen: Screen) -> None:
+    app.add_static_files("/statics", "statics")
+
     days = dummy_days(7)
     habits = dummy_habit_list(days)
 
@@ -45,6 +46,8 @@ def test_add_page(screen: Screen) -> None:
 
 
 def test_habit_detail_page(screen: Screen) -> None:
+    app.add_static_files("/statics", "statics")
+
     days = dummy_days(7)
     today = days[-1]
     habits = dummy_habit_list(days)
