@@ -1,6 +1,6 @@
 import calendar
-import logging
 from enum import Enum
+import logging
 
 import dotenv
 from pydantic_settings import BaseSettings

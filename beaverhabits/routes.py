@@ -207,6 +207,6 @@ def init_gui_routes(fastapi_app: FastAPI):
         fastapi_app,
         title=const.PAGE_TITLE,
         storage_secret=settings.NICEGUI_STORAGE_SECRET,
-        favicon="images/favicon.svg",
+        favicon="statics/images/favicon.svg",
         dark=True,
     )

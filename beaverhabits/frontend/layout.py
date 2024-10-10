@@ -10,7 +10,7 @@ from beaverhabits.storage.meta import get_page_title, get_root_path
 
 
 def custom_header():
-    app.add_static_files("/images", "images")
+    app.add_static_files("/statics", "statics")
 
     ui.add_head_html(
         '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">'
@@ -24,7 +24,7 @@ def custom_header():
 
     # viewBox="90 90 220 220"
     ui.add_head_html(
-        '<link rel="apple-touch-icon" href="/images/apple-touch-icon-v4.png">'
+        '<link rel="apple-touch-icon" href="/statics/images/apple-touch-icon-v4.png">'
     )
 
 

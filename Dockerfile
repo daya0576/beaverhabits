@@ -23,6 +23,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY start.sh .
 COPY beaverhabits ./beaverhabits
-COPY images ./images
+COPY statics ./statics
 
 CMD ["sh", "start.sh", "prd"]
