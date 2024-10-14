@@ -77,9 +77,6 @@ To import from an existing setup, e.g. uhabit, please check this [wiki](https://
 ## Standalone mode for iOS (Web Application)
 Follow this [wiki](https://github.com/daya0576/beaverhabits/wiki/To-Add-Standalone-Mode-for-iOS-(Web-Application)) to add it as an icon on the home screen and make it launch in a separate window
 
-<img src='https://github.com/user-attachments/assets/708b3b7c-0003-4153-9484-ed2325217197' width='200'>
-<img src='https://github.com/user-attachments/assets/a23df5a3-6ad5-467b-a0c5-fe696baf4c8f' width='200'>
-
 # Future Plans
 
 1. Native mobile app
