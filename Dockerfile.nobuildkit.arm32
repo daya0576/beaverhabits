@@ -1,0 +1,36 @@
+FROM python:3.12-slim AS builder
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
+    apt-get install -y --no-install-recommends \
+    build-essential libffi-dev libssl-dev curl
+#    && rm -rf /var/lib/apt/lists/* \
+#    && apt-get clean
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+ENV PATH=/root/.cargo/bin:$PATH
+ENV PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig
+ENV OPENSSL_LIB_DIR=/usr/lib/arm-linux-gnueabihf
+ENV OPENSSL_INCLUDE_DIR=/usr/include/arm-linux-gnueabihf/openssl
+
+RUN python -m pip install --upgrade pip
+# NiceGUI 1.4.20 - Make libsass optional 
+# RUN python -m pip install --upgrade libsass
+RUN python -m pip install --upgrade cffi
+COPY requirements.txt ./
+RUN mkdir /wheels
+RUN pip wheel --no-cache-dir -r requirements.txt -w /wheels
+
+FROM python:3.12-slim AS release
+COPY --from=builder /wheels /wheels
+
+LABEL maintainer="Henry Zhu <daya0576@gmail.com>"
+
+WORKDIR /app
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --no-index --find-links /wheels -r requirements.txt
+
+COPY start.sh .
+COPY beaverhabits ./beaverhabits
+COPY statics ./statics
+
+CMD ["sh", "start.sh", "prd"]
