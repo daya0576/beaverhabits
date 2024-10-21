@@ -9,15 +9,13 @@ from beaverhabits.frontend.components import (
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.storage import HabitList
 
-grid_classes = "w-full gap-0 items-center"
-
 
 @ui.refreshable
 def add_ui(habit_list: HabitList):
     for item in habit_list.habits:
-        with ui.grid(columns=9, rows=1).classes("w-full gap-0 items-center"):
+        with ui.grid(columns=8, rows=1).classes("w-full gap-0 items-center"):
             name = HabitNameInput(item)
-            name.classes("col-span-7 break-all")
+            name.classes("col-span-6 break-all")
 
             star = HabitStarCheckbox(item, add_ui.refresh)
             star.props("flat fab-mini color=grey")

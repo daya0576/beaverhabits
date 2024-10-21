@@ -7,6 +7,7 @@ from nicegui import app, ui
 
 from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.layout import custom_header
+from beaverhabits.frontend.order_page import order_page_ui
 
 from . import const, views
 from .app.auth import (
@@ -43,6 +44,13 @@ async def demo_add_page() -> None:
     add_page_ui(habit_list)
 
 
+@ui.page("/demo/order")
+async def demo_order_page() -> None:
+    days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
+    habit_list = views.get_or_create_session_habit_list(days)
+    order_page_ui(habit_list)
+
+
 @ui.page("/demo/habits/{habit_id}")
 async def demo_habit_page(habit_id: str) -> None:
     today = await get_user_today_date()
@@ -74,6 +82,13 @@ async def add_page(user: User = Depends(current_active_user)) -> None:
     days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habits = await views.get_or_create_user_habit_list(user, days)
     add_page_ui(habits)
+
+
+@ui.page("/gui/order")
+async def order_page(user: User = Depends(current_active_user)) -> None:
+    days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
+    habits = await views.get_or_create_user_habit_list(user, days)
+    order_page_ui(habits)
 
 
 @ui.page("/gui/habits/{habit_id}")

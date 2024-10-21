@@ -1,6 +1,6 @@
-import datetime
 from dataclasses import dataclass, field
-from typing import Optional
+import datetime
+from typing import List, Optional
 
 from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList
 from beaverhabits.utils import generate_short_hash
@@ -103,15 +103,36 @@ class DictHabit(Habit[DictRecord], DictStorage):
     def __hash__(self) -> int:
         return hash(self.id)
 
+    def __str__(self) -> str:
+        return f"{self.name}<{self.id}>"
+
+    __repr__ = __str__
+
 
 @dataclass
 class DictHabitList(HabitList[DictHabit], DictStorage):
-
     @property
     def habits(self) -> list[DictHabit]:
         habits = [DictHabit(d) for d in self.data["habits"]]
+        if self.order:
+            habits.sort(
+                key=lambda x: (
+                    self.order.index(str(x.id))
+                    if str(x.id) in self.order
+                    else float("inf")
+                )
+            )
         habits.sort(key=lambda x: x.star, reverse=True)
+
         return habits
+
+    @property
+    def order(self) -> List[str]:
+        return self.data.get("order", [])
+
+    @order.setter
+    def order(self, value: List[str]) -> None:
+        self.data["order"] = value
 
     async def get_habit_by(self, habit_id: str) -> Optional[DictHabit]:
         for habit in self.habits:

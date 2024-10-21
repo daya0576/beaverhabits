@@ -36,6 +36,7 @@ class Settings(BaseSettings):
 
     # Customization
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
+    ENABLE_PWA: bool = False
 
     def is_dev(self):
         return self.ENV == "dev"

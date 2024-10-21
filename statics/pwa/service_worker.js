@@ -1,6 +1,8 @@
-const CACHE_NAME = 'beaverhabits';
+const CACHE_NAME = 'beaverhabits_v1';
 const CACHE_URLS = [
-    '/media/'
+    '/media/', 
+    '/statics/',
+    '/_nicegui/'
 ];
 
 // WebSocket connections to be excluded from the fetch handler
