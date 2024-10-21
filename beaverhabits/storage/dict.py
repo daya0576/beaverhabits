@@ -1,5 +1,5 @@
-import datetime
 from dataclasses import dataclass, field
+import datetime
 from typing import List, Optional
 
 from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList
@@ -111,7 +111,6 @@ class DictHabit(Habit[DictRecord], DictStorage):
 
 @dataclass
 class DictHabitList(HabitList[DictHabit], DictStorage):
-
     @property
     def habits(self) -> list[DictHabit]:
         habits = [DictHabit(d) for d in self.data["habits"]]
@@ -123,8 +122,7 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
                     else float("inf")
                 )
             )
-        else:
-            habits.sort(key=lambda x: x.star, reverse=True)
+        habits.sort(key=lambda x: x.star, reverse=True)
 
         return habits
 

@@ -4,9 +4,12 @@ import os
 from nicegui import ui
 
 from beaverhabits.app.auth import user_logout
+from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.storage.meta import get_page_title, get_root_path
+
+open_page = ui.navigate.to
 
 
 def custom_header():
@@ -25,29 +28,29 @@ def custom_header():
         '<link rel="apple-touch-icon" href="/statics/images/apple-touch-icon-v4.png">'
     )
 
-    ui.add_head_html('<link rel="manifest" href="/statics/pwa/manifest.json">')
-    ui.add_head_html(
-        '<script>if(navigator.standalone === true) { navigator.serviceWorker.register("/statics/pwa/service_worker.js"); };</script>'
-    )
+    # ui.add_head_html('<link rel="manifest" href="/statics/pwa/manifest.json">')
+    # ui.add_head_html(
+    #     '<script>if(navigator.standalone === true) { navigator.serviceWorker.register("/statics/pwa/service_worker.js"); };</script>'
+    # )
 
 
 def menu_component(root_path: str) -> None:
     """Dropdown menu for the top-right corner of the page."""
     with ui.menu():
-        compat_menu("Add", lambda: ui.open(os.path.join(root_path, "add")))
+        compat_menu("Add", lambda: open_page(os.path.join(root_path, "add")))
         ui.separator()
 
         compat_menu(
             "Export",
-            lambda: ui.open(os.path.join(root_path, "export"), new_tab=True),
+            lambda: open_page(os.path.join(root_path, "export"), new_tab=True),
         )
         ui.separator()
 
         if not root_path.startswith("/demo"):
-            compat_menu("Import", lambda: ui.open(os.path.join(root_path, "import")))
+            compat_menu("Import", lambda: open_page(os.path.join(root_path, "import")))
             ui.separator()
 
-        compat_menu("Logout", lambda: user_logout() and ui.open("/login"))
+        compat_menu("Logout", lambda: user_logout() and ui.navigate.to("/login"))
 
 
 @contextmanager
@@ -56,7 +59,9 @@ def layout(title: str | None = None, with_menu: bool = True):
     root_path = get_root_path()
     title = title or get_page_title(root_path)
     with ui.column().classes("max-w-sm mx-auto sm:mx-0"):
-        custom_header()
+        # Experimental PWA support
+        if settings.ENABLE_PWA:
+            custom_header()
 
         with ui.row().classes("min-w-full"):
             menu_header(title, target=root_path)

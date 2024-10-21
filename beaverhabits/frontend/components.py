@@ -1,6 +1,6 @@
 import calendar
-import datetime
 from dataclasses import dataclass
+import datetime
 from typing import Callable, Optional
 
 from nicegui import events, ui
@@ -70,11 +70,15 @@ class HabitCheckBox(ui.checkbox):
         logger.info(f"Day {self.day} ticked: {e.value}")
 
 
-class HabitAddCard(ui.card):
-    def __init__(self, habit: Habit):
+class HabitOrderCard(ui.card):
+    def __init__(self, habit: Habit | None = None) -> None:
         super().__init__()
         self.habit = habit
-        self.props("flat dense draggable").classes("cursor-grab")
+        self.props("flat dense")
+        self.classes("py-0.5 w-full")
+        if habit:
+            self.props("draggable")
+            self.classes("cursor-grab")
 
 
 class HabitNameInput(ui.input):
@@ -82,7 +86,7 @@ class HabitNameInput(ui.input):
         super().__init__(value=habit.name, on_change=self._async_task)
         self.habit = habit
         self.validation = self._validate
-        self.props("flat dense")
+        self.props("dense hide-bottom-space")
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
         self.habit.name = e.value
