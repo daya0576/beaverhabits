@@ -9,8 +9,6 @@ from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.storage.meta import get_page_title, get_root_path
 
-open_page = ui.navigate.to
-
 
 def custom_header():
     ui.add_head_html(
@@ -28,26 +26,30 @@ def custom_header():
         '<link rel="apple-touch-icon" href="/statics/images/apple-touch-icon-v4.png">'
     )
 
-    # ui.add_head_html('<link rel="manifest" href="/statics/pwa/manifest.json">')
-    # ui.add_head_html(
-    #     '<script>if(navigator.standalone === true) { navigator.serviceWorker.register("/statics/pwa/service_worker.js"); };</script>'
-    # )
+    ui.add_head_html('<link rel="manifest" href="/statics/pwa/manifest.json">')
+    ui.add_head_html(
+        '<script>if(navigator.standalone === true) { navigator.serviceWorker.register("/statics/pwa/service_worker.js"); };</script>'
+    )
 
 
 def menu_component(root_path: str) -> None:
     """Dropdown menu for the top-right corner of the page."""
+
+    def redirect(x):
+        ui.navigate.to(os.path.join(root_path, x))
+
+    def open_tab(x):
+        ui.navigate.to(os.path.join(root_path, x), new_tab=True)
+
     with ui.menu():
-        compat_menu("Add", lambda: open_page(os.path.join(root_path, "add")))
+        compat_menu("Add", lambda: redirect("add"))
         ui.separator()
 
-        compat_menu(
-            "Export",
-            lambda: open_page(os.path.join(root_path, "export"), new_tab=True),
-        )
+        compat_menu("Export", lambda: open_tab("export"))
         ui.separator()
 
         if not root_path.startswith("/demo"):
-            compat_menu("Import", lambda: open_page(os.path.join(root_path, "import")))
+            compat_menu("Import", lambda: redirect("import"))
             ui.separator()
 
         compat_menu("Logout", lambda: user_logout() and ui.navigate.to("/login"))

@@ -114,6 +114,8 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
     @property
     def habits(self) -> list[DictHabit]:
         habits = [DictHabit(d) for d in self.data["habits"]]
+
+        # Sort by order
         if self.order:
             habits.sort(
                 key=lambda x: (
@@ -122,7 +124,6 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
                     else float("inf")
                 )
             )
-        habits.sort(key=lambda x: x.star, reverse=True)
 
         return habits
 

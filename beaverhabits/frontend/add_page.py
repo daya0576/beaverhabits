@@ -12,7 +12,10 @@ from beaverhabits.storage.storage import HabitList
 
 @ui.refreshable
 def add_ui(habit_list: HabitList):
-    for item in habit_list.habits:
+    habits = habit_list.habits
+    habits.sort(key=lambda x: x.star, reverse=True)
+
+    for item in habits:
         with ui.grid(columns=8, rows=1).classes("w-full gap-0 items-center"):
             name = HabitNameInput(item)
             name.classes("col-span-6 break-all")

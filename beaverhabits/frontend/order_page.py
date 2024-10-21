@@ -1,11 +1,7 @@
 from nicegui import ui
 
 from beaverhabits.frontend import components
-from beaverhabits.frontend.components import (
-    HabitAddButton,
-    HabitDeleteButton,
-    HabitOrderCard,
-)
+from beaverhabits.frontend.components import HabitDeleteButton
 from beaverhabits.frontend.layout import layout
 from beaverhabits.logging import logger
 from beaverhabits.storage.storage import HabitList
@@ -34,13 +30,13 @@ async def item_drop(e, habit_list: HabitList):
 def add_ui(habit_list: HabitList):
     for item in habit_list.habits:
         with components.HabitOrderCard(item):
-            with ui.grid(columns=7, rows=1).classes("w-full gap-0 items-center"):
+            with ui.grid(columns=7, rows=1).classes("gap-0 items-center"):
                 name = ui.label(item.name)
                 name.classes("col-span-6")
 
                 delete = HabitDeleteButton(item, habit_list, add_ui.refresh)
-                delete.props("flat fab-mini color=grey")
                 delete.classes("col-span-1")
+                delete.props("flat fab-mini color=grey")
 
 
 def order_page_ui(habit_list: HabitList):
