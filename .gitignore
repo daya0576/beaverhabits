@@ -157,3 +157,4 @@ test.db
 .user/
 screenshots/
 tags
+.env

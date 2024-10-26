@@ -15,7 +15,6 @@ def custom_header():
         '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">'
     )
     ui.add_head_html('<meta name="apple-mobile-web-app-title" content="Beaver">')
-    ui.add_head_html('<meta name="apple-mobile-web-app-capable" content="yes">')
     ui.add_head_html(
         '<meta name="apple-mobile-web-app-status-bar-style" content="black">'
     )
@@ -26,10 +25,9 @@ def custom_header():
         '<link rel="apple-touch-icon" href="/statics/images/apple-touch-icon-v4.png">'
     )
 
-    ui.add_head_html('<link rel="manifest" href="/statics/pwa/manifest.json">')
-    ui.add_head_html(
-        '<script>if(navigator.standalone === true) { navigator.serviceWorker.register("/statics/pwa/service_worker.js"); };</script>'
-    )
+    # Experimental PWA support
+    if settings.ENABLE_IOS_STANDALONE:
+        ui.add_head_html('<meta name="apple-mobile-web-app-capable" content="yes">')
 
 
 def menu_component(root_path: str) -> None:
@@ -61,9 +59,7 @@ def layout(title: str | None = None, with_menu: bool = True):
     root_path = get_root_path()
     title = title or get_page_title(root_path)
     with ui.column().classes("max-w-sm mx-auto sm:mx-0"):
-        # Experimental PWA support
-        if settings.ENABLE_PWA:
-            custom_header()
+        custom_header()
 
         with ui.row().classes("min-w-full"):
             menu_header(title, target=root_path)

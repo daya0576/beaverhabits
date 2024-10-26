@@ -37,18 +37,19 @@ docker run -d --name beaverhabits \
 
 Options:
 
-| Name                       | Description                                                                                                                                                                        |
-|:---------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **HABITS_STORAGE**(str)    | The `DATABASE` option stores everything in a single SQLite database file named habits.db. On the other hand, the `USER_DISK` option saves habits and records in a local json file. |
-| **FIRST_DAY_OF_WEEK**(int) | By default, the first day of the week is set as Monday. To change it to Sunday, you can set it as `6`.                                                                             |
-| **MAX_USER_COUNT**(int)    | By setting it to `1`, you can prevent others from signing up in the future.                                                                                                        |
-| **ENABLE_PWA**(bool)       | Experiential feature to support PWA, such as enabling standalone mode on iOS. The default setting is `ture`                                                                        |
+| Name                            | Description                                                                                                                                                                        |
+|:--------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **HABITS_STORAGE**(str)         | The `DATABASE` option stores everything in a single SQLite database file named habits.db. On the other hand, the `USER_DISK` option saves habits and records in a local json file. |
+| **FIRST_DAY_OF_WEEK**(int)      | By default, the first day of the week is set as Monday. To change it to Sunday, you can set it as `6`.                                                                             |
+| **MAX_USER_COUNT**(int)         | By setting it to `1`, you can prevent others from signing up in the future.                                                                                                        |
+| **ENABLE_IOS_STANDALONE**(bool) | Experiential feature to  enable standalone mode on iOS. The default setting is `false`                                                                                             |
 
 # Features
 
 1. Pages
    - [x] Index page
    - [x] Habit list page
+     - [x] Order habits
    - [x] Habit detail page
      - [x] Calendar
      - [x] Streaks
@@ -76,7 +77,12 @@ Here are my table tennis training sessions in the past year :)
 To import from an existing setup, e.g. uhabit, please check this [wiki](https://github.com/daya0576/beaverhabits/wiki/Import-from-Existing-Setup) for more details.
 
 ## Standalone mode for iOS (Web Application)
+
 Follow this [wiki](https://github.com/daya0576/beaverhabits/wiki/To-Add-Standalone-Mode-for-iOS-(Web-Application)) to add it as an icon on the home screen and make it launch in a separate window
+
+## Order Habits
+
+Open page `/gui/order` to change the order of habits.
 
 # Future Plans
 
