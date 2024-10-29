@@ -58,10 +58,8 @@ async def user_check_token(token: str | None) -> bool:
                         return False
                     strategy = get_jwt_strategy()
                     user = await strategy.read_token(token, user_manager)
-                    if user is None or not user.is_active:
-                        return False
-                    else:
-                        return True
+                    return user is not None and user.is_active
+
     except:
         return False
 
