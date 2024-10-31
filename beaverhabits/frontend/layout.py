@@ -1,13 +1,12 @@
 from contextlib import contextmanager
 import os
 
-from nicegui import ui
-
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.storage.meta import get_page_title, get_root_path
+from nicegui import ui
 
 
 def custom_header():
@@ -58,7 +57,14 @@ def layout(title: str | None = None, with_menu: bool = True):
     """Base layout for all pages."""
     root_path = get_root_path()
     title = title or get_page_title(root_path)
-    with ui.column().classes("max-w-sm mx-auto sm:mx-0"):
+
+    with ui.column() as c:
+        # Center the content on small screens
+        c.classes("max-w-sm mx-auto")
+        if not settings.ENABLE_DESKTOP_ALGIN_CENTER:
+            c.classes("sm:mx-0")
+
+        # Standard headers
         custom_header()
 
         with ui.row().classes("min-w-full"):

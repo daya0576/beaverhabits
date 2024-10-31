@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     # Customization
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
     ENABLE_IOS_STANDALONE: bool = False
+    ENABLE_DESKTOP_ALGIN_CENTER: bool = False
 
     def is_dev(self):
         return self.ENV == "dev"
