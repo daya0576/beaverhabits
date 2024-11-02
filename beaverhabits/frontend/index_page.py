@@ -8,7 +8,7 @@ from beaverhabits.configs import settings
 from beaverhabits.frontend.components import HabitCheckBox, link
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
-from beaverhabits.storage.storage import HabitList
+from beaverhabits.storage.storage import HabitList, HabitStatus
 
 HABIT_LIST_RECORD_COUNT = settings.INDEX_HABIT_ITEM_COUNT
 
@@ -17,7 +17,8 @@ row_compat_classes = "pl-4 pr-1 py-0"
 
 @ui.refreshable
 def habit_list_ui(days: List[datetime.date], habits: HabitList):
-    if not habits.habits:
+    active_habits = [h for h in habits.habits if h.status == HabitStatus.ACTIVE]
+    if not active_habits:
         ui.label("List is empty.").classes("mx-auto")
         return
 
@@ -39,7 +40,7 @@ def habit_list_ui(days: List[datetime.date], habits: HabitList):
                     label = ui.label(str(date.strftime(fmt))).classes(right_classes)
                     label.style("color: #9e9e9e; font-size: 85%; font-weight: 500")
 
-        for habit in habits.habits:
+        for habit in active_habits:
             with ui.card().classes(row_compat_classes).classes("shadow-none"):
                 with grid(1):
                     redirect_page = os.path.join(get_root_path(), "habits", habit.id)

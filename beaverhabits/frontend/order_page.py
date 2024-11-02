@@ -63,8 +63,8 @@ def add_ui(habit_list: HabitList):
 
 def order_page_ui(habit_list: HabitList):
     with layout():
-        with ui.column().classes("w-full pl-1 items-center gap-3"):
-            with ui.column().classes("sortable").classes("gap-3"):
+        with ui.column().classes("w-full pl-1 items-center gap-2"):
+            with ui.column().classes("sortable").classes("gap-2"):
                 add_ui(habit_list)
 
             with components.HabitOrderCard():
