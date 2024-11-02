@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass, field
 import datetime
 from typing import List, Optional
@@ -75,11 +76,21 @@ class DictHabit(Habit[DictRecord], DictStorage):
 
     @property
     def status(self) -> HabitStatus:
-        return HabitStatus(self.data.get("status", HabitStatus.ACTIVE))
+        status_value = self.data.get("status")
+
+        if status_value is None:
+            return HabitStatus.ACTIVE
+
+        try:
+            return HabitStatus(status_value)
+        except ValueError:
+            logging.error(f"Invalid status value: {status_value}")
+            self.data["status"] = None
+            return HabitStatus.ACTIVE
 
     @status.setter
     def status(self, value: HabitStatus) -> None:
-        self.data["status"] = value
+        self.data["status"] = value.value
 
     @property
     def records(self) -> list[DictRecord]:

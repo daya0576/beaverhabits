@@ -22,7 +22,7 @@ class CheckedRecord(Protocol):
 
 
 class HabitStatus(Enum):
-    ACTIVE = "normal"
+    ACTIVE = "active"
     ARCHIVED = "archive"
     SOLF_DELETED = "soft_delete"
 

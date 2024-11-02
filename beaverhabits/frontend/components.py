@@ -83,7 +83,7 @@ class HabitOrderCard(ui.card):
             if habit.status == HabitStatus.ARCHIVED:
                 # self.props("disabled")
                 self.classes("opacity-50")
-        
+
         if not habit:
             self.classes("opacity-50")
 
