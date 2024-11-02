@@ -6,6 +6,7 @@ from nicegui.testing import Screen
 from beaverhabits.frontend.add_page import add_page_ui
 from beaverhabits.frontend.habit_page import habit_page_ui
 from beaverhabits.frontend.index_page import index_page_ui
+from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.views import dummy_habit_list
 
 # Test cases:
@@ -39,6 +40,16 @@ def test_add_page(screen: Screen) -> None:
     habits = dummy_habit_list(days)
 
     add_page_ui(habits)
+
+    screen.open("/", timeout=60)
+    screen.should_contain("Habits")
+
+
+def test_order_page(screen: Screen) -> None:
+    days = dummy_days(7)
+    habits = dummy_habit_list(days)
+
+    order_page_ui(habits)
 
     screen.open("/", timeout=60)
     screen.should_contain("Habits")
