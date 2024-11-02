@@ -3,15 +3,14 @@ from dataclasses import dataclass
 import datetime
 from typing import Callable, Optional
 
-from nicegui import events, ui
-from nicegui.elements.button import Button
-
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.storage import Habit, HabitList
 from beaverhabits.utils import WEEK_DAYS
+from nicegui import events, ui
+from nicegui.elements.button import Button
 
 strptime = datetime.datetime.strptime
 
@@ -83,14 +82,15 @@ class HabitOrderCard(ui.card):
 
 class HabitNameInput(ui.input):
     def __init__(self, habit: Habit) -> None:
-        super().__init__(value=habit.name, on_change=self._async_task)
+        super().__init__(value=habit.name)
         self.habit = habit
         self.validation = self._validate
         self.props("dense hide-bottom-space")
+        self.on("blur", self._async_task)
 
-    async def _async_task(self, e: events.ValueChangeEventArguments):
-        self.habit.name = e.value
-        logger.info(f"Habit Name changed to {e.value}")
+    async def _async_task(self):
+        self.habit.name = self.value
+        logger.info(f"Habit Name changed to {self.value}")
 
     def _validate(self, value: str) -> Optional[str]:
         if not value:
@@ -121,6 +121,7 @@ class HabitDeleteButton(ui.button):
         self.habit = habit
         self.habit_list = habit_list
         self.refresh = refresh
+        self.props("flat fab-mini color=grey")
 
     async def _async_task(self):
         await self.habit_list.remove(self.habit)
@@ -135,6 +136,7 @@ class HabitAddButton(ui.input):
         self.refresh = refresh
         self.on("keydown.enter", self._async_task)
         self.props("dense")
+        self.props("flat fab-mini color=grey")
 
     async def _async_task(self):
         logger.info(f"Adding new habit: {self.value}")
