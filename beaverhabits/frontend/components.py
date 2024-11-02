@@ -7,7 +7,7 @@ from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
-from beaverhabits.storage.storage import Habit, HabitList
+from beaverhabits.storage.storage import Habit, HabitList, HabitStatus
 from beaverhabits.utils import WEEK_DAYS
 from nicegui import events, ui
 from nicegui.elements.button import Button
@@ -75,9 +75,17 @@ class HabitOrderCard(ui.card):
         self.habit = habit
         self.props("flat dense")
         self.classes("py-0.5 w-full")
+
         if habit:
             self.props("draggable")
             self.classes("cursor-grab")
+
+            if habit.status == HabitStatus.ARCHIVED:
+                # self.props("disabled")
+                self.classes("opacity-50")
+        
+        if not habit:
+            self.classes("opacity-50")
 
 
 class HabitNameInput(ui.input):
@@ -124,7 +132,26 @@ class HabitDeleteButton(ui.button):
         self.props("flat fab-mini color=grey")
 
     async def _async_task(self):
-        await self.habit_list.remove(self.habit)
+        if self.habit.status == HabitStatus.ACTIVE:
+            self.habit.status = HabitStatus.ARCHIVED
+            logger.info(f"Archive habit: {self.habit.name}")
+        elif self.habit.status == HabitStatus.ARCHIVED:
+            self.habit.status = HabitStatus.SOLF_DELETED
+            logger.info(f"Soft delete habit: {self.habit.name}")
+
+        self.refresh()
+
+
+class HabitEditButton(ui.button):
+    def __init__(self, habit: Habit, habit_list: HabitList, refresh: Callable) -> None:
+        super().__init__(on_click=self._async_task, icon="edit")
+        self.habit = habit
+        self.habit_list = habit_list
+        self.refresh = refresh
+        self.props("flat fab-mini color=grey")
+
+    async def _async_task(self):
+        # await self.habit_list.remove(self.habit)
         self.refresh()
         logger.info(f"Deleted habit: {self.habit.name}")
 
@@ -139,11 +166,10 @@ class HabitAddButton(ui.input):
         self.props("flat fab-mini color=grey")
 
     async def _async_task(self):
-        logger.info(f"Adding new habit: {self.value}")
         await self.habit_list.add(self.value)
+        logger.info(f"Added new habit: {self.value}")
         self.refresh()
         self.set_value("")
-        logger.info(f"Added new habit: {self.value}")
 
 
 TODAY = "today"

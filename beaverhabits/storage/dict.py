@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import datetime
 from typing import List, Optional
 
-from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList
+from beaverhabits.storage.storage import CheckedRecord, HabitStatus, Habit, HabitList
 from beaverhabits.utils import generate_short_hash
 
 DAY_MASK = "%Y-%m-%d"
@@ -74,6 +74,14 @@ class DictHabit(Habit[DictRecord], DictStorage):
         self.data["star"] = value
 
     @property
+    def status(self) -> HabitStatus:
+        return HabitStatus(self.data.get("status", HabitStatus.ACTIVE))
+
+    @status.setter
+    def status(self, value: HabitStatus) -> None:
+        self.data["status"] = value
+
+    @property
     def records(self) -> list[DictRecord]:
         return [DictRecord(d) for d in self.data["records"]]
 
@@ -114,16 +122,18 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
     @property
     def habits(self) -> list[DictHabit]:
         habits = [DictHabit(d) for d in self.data["habits"]]
+        status = {HabitStatus.ACTIVE: 0, HabitStatus.ARCHIVED: 1}
+
+        # Filter out valid habits
+        habits = [x for x in habits if x.status in status]
 
         # Sort by order
-        if self.order:
+        if o := self.order:
             habits.sort(
-                key=lambda x: (
-                    self.order.index(str(x.id))
-                    if str(x.id) in self.order
-                    else float("inf")
-                )
+                key=lambda x: (o.index(str(x.id)) if str(x.id) in o else float("inf"))
             )
+        # Sort by status
+        habits.sort(key=lambda x: status.get(x.status, float("inf")))
 
         return habits
 
