@@ -39,7 +39,7 @@ def menu_component(root_path: str) -> None:
         ui.navigate.to(os.path.join(root_path, x), new_tab=True)
 
     with ui.menu():
-        compat_menu("Add", lambda: redirect("add"))
+        compat_menu("Add", lambda: redirect("order"))
         ui.separator()
 
         compat_menu("Export", lambda: open_tab("export"))

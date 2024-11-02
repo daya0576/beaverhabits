@@ -1,4 +1,5 @@
 import datetime
+from enum import Enum
 from typing import List, Optional, Protocol
 
 from beaverhabits.app.db import User
@@ -20,6 +21,12 @@ class CheckedRecord(Protocol):
     __repr__ = __str__
 
 
+class HabitStatus(Enum):
+    ACTIVE = "normal"
+    ARCHIVED = "archive"
+    SOLF_DELETED = "soft_delete"
+
+
 class Habit[R: CheckedRecord](Protocol):
     @property
     def id(self) -> str | int: ...
@@ -38,6 +45,12 @@ class Habit[R: CheckedRecord](Protocol):
 
     @property
     def records(self) -> List[R]: ...
+
+    @property
+    def status(self) -> HabitStatus: ...
+
+    @status.setter
+    def status(self, value: HabitStatus) -> None: ...
 
     @property
     def ticked_days(self) -> list[datetime.date]:
