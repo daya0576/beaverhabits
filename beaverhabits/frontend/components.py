@@ -362,3 +362,7 @@ def habit_heat_map(
             week_day_abbr_label = ui.label(habit_calendar.week_days[i])
             week_day_abbr_label.classes("indent-1.5 text-gray-300")
             week_day_abbr_label.style("width: 22px; line-height: 20px; font-size: 9px;")
+
+
+def grid(columns: int, rows: int | None = 1) -> ui.grid:
+    return ui.grid(columns=columns, rows=rows).classes("gap-0 items-center")

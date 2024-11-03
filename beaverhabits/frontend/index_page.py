@@ -8,7 +8,7 @@ from beaverhabits.configs import settings
 from beaverhabits.frontend.components import HabitCheckBox, link
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
-from beaverhabits.storage.storage import HabitList, HabitStatus
+from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
 
 HABIT_LIST_RECORD_COUNT = settings.INDEX_HABIT_ITEM_COUNT
 
@@ -16,10 +16,11 @@ row_compat_classes = "pl-4 pr-1 py-0"
 
 
 @ui.refreshable
-def habit_list_ui(days: List[datetime.date], habits: HabitList):
-    active_habits = [h for h in habits.habits if h.status == HabitStatus.ACTIVE]
+def habit_list_ui(days: List[datetime.date], habit_list: HabitList):
+    active_habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
+
     if not active_habits:
-        ui.label("List is empty.").classes("mx-auto")
+        ui.label("List is empty.").classes("mx-auto w-80")
         return
 
     with ui.column().classes("gap-1.5"):
@@ -43,7 +44,9 @@ def habit_list_ui(days: List[datetime.date], habits: HabitList):
         for habit in active_habits:
             with ui.card().classes(row_compat_classes).classes("shadow-none"):
                 with grid(1):
-                    redirect_page = os.path.join(get_root_path(), "habits", habit.id)
+                    redirect_page = os.path.join(
+                        get_root_path(), "habits", str(habit.id)
+                    )
                     habit_name = link(habit.name, target=redirect_page)
                     habit_name.classes(left_classes)
 

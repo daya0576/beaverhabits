@@ -8,7 +8,7 @@ from beaverhabits.frontend.components import (
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.logging import logger
-from beaverhabits.storage.storage import HabitList, HabitStatus
+from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
 
 
 async def item_drop(e, habit_list: HabitList):
@@ -45,14 +45,16 @@ async def item_drop(e, habit_list: HabitList):
 
 @ui.refreshable
 def add_ui(habit_list: HabitList):
-    for item in habit_list.habits:
+    habits = (
+        HabitListBuilder(habit_list)
+        .status(HabitStatus.ACTIVE, HabitStatus.ARCHIVED)
+        .build()
+    )
+
+    for item in habits:
         with components.HabitOrderCard(item):
-            with ui.grid(columns=12, rows=1).classes("gap-0 items-center"):
-                if item.status == HabitStatus.ACTIVE:
-                    name = HabitNameInput(item)
-                    name.props("borderless")
-                else:
-                    name = ui.label(item.name)
+            with components.grid(columns=12):
+                name = ui.label(item.name)
                 name.classes("col-span-4 col-3")
 
                 ui.space().classes("col-span-7")
@@ -63,12 +65,12 @@ def add_ui(habit_list: HabitList):
 
 def order_page_ui(habit_list: HabitList):
     with layout():
-        with ui.column().classes("w-full pl-1 items-center gap-2"):
+        with ui.column().classes("pl-1 items-center gap-2"):
             with ui.column().classes("sortable").classes("gap-2"):
                 add_ui(habit_list)
 
             with components.HabitOrderCard():
-                with ui.grid(columns=12, rows=1).classes("gap-0 items-center"):
+                with components.grid(columns=12):
                     add = HabitAddButton(habit_list, add_ui.refresh)
                     add.classes("col-span-12")
                     add.props("borderless")

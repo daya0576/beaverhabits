@@ -7,13 +7,12 @@ from beaverhabits.frontend.components import (
     HabitStarCheckbox,
 )
 from beaverhabits.frontend.layout import layout
-from beaverhabits.storage.storage import HabitList
+from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
 
 
 @ui.refreshable
 def add_ui(habit_list: HabitList):
-    habits = habit_list.habits
-    habits.sort(key=lambda x: x.star, reverse=True)
+    habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
 
     for item in habits:
         with ui.grid(columns=8, rows=1).classes("w-full gap-0 items-center"):
