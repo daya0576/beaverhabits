@@ -70,7 +70,7 @@ Options:
 ## Streaks
 
 Here are my table tennis training sessions in the past year :)
-<img width="760" alt="image" src="https://github.com/user-attachments/assets/327f3855-299e-4307-87af-f30b4b4f7c60">
+<img alt="streaks" src="https://github.com/user-attachments/assets/a7a35d96-8fe6-4c01-87d8-84aa820a334f">
 
 ## Import
 

@@ -47,11 +47,10 @@ def menu_component(root_path: str) -> None:
 
     with ui.menu():
         compat_menu("Add", lambda: redirect("add"))
+        compat_menu("Sort", lambda: redirect("order"))
         ui.separator()
 
         compat_menu("Export", lambda: open_tab("export"))
-        ui.separator()
-
         if not root_path.startswith("/demo"):
             compat_menu("Import", lambda: redirect("import"))
             ui.separator()
