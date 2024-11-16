@@ -1,12 +1,13 @@
 from contextlib import contextmanager
 import os
 
+from nicegui import ui
+
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.storage.meta import get_page_title, get_root_path
-from nicegui import ui
 
 
 def custom_header():
@@ -27,6 +28,12 @@ def custom_header():
     # Experimental PWA support
     if settings.ENABLE_IOS_STANDALONE:
         ui.add_head_html('<meta name="apple-mobile-web-app-capable" content="yes">')
+
+
+def add_umami_headers():
+    ui.add_head_html(
+        '<script defer src="https://cloud.umami.is/script.js" data-website-id="246fa4ac-0f4f-464a-8a32-14c9f75fed77"></script>'
+    )
 
 
 def menu_component(root_path: str) -> None:
@@ -66,6 +73,7 @@ def layout(title: str | None = None, with_menu: bool = True):
 
         # Standard headers
         custom_header()
+        add_umami_headers()
 
         with ui.row().classes("min-w-full"):
             menu_header(title, target=root_path)
