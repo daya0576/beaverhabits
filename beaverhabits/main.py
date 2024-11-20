@@ -1,9 +1,11 @@
 import asyncio
-import logging
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI
 import sentry_sdk
+
+from beaverhabits.app import crud
 
 from .app.app import init_auth_routes
 from .app.db import create_db_and_tables
@@ -36,6 +38,11 @@ if settings.is_dev():
 @app.get("/health")
 def read_root():
     return {"Hello": "World"}
+
+
+@app.get("/user/count")
+async def user_count():
+    return {"count": await crud.get_user_count()}
 
 
 # auth
