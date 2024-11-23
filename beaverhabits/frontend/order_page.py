@@ -4,7 +4,6 @@ from beaverhabits.frontend import components
 from beaverhabits.frontend.components import (
     HabitAddButton,
     HabitDeleteButton,
-    HabitNameInput,
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.logging import logger
@@ -18,25 +17,27 @@ async def item_drop(e, habit_list: HabitList):
     # Move element
     elements = ui.context.client.elements
     dragged = elements[int(e.args["id"][1:])]
+    assert dragged.parent_slot is not None
     dragged.move(target_index=e.args["new_index"])
 
-    # Update habit order
-    assert dragged.parent_slot is not None
-    habits = [
-        x.habit
-        for x in dragged.parent_slot.children
-        if isinstance(x, components.HabitOrderCard) and x.habit
-    ]
-
     # Unarchive dragged habit
-    if new_index < len(habits) - 1:
-        if habits[new_index + 1].status == HabitStatus.ACTIVE:
-            habits[new_index].status = HabitStatus.ACTIVE
-    # Archive dragged Habit
-    if new_index > 1:
-        if habits[new_index - 1].status == HabitStatus.ARCHIVED:
-            habits[new_index].status = HabitStatus.ARCHIVED
+    is_archived = False
+    habits = []
+    for card in dragged.parent_slot:
+        if not isinstance(card, components.HabitOrderCard):
+            continue
 
+        if card.habit is None:
+            is_archived = True
+            continue
+
+        if not is_archived and card.habit.status == HabitStatus.ARCHIVED:
+            card.habit.status = HabitStatus.ACTIVE
+        if is_archived and card.habit.status == HabitStatus.ACTIVE:
+            card.habit.status = HabitStatus.ARCHIVED
+        habits.append(card.habit)
+
+    # Update order
     habit_list.order = [str(x.id) for x in habits]
     logger.info(f"New order: {habits}")
 
@@ -45,22 +46,27 @@ async def item_drop(e, habit_list: HabitList):
 
 @ui.refreshable
 def add_ui(habit_list: HabitList):
-    habits = (
-        HabitListBuilder(habit_list)
-        .status(HabitStatus.ACTIVE, HabitStatus.ARCHIVED)
-        .build()
-    )
+    active_habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
+    archived_habits = HabitListBuilder(habit_list).status(HabitStatus.ARCHIVED).build()
+    habits = [*active_habits, None, *archived_habits]
 
     for item in habits:
         with components.HabitOrderCard(item):
             with components.grid(columns=12):
-                name = ui.label(item.name)
-                name.classes("col-span-4 col-3")
+                if item:
+                    name = ui.label(item.name)
+                    name.classes("col-span-4 col-3")
 
-                ui.space().classes("col-span-7")
+                    ui.space().classes("col-span-7")
 
-                delete = HabitDeleteButton(item, habit_list, add_ui.refresh)
-                delete.classes("col-span-1")
+                    btn = HabitDeleteButton(item, habit_list, add_ui.refresh)
+                    btn.classes("col-span-1")
+                    if item.status == HabitStatus.ACTIVE:
+                        btn.classes("invisible")
+                else:
+                    add = HabitAddButton(habit_list, add_ui.refresh)
+                    add.classes("col-span-12")
+                    add.props("borderless")
 
 
 def order_page_ui(habit_list: HabitList):
@@ -69,14 +75,8 @@ def order_page_ui(habit_list: HabitList):
             with ui.column().classes("sortable").classes("gap-2"):
                 add_ui(habit_list)
 
-            with components.HabitOrderCard():
-                with components.grid(columns=12):
-                    add = HabitAddButton(habit_list, add_ui.refresh)
-                    add.classes("col-span-12")
-                    add.props("borderless")
-
     ui.add_body_html(
-        r"""
+        """
         <script type="module">
         import '/statics/libs/sortable.min.js';
         document.addEventListener('DOMContentLoaded', () => {
@@ -87,7 +87,7 @@ def order_page_ui(habit_list: HabitList):
             });
         });
         </script>
-    """
+        """
     )
 
     ui.on("item_drop", lambda e: item_drop(e, habit_list))

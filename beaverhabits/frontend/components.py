@@ -1,7 +1,10 @@
 import calendar
-from dataclasses import dataclass
 import datetime
+from dataclasses import dataclass
 from typing import Callable, Optional
+
+from nicegui import events, ui
+from nicegui.elements.button import Button
 
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
@@ -9,8 +12,6 @@ from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.storage import Habit, HabitList, HabitStatus
 from beaverhabits.utils import WEEK_DAYS
-from nicegui import events, ui
-from nicegui.elements.button import Button
 
 strptime = datetime.datetime.strptime
 
@@ -123,6 +124,16 @@ class HabitStarCheckbox(ui.checkbox):
         logger.info(f"Habit Star changed to {e.value}")
 
 
+class HabitEditButton(ui.button):
+    def __init__(self, habit: Habit) -> None:
+        super().__init__(on_click=self._async_task, icon="edit_square")
+        self.habit = habit
+        self.props("flat fab-mini color=grey")
+
+    async def _async_task(self):
+        pass
+
+
 class HabitDeleteButton(ui.button):
     def __init__(self, habit: Habit, habit_list: HabitList, refresh: Callable) -> None:
         super().__init__(on_click=self._async_task, icon=icons.DELETE)
@@ -142,28 +153,13 @@ class HabitDeleteButton(ui.button):
         self.refresh()
 
 
-class HabitEditButton(ui.button):
-    def __init__(self, habit: Habit, habit_list: HabitList, refresh: Callable) -> None:
-        super().__init__(on_click=self._async_task, icon="edit")
-        self.habit = habit
-        self.habit_list = habit_list
-        self.refresh = refresh
-        self.props("flat fab-mini color=grey")
-
-    async def _async_task(self):
-        # await self.habit_list.remove(self.habit)
-        self.refresh()
-        logger.info(f"Deleted habit: {self.habit.name}")
-
-
 class HabitAddButton(ui.input):
     def __init__(self, habit_list: HabitList, refresh: Callable) -> None:
         super().__init__("New item")
         self.habit_list = habit_list
         self.refresh = refresh
         self.on("keydown.enter", self._async_task)
-        self.props("dense")
-        self.props("flat fab-mini color=grey")
+        self.props('dense color="white" label-color="white"')
 
     async def _async_task(self):
         await self.habit_list.add(self.value)

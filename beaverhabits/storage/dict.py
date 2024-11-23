@@ -1,9 +1,9 @@
+import datetime
 import logging
 from dataclasses import dataclass, field
-import datetime
 from typing import List, Optional
 
-from beaverhabits.storage.storage import CheckedRecord, HabitStatus, Habit, HabitList
+from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, HabitStatus
 from beaverhabits.utils import generate_short_hash
 
 DAY_MASK = "%Y-%m-%d"
@@ -123,7 +123,7 @@ class DictHabit(Habit[DictRecord], DictStorage):
         return hash(self.id)
 
     def __str__(self) -> str:
-        return f"{self.name}<{self.id}>"
+        return f"{self.name}<{self.status.value}>"
 
     __repr__ = __str__
 
