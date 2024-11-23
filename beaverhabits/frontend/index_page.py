@@ -34,6 +34,7 @@ def habit_list_ui(days: List[datetime.date], habit_list: HabitList):
             "col-span-2 px-1.5 justify-self-center",
         )
 
+        # Header of date columns
         with grid(2).classes(row_compat_classes):
             for fmt in ("%a", "%d"):
                 ui.label("").classes(left_classes)
