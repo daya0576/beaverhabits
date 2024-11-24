@@ -38,6 +38,9 @@ def habit_page(today: datetime.date, habit: Habit):
         link("Last 3 Months", get_habit_heatmap_path(habit)).classes("text-base")
         habit_heat_map(habit, habit_calendar, ticked_data=ticked_data)
 
+    with card():
+        link("Total", get_habit_heatmap_path(habit)).classes("text-base")
+
 
 def habit_page_ui(today: datetime.date, habit: Habit):
     ui.add_css(CHECK_BOX_CSS)

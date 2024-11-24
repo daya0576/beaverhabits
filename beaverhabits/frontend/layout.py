@@ -78,7 +78,7 @@ def layout(title: str | None = None, with_menu: bool = True):
         custom_header()
         add_umami_headers()
 
-        path = context.get_client().page.path
+        path = context.client.page.path
         logger.info(f"Rendering page: {path}")
         with ui.row().classes("min-w-full gap-x-2"):
             menu_header(title, target=root_path)
