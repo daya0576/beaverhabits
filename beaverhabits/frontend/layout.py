@@ -49,7 +49,8 @@ def menu_component(root_path: str) -> None:
     """Dropdown menu for the top-right corner of the page."""
     with ui.menu():
         compat_menu("Add", lambda: redirect("add"))
-        # compat_menu("Sort", lambda: redirect("order"))
+        ui.separator()
+        compat_menu("Sort", lambda: redirect("order"))
         ui.separator()
 
         compat_menu("Export", lambda: open_tab("export"))
@@ -86,8 +87,6 @@ def layout(title: str | None = None, with_menu: bool = True):
                 ui.space()
                 if "order" in path:
                     menu_icon_button(icons.ADD, click=lambda: redirect("add"))
-                if "add" in path:
-                    menu_icon_button("drag_indicator", click=lambda: redirect("order"))
                 # elif "/habits/{habit_id}" in path:
                 #     menu_icon_button(icons.EDIT, click=lambda: redirect("edit"))
                 with menu_icon_button(icons.MENU):
