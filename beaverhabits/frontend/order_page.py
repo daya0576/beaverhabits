@@ -26,8 +26,7 @@ async def item_drop(e, habit_list: HabitList):
     for card in dragged.parent_slot:
         if not isinstance(card, components.HabitOrderCard):
             continue
-
-        if card.habit is None:
+        if not card.habit:
             is_archived = True
             continue
 
@@ -35,6 +34,10 @@ async def item_drop(e, habit_list: HabitList):
             card.habit.status = HabitStatus.ACTIVE
         if is_archived and card.habit.status == HabitStatus.ACTIVE:
             card.habit.status = HabitStatus.ARCHIVED
+
+        if card.habit.star:
+            card.habit.star = False
+
         habits.append(card.habit)
 
     # Update order
@@ -52,28 +55,25 @@ def add_ui(habit_list: HabitList):
 
     for item in habits:
         with components.HabitOrderCard(item):
-            with components.grid(columns=12):
+            with components.grid(columns=8):
                 if item:
                     name = ui.label(item.name)
-                    name.classes("col-span-4 col-3")
-
-                    ui.space().classes("col-span-7")
+                    name.classes("col-span-7 col-3")
 
                     btn = HabitDeleteButton(item, habit_list, add_ui.refresh)
                     btn.classes("col-span-1")
-                    if item.status == HabitStatus.ACTIVE:
-                        btn.classes("invisible")
+                    # if item.status == HabitStatus.ACTIVE:
+                    #     btn.classes("invisible")
                 else:
                     add = HabitAddButton(habit_list, add_ui.refresh)
-                    add.classes("col-span-12")
+                    add.classes("col-span-8")
                     add.props("borderless")
 
 
 def order_page_ui(habit_list: HabitList):
     with layout():
-        with ui.column().classes("items-center gap-2"):
-            with ui.column().classes("sortable").classes("gap-2"):
-                add_ui(habit_list)
+        with ui.column().classes("items-center sortable gap-3 w-full"):
+            add_ui(habit_list)
 
     ui.add_body_html(
         """

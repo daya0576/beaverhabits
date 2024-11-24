@@ -75,7 +75,7 @@ class HabitOrderCard(ui.card):
         super().__init__()
         self.habit = habit
         self.props("flat dense")
-        self.classes("py-0.5 w-full")
+        self.classes("py-0 w-full")
 
         if habit:
             self.props("draggable")
@@ -128,7 +128,7 @@ class HabitEditButton(ui.button):
     def __init__(self, habit: Habit) -> None:
         super().__init__(on_click=self._async_task, icon="edit_square")
         self.habit = habit
-        self.props("flat fab-mini color=grey")
+        self.props("flat fab-mini color=grey-8")
 
     async def _async_task(self):
         pass
@@ -136,7 +136,8 @@ class HabitEditButton(ui.button):
 
 class HabitDeleteButton(ui.button):
     def __init__(self, habit: Habit, habit_list: HabitList, refresh: Callable) -> None:
-        super().__init__(on_click=self._async_task, icon=icons.DELETE)
+        icon = icons.DELETE if habit.status == HabitStatus.ACTIVE else icons.DELETE_F
+        super().__init__(on_click=self._async_task, icon=icon)
         self.habit = habit
         self.habit_list = habit_list
         self.refresh = refresh

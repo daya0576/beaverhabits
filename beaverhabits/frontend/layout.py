@@ -1,13 +1,22 @@
 import os
 from contextlib import contextmanager
 
-from nicegui import ui
+from nicegui import context, ui
 
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
+from beaverhabits.logging import logger
 from beaverhabits.storage.meta import get_page_title, get_root_path
+
+
+def redirect(x):
+    ui.navigate.to(os.path.join(get_root_path(), x))
+
+
+def open_tab(x):
+    ui.navigate.to(os.path.join(get_root_path(), x), new_tab=True)
 
 
 def custom_header():
@@ -38,15 +47,8 @@ def add_umami_headers():
 
 def menu_component(root_path: str) -> None:
     """Dropdown menu for the top-right corner of the page."""
-
-    def redirect(x):
-        ui.navigate.to(os.path.join(root_path, x))
-
-    def open_tab(x):
-        ui.navigate.to(os.path.join(root_path, x), new_tab=True)
-
     with ui.menu():
-        compat_menu("Add", lambda: redirect("order"))
+        compat_menu("Add", lambda: redirect("add"))
         # compat_menu("Sort", lambda: redirect("order"))
         ui.separator()
 
@@ -76,10 +78,20 @@ def layout(title: str | None = None, with_menu: bool = True):
         custom_header()
         add_umami_headers()
 
-        with ui.row().classes("min-w-full"):
+        path = context.get_client().page.path
+        logger.info(f"Rendering page: {path}")
+        with ui.row().classes("min-w-full gap-x-2"):
             menu_header(title, target=root_path)
             if with_menu:
                 ui.space()
+                if "add" in path:
+                    menu_icon_button(icons.SWAP, click=lambda: redirect("order"))
+                if "order" in path:
+                    menu_icon_button(icons.ADD, click=lambda: redirect("add"))
+
+                # if "/habits/{habit_id}" in path:
+                #     menu_icon_button(icons.EDIT, click=lambda: redirect("edit"))
+
                 with menu_icon_button(icons.MENU):
                     menu_component(root_path)
 
