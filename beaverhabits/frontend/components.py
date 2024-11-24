@@ -3,6 +3,7 @@ import datetime
 from dataclasses import dataclass
 from typing import Callable, Optional
 
+from dateutil.relativedelta import relativedelta
 from nicegui import events, ui
 from nicegui.elements.button import Button
 
@@ -35,7 +36,7 @@ def compat_menu(name: str, callback: Callable):
 
 
 def menu_icon_button(icon_name: str, click: Optional[Callable] = None) -> Button:
-    button_props = "flat=true unelevated=true padding=xs backgroup=none"
+    button_props = "flat=true unelevated=true padding=xs backgroup=none size=13px"
     return ui.button(icon=icon_name, color=None, on_click=click).props(button_props)
 
 
@@ -363,3 +364,51 @@ def habit_heat_map(
 
 def grid(columns: int, rows: int | None = 1) -> ui.grid:
     return ui.grid(columns=columns, rows=rows).classes("gap-0 items-center")
+
+
+def habit_history(today: datetime.date, ticked_days: list[datetime.date]):
+    # get lastest 6 months, e.g. Feb
+    months, data = [], []
+    for i in range(12, 0, -1):
+        offset_date = today - relativedelta(months=i)
+        months.append(offset_date.strftime("%b"))
+
+        count = sum(
+            1
+            for x in ticked_days
+            if x.month == offset_date.month and x.year == offset_date.year
+        )
+        data.append(count)
+
+    echart = ui.echart(
+        {
+            "xAxis": {
+                "data": months,
+            },
+            "yAxis": {
+                "type": "value",
+                "splitLine": {
+                    "show": True,
+                    "lineStyle": {
+                        "color": "#303030",
+                    },
+                },
+            },
+            "series": [
+                {
+                    "type": "bar",
+                    "data": data,
+                    "itemStyle": {"color": icons.current_color},
+                    "animation": False,
+                }
+            ],
+            "grid": {
+                "top": 15,
+                "bottom": 25,
+                "left": 30,
+                "right": 8,
+                "show": False,
+            },
+        }
+    )
+    echart.classes("h-40")

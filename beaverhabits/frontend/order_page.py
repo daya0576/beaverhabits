@@ -55,24 +55,23 @@ def add_ui(habit_list: HabitList):
 
     for item in habits:
         with components.HabitOrderCard(item):
-            with components.grid(columns=8):
+            with components.grid(columns=7):
                 if item:
                     name = ui.label(item.name)
-                    name.classes("col-span-7 col-3")
+                    name.classes("col-span-6 col-3")
 
                     btn = HabitDeleteButton(item, habit_list, add_ui.refresh)
                     btn.classes("col-span-1")
-                    # if item.status == HabitStatus.ACTIVE:
-                    #     btn.classes("invisible")
+                    if item.status == HabitStatus.ACTIVE:
+                        btn.classes("invisible")
+
                 else:
-                    add = HabitAddButton(habit_list, add_ui.refresh)
-                    add.classes("col-span-8")
-                    add.props("borderless")
+                    ui.separator().props("w-full col-span-8").props("size=2px")
 
 
 def order_page_ui(habit_list: HabitList):
     with layout():
-        with ui.column().classes("items-center sortable gap-3 w-full"):
+        with ui.column().classes("items-center sortable gap-2 w-full"):
             add_ui(habit_list)
 
     ui.add_body_html(

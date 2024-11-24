@@ -48,7 +48,13 @@ def habit_list_ui(days: List[datetime.date], habit_list: HabitList):
                     redirect_page = os.path.join(
                         get_root_path(), "habits", str(habit.id)
                     )
-                    habit_name = link(habit.name, target=redirect_page)
+                    if settings.INDEX_SHOW_HABIT_COUNT:
+                        habit_name = link(
+                            f"{habit.name} ({len(habit.ticked_days)})",
+                            target=redirect_page,
+                        )
+                    else:
+                        habit_name = link(habit.name, target=redirect_page)
                     habit_name.classes(left_classes)
 
                     d_d = {r.day: r.done for r in habit.records}

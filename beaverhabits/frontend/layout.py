@@ -80,18 +80,16 @@ def layout(title: str | None = None, with_menu: bool = True):
 
         path = context.client.page.path
         logger.info(f"Rendering page: {path}")
-        with ui.row().classes("min-w-full gap-x-2"):
+        with ui.row().classes("min-w-full gap-x-0"):
             menu_header(title, target=root_path)
             if with_menu:
                 ui.space()
-                if "add" in path:
-                    menu_icon_button(icons.SWAP, click=lambda: redirect("order"))
                 if "order" in path:
                     menu_icon_button(icons.ADD, click=lambda: redirect("add"))
-
-                # if "/habits/{habit_id}" in path:
+                if "add" in path:
+                    menu_icon_button("drag_indicator", click=lambda: redirect("order"))
+                # elif "/habits/{habit_id}" in path:
                 #     menu_icon_button(icons.EDIT, click=lambda: redirect("edit"))
-
                 with menu_icon_button(icons.MENU):
                     menu_component(root_path)
 

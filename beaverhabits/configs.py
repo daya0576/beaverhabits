@@ -1,6 +1,6 @@
 import calendar
-from enum import Enum
 import logging
+from enum import Enum
 
 import dotenv
 from pydantic_settings import BaseSettings
@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
     ENABLE_IOS_STANDALONE: bool = False
     ENABLE_DESKTOP_ALGIN_CENTER: bool = True
+    INDEX_SHOW_HABIT_COUNT: bool = False
 
     def is_dev(self):
         return self.ENV == "dev"
