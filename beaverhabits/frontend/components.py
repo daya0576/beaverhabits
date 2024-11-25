@@ -36,7 +36,7 @@ def compat_menu(name: str, callback: Callable):
 
 
 def menu_icon_button(icon_name: str, click: Optional[Callable] = None) -> Button:
-    button_props = "flat=true unelevated=true padding=xs backgroup=none size=13px"
+    button_props = "flat=true unelevated=true padding=xs backgroup=none"
     return ui.button(icon=icon_name, color=None, on_click=click).props(button_props)
 
 
