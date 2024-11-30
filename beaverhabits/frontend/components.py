@@ -332,12 +332,13 @@ def habit_heat_map(
     habit: Habit,
     habit_calendar: CalendarHeatmap,
     ticked_data: dict[datetime.date, bool] | None = None,
+    readonly: bool = False,
 ):
     today = habit_calendar.today
 
     # Bind to external state data
     is_bind_data = True
-    if ticked_data is None:
+    if readonly or ticked_data is None:
         ticked_data = {x: True for x in habit.ticked_days}
         is_bind_data = False
 

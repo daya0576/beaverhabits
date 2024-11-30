@@ -19,9 +19,14 @@ from beaverhabits.storage.storage import Habit
 WEEKS_TO_DISPLAY = 15
 
 
+def card_title(title: str, target: str):
+    link(title, target).classes("text-base flex justify-center")
+
+
 @contextmanager
-def card(link: str | None = None):
-    with ui.card().classes("p-3 gap-0 no-shadow items-center") as card:
+def card(link: str | None = None, padding: float = 3):
+    with ui.card().classes("gap-0 no-shadow items-center") as card:
+        card.classes(f"p-{padding}")
         card.classes("w-full")
         card.style("max-width: 350px")
         if link:
@@ -34,19 +39,21 @@ def habit_page(today: datetime.date, habit: Habit):
     with ui.column().classes("gap-y-3"):
         ticked_data = {x: True for x in habit.ticked_days}
         habit_calendar = CalendarHeatmap.build(today, WEEKS_TO_DISPLAY, calendar.MONDAY)
+        target = get_habit_heatmap_path(habit)
 
         with card():
             HabitDateInput(today, habit, ticked_data)
 
         with card():
-            link("Last 3 Months", get_habit_heatmap_path(habit)).classes(
-                "text-base flex justify-center"
-            )
+            card_title("Last 3 Months", target)
             habit_heat_map(habit, habit_calendar, ticked_data=ticked_data)
 
         with card():
-            ui.label("History").classes("text-base flex justify-center")
+            card_title("History", target)
             habit_history(today, list(ticked_data.keys()))
+
+        with card(target, padding=0.5):
+            ui.icon("more_horiz", size="1.5em")
 
 
 def habit_page_ui(today: datetime.date, habit: Habit):
