@@ -397,7 +397,7 @@ def habit_history(today: datetime.date, ticked_days: list[datetime.date]):
             },
             "series": [
                 {
-                    "type": "bar",
+                    "type": "line",
                     "data": data,
                     "itemStyle": {"color": icons.current_color},
                     "animation": False,
