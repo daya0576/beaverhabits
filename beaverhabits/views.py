@@ -11,7 +11,7 @@ from beaverhabits.logging import logger
 from beaverhabits.storage import get_user_dict_storage, session_storage
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.utils import generate_short_hash
+from beaverhabits.utils import dummy_days, generate_short_hash
 
 user_storage = get_user_dict_storage()
 

@@ -76,16 +76,18 @@ class HabitOrderCard(ui.card):
         self.props("flat dense")
         self.classes("py-0 w-full")
 
-        if habit:
-            self.props("draggable")
-            self.classes("cursor-grab")
-
-            if habit.status == HabitStatus.ARCHIVED:
-                # self.props("disabled")
-                self.classes("opacity-50")
-
-        if not habit:
+        # Drag and drop
+        self.props("draggable")
+        self.classes("cursor-grab")
+        if not habit or habit.status == HabitStatus.ARCHIVED:
             self.classes("opacity-50")
+
+        # Button to delete habit
+        self.btn: ui.button | None = None
+        self.on(
+            "mouseover", lambda: self.btn and self.btn.classes("transition opacity-100")
+        )
+        self.on("mouseout", lambda: self.btn and self.btn.classes(remove="opacity-100"))
 
 
 class HabitNameInput(ui.input):
@@ -140,13 +142,24 @@ class HabitDeleteButton(ui.button):
         self.habit = habit
         self.habit_list = habit_list
         self.refresh = refresh
-        self.props("flat fab-mini color=grey")
+        self.props("flat fab-mini color=grey-9")
+
+        # Double confirm dialog to delete habit
+        with ui.dialog() as dialog, ui.card():
+            ui.label(f"Are you sure to delete habit: {habit.name}?")
+            with ui.row():
+                ui.button("Yes", on_click=lambda: dialog.submit(True))
+                ui.button("No", on_click=lambda: dialog.submit(False))
+        self.dialog = dialog
 
     async def _async_task(self):
         if self.habit.status == HabitStatus.ACTIVE:
             self.habit.status = HabitStatus.ARCHIVED
             logger.info(f"Archive habit: {self.habit.name}")
-        elif self.habit.status == HabitStatus.ARCHIVED:
+
+        if self.habit.status == HabitStatus.ARCHIVED:
+            if not await self.dialog:
+                return
             self.habit.status = HabitStatus.SOLF_DELETED
             logger.info(f"Soft delete habit: {self.habit.name}")
 
@@ -412,3 +425,9 @@ def habit_history(today: datetime.date, ticked_days: list[datetime.date]):
         }
     )
     echart.classes("h-40")
+
+
+class HabitTotalBadge(ui.badge):
+    def __init__(self, habit: Habit) -> None:
+        super().__init__()
+        self.bind_text_from(habit, "ticked_days", backward=lambda x: str(len(x)))

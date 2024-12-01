@@ -5,7 +5,7 @@ from typing import List
 from nicegui import ui
 
 from beaverhabits.configs import settings
-from beaverhabits.frontend.components import HabitCheckBox, link
+from beaverhabits.frontend.components import HabitCheckBox, HabitTotalBadge, link
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
@@ -48,19 +48,19 @@ def habit_list_ui(days: List[datetime.date], habit_list: HabitList):
                     redirect_page = os.path.join(
                         get_root_path(), "habits", str(habit.id)
                     )
-                    if settings.INDEX_SHOW_HABIT_COUNT:
-                        habit_name = link(
-                            f"{habit.name} ({len(habit.ticked_days)})",
-                            target=redirect_page,
-                        )
-                    else:
-                        habit_name = link(habit.name, target=redirect_page)
+                    habit_name = link(habit.name, target=redirect_page)
                     habit_name.classes(left_classes)
 
                     d_d = {r.day: r.done for r in habit.records}
                     for day in days:
                         checkbox = HabitCheckBox(habit, day, value=d_d.get(day, False))
                         checkbox.classes(right_classes)
+
+                    if settings.INDEX_SHOW_HABIT_COUNT:
+                        badge = HabitTotalBadge(habit)
+                        badge.classes("py-0")
+                        badge.props("color=grey-9 rounded floating transparent")
+                        badge.style("font-size: 75%; font-weight: 500")
 
 
 def index_page_ui(days: List[datetime.date], habits: HabitList):

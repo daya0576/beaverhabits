@@ -2,8 +2,8 @@ from nicegui import ui
 
 from beaverhabits.frontend import components
 from beaverhabits.frontend.components import (
-    HabitAddButton,
     HabitDeleteButton,
+    HabitTotalBadge,
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.logging import logger
@@ -54,19 +54,28 @@ def add_ui(habit_list: HabitList):
     habits = [*active_habits, None, *archived_habits]
 
     for item in habits:
-        with components.HabitOrderCard(item):
-            with components.grid(columns=7):
-                if item:
-                    name = ui.label(item.name)
-                    name.classes("col-span-6 col-3")
+        if not item:
+            with components.HabitOrderCard(item).classes("p-0"):
+                ui.separator().props("w-full size=1.5px")
+                continue
+
+        with components.HabitOrderCard(item) as card:
+            with ui.row().classes("min-h-10 w-80 items-center"):
+                ui.label(item.name)
+
+                ui.space()
+
+                if item.status == HabitStatus.ACTIVE:
+                    badge = HabitTotalBadge(item)
+                    badge.props("color=grey-9")
+                else:
 
                     btn = HabitDeleteButton(item, habit_list, add_ui.refresh)
-                    btn.classes("col-span-1")
-                    if item.status == HabitStatus.ACTIVE:
-                        btn.classes("invisible")
+                    btn.classes("opacity-0")
+                    card.btn = btn
 
-                else:
-                    ui.separator().props("w-full col-span-8").props("size=2px")
+    # Placeholder for moving habit to the end to archive
+    ui.space()
 
 
 def order_page_ui(habit_list: HabitList):
