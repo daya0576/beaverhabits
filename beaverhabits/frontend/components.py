@@ -65,8 +65,6 @@ class HabitCheckBox(ui.checkbox):
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
         self._update_style(e.value)
-        # await asyncio.sleep(5)
-        # ui.notify(f"Asynchronous task started: {self.record}")
         await self.habit.tick(self.day, e.value)
         logger.info(f"Day {self.day} ticked: {e.value}")
 

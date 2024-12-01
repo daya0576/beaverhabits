@@ -12,10 +12,20 @@ KEY_NAME = "data"
 
 
 class UserDiskStorage(UserStorage[DictHabitList]):
+    def __init__(self):
+        self.user: dict[User, PersistentDict] = {}
 
     def _get_persistent_dict(self, user: User) -> PersistentDict:
+        if user in self.user:
+            return self.user[user]
+
         path = Path(f"{USER_DATA_FOLDER}/{str(user.email)}.json")
-        return PersistentDict(path, encoding="utf-8")
+        d = PersistentDict(path, encoding="utf-8")
+
+        # Cache the persistent dict
+        self.user[user] = d
+
+        return d
 
     async def get_user_habit_list(self, user: User) -> Optional[DictHabitList]:
         d = self._get_persistent_dict(user).get(KEY_NAME)

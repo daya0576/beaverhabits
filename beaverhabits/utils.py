@@ -25,6 +25,7 @@ async def get_or_create_user_timezone() -> str:
         return timezone
 
     ui.context.client.on_connect(fetch_user_timezone)
+
     return "UTC"
 
 
