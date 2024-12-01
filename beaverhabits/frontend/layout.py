@@ -50,7 +50,7 @@ def menu_component(root_path: str) -> None:
     with ui.menu():
         compat_menu("Add", lambda: redirect("add"))
         ui.separator()
-        # compat_menu("Sort", lambda: redirect("order"))
+        # compat_menu("Edit", lambda: redirect("order"))
         # ui.separator()
 
         compat_menu("Export", lambda: open_tab("export"))
@@ -85,6 +85,10 @@ def layout(title: str | None = None, with_menu: bool = True):
             menu_header(title, target=root_path)
             if with_menu:
                 ui.space()
+                if "order" in path:
+                    menu_icon_button(icons.ADD, click=lambda: redirect("add"))
+                if "add" in path:
+                    menu_icon_button("drag_indicator", click=lambda: redirect("order"))
                 with menu_icon_button(icons.MENU):
                     menu_component(root_path)
 
