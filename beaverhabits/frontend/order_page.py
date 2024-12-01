@@ -65,14 +65,12 @@ def add_ui(habit_list: HabitList):
 
                 ui.space()
 
-                if item.status == HabitStatus.ACTIVE:
-                    badge = HabitTotalBadge(item)
-                    badge.props("color=grey-9")
-                else:
-
+                if item.status == HabitStatus.ARCHIVED:
                     btn = HabitDeleteButton(item, habit_list, add_ui.refresh)
                     btn.classes("opacity-0")
                     card.btn = btn
+                badge = HabitTotalBadge(item)
+                badge.props("color=grey-9")
 
     # Placeholder for moving habit to the end to archive
     ui.space()
