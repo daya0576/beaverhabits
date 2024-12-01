@@ -157,7 +157,7 @@ class HabitDeleteButton(ui.button):
             self.habit.status = HabitStatus.ARCHIVED
             logger.info(f"Archive habit: {self.habit.name}")
 
-        if self.habit.status == HabitStatus.ARCHIVED:
+        elif self.habit.status == HabitStatus.ARCHIVED:
             if not await self.dialog:
                 return
             self.habit.status = HabitStatus.SOLF_DELETED
