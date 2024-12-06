@@ -26,17 +26,20 @@ Example:
 
 ```bash
 docker run -d --name beaverhabits \
+  -u $(id -u):$(id -g) \
   -e FIRST_DAY_OF_WEEK=0 \
   -e HABITS_STORAGE=USER_DISK \
   -e MAX_USER_COUNT=1 \
   -v /path/to/host/directory:/app/.user/ \
   -p 8080:8080 \
   --restart unless-stopped \
-  -u $(id -u):$(id -g) \
   daya0576/beaverhabits:latest
 ```
 
-Options:
+P.S. The container starts as nobody to increase the security and make it OpenShift compatible.
+To avoid permission issues, ensure that the UID owning the host folder aligns with the UID of the user inside the container.
+
+### Options:
 
 | Name | Description |
 |:--|:--|
