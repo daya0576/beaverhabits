@@ -37,7 +37,7 @@ docker run -d --name beaverhabits \
 ```
 
 P.S. The container starts as nobody to increase the security and make it OpenShift compatible.
-To avoid permission issues, ensure that the UID owning the host folder aligns with the UID of the user inside the container.
+To avoid [permission issues](https://github.com/daya0576/beaverhabits/issues/23), ensure that the UID owning the host folder aligns with the UID of the user inside the container.
 
 ### Options:
 
