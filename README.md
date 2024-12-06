@@ -32,6 +32,7 @@ docker run -d --name beaverhabits \
   -v /path/to/host/directory:/app/.user/ \
   -p 8080:8080 \
   --restart unless-stopped \
+  -u $(id -u):$(id -g) \
   daya0576/beaverhabits:latest
 ```
 
