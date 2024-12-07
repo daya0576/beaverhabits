@@ -32,6 +32,10 @@ RUN apt-get update \
 # install poetry - respects $POETRY_VERSION & $POETRY_HOME
 RUN --mount=type=cache,target=/root/.cache \
     curl -sSL https://install.python-poetry.org | python -
+# install rusk toolchain
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+    sh -s -- -y --default-toolchain stable
+
 # install dependency
 RUN python -m pip install --upgrade pip cffi
 
