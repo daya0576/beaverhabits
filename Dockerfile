@@ -1,33 +1,62 @@
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim AS python-base
 
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
-    apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    \
+    POETRY_VERSION=1.8.4 \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_NO_INTERACTION=1 \
+    \
+    PYSETUP_PATH="/opt/pysetup" \
+    VENV_PATH="/opt/pysetup/.venv"
 
-RUN python -m pip install --upgrade pip
-# NiceGUI 1.4.20 - Make libsass optional 
-# RUN python -m pip install --upgrade libsass
-RUN python -m pip install --upgrade cffi
+# prepend poetry and venv to path
+ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-FROM python:3.12-slim AS release
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 
-LABEL maintainer="Henry Zhu <daya0576@gmail.com>"
+################################
+# BUILDER-BASE
+# Used to build deps + create our virtual environment
+################################
+FROM python-base AS builder-base
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+        curl \
+        build-essential
+
+# install poetry - respects $POETRY_VERSION & $POETRY_HOME
+RUN --mount=type=cache,target=/root/.cache \
+    curl -sSL https://install.python-poetry.org | python -
+# install dependency
+RUN python -m pip install --upgrade pip cffi
+
+# copy project requirement files here to ensure they will be cached.
+WORKDIR $PYSETUP_PATH
+COPY poetry.lock pyproject.toml ./
+
+# install runtime deps - uses $POETRY_VIRTUALENVS_IN_PROJECT internally
+RUN poetry install --no-dev
+
+
+################################
+# PRODUCTION
+# Final image used for runtime
+################################
+FROM python-base AS production
+COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
 
 WORKDIR /app
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
 COPY start.sh .
 COPY beaverhabits ./beaverhabits
 COPY statics ./statics
 
 RUN chmod -R g+w /app && \
     chown -R nobody /app
-
 USER nobody
 
 CMD ["sh", "start.sh", "prd"]
