@@ -26,18 +26,22 @@ ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 FROM python-base AS builder-base
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
-        curl \
-        build-essential
+        build-essential \
+        curl
 
-# install rust toolchain
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 # install poetry - respects $POETRY_VERSION & $POETRY_HOME
-RUN pip install poetry cffi
+RUN curl -sSL https://install.python-poetry.org | python3 -
 # copy project requirement files here to ensure they will be cached.
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock pyproject.toml ./
 # install runtime deps - uses $POETRY_VIRTUALENVS_IN_PROJECT internally
-RUN poetry install --no-dev
+RUN poetry install --only main
+
+# [Experimental] Remove unused nicegui libs
+ENV NICEGUI_LIB_PATH="/opt/pysetup/.venv/lib/python3.12/site-packages/nicegui/elements/lib"
+RUN rm -rf "$NICEGUI_LIB_PATH/mermaid/"
+RUN rm -rf "$NICEGUI_LIB_PATH/plotly/"
+RUN rm -rf "$NICEGUI_LIB_PATH/vanilla-jsoneditor/"
 
 
 ################################

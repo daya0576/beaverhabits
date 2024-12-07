@@ -1,3 +1,5 @@
+# https://docs.docker.com/build/ci/github-actions/multi-platform/
+
 name: Publish Release
 
 on:
@@ -5,45 +7,40 @@ on:
   push:
     tags:
       - v**
+    branches:
+      - debug_docker_image
+
+env:
+  REGISTRY_IMAGE: daya0576/beaverhabits
 
 jobs:
-  pre-deploy-test:
-    name: Unit tests
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip 
-          pip install poetry
-          poetry install --no-interaction --no-ansi
-
-      - name: Test with pytest
-        run: poetry run pytest tests
-
-  docker:
-    needs: pre-deploy-test
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/amd64/v3, linux/arm64]
+        dockerfile: [Dockerfile]
+        # include:
+        #   - platform: linux/arm/v7
+        #     dockerfile: Dockerfile.nobuildkit.arm32
 
     steps:
       - name: Prepare
         id: prep
         run: |
-          DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME  }}/${GITHUB_REPOSITORY#*/}
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-            TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:latest"
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
 
-          fi
-          echo $TAGS
-          echo ::set-output name=tags::${TAGS}
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_IMAGE }}
 
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -53,40 +50,74 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
+          username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push by digest
+        id: build
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/amd64,linux/amd64/v3,linux/arm64,linux/arm/v7,linux/arm64/v8
-          push: false
-          tags: ${{ steps.prep.outputs.tags }}
+          platforms: ${{ matrix.platform }}
+          file: ${{ matrix.dockerfile }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache,mode=max
 
-  verify:
-    needs: docker
-    runs-on: ubuntu-latest
-    steps:
-      - name: Pull and Test Container
-        env:
-          DOCKER_IMAGE: daya0576/beaverhabits
-          VERSION: latest
+
+      - name: Export digest
         run: |
-          docker pull ${DOCKER_IMAGE}:${VERSION}
-          docker run -d --name test_container ${DOCKER_IMAGE}:${VERSION}
-          sleep 3
-          CONTAINER_OUTPUT=$(docker logs test_container)
-          # Check if the container is still running
-          CONTAINER_STATUS=$(docker inspect -f '{{.State.Running}}' test_container)
-          if [ "${CONTAINER_STATUS}" != "true" ]; then
-            echo "The container is not running!"
-            exit 1
-          fi
-          # Check if the "Error" string is present in the container output
-          if echo "${CONTAINER_OUTPUT}" | grep -i -q "Error"; then
-            echo "Error found in container output!"
-            echo "${CONTAINER_OUTPUT}"
-            exit 1
-          fi
-          docker stop test_container
-          docker rm test_container
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"          
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)          
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }} 

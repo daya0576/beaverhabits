@@ -1,9 +1,9 @@
 import asyncio
-from contextlib import asynccontextmanager
 import logging
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
 import sentry_sdk
+from fastapi import FastAPI
 
 from beaverhabits.app import crud
 
@@ -40,7 +40,7 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/user/count")
+@app.get("/api/v1/users/count")
 async def user_count():
     return {"count": await crud.get_user_count()}
 
