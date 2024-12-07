@@ -8,6 +8,7 @@ mkdir -p .user
 
 if [ "$1" = "prd" ]; then
     echo "Starting Uvicorn server in production mode..."
+    # Set nicegui storage path to avoid permission issues
     if [ -z "$NICEGUI_STORAGE_PATH" ]; then
         export NICEGUI_STORAGE_PATH=".user/.nicegui"
         echo "NICEGUI_STORAGE_PATH not set. Using default value: .user/.nicegui"

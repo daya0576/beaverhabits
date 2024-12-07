@@ -5,62 +5,78 @@ from typing import List
 from nicegui import ui
 
 from beaverhabits.configs import settings
-from beaverhabits.frontend.components import HabitCheckBox, HabitTotalBadge, link
+from beaverhabits.frontend.components import HabitCheckBox, IndexBadge, link
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
 
 HABIT_LIST_RECORD_COUNT = settings.INDEX_HABIT_ITEM_COUNT
 
-row_compat_classes = "pl-4 pr-1 py-0"
+
+def grid(columns, rows):
+    g = ui.grid(columns=columns, rows=rows)
+    g.classes("w-full gap-0 items-center")
+    return g
+
+
+def week_headers(days: List[datetime.date]):
+    for day in days:
+        yield day.strftime("%a")
+    if settings.INDEX_SHOW_HABIT_COUNT:
+        yield "Sum"
+
+
+def day_headers(days: List[datetime.date]):
+    for day in days:
+        yield day.strftime("%d")
+    if settings.INDEX_SHOW_HABIT_COUNT:
+        yield "#"
 
 
 @ui.refreshable
 def habit_list_ui(days: List[datetime.date], habit_list: HabitList):
     active_habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
-
     if not active_habits:
         ui.label("List is empty.").classes("mx-auto w-80")
         return
 
+    # Calculate column count
+    name_columns, date_columns = 4, 2
+    count_columns = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
+    columns = name_columns + len(days) * date_columns + count_columns
+
+    row_compat_classes = "pl-4 pr-1 py-0"
+    left_classes, right_classes = (
+        # grid 4
+        "col-span-4 break-all",
+        # grid 2 2 2 2 2
+        "col-span-2 px-1.5 justify-self-center",
+    )
+    header_styles = "font-size: 85%; font-weight: 500; color: #9e9e9e"
+
     with ui.column().classes("gap-1.5"):
-        # align center vertically
-        grid_classes = "w-full gap-0 items-center"
-        grid = lambda rows: ui.grid(columns=15, rows=rows).classes(grid_classes)
-        left_classes, right_classes = (
-            # grid 5
-            "col-span-5 break-all",
-            # grid 2 2 2 2 2
-            "col-span-2 px-1.5 justify-self-center",
-        )
-
-        # Header of date columns
-        with grid(2).classes(row_compat_classes):
-            for fmt in ("%a", "%d"):
+        # Date Headers
+        with grid(columns, 2).classes(row_compat_classes):
+            for it in (week_headers(days), day_headers(days)):
                 ui.label("").classes(left_classes)
-                for date in days:
-                    label = ui.label(str(date.strftime(fmt))).classes(right_classes)
-                    label.style("color: #9e9e9e; font-size: 85%; font-weight: 500")
+                for label in it:
+                    ui.label(label).classes(right_classes).style(header_styles)
 
+        # Habit List
         for habit in active_habits:
             with ui.card().classes(row_compat_classes).classes("shadow-none"):
-                with grid(1):
-                    redirect_page = os.path.join(
-                        get_root_path(), "habits", str(habit.id)
-                    )
-                    habit_name = link(habit.name, target=redirect_page)
-                    habit_name.classes(left_classes)
+                with grid(columns, 1):
+                    root_path = get_root_path()
+                    redirect_page = os.path.join(root_path, "habits", str(habit.id))
+                    link(habit.name, target=redirect_page).classes(left_classes)
 
-                    d_d = {r.day: r.done for r in habit.records}
+                    ticked_days = habit.ticked_days
                     for day in days:
-                        checkbox = HabitCheckBox(habit, day, value=d_d.get(day, False))
+                        checkbox = HabitCheckBox(habit, day, value=day in ticked_days)
                         checkbox.classes(right_classes)
 
                     if settings.INDEX_SHOW_HABIT_COUNT:
-                        badge = HabitTotalBadge(habit)
-                        badge.classes("py-0")
-                        badge.props("color=grey-9 rounded floating transparent")
-                        badge.style("font-size: 75%; font-weight: 500")
+                        IndexBadge(habit).classes(right_classes)
 
 
 def index_page_ui(days: List[datetime.date], habits: HabitList):
