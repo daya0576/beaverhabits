@@ -29,20 +29,13 @@ RUN apt-get update \
         curl \
         build-essential
 
+# install rust toolchain
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 # install poetry - respects $POETRY_VERSION & $POETRY_HOME
-RUN --mount=type=cache,target=/root/.cache \
-    curl -sSL https://install.python-poetry.org | python -
-# install rusk toolchain
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --default-toolchain stable
-
-# install dependency
-RUN python -m pip install --upgrade pip cffi
-
+RUN pip install poetry cffi
 # copy project requirement files here to ensure they will be cached.
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock pyproject.toml ./
-
 # install runtime deps - uses $POETRY_VIRTUALENVS_IN_PROJECT internally
 RUN poetry install --no-dev
 
