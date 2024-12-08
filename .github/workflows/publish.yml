@@ -1,5 +1,3 @@
-# https://docs.docker.com/build/ci/github-actions/multi-platform/
-
 name: Publish Release
 
 on:
@@ -7,8 +5,8 @@ on:
   push:
     tags:
       - v**
-    # branches:
-    #   - debug_docker_image
+    branches:
+      - debug_docker_image
 
 env:
   REGISTRY_IMAGE: daya0576/beaverhabits
