@@ -21,8 +21,6 @@ jobs:
         include:
           - platform: linux/arm/v7
             dockerfile: Dockerfile.nobuildkit.arm32
-          - platform: linux/arm/v6
-            dockerfile: Dockerfile.nobuildkit.arm32
 
     steps:
       - name: Prepare
