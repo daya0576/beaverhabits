@@ -62,7 +62,6 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache-${{ env.PLATFORM_PAIR }}
           cache-to: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache-${{ env.PLATFORM_PAIR }},mode=max
 
-
       - name: Export digest
         run: |
           mkdir -p /tmp/digests
