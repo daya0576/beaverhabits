@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-nicegui = {extras = ["highcharts"], version = "^2.7.0"}
+nicegui = "^2.7.0"
 pydantic-settings = "^2.2.1"
 fastapi-users = {extras = ["sqlalchemy"], version = "^13.0.0"}
 uvicorn = {extras = ["standard"], version = "^0.28.0"}
