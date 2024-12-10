@@ -85,7 +85,7 @@ To import from an existing setup, e.g. uhabit, please check this [wiki](https://
 
 ## Standalone mode for iOS (Web Application)
 
-Follow this [wiki](https://github.com/daya0576/beaverhabits/wiki/To-Add-Standalone-Mode-for-iOS-(Web-Application)) to add it as an icon on the home screen and make it launch in a separate window
+Please follow this [wiki](https://github.com/daya0576/beaverhabits/wiki/To-Add-Standalone-Mode-for-iOS-(Web-Application)) to add it as an icon on the home screen and make it launch in a separate window
 
 ## Order Habits
 
