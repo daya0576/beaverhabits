@@ -10,16 +10,17 @@ from fastapi_users.authentication import (
 )
 from fastapi_users.db import SQLAlchemyUserDatabase
 
+from beaverhabits.configs import settings
+
 from .db import User, get_user_db
 
-SECRET = "SECRET"
-
-ONE_MONTH_IN_SECONDS = 60 * 60 * 24 * 30
+JWT_SECRET = settings.JWT_SECRET
+JWT_LIFETIME_SECONDS = settings.JWT_LIFETIME_SECONDS
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
-    reset_password_token_secret = SECRET
-    verification_token_secret = SECRET
+    reset_password_token_secret = JWT_SECRET
+    verification_token_secret = JWT_SECRET
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} has registered.")
@@ -43,7 +44,7 @@ bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
 
 def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET, lifetime_seconds=ONE_MONTH_IN_SECONDS)
+    return JWTStrategy(secret=JWT_SECRET, lifetime_seconds=JWT_LIFETIME_SECONDS)
 
 
 auth_backend = AuthenticationBackend(

@@ -40,7 +40,7 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/api/v1/users/count")
+@app.get("/users/count", include_in_schema=False)
 async def user_count():
     return {"count": await crud.get_user_count()}
 
