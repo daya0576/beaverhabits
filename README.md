@@ -37,7 +37,7 @@ docker run -d --name beaverhabits \
 ```
 
 P.S. The container starts as nobody to increase the security and make it OpenShift compatible.
-To avoid [permission issues](https://github.com/daya0576/beaverhabits/issues/23), ensure that the UID owning the host folder aligns with the UID of the user inside the container.
+To avoid [permission issues](https://github.com/daya0576/beaverhabits/discussions/31), ensure that the UID owning the host folder aligns with the UID of the user inside the container.
 
 ### Options:
 
@@ -87,7 +87,7 @@ To import from an existing setup, e.g. uhabit, please check this [wiki](https://
 
 Please follow this [wiki](https://github.com/daya0576/beaverhabits/wiki/To-Add-Standalone-Mode-for-iOS-(Web-Application)) to add it as an icon on the home screen and make it launch in a separate window
 
-## Order Habits
+## Reorder Habits
 
 Open page `/gui/order` to change the order of habits.
 
@@ -95,4 +95,5 @@ Open page `/gui/order` to change the order of habits.
 
 1. Native mobile app
 2. Habit calendar template, e.g. vacations
-3. ...
+3. Open API!
+4. ...
