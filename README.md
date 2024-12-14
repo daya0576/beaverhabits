@@ -49,6 +49,19 @@ To avoid [permission issues](https://github.com/daya0576/beaverhabits/discussion
 | **ENABLE_IOS_STANDALONE**(bool) | Experiential feature to  enable standalone mode on iOS. The default setting is `false` |
 | **INDEX_SHOW_HABIT_COUNT**(bool) | To display the total completed count badge on the main page. The default setting is `false` |
 
+## Development
+
+BeaverHabits favors [uv](https://docs.astral.sh/uv/getting-started/) as package management tool. Here is how to set up the development environment:
+
+```sh
+# Install uv and all the dependencies
+uv venv && uv sync
+
+# Start the server
+./start.sh dev
+```
+
+
 # Features
 
 1. Pages

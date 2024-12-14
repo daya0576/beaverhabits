@@ -1,36 +1,38 @@
-[tool.poetry]
+[project]
+authors = [
+    {name = "Henry Zhu", email = "daya0576@gmail.com"},
+]
 name = "beaverhabits"
-version = "0.1.0"
+version = "0.3.5"
+requires-python = "<4.0,>=3.12"
+dependencies = [
+    "nicegui<3.0.0,>=2.7.0",
+    "pydantic-settings<3.0.0,>=2.2.1",
+    "fastapi-users[sqlalchemy]<15.0.0,>=14.0.0",
+    "uvicorn[standard]<1.0.0,>=0.28.0",
+    "sqlalchemy[asyncio]<3.0.0,>=2.0.29",
+    "asyncpg<1.0.0,>=0.29.0",
+    "aiosqlite<1.0.0,>=0.20.0",
+    "pytz<2025.0,>=2024.1",
+    "sentry-sdk[fastapi]<3.0.0,>=2.15.0",
+    "python-dateutil<3.0.0.0,>=2.9.0.post0",
+]
 description = ""
-authors = ["Henry Zhu <daya0576@gmail.com>"]
 readme = "README.md"
 
-[tool.poetry.dependencies]
-python = "^3.12"
-nicegui = "^2.7.0"
-pydantic-settings = "^2.2.1"
-fastapi-users = {extras = ["sqlalchemy"], version = "^14.0.0"}
-uvicorn = {extras = ["standard"], version = "^0.28.0"}
-sqlalchemy = {extras = ["asyncio"], version = "^2.0.29"}
-asyncpg = "^0.29.0"
-aiosqlite = "^0.20.0"
-pytz = "^2024.1"
-sentry-sdk = {extras = ["fastapi"], version = "^2.15.0"}
-python-dateutil = "^2.9.0.post0"
+[dependency-groups]
+dev = [
+    "icecream<3.0.0,>=2.1.3",
+    "autopep8<3.0.0,>=2.0.4",
+    "pytest-selenium<5.0.0,>=4.1.0",
+    "pytest-asyncio<1.0.0.0,>=0.23.5.post1",
+    "webdriver-manager<5.0.0,>=4.0.1",
+    "selenium<5.0.0,>=4.18.1",
+    "beautifulsoup4<5.0.0,>=4.12.3",
+    "pytest<9.0.0,>=8.1.1",
+    "pip>=24.3.1",
+]
 
-[tool.poetry.group.dev.dependencies]
-icecream = "^2.1.3"
-autopep8 = "^2.0.4"
-pytest-selenium = "^4.1.0"
-pytest-asyncio = "^0.23.5.post1"
-webdriver-manager = "^4.0.1"
-selenium = "^4.18.1"
-beautifulsoup4 = "^4.12.3"
-pytest = "^8.1.1"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
+[project.scripts]
 main = "beaverhabits.routes:main"
+
