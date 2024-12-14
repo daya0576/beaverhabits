@@ -51,16 +51,13 @@ To avoid [permission issues](https://github.com/daya0576/beaverhabits/discussion
 
 ## Development
 
-BeaverHabits favors poetry as package management tool. Here is how to set up the development environment:
+BeaverHabits favors [uv](https://docs.astral.sh/uv/getting-started/) as package management tool. Here is how to set up the development environment:
 
 ```sh
-# First, install poetry (you can do it in a python's virtualenv)
-pip install poetry 
+# Install uv and all the dependencies
+uv venv && uv sync
 
-# Then run (which is similar to pip install -e .)
-poetry install
-
-# Finally, start the server
+# Start the server
 ./start.sh dev
 ```
 
