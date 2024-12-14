@@ -5,10 +5,7 @@ ENV UV_COMPILE_BYTECODE=1 \
     VENV_PATH="/opt/pysetup/.venv"
 ENV PATH="$VENV_PATH/bin:$PATH"
 
-################################
-# BUILDER-BASE
-# Used to build deps + create our virtual environment
-################################
+
 FROM python-base AS builder-base
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -37,20 +34,13 @@ RUN rm -rf "$NICEGUI_LIB_PATH/plotly/"
 RUN rm -rf "$NICEGUI_LIB_PATH/vanilla-jsoneditor/"
 
 
-################################
-# PRODUCTION
-# Final image used for runtime
-################################
 FROM python-base AS production
 COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
-
 WORKDIR /app
 COPY start.sh .
 COPY beaverhabits ./beaverhabits
 COPY statics ./statics
-
 RUN chmod -R g+w /app && \
     chown -R nobody /app
 USER nobody
-
 CMD ["sh", "start.sh", "prd"]

@@ -2,19 +2,16 @@ name: Pull Request Checks
 on: [push]
 
 jobs:
-  pre-deploy-test:
-    name: Unit tests
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install the latest version of uv and set the python version
+        uses: astral-sh/setup-uv@v4
         with:
-          python-version: "3.12"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip 
-          pip install poetry
-          poetry install --no-interaction --no-ansi
-      - name: Test with pytest
-        run: poetry run pytest tests
+          python-version: ${{ matrix.python-version }}
+      - name: Test with python ${{ matrix.python-version }}
+        run: uv run --frozen pytest
