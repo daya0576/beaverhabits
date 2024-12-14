@@ -11,7 +11,6 @@ if [ "$1" = "prd" ]; then
     # Set nicegui storage path to avoid permission issues
     if [ -z "$NICEGUI_STORAGE_PATH" ]; then
         export NICEGUI_STORAGE_PATH=".user/.nicegui"
-        echo "NICEGUI_STORAGE_PATH not set. Using default value: .user/.nicegui"
     fi
     # we also use a single worker in production mode so socket.io connections are always handled by the same worker
     uvicorn beaverhabits.main:app --workers 1 --log-level info --port 8080 --host 0.0.0.0

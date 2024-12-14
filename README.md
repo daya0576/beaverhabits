@@ -49,6 +49,22 @@ To avoid [permission issues](https://github.com/daya0576/beaverhabits/discussion
 | **ENABLE_IOS_STANDALONE**(bool) | Experiential feature to  enable standalone mode on iOS. The default setting is `false` |
 | **INDEX_SHOW_HABIT_COUNT**(bool) | To display the total completed count badge on the main page. The default setting is `false` |
 
+## Development
+
+BeaverHabits favors poetry as package management tool. Here is how to set up the development environment:
+
+```sh
+# First, install poetry (you can do it in a python's virtualenv)
+pip install poetry 
+
+# Then run (which is similar to pip install -e .)
+poetry install
+
+# Finally, start the server
+./start.sh dev
+```
+
+
 # Features
 
 1. Pages
