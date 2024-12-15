@@ -92,6 +92,8 @@ async def get_habit_completions(
                 status_code=400, detail="Both date_start and date_end are required"
             )
 
+    if sort not in ("asc", "desc"):
+        raise HTTPException(status_code=400, detail="Invalid sort value")
     ticked_days = sorted(ticked_days, reverse=sort == "desc")
 
     if limit:
