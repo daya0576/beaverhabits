@@ -1,6 +1,5 @@
 import datetime
 import uuid
-from typing import List
 
 from fastapi_users import schemas
 from pydantic import BaseModel
@@ -27,7 +26,7 @@ class HabitRead(BaseModel):
     name: str
 
     user: UserRead
-    items: List["CheckedRecord"]
+    items: list["CheckedRecord"]
 
 
 class CheckedRecord(BaseModel):

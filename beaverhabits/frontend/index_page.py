@@ -1,6 +1,5 @@
 import datetime
 import os
-from typing import List
 
 from nicegui import ui
 
@@ -19,14 +18,14 @@ def grid(columns, rows):
     return g
 
 
-def week_headers(days: List[datetime.date]):
+def week_headers(days: list[datetime.date]):
     for day in days:
         yield day.strftime("%a")
     if settings.INDEX_SHOW_HABIT_COUNT:
         yield "Sum"
 
 
-def day_headers(days: List[datetime.date]):
+def day_headers(days: list[datetime.date]):
     for day in days:
         yield day.strftime("%d")
     if settings.INDEX_SHOW_HABIT_COUNT:
@@ -34,7 +33,7 @@ def day_headers(days: List[datetime.date]):
 
 
 @ui.refreshable
-def habit_list_ui(days: List[datetime.date], habit_list: HabitList):
+def habit_list_ui(days: list[datetime.date], habit_list: HabitList):
     active_habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
     if not active_habits:
         ui.label("List is empty.").classes("mx-auto w-80")
@@ -79,6 +78,6 @@ def habit_list_ui(days: List[datetime.date], habit_list: HabitList):
                         IndexBadge(habit).classes(right_classes)
 
 
-def index_page_ui(days: List[datetime.date], habits: HabitList):
+def index_page_ui(days: list[datetime.date], habits: HabitList):
     with layout():
         habit_list_ui(days, habits)
