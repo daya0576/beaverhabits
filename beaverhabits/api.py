@@ -64,8 +64,8 @@ async def get_habit_detail(
     }
 
 
-@api_router.get("/habits/{habit_id}/records", tags=["habits"])
-async def get_habit_records(
+@api_router.get("/habits/{habit_id}/completions", tags=["habits"])
+async def get_habit_completions(
     habit_id: str,
     date_fmt: str = "%d-%m-%Y",
     date_start: str | None = None,
@@ -106,8 +106,8 @@ class Tick(BaseModel):
     date_fmt: str = "%d-%m-%Y"
 
 
-@api_router.post("/habits/{habit_id}/records", tags=["habits"])
-async def put_habit_records(
+@api_router.post("/habits/{habit_id}/completions", tags=["habits"])
+async def put_habit_completions(
     habit_id: str,
     tick: Tick,
     user: User = Depends(current_active_user),
