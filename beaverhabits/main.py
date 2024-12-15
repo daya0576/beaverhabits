@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 import sentry_sdk
 from fastapi import FastAPI
 
+from beaverhabits.api import init_api_routes
 from beaverhabits.app import crud
 
 from .app.app import init_auth_routes
@@ -47,7 +48,9 @@ async def user_count():
 
 # auth
 init_auth_routes(app)
+init_api_routes(app)
 init_gui_routes(app)
+
 
 # sentry
 if settings.SENTRY_DSN:
