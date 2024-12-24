@@ -29,11 +29,17 @@ RUN rm -rf "$NICEGUI_LIB_PATH/vanilla-jsoneditor/"
 
 FROM python-base AS production
 COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
+
+RUN addgroup --gid 65534 nonroot && \
+    adduser --uid 65534 --gid 65534 --disabled-password --gecos "" nonroot
+USER nonroot
+
 WORKDIR /app
 COPY start.sh .
 COPY beaverhabits ./beaverhabits
 COPY statics ./statics
 RUN chmod -R g+w /app && \
-    chown -R 65534 /app
-USER 65534
+    chown -R nonroot /app
+USER nonroot
+
 CMD ["sh", "start.sh", "prd"]
