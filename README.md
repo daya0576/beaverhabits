@@ -11,6 +11,10 @@ A self-hosted habit tracking app without "Goals"
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/c0ce98cf-5a44-4bbc-8cd3-c7afb20af671' width='250'>
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/516c19ca-9f55-4c21-9e6d-c8f0361a5eb2' width='250'>
 
+# Derivatives
+Awesome projects integrating with Beaver Habit Tracker REST APIs:
+- [HabitDeck](https://github.com/nov1n/HabitDeck): turns your Stream Deck into an interactive habit tracker
+
 # Getting Started
 
 ## Cloud Service
@@ -87,23 +91,21 @@ uv venv && uv sync
    - [x] RESTful API
 
 ## Streaks
-
 Here are my table tennis training sessions in the past year :)
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/8b353afb-38d5-4210-a083-cb05ea9d3746">
 
-
 ## Import
-
 To import from an existing setup, e.g. uhabit, please check this [wiki](https://github.com/daya0576/beaverhabits/wiki/Import-from-Existing-Setup) for more details.
 
 ## Standalone mode for iOS (Web Application)
-
 Please follow this [wiki](https://github.com/daya0576/beaverhabits/wiki/To-Add-Standalone-Mode-for-iOS-(Web-Application)) to add it as an icon on the home screen and make it launch in a separate window
 
 ## Reorder Habits
-
 Open page `/gui/order` to change the order of habits.
+
+## REST APIs
+[Beaver Habit Tracker API How‐to Guide](https://github.com/daya0576/beaverhabits/wiki/Beaver-Habit-Tracker-API-How%E2%80%90to-Guide)
 
 # Future Plans
 
