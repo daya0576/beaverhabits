@@ -34,6 +34,6 @@ COPY start.sh .
 COPY beaverhabits ./beaverhabits
 COPY statics ./statics
 RUN chmod -R g+w /app && \
-    chown -R nobody /app
-USER nobody
+    chown -R 65534 /app
+USER 65534
 CMD ["sh", "start.sh", "prd"]
