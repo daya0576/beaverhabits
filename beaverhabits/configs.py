@@ -19,6 +19,7 @@ class StorageType(Enum):
 
 class Settings(BaseSettings):
     ENV: str = "dev"
+    DEBUG: bool = False
     SENTRY_DSN: str = ""
 
     # UI config

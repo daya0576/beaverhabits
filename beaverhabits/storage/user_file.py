@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
+from fastapi_users_db_sqlalchemy import UUID_ID
 from nicegui.storage import PersistentDict
 
 from beaverhabits.app.db import User
@@ -13,17 +14,17 @@ KEY_NAME = "data"
 
 class UserDiskStorage(UserStorage[DictHabitList]):
     def __init__(self):
-        self.user: dict[User, PersistentDict] = {}
+        self.user: dict[UUID_ID, PersistentDict] = {}
 
     def _get_persistent_dict(self, user: User) -> PersistentDict:
-        if user in self.user:
-            return self.user[user]
+        if user.id in self.user:
+            return self.user[user.id]
 
         path = Path(f"{USER_DATA_FOLDER}/{str(user.email)}.json")
         d = PersistentDict(path, encoding="utf-8")
 
         # Cache the persistent dict
-        self.user[user] = d
+        self.user[user.id] = d
 
         return d
 
