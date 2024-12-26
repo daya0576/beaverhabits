@@ -13,7 +13,7 @@ A self-hosted habit tracking app without "Goals"
 
 # Derivatives
 - [HabitDeck](https://github.com/nov1n/HabitDeck): Turns your Stream Deck into an interactive habit tracker
-- [Unraid](https://unraid.net/community/apps/c/tools?q=beaver+habit#r): An out-of-the-box community app for Unraid
+- [Unraid](https://unraid.net/community/apps/c/tools?q=beaver+habit#r): An out-of-the-box community app for your Unraid server
 
 # Getting Started
 
@@ -22,7 +22,7 @@ A self-hosted habit tracking app without "Goals"
 - Demo: https://beaverhabits.com/demo
 - Login: https://beaverhabits.com
 
-## Self-hosting
+## Self-Hosting
 
 ### Ship with Docker
 
