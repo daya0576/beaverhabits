@@ -2,8 +2,6 @@ import datetime
 import logging
 from dataclasses import dataclass, field
 
-import pytz
-
 from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, HabitStatus
 from beaverhabits.utils import generate_short_hash
 
