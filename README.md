@@ -12,8 +12,8 @@ A self-hosted habit tracking app without "Goals"
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/516c19ca-9f55-4c21-9e6d-c8f0361a5eb2' width='250'>
 
 # Derivatives
-Awesome projects integrating with Beaver Habit Tracker REST APIs:
-- [HabitDeck](https://github.com/nov1n/HabitDeck): turns your Stream Deck into an interactive habit tracker
+- [HabitDeck](https://github.com/nov1n/HabitDeck): Turns your Stream Deck into an interactive habit tracker
+- [Unraid](https://unraid.net/community/apps/c/tools?q=beaver+habit#r): An out-of-the-box community app for Unraid
 
 # Getting Started
 
