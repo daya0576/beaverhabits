@@ -35,9 +35,12 @@ def compat_menu(name: str, callback: Callable):
     return ui.menu_item(name, callback).props("dense").classes("items-center")
 
 
-def menu_icon_button(icon_name: str, click: Optional[Callable] = None) -> Button:
+def menu_icon_button(icon_name: str, click: Optional[Callable] = None, tooltip: Optional[str] = False) -> Button:
     button_props = "flat=true unelevated=true padding=xs backgroup=none"
-    return ui.button(icon=icon_name, color=None, on_click=click).props(button_props)
+    if not tooltip:
+        return ui.button(icon=icon_name, color=None, on_click=click).props(button_props)
+    else:
+         return ui.button(icon=icon_name, color=None, on_click=click).props(button_props).tooltip(tooltip)
 
 
 class HabitCheckBox(ui.checkbox):
