@@ -113,6 +113,7 @@ Open page `/gui/order` to change the order of habits.
 # Future Plans
 
 1. Quantitative metrics
-2. Native mobile app
+2. Native mobile app (can't wait to learn Swift or Tauri 😁)
 3. Habit calendar template, e.g. vacations
-4. ...
+4. Category or Folders
+5. ...
