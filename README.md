@@ -96,7 +96,7 @@ uv venv && uv sync
 ## Streaks
 Here are my table tennis training sessions in the past year :)
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/8b353afb-38d5-4210-a083-cb05ea9d3746">
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/db795af7-ed32-4879-b629-9fd3a2700440" />
 
 ## Import
 To import from an existing setup, e.g. uhabit, please check this [wiki](https://github.com/daya0576/beaverhabits/wiki/Import-from-Existing-Setup) for more details.
