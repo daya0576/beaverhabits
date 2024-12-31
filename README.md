@@ -12,8 +12,11 @@ A self-hosted habit tracking app without "Goals"
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/516c19ca-9f55-4c21-9e6d-c8f0361a5eb2' width='250'>
 
 # Derivatives
-- [HabitDeck](https://github.com/nov1n/HabitDeck): Turns your Stream Deck into an interactive habit tracker
-- [Unraid](https://unraid.net/community/apps/c/tools?q=beaver+habit#r): An out-of-the-box community app for your Unraid server
+
+
+- [HabitDeck](https://github.com/nov1n/HabitDeck): Turn your Stream Deck into an interactive habit tracker
+- [Unraid](https://unraid.net/community/apps/c/tools?q=beaver+habit#r): An out-of-the-box community App for your Unraid server
+- [Apple shortcut](https://www.icloud.com/shortcuts/bc2e81c8fb87417f814c3e216b4ae0cf): A shortcut for sharing the App on iPhone by [@DustinThal](https://github.com/DustinThal)
 
 # Getting Started
 
