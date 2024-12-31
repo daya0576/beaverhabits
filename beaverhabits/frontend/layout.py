@@ -86,9 +86,9 @@ def layout(title: str | None = None, with_menu: bool = True):
             if with_menu:
                 ui.space()
                 if "order" in path:
-                    menu_icon_button(icons.ADD, click=lambda: redirect("add"))
+                    menu_icon_button(icons.ADD, click=lambda: redirect("add"), tooltip="Add Habits")
                 if "add" in path:
-                    menu_icon_button("drag_indicator", click=lambda: redirect("order"))
+                    menu_icon_button("drag_indicator", click=lambda: redirect("order"), tooltip="Reorder habits")
                 with menu_icon_button(icons.MENU):
                     menu_component(root_path)
 
