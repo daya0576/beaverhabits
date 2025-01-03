@@ -13,10 +13,11 @@ A self-hosted habit tracking app without "Goals"
 
 # Derivatives
 
-
 - [HabitDeck](https://github.com/nov1n/HabitDeck): Turn your Stream Deck into an interactive habit tracker
-- [Unraid](https://unraid.net/community/apps/c/tools?q=beaver+habit#r): An out-of-the-box community App for your Unraid server
-- [Apple shortcut](https://www.icloud.com/shortcuts/bc2e81c8fb87417f814c3e216b4ae0cf): A shortcut for sharing the App on iPhone by [@DustinThal](https://github.com/DustinThal)
+- [Unraid App](https://unraid.net/community/apps/c/tools?q=beaver+habit#r): An out-of-the-box community App for your Unraid server
+- [Apple Shortcut](https://github.com/daya0576/beaverhabits/discussions/50#discussion-7746029): A shortcut for sharing the App on iPhone
+- [Home Assistant Switch](https://github.com/daya0576/beaverhabits/issues/55#issuecomment-2569685687): A switch for home assistant to mark a habit as done
+- ...
 
 # Getting Started
 
