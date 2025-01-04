@@ -11,25 +11,6 @@ A self-hosted habit tracking app without "Goals"
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/c0ce98cf-5a44-4bbc-8cd3-c7afb20af671' width='250'>
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/516c19ca-9f55-4c21-9e6d-c8f0361a5eb2' width='250'>
 
-# Table of contents:
-
-- [Derivatives](#derivatives)
-- [Getting Started](#getting-started)
-  - [Cloud Service](#cloud-service)
-  - [Self-Hosting](#self-hosting)
-    - [Unraid](#unraid)
-    - [Ship with Docker](#ship-with-docker)
-  - [Options](#options)
-  - [Development](#development)
-- [Features](#features)
-  - [Streaks](#streaks)
-  - [Import](#import)
-  - [Standalone Mode](#standalone-mode-for-ios-web-application)
-  - [Reorder Habits](#reorder-habits)
-  - [REST APIs](#rest-apis)
-- [Future Plans](#future-plans)
-
-
 # Derivatives
 
 - [HabitDeck](https://github.com/nov1n/HabitDeck): Turn your Stream Deck into an interactive habit tracker
@@ -61,7 +42,7 @@ docker run -d --name beaverhabits \
   daya0576/beaverhabits:latest
 ```
 
-Docker Compose file:
+Or Docker Compose:
 ```yaml
 services:
     beaverhabits:
