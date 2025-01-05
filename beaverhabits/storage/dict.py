@@ -38,11 +38,19 @@ class DictRecord(CheckedRecord, DictStorage):
 
     @property
     def done(self) -> bool:
-        return self.data["done"]
+        return self.data.get("done", False)
 
     @done.setter
     def done(self, value: bool) -> None:
         self.data["done"] = value
+
+    @property
+    def text(self) -> str:
+        return self.data.get("text", "")
+
+    @text.setter
+    def text(self, value: str) -> None:
+        self.data["text"] = value
 
 
 @dataclass
@@ -95,12 +103,32 @@ class DictHabit(Habit[DictRecord], DictStorage):
     def records(self) -> list[DictRecord]:
         return [DictRecord(d) for d in self.data["records"]]
 
-    async def tick(self, day: datetime.date, done: bool) -> None:
-        if record := next((r for r in self.records if r.day == day), None):
-            record.done = done
-        else:
-            data = {"day": day.strftime(DAY_MASK), "done": done}
+    @property
+    def note(self) -> bool:
+        return bool(self.data.get("note"))
+
+    @note.setter
+    def note(self, value: bool) -> None:
+        self.data["note"] = value
+
+    async def tick(
+        self, day: datetime.date, done: bool, text: str | None = None
+    ) -> CheckedRecord:
+        day_fmt = day.strftime(DAY_MASK)
+        # TODO: Refactor from O(n) to O(1)
+        data = next((d for d in self.data["records"] if d["day"] == day_fmt), None)
+        if not data:
+            data = {"day": day_fmt, "done": done}
             self.data["records"].append(data)
+
+        record = DictRecord(data)
+        if record.done != done:
+            record.done = done
+        # Do not overwrite the text
+        if text is not None and record.text != text:
+            record.text = text
+
+        return record
 
     async def merge(self, other: "DictHabit") -> "DictHabit":
         self_ticks = {r.day for r in self.records if r.done}

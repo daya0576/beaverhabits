@@ -48,10 +48,13 @@ def add_umami_headers():
 def menu_component(root_path: str) -> None:
     """Dropdown menu for the top-right corner of the page."""
     with ui.menu():
-        compat_menu("Add", lambda: redirect("add"))
-        ui.separator()
-        # compat_menu("Edit", lambda: redirect("order"))
-        # ui.separator()
+        path = context.client.page.path
+        if "add" in path:
+            compat_menu("Reorder", lambda: redirect("order"))
+            ui.separator()
+        else:
+            compat_menu("Add", lambda: redirect("add"))
+            ui.separator()
 
         compat_menu("Export", lambda: open_tab("export"))
         ui.separator()
@@ -85,10 +88,6 @@ def layout(title: str | None = None, with_menu: bool = True):
             menu_header(title, target=root_path)
             if with_menu:
                 ui.space()
-                if "order" in path:
-                    menu_icon_button(icons.ADD, click=lambda: redirect("add"), tooltip="Add Habits")
-                if "add" in path:
-                    menu_icon_button("drag_indicator", click=lambda: redirect("order"), tooltip="Reorder habits")
                 with menu_icon_button(icons.MENU):
                     menu_component(root_path)
 

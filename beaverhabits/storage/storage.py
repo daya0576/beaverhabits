@@ -15,6 +15,12 @@ class CheckedRecord(Protocol):
     @done.setter
     def done(self, value: bool) -> None: ...
 
+    @property
+    def text(self) -> str: ...
+
+    @text.setter
+    def text(self, value: str) -> None: ...
+
     def __str__(self):
         return f"{self.day} {'[x]' if self.done else '[ ]'}"
 
@@ -57,10 +63,22 @@ class Habit[R: CheckedRecord](Protocol):
     def status(self, value: HabitStatus) -> None: ...
 
     @property
+    def note(self) -> bool: ...
+
+    @note.setter
+    def note(self, value: bool) -> None: ...
+
+    @property
     def ticked_days(self) -> list[datetime.date]:
         return [r.day for r in self.records if r.done]
 
-    async def tick(self, day: datetime.date, done: bool) -> None: ...
+    @property
+    def ticked_records(self) -> dict[datetime.date, R]:
+        return {r.day: r for r in self.records if r.done}
+
+    async def tick(
+        self, day: datetime.date, done: bool, text: str | None = None
+    ) -> CheckedRecord: ...
 
     def __str__(self):
         return self.name

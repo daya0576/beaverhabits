@@ -11,7 +11,7 @@ from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
-from beaverhabits.storage.storage import Habit, HabitList, HabitStatus
+from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, HabitStatus
 from beaverhabits.utils import WEEK_DAYS
 
 strptime = datetime.datetime.strptime
@@ -35,7 +35,9 @@ def compat_menu(name: str, callback: Callable):
     return ui.menu_item(name, callback).props("dense").classes("items-center")
 
 
-def menu_icon_button(icon_name: str, click: Optional[Callable] = None, tooltip: str | None = None) -> Button:
+def menu_icon_button(
+    icon_name: str, click: Optional[Callable] = None, tooltip: str | None = None
+) -> Button:
     button_props = "flat=true unelevated=true padding=xs backgroup=none"
     button = ui.button(icon=icon_name, color=None, on_click=click).props(button_props)
     if tooltip:
@@ -43,19 +45,32 @@ def menu_icon_button(icon_name: str, click: Optional[Callable] = None, tooltip: 
     return button
 
 
+def habit_tick_dialog(record: CheckedRecord | None):
+    text = record.text if record else ""
+
+    with ui.dialog() as dialog, ui.card():
+        t = ui.textarea(label="Note", value=text)
+        with ui.row():
+            ui.button("Yes", on_click=lambda: dialog.submit((True, t.value)))
+            ui.button("No", on_click=lambda: dialog.submit((False, None)))
+    return dialog
+
+
 class HabitCheckBox(ui.checkbox):
     def __init__(
         self,
         habit: Habit,
         day: datetime.date,
-        text: str = "",
-        *,
-        value: bool = False,
+        record: CheckedRecord | None = None,
     ) -> None:
-        super().__init__(text, value=value, on_change=self._async_task)
+        value = bool(record and record.done)
+        super().__init__("", value=value, on_change=self._async_task)
         self.habit = habit
         self.day = day
         self._update_style(value)
+        self.bind_value_from(self, "ticked_value")
+
+        self.dialog_lock = False
 
     def _update_style(self, value: bool):
         self.props(
@@ -66,9 +81,34 @@ class HabitCheckBox(ui.checkbox):
         else:
             self.props("color=currentColor")
 
+    async def update_with_dialog(self) -> tuple[bool, str | None]:
+        TRUE, FALSE = (True, None), (False, None)
+
+        if not self.habit.note:
+            return TRUE
+
+        # Prevent dialog from being triggered twice
+        if self.dialog_lock:
+            self.dialog_lock = False
+            return FALSE
+
+        result, text = await habit_tick_dialog(self.record)
+        if not result:
+            self.dialog_lock = True
+            self.set_value(result)
+            return FALSE
+
+        return result, text
+
     async def _async_task(self, e: events.ValueChangeEventArguments):
+        # Dialog to add daily notes or short description
+        yes, text = await self.update_with_dialog()
+        if not yes:
+            return
+
+        # Do update completion status
         self._update_style(e.value)
-        await self.habit.tick(self.day, e.value)
+        self.record = await self.habit.tick(self.day, e.value, text)
         logger.info(f"Day {self.day} ticked: {e.value}")
 
 
