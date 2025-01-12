@@ -53,9 +53,9 @@ def habit_page(today: datetime.date, habit: Habit):
             card_title("History", target)
             habit_history(today, habit.ticked_days)
 
-        with card(padding=0.5):
-            with HabitNotesExpansion("Notes", habit):
-                ui.label("...")
+        # with card(padding=0.5):
+        #     with HabitNotesExpansion("Notes", habit):
+        #         ui.label("...")
 
         with card(target, padding=0.5):
             ui.icon("more_horiz", size="1.5em")

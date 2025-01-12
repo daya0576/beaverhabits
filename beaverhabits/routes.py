@@ -82,22 +82,20 @@ async def index_page(
     user: User = Depends(current_active_user),
 ) -> None:
     days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
-    habits = await views.get_or_create_user_habit_list(user, days)
-    index_page_ui(days, habits)
+    habit_list = await views.get_user_habit_list(user)
+    index_page_ui(days, habit_list)
 
 
 @ui.page("/gui/add")
 async def add_page(user: User = Depends(current_active_user)) -> None:
-    days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
-    habits = await views.get_or_create_user_habit_list(user, days)
-    add_page_ui(habits)
+    habit_list = await views.get_user_habit_list(user)
+    add_page_ui(habit_list)
 
 
 @ui.page("/gui/order")
 async def order_page(user: User = Depends(current_active_user)) -> None:
-    days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
-    habits = await views.get_or_create_user_habit_list(user, days)
-    order_page_ui(habits)
+    habit_list = await views.get_user_habit_list(user)
+    order_page_ui(habit_list)
 
 
 @ui.page("/gui/habits/{habit_id}")
@@ -174,6 +172,8 @@ async def register():
         try:
             await validate_max_user_count()
             user = await user_create(email=email.value, password=password.value)
+            # Create a dummy habit list for the new users
+            await views.get_or_create_user_habit_list(user, await dummy_days(31))
         except Exception as e:
             ui.notify(str(e), color="negative")
         else:
