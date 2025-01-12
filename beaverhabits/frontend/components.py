@@ -55,31 +55,38 @@ def habit_tick_dialog(record: CheckedRecord | None):
     return dialog
 
 
-async def habit_tick(
-    habit: Habit, day: datetime.date, value: bool
-) -> CheckedRecord | None:
+async def habit_tick(habit: Habit, day: datetime.date, value: bool):
+    # Avoid duplicate tick
+    record = habit.record_by(day)
+    if record and record.done == value:
+        return
+
     # Transaction start
     await habit.tick(day, value)
     logger.info(f"Day {day} ticked: {value}")
 
     # Daily notes/short description
     if habit.note and value:
-        record = habit.record_by(day)
-        yes, text = await habit_tick_dialog(record)
+        result = await habit_tick_dialog(record)
+
+        yes, text = (False, None) if result is None else result
 
         # Rollback if user cancel
         if not yes:
             await habit.tick(day, not value, text)
-            logger.info(f"Day {day} ticked: {not value} (rollback)")
+            logger.info(f"Day {day} ticked: {value} (rollback)")
+
+        if yes:
+            await habit.tick(day, value, text)
+            logger.info(f"Habit ticked: {day} {value}, note: {text}")
 
 
 class HabitCheckBox(ui.checkbox):
-    def __init__(self, habit: Habit, day: datetime.date) -> None:
+    def __init__(self, habit: Habit, day: datetime.date, value: bool) -> None:
+        super().__init__("", value=value, on_change=self._async_task)
         self.habit = habit
         self.day = day
-
-        super().__init__("", value=self._value, on_change=self._async_task)
-        self._update_style(self._value)
+        self._update_style(value)
 
         self.bind_value_from(self, "_value")
 
