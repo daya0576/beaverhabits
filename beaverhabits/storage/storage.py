@@ -69,12 +69,13 @@ class Habit[R: CheckedRecord](Protocol):
     def note(self, value: bool) -> None: ...
 
     @property
-    def ticked_days(self) -> list[datetime.date]:
-        return [r.day for r in self.records if r.done]
+    def ticked_days(self) -> list[datetime.date]: ...
 
     @property
-    def ticked_records(self) -> dict[datetime.date, R]:
-        return {r.day: r for r in self.records if r.done}
+    def ticked_data(self) -> dict[datetime.date, R]: ...
+
+    def record_by(self, day: datetime.date) -> Optional[R]:
+        return self.ticked_data.get(day)
 
     async def tick(
         self, day: datetime.date, done: bool, text: str | None = None

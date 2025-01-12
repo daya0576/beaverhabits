@@ -27,3 +27,8 @@ CALENDAR_CSS = """
     min-height: 0;
 }
 """
+EXPANSION_CSS = """
+.q-item__section--side {
+  min-width: 0 !important;
+}
+"""

@@ -20,9 +20,9 @@ logger.info("Starting BeaverHabits...")
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    logging.info("Creating database and tables")
+    logger.info("Creating database and tables")
     await create_db_and_tables()
-    logging.info("Database and tables created")
+    logger.info("Database and tables created")
     yield
 
 

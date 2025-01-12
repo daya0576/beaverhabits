@@ -69,9 +69,8 @@ def habit_list_ui(days: list[datetime.date], habit_list: HabitList):
                     redirect_page = os.path.join(root_path, "habits", str(habit.id))
                     link(habit.name, target=redirect_page).classes(left_classes)
 
-                    ticked_records = habit.ticked_records
                     for day in days:
-                        checkbox = HabitCheckBox(habit, day, ticked_records.get(day))
+                        checkbox = HabitCheckBox(habit, day)
                         checkbox.classes(right_classes)
 
                     if settings.INDEX_SHOW_HABIT_COUNT:

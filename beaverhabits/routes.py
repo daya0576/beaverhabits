@@ -24,6 +24,7 @@ from .frontend.add_page import add_page_ui
 from .frontend.cal_heatmap_page import heatmap_page
 from .frontend.habit_page import habit_page_ui
 from .frontend.index_page import index_page_ui
+from .logging import logger
 from .storage.meta import GUI_ROOT_PATH
 from .utils import dummy_days, get_user_today_date
 
@@ -56,6 +57,14 @@ async def demo_habit_page(habit_id: str) -> None:
     today = await get_user_today_date()
     habit = await views.get_session_habit(habit_id)
     habit_page_ui(today, habit)
+
+
+@ui.page("/demo/habits/{habit_id}/streak")
+@ui.page("/demo/habits/{habit_id}/heatmap")
+async def demo_habit_page_heatmap(habit_id: str) -> None:
+    today = await get_user_today_date()
+    habit = await views.get_session_habit(habit_id)
+    heatmap_page(today, habit)
 
 
 @ui.page("/demo/export")
@@ -98,6 +107,7 @@ async def habit_page(habit_id: str, user: User = Depends(current_active_user)) -
     habit_page_ui(today, habit)
 
 
+@ui.page("/gui/habits/{habit_id}/streak")
 @ui.page("/gui/habits/{habit_id}/heatmap")
 async def gui_habit_page_heatmap(
     habit_id: str, user: User = Depends(current_active_user)

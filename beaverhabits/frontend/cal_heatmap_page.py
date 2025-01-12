@@ -33,8 +33,6 @@ def heatmap_page(today: datetime.date, habit: Habit):
                 habit_calendar = CalendarHeatmap.build(
                     today, WEEKS_TO_DISPLAY, settings.FIRST_DAY_OF_WEEK
                 )
-                habit_heat_map(
-                    habit, habit_calendar, ticked_data=ticked_data, readonly=True
-                )
+                habit_heat_map(habit, habit_calendar, readonly=True)
 
                 today -= datetime.timedelta(days=7 * WEEKS_TO_DISPLAY)

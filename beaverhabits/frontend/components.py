@@ -47,7 +47,6 @@ def menu_icon_button(
 
 def habit_tick_dialog(record: CheckedRecord | None):
     text = record.text if record else ""
-
     with ui.dialog() as dialog, ui.card():
         t = ui.textarea(label="Note", value=text)
         with ui.row():
@@ -56,21 +55,33 @@ def habit_tick_dialog(record: CheckedRecord | None):
     return dialog
 
 
+async def habit_tick(
+    habit: Habit, day: datetime.date, value: bool
+) -> CheckedRecord | None:
+    # Transaction start
+    await habit.tick(day, value)
+    logger.info(f"Day {day} ticked: {value}")
+
+    # Daily notes/short description
+    if habit.note and value:
+        record = habit.record_by(day)
+        yes, text = await habit_tick_dialog(record)
+
+        # Rollback if user cancel
+        if not yes:
+            await habit.tick(day, not value, text)
+            logger.info(f"Day {day} ticked: {not value} (rollback)")
+
+
 class HabitCheckBox(ui.checkbox):
-    def __init__(
-        self,
-        habit: Habit,
-        day: datetime.date,
-        record: CheckedRecord | None = None,
-    ) -> None:
-        value = bool(record and record.done)
-        super().__init__("", value=value, on_change=self._async_task)
+    def __init__(self, habit: Habit, day: datetime.date) -> None:
         self.habit = habit
         self.day = day
-        self._update_style(value)
-        self.bind_value_from(self, "ticked_value")
 
-        self.dialog_lock = False
+        super().__init__("", value=self._value, on_change=self._async_task)
+        self._update_style(self._value)
+
+        self.bind_value_from(self, "_value")
 
     def _update_style(self, value: bool):
         self.props(
@@ -81,35 +92,17 @@ class HabitCheckBox(ui.checkbox):
         else:
             self.props("color=currentColor")
 
-    async def update_with_dialog(self) -> tuple[bool, str | None]:
-        TRUE, FALSE = (True, None), (False, None)
-
-        if not self.habit.note:
-            return TRUE
-
-        # Prevent dialog from being triggered twice
-        if self.dialog_lock:
-            self.dialog_lock = False
-            return FALSE
-
-        result, text = await habit_tick_dialog(self.record)
-        if not result:
-            self.dialog_lock = True
-            self.set_value(result)
-            return FALSE
-
-        return result, text
+    @property
+    def _value(self) -> bool:
+        record = self.habit.record_by(self.day)
+        result = bool(record and record.done)
+        return result
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
-        # Dialog to add daily notes or short description
-        yes, text = await self.update_with_dialog()
-        if not yes:
-            return
+        self._update_style(e.value)
 
         # Do update completion status
-        self._update_style(e.value)
-        self.record = await self.habit.tick(self.day, e.value, text)
-        logger.info(f"Day {self.day} ticked: {e.value}")
+        await habit_tick(self.habit, self.day, e.value)
 
 
 class HabitOrderCard(ui.card):
@@ -229,52 +222,43 @@ TODAY = "today"
 
 class HabitDateInput(ui.date):
     def __init__(
-        self, today: datetime.date, habit: Habit, ticked_data: dict[datetime.date, bool]
+        self,
+        today: datetime.date,
+        habit: Habit,
     ) -> None:
         self.today = today
         self.habit = habit
-        self.ticked_data = ticked_data
-        self.init = True
-        self.default_date = today
-        super().__init__(self.ticked_days, on_change=self._async_task)
+        # self.init = True
+        # self.default_date = today
+        super().__init__(self._tick_days, on_change=self._async_task)
 
-        self.props("multiple")
-        self.props("minimal flat")
+        self.props("multiple minimal flat today-btn")
         self.props(f"default-year-month={self.today.strftime(MONTH_MASK)}")
-        qdate_week_first_day = (settings.FIRST_DAY_OF_WEEK + 1) % 7
-        self.props(f"first-day-of-week='{qdate_week_first_day}'")
-        self.props("today-btn")
-        # self.props(f"subtitle='{habit.name}'")
+        self.props(f"first-day-of-week='{(settings.FIRST_DAY_OF_WEEK + 1) % 7}'")
+
         self.classes("shadow-none")
 
-        self.bind_value_from(self, "ticked_days")
+        self.bind_value_from(self, "_tick_days")
 
     @property
-    def ticked_days(self) -> list[str]:
-        result = [k.strftime(DAY_MASK) for k, v in self.ticked_data.items() if v]
-        # workaround to disable auto focus
-        result.append(TODAY)
-        return result
+    def _tick_days(self) -> list[str]:
+        ticked_days = [x.strftime(DAY_MASK) for x in self.habit.ticked_days]
+        return [*ticked_days, TODAY]
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
         old_values = set(self.habit.ticked_days)
         new_values = set(strptime(x, DAY_MASK).date() for x in e.value if x != TODAY)
 
-        for day in new_values - old_values:
-            # self.props(remove="default-date")
-            self.props(f"default-year-month={day.strftime(MONTH_MASK)}")
-            self.ticked_data[day] = True
+        if diff := new_values - old_values:
+            day, value = diff.pop(), True
+        elif diff := old_values - new_values:
+            day, value = diff.pop(), False
+        else:
+            return
 
-            await self.habit.tick(day, True)
-            logger.info(f"QDate day {day} ticked: True")
-
-        for day in old_values - new_values:
-            # self.props(remove="default-date")
-            self.props(f"default-year-month={day.strftime(MONTH_MASK)}")
-            self.ticked_data[day] = False
-
-            await self.habit.tick(day, False)
-            logger.info(f"QDate day {day} ticked: False")
+        self.props(f"default-year-month={day.strftime(MONTH_MASK)}")
+        await habit_tick(self.habit, day, bool(value))
+        self.value = self._tick_days
 
 
 @dataclass
@@ -344,13 +328,11 @@ class CalendarCheckBox(ui.checkbox):
         habit: Habit,
         day: datetime.date,
         today: datetime.date,
-        ticked_data: dict[datetime.date, bool],
         is_bind_data: bool = True,
     ) -> None:
         self.habit = habit
         self.day = day
         self.today = today
-        self.ticked_data = ticked_data
         super().__init__("", value=self.ticked, on_change=self._async_task)
 
         self.classes("inline-block")
@@ -363,8 +345,9 @@ class CalendarCheckBox(ui.checkbox):
             self.bind_value_from(self, "ticked")
 
     @property
-    def ticked(self):
-        return self.ticked_data.get(self.day, False)
+    def ticked(self) -> bool:
+        record = self.habit.ticked_data.get(self.day)
+        return bool(record and record.done)
 
     def _icon_svg(self):
         unchecked_color, checked_color = "rgb(54,54,54)", "rgb(103,150,207)"
@@ -374,27 +357,20 @@ class CalendarCheckBox(ui.checkbox):
         )
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
-        # Update state data
-        self.ticked_data[self.day] = e.value
-
         # Update persistent storage
         await self.habit.tick(self.day, e.value)
-        logger.info(f"Calendar Day {self.day} ticked: {e.value}")
+        logger.info(f"Day {self.day} ticked: {e.value}")
 
 
 def habit_heat_map(
     habit: Habit,
     habit_calendar: CalendarHeatmap,
-    ticked_data: dict[datetime.date, bool] | None = None,
     readonly: bool = False,
 ):
     today = habit_calendar.today
 
     # Bind to external state data
-    is_bind_data = True
-    if readonly or ticked_data is None:
-        ticked_data = {x: True for x in habit.ticked_days}
-        is_bind_data = False
+    is_bind_data = not readonly
 
     # Headers
     with ui.row(wrap=False).classes("gap-0"):
@@ -408,7 +384,7 @@ def habit_heat_map(
         with ui.row(wrap=False).classes("gap-0"):
             for day in weekday_days:
                 if day <= habit_calendar.today:
-                    CalendarCheckBox(habit, day, today, ticked_data, is_bind_data)
+                    CalendarCheckBox(habit, day, today, is_bind_data)
                 else:
                     ui.label().style("width: 20px; height: 20px;")
 
@@ -481,3 +457,39 @@ class IndexBadge(HabitTotalBadge):
         super().__init__(habit)
         self.props("color=grey-9 rounded transparent")
         self.style("font-size: 80%; font-weight: 500")
+
+
+class HabitNotesExpansion(ui.expansion):
+    def __init__(self, title, habit: Habit) -> None:
+        is_expanded = bool(habit.note)
+
+        super().__init__(
+            title,
+            icon=" ",
+            value=is_expanded,
+            on_value_change=self._async_task,
+        )
+        self.habit = habit
+        self.props("dense")
+        self.classes("w-full text-base text-center")
+
+        self.bind_value_from(self, "value")
+
+    async def _async_task(self, e: events.ValueChangeEventArguments):
+        if e.value == self.habit.note:
+            return
+        if not await self.confirm_dialog():
+            self.value = self.habit.note
+            return
+
+        self.habit.note = e.value
+        logger.info(f"Habit Note changed to {e.value}")
+
+    def confirm_dialog(self):
+        msg = "enable" if not self.habit.note else "disable"
+        with ui.dialog() as dialog, ui.card():
+            ui.label(f"Are you sure to {msg} notes?")
+            with ui.row():
+                ui.button("Yes", on_click=lambda: dialog.submit(True))
+                ui.button("No", on_click=lambda: dialog.submit(False))
+        return dialog

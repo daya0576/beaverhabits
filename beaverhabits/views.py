@@ -79,6 +79,7 @@ async def get_or_create_user_habit_list(
 ) -> HabitList:
     logger.info("Getting user habit list")
     habit_list = await get_user_habit_list(user)
+    logger.info(f"Habit list backup: {habit_list}")
     if habit_list is not None:
         return habit_list
 

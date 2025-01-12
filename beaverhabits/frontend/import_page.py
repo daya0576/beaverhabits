@@ -1,7 +1,6 @@
 import csv
-from io import StringIO
 import json
-import logging
+from io import StringIO
 
 from nicegui import events, ui
 
@@ -9,6 +8,7 @@ from beaverhabits import const
 from beaverhabits.app.db import User
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.layout import layout
+from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.storage.storage import HabitList
 from beaverhabits.views import user_storage
@@ -86,9 +86,9 @@ def import_ui_page(user: User):
                 merged = set(other.habits) & set(from_habit_list.habits)
                 unchanged = set(from_habit_list.habits) - set(other.habits)
 
-            logging.info(f"added: {added}")
-            logging.info(f"merged: {merged}")
-            logging.info(f"unchanged: {unchanged}")
+            logger.info(f"added: {added}")
+            logger.info(f"merged: {merged}")
+            logger.info(f"unchanged: {unchanged}")
 
             with ui.dialog() as dialog, ui.card().classes("w-64"):
                 ui.label(
@@ -114,7 +114,7 @@ def import_ui_page(user: User):
         except json.JSONDecodeError:
             ui.notify("Import failed: Invalid JSON", color="negative", position="top")
         except Exception as error:
-            logging.exception("Import failed")
+            logger.exception("Import failed")
             ui.notify(str(error), color="negative", position="top")
 
     with layout(title="Import", with_menu=False):
