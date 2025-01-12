@@ -24,6 +24,7 @@ from .frontend.add_page import add_page_ui
 from .frontend.cal_heatmap_page import heatmap_page
 from .frontend.habit_page import habit_page_ui
 from .frontend.index_page import index_page_ui
+from .logging import logger
 from .storage.meta import GUI_ROOT_PATH
 from .utils import dummy_days, get_user_today_date
 
@@ -58,6 +59,14 @@ async def demo_habit_page(habit_id: str) -> None:
     habit_page_ui(today, habit)
 
 
+@ui.page("/demo/habits/{habit_id}/streak")
+@ui.page("/demo/habits/{habit_id}/heatmap")
+async def demo_habit_page_heatmap(habit_id: str) -> None:
+    today = await get_user_today_date()
+    habit = await views.get_session_habit(habit_id)
+    heatmap_page(today, habit)
+
+
 @ui.page("/demo/export")
 async def demo_export() -> None:
     habit_list = views.get_session_habit_list()
@@ -73,22 +82,20 @@ async def index_page(
     user: User = Depends(current_active_user),
 ) -> None:
     days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
-    habits = await views.get_or_create_user_habit_list(user, days)
-    index_page_ui(days, habits)
+    habit_list = await views.get_user_habit_list(user)
+    index_page_ui(days, habit_list)
 
 
 @ui.page("/gui/add")
 async def add_page(user: User = Depends(current_active_user)) -> None:
-    days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
-    habits = await views.get_or_create_user_habit_list(user, days)
-    add_page_ui(habits)
+    habit_list = await views.get_user_habit_list(user)
+    add_page_ui(habit_list)
 
 
 @ui.page("/gui/order")
 async def order_page(user: User = Depends(current_active_user)) -> None:
-    days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
-    habits = await views.get_or_create_user_habit_list(user, days)
-    order_page_ui(habits)
+    habit_list = await views.get_user_habit_list(user)
+    order_page_ui(habit_list)
 
 
 @ui.page("/gui/habits/{habit_id}")
@@ -98,6 +105,7 @@ async def habit_page(habit_id: str, user: User = Depends(current_active_user)) -
     habit_page_ui(today, habit)
 
 
+@ui.page("/gui/habits/{habit_id}/streak")
 @ui.page("/gui/habits/{habit_id}/heatmap")
 async def gui_habit_page_heatmap(
     habit_id: str, user: User = Depends(current_active_user)
@@ -164,6 +172,8 @@ async def register():
         try:
             await validate_max_user_count()
             user = await user_create(email=email.value, password=password.value)
+            # Create a dummy habit list for the new users
+            await views.get_or_create_user_habit_list(user, await dummy_days(31))
         except Exception as e:
             ui.notify(str(e), color="negative")
         else:

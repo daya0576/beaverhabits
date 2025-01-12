@@ -22,7 +22,7 @@ def dummy_habit_list(days: list[datetime.date]):
             "id": generate_short_hash(name),
             "name": name,
             "records": [
-                {"day": day.strftime(DAY_MASK), "done": pick()} for day in days
+                {"day": day.strftime(DAY_MASK), "done": True} for day in days if pick()
             ],
         }
         for name in ("Order pizz", "Running", "Table Tennis", "Clean", "Call mom")
@@ -58,14 +58,19 @@ def get_or_create_session_habit_list(days: list[datetime.date]) -> HabitList:
     return habit_list
 
 
-async def get_user_habit_list(user: User) -> HabitList | None:
-    return await user_storage.get_user_habit_list(user)
+async def get_user_habit_list(user: User) -> HabitList:
+    habit_list = await user_storage.get_user_habit_list(user)
+    if habit_list is None:
+        logger.warning(f"Failed to load habit list for user {user.email}")
+        raise HTTPException(
+            status_code=404,
+            detail="The habit list data may be broken or missing, please contact the administrator.",
+        )
+    return habit_list
 
 
 async def get_user_habit(user: User, habit_id: str) -> Habit:
     habit_list = await get_user_habit_list(user)
-    if habit_list is None:
-        raise HTTPException(status_code=404, detail="Habit list not found")
 
     habit = await habit_list.get_habit_by(habit_id)
     if habit is None:
@@ -77,11 +82,13 @@ async def get_user_habit(user: User, habit_id: str) -> Habit:
 async def get_or_create_user_habit_list(
     user: User, days: list[datetime.date]
 ) -> HabitList:
-    logger.info("Getting user habit list")
-    habit_list = await get_user_habit_list(user)
-    if habit_list is not None:
-        return habit_list
+    try:
+        return await get_user_habit_list(user)
+    except HTTPException:
+        logger.warning(f"Failed to load habit list for user {user.email}")
+        pass
 
+    logger.info(f"Creating dummy habit list for user {user.email}")
     await user_storage.save_user_habit_list(user, dummy_habit_list(days))
 
     habit_list = await get_user_habit_list(user)

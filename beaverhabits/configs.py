@@ -22,9 +22,6 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     SENTRY_DSN: str = ""
 
-    # UI config
-    INDEX_HABIT_ITEM_COUNT: int = 5
-
     # NiceGUI
     NICEGUI_STORAGE_SECRET: str = "dev"
     GUI_MOUNT_PATH: str = "/gui"
@@ -38,6 +35,7 @@ class Settings(BaseSettings):
     JWT_LIFETIME_SECONDS: int = 60 * 60 * 24 * 30
 
     # Customization
+    INDEX_HABIT_ITEM_COUNT: int = 5
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
     ENABLE_IOS_STANDALONE: bool = False
     ENABLE_DESKTOP_ALGIN_CENTER: bool = True

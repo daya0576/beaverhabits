@@ -66,9 +66,7 @@ async def user_check_token(token: str | None) -> bool:
         return False
 
 
-async def user_create(
-    email: str, password: str, is_superuser: bool = False
-) -> Optional[User]:
+async def user_create(email: str, password: str, is_superuser: bool = False) -> User:
     try:
         async with get_async_session_context() as session:
             async with get_user_db_context(session) as user_db:

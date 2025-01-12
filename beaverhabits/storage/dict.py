@@ -1,7 +1,7 @@
 import datetime
-import logging
 from dataclasses import dataclass, field
 
+from beaverhabits.logging import logger
 from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, HabitStatus
 from beaverhabits.utils import generate_short_hash
 
@@ -38,15 +38,39 @@ class DictRecord(CheckedRecord, DictStorage):
 
     @property
     def done(self) -> bool:
-        return self.data["done"]
+        return self.data.get("done", False)
 
     @done.setter
     def done(self, value: bool) -> None:
         self.data["done"] = value
 
+    @property
+    def text(self) -> str:
+        return self.data.get("text", "")
+
+    @text.setter
+    def text(self, value: str) -> None:
+        self.data["text"] = value
+
+
+class HabitDataCache:
+    def __init__(self, habit: "DictHabit"):
+        self.habit = habit
+        self.ticked_days = [r.day for r in self.habit.records if r.done]
+        self.ticked_data = {r.day: r for r in self.habit.records}
+
+    def refresh(self):
+        self.ticked_days = [r.day for r in self.habit.records if r.done]
+        self.ticked_data = {r.day: r for r in self.habit.records}
+
 
 @dataclass
 class DictHabit(Habit[DictRecord], DictStorage):
+
+    def __init__(self, data: dict) -> None:
+        self.data = data
+        self.cache = HabitDataCache(self)
+
     @property
     def id(self) -> str:
         if "id" not in self.data:
@@ -83,7 +107,7 @@ class DictHabit(Habit[DictRecord], DictStorage):
         try:
             return HabitStatus(status_value)
         except ValueError:
-            logging.error(f"Invalid status value: {status_value}")
+            logger.error(f"Invalid status value: {status_value}")
             self.data["status"] = None
             return HabitStatus.ACTIVE
 
@@ -95,12 +119,49 @@ class DictHabit(Habit[DictRecord], DictStorage):
     def records(self) -> list[DictRecord]:
         return [DictRecord(d) for d in self.data["records"]]
 
-    async def tick(self, day: datetime.date, done: bool) -> None:
-        if record := next((r for r in self.records if r.day == day), None):
-            record.done = done
+    @property
+    def note(self) -> bool:
+        return bool(self.data.get("note"))
+
+    @note.setter
+    def note(self, value: bool) -> None:
+        self.data["note"] = value
+
+    @property
+    def ticked_days(self) -> list[datetime.date]:
+        return self.cache.ticked_days
+
+    @property
+    def ticked_data(self) -> dict[datetime.date, DictRecord]:
+        return self.cache.ticked_data
+
+    async def tick(
+        self, day: datetime.date, done: bool, text: str | None = None
+    ) -> CheckedRecord:
+        # Find the record in the cache
+        record = self.ticked_data.get(day)
+
+        if record is not None:
+            # Update only if necessary to avoid unnecessary writes
+            new_data = {}
+            if record.done != done:
+                new_data["done"] = done
+            if text is not None and record.text != text:
+                new_data["text"] = text
+            if new_data:
+                record.data.update(new_data)
+
         else:
+            # Update storage once
             data = {"day": day.strftime(DAY_MASK), "done": done}
+            if text is not None:
+                data["text"] = text
             self.data["records"].append(data)
+
+        # Update the cache
+        self.cache.refresh()
+
+        return self.ticked_data[day]
 
     async def merge(self, other: "DictHabit") -> "DictHabit":
         self_ticks = {r.day for r in self.records if r.done}

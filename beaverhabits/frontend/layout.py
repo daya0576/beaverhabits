@@ -8,7 +8,8 @@ from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.logging import logger
-from beaverhabits.storage.meta import get_page_title, get_root_path
+from beaverhabits.storage.meta import get_page_title, get_root_path, is_demo
+from beaverhabits.storage.storage import Habit
 
 
 def redirect(x):
@@ -45,18 +46,23 @@ def add_umami_headers():
     )
 
 
-def menu_component(root_path: str) -> None:
+def menu_component() -> None:
     """Dropdown menu for the top-right corner of the page."""
     with ui.menu():
-        compat_menu("Add", lambda: redirect("add"))
-        ui.separator()
-        # compat_menu("Edit", lambda: redirect("order"))
-        # ui.separator()
+        show_import = not is_demo()
+        show_export = True
 
-        compat_menu("Export", lambda: open_tab("export"))
+        path = context.client.page.path
+        if "add" in path:
+            compat_menu("Reorder", lambda: redirect("order"))
+        else:
+            compat_menu("Add", lambda: redirect("add"))
         ui.separator()
 
-        if not root_path.startswith("/demo"):
+        if show_export:
+            compat_menu("Export", lambda: open_tab("export"))
+            ui.separator()
+        if show_import:
             compat_menu("Import", lambda: redirect("import"))
             ui.separator()
 
@@ -85,11 +91,7 @@ def layout(title: str | None = None, with_menu: bool = True):
             menu_header(title, target=root_path)
             if with_menu:
                 ui.space()
-                if "order" in path:
-                    menu_icon_button(icons.ADD, click=lambda: redirect("add"), tooltip="Add Habits")
-                if "add" in path:
-                    menu_icon_button("drag_indicator", click=lambda: redirect("order"), tooltip="Reorder habits")
                 with menu_icon_button(icons.MENU):
-                    menu_component(root_path)
+                    menu_component()
 
         yield
