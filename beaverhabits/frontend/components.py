@@ -16,6 +16,8 @@ from beaverhabits.utils import WEEK_DAYS
 
 strptime = datetime.datetime.strptime
 
+DAILY_NOTE_MAX_LENGTH = 300
+
 
 def link(text: str, target: str):
     return ui.link(text, target=target).classes(
@@ -48,7 +50,12 @@ def menu_icon_button(
 def habit_tick_dialog(record: CheckedRecord | None):
     text = record.text if record else ""
     with ui.dialog() as dialog, ui.card():
-        t = ui.textarea(label="Note", value=text)
+        t = ui.textarea(
+            label="Note",
+            value=text,
+            validation={"Too long!": lambda value: len(value) < DAILY_NOTE_MAX_LENGTH},
+        )
+        t.style("max-width: 300px")
         with ui.row():
             ui.button("Yes", on_click=lambda: dialog.submit((True, t.value)))
             ui.button("No", on_click=lambda: dialog.submit((False, None)))
@@ -71,9 +78,13 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool):
 
         yes, text = (False, None) if result is None else result
 
+        if text and len(text) > DAILY_NOTE_MAX_LENGTH:
+            ui.notify("Note is too long", color="negative")
+            yes = False
+
         # Rollback if user cancel
         if not yes:
-            await habit.tick(day, not value, text)
+            await habit.tick(day, not value)
             logger.info(f"Day {day} ticked: {value} (rollback)")
 
         if yes:
