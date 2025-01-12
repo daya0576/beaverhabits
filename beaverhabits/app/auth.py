@@ -6,6 +6,7 @@ from fastapi_users.exceptions import UserAlreadyExists
 from nicegui import app
 
 from beaverhabits.app.schemas import UserCreate
+from beaverhabits.logging import logger
 
 from .db import User, get_async_session, get_user_db
 from .users import get_jwt_strategy, get_user_manager
@@ -29,6 +30,7 @@ async def user_authenticate(email: str, password: str) -> Optional[User]:
                         return None
                     return user
     except:
+        logger.exception("Unkownn Exception")
         return None
 
 
