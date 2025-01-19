@@ -32,3 +32,9 @@ EXPANSION_CSS = """
   min-width: 0 !important;
 }
 """
+
+HIDE_TIMELINE_TITLE = """\
+.q-timeline__title {
+  display: none;
+}
+"""

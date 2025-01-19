@@ -13,7 +13,12 @@ from beaverhabits.frontend.components import (
     habit_notes,
     link,
 )
-from beaverhabits.frontend.css import CALENDAR_CSS, CHECK_BOX_CSS, EXPANSION_CSS
+from beaverhabits.frontend.css import (
+    CALENDAR_CSS,
+    CHECK_BOX_CSS,
+    EXPANSION_CSS,
+    HIDE_TIMELINE_TITLE,
+)
 from beaverhabits.frontend.layout import layout, redirect
 from beaverhabits.storage.meta import get_habit_heatmap_path
 from beaverhabits.storage.storage import Habit
@@ -22,7 +27,7 @@ WEEKS_TO_DISPLAY = 15
 
 
 def card_title(title: str, target: str):
-    link(title, target).classes("text-base flex justify-center")
+    return link(title, target).classes("text-base flex justify-center")
 
 
 @contextmanager
@@ -54,9 +59,9 @@ def habit_page(today: datetime.date, habit: Habit):
             card_title("History", target)
             habit_history(today, habit.ticked_days)
 
-        with card():
-            card_title("Notes", target)
-            habit_notes(today, habit)
+        with card(padding=2):
+            card_title("Notes", target).tooltip("Long press checkboxes to add notes")
+            habit_notes(habit)
 
         with card(target, padding=0.5):
             ui.icon("more_horiz", size="1.5em")
@@ -66,6 +71,7 @@ def habit_page_ui(today: datetime.date, habit: Habit):
     ui.add_css(CHECK_BOX_CSS)
     ui.add_css(CALENDAR_CSS)
     ui.add_css(EXPANSION_CSS)
+    ui.add_css(HIDE_TIMELINE_TITLE)
 
     with layout(title=habit.name):
         habit_page(today, habit)

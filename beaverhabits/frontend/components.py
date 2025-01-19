@@ -52,8 +52,8 @@ def menu_icon_button(
 def habit_tick_dialog(record: CheckedRecord | None):
     text = record.text if record else ""
     with ui.dialog() as dialog, ui.card().props("flat") as card:
-        dialog.props("persistent")
-        card.classes("w-96")
+        dialog.props('persistent backdrop-filter="blur(4px)"')
+        card.classes("w-5/6 max-w-80")
 
         with ui.column().classes("gap-0 w-full"):
             t = ui.textarea(
@@ -129,7 +129,7 @@ class HabitCheckBox(ui.checkbox):
         self.bind_value_from(self, "_value")
 
         # hold on event
-        self._hold, self._hold_ts = False, 0
+        self.hold = asyncio.Event()
         self.on("mousedown", self._mouse_down_event)
         self.on("mouseup", self._mouse_up_event)
 
@@ -158,18 +158,15 @@ class HabitCheckBox(ui.checkbox):
         await habit_tick(self.habit, self.day, e.value)
 
     async def _mouse_down_event(self):
-        self._hold = True
-        await asyncio.sleep(0.2)
-        if self._hold and time.time() - self._hold_ts > 1:
-            self._hold_ts = time.time()
+        self.hold.clear()
+        try:
+            async with asyncio.timeout(0.15):
+                await self.hold.wait()
+        except asyncio.TimeoutError:
             await note_tick(self.habit, self.day)
-            return False
-
-        return True
 
     async def _mouse_up_event(self):
-        self._hold = False
-        return True
+        self.hold.set()
 
 
 class HabitOrderCard(ui.card):
@@ -562,18 +559,17 @@ class HabitNotesExpansion(ui.expansion):
         return dialog
 
 
-def habit_notes(today: datetime.date, habit: Habit):
-    habit.records.sort(key=lambda x: x.day, reverse=True)
+def habit_notes(habit: Habit, limit: int = 10):
+    records = [x for x in habit.records if x.text]
+    records.sort(key=lambda x: x.day, reverse=True)
 
-    with ui.timeline(side="right"):
-        ui.timeline_entry(
-            "Rodja and Falko start working on NiceGUI.", subtitle="May 07, 2021"
-        )
-        ui.timeline_entry(
-            "The first PyPI package is released.", subtitle="May 14, 2021"
-        )
-        ui.timeline_entry(
-            "Large parts are rewritten to remove JustPy "
-            "and to upgrade to Vue 3 and Quasar 2.",
-            subtitle="December 15, 2022",
-        )
+    if not records:
+        return
+
+    with ui.timeline(side="right").classes("w-full pt-5 px-3"):
+        for record in records[:limit]:
+            ui.timeline_entry(
+                record.text,
+                title="title",
+                subtitle=record.day.strftime("%B %d, %Y"),
+            )
