@@ -80,8 +80,8 @@ def habit_list_ui(days: list[datetime.date], habit_list: HabitList):
 
 
 def index_page_ui(days: list[datetime.date], habits: HabitList):
-    # Prevent long press context menu for svg image elements
-    javascript.prevent_context_menu()
-
     with layout():
         habit_list_ui(days, habits)
+
+    # Prevent long press context menu for svg image elements
+    ui.context.client.on_connect(javascript.prevent_context_menu)
