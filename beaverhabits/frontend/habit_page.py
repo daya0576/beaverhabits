@@ -21,7 +21,7 @@ WEEKS_TO_DISPLAY = 15
 
 
 def card_title(title: str, target: str):
-    link(title, target).classes("text-base flex justify-center")
+    link(title, target).classes("text-base flex justify-center text-inherit")
 
 
 @contextmanager

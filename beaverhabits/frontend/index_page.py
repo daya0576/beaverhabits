@@ -47,11 +47,12 @@ def habit_list_ui(days: list[datetime.date], habit_list: HabitList):
     row_compat_classes = "pl-4 pr-1 py-0"
     left_classes, right_classes = (
         # grid 4
-        "col-span-4 break-all",
+        "col-span-4 break-all text-inherit",
         # grid 2 2 2 2 2
         "col-span-2 px-1.5 justify-self-center",
     )
-    header_styles = "font-size: 85%; font-weight: 500; color: #9e9e9e"
+    header_styles = "font-size: 85%"
+    right_classes += " font-medium text-neutral-500 dark:text-neutral-400"
 
     with ui.column().classes("gap-1.5"):
         # Date Headers

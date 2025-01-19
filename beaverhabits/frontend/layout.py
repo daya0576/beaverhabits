@@ -5,11 +5,10 @@ from nicegui import context, ui
 
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
-from beaverhabits.frontend import icons
+from beaverhabits.frontend import css, icons
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.logging import logger
 from beaverhabits.storage.meta import get_page_title, get_root_path, is_demo
-from beaverhabits.storage.storage import Habit
 
 
 def redirect(x):
@@ -72,6 +71,8 @@ def menu_component() -> None:
 @contextmanager
 def layout(title: str | None = None, with_menu: bool = True):
     """Base layout for all pages."""
+    ui.add_css(css.DARK_BG)
+
     root_path = get_root_path()
     title = title or get_page_title(root_path)
 
@@ -85,13 +86,20 @@ def layout(title: str | None = None, with_menu: bool = True):
         custom_header()
         add_umami_headers()
 
+        # Header components
         path = context.client.page.path
         logger.info(f"Rendering page: {path}")
         with ui.row().classes("min-w-full gap-x-0"):
             menu_header(title, target=root_path)
             if with_menu:
                 ui.space()
+
                 with menu_icon_button(icons.MENU):
                     menu_component()
 
         yield
+
+        with ui.row():
+            dark = ui.dark_mode()
+            ui.button("Dark", on_click=dark.enable)
+            ui.button("Light", on_click=dark.disable)

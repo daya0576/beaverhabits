@@ -27,9 +27,7 @@ def link(text: str, target: str):
 
 def menu_header(title: str, target: str):
     link = ui.link(title, target=target)
-    link.classes(
-        "text-semibold text-2xl dark:text-white no-underline hover:no-underline"
-    )
+    link.classes("text-semibold text-2xl no-underline hover:no-underline text-inherit")
     return link
 
 

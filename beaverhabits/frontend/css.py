@@ -32,3 +32,15 @@ EXPANSION_CSS = """
   min-width: 0 !important;
 }
 """
+
+DARK_BG = """
+body {
+    background-color: rgb(18, 18, 18);
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: rgb(238, 238, 238);
+  }
+}
+"""
