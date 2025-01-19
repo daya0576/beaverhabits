@@ -1,5 +1,7 @@
+import asyncio
 import calendar
 import datetime
+import time
 from dataclasses import dataclass
 from typing import Callable, Optional
 
@@ -49,17 +51,42 @@ def menu_icon_button(
 
 def habit_tick_dialog(record: CheckedRecord | None):
     text = record.text if record else ""
-    with ui.dialog() as dialog, ui.card():
-        t = ui.textarea(
-            label="Note",
-            value=text,
-            validation={"Too long!": lambda value: len(value) < DAILY_NOTE_MAX_LENGTH},
-        )
-        t.style("max-width: 300px")
-        with ui.row():
-            ui.button("Yes", on_click=lambda: dialog.submit((True, t.value)))
-            ui.button("No", on_click=lambda: dialog.submit((False, None)))
+    with ui.dialog() as dialog, ui.card().props("flat") as card:
+        dialog.props("persistent")
+        card.classes("w-96")
+
+        with ui.column().classes("gap-0 w-full"):
+            t = ui.textarea(
+                label="Note",
+                value=text,
+                validation={
+                    "Too long!": lambda value: len(value) < DAILY_NOTE_MAX_LENGTH
+                },
+            )
+            t.classes("w-full")
+
+            with ui.row():
+                ui.button("Yes", on_click=lambda: dialog.submit((True, t.value))).props(
+                    "flat"
+                )
+                ui.button("No", on_click=lambda: dialog.submit((False, None))).props(
+                    "flat"
+                )
     return dialog
+
+
+async def note_tick(habit: Habit, day: datetime.date):
+    record = habit.record_by(day)
+    result = await habit_tick_dialog(record)
+
+    yes, text = (False, None) if result is None else result
+    if text and len(text) > DAILY_NOTE_MAX_LENGTH:
+        ui.notify("Note is too long", color="negative")
+        yes = False
+
+    if yes:
+        await habit.tick(day, True, text)
+        logger.info(f"Habit ticked: {day} True, note: {text}")
 
 
 async def habit_tick(habit: Habit, day: datetime.date, value: bool):
@@ -101,6 +128,14 @@ class HabitCheckBox(ui.checkbox):
 
         self.bind_value_from(self, "_value")
 
+        # hold on event
+        self._hold, self._hold_ts = False, 0
+        self.on("mousedown", self._mouse_down_event)
+        self.on("mouseup", self._mouse_up_event)
+
+        self.on("touchstart", self._mouse_down_event)
+        self.on("touchend", self._mouse_up_event)
+
     def _update_style(self, value: bool):
         self.props(
             f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
@@ -121,6 +156,20 @@ class HabitCheckBox(ui.checkbox):
 
         # Do update completion status
         await habit_tick(self.habit, self.day, e.value)
+
+    async def _mouse_down_event(self):
+        self._hold = True
+        await asyncio.sleep(0.2)
+        if self._hold and time.time() - self._hold_ts > 1:
+            self._hold_ts = time.time()
+            await note_tick(self.habit, self.day)
+            return False
+
+        return True
+
+    async def _mouse_up_event(self):
+        self._hold = False
+        return True
 
 
 class HabitOrderCard(ui.card):
@@ -511,3 +560,20 @@ class HabitNotesExpansion(ui.expansion):
                 ui.button("Yes", on_click=lambda: dialog.submit(True))
                 ui.button("No", on_click=lambda: dialog.submit(False))
         return dialog
+
+
+def habit_notes(today: datetime.date, habit: Habit):
+    habit.records.sort(key=lambda x: x.day, reverse=True)
+
+    with ui.timeline(side="right"):
+        ui.timeline_entry(
+            "Rodja and Falko start working on NiceGUI.", subtitle="May 07, 2021"
+        )
+        ui.timeline_entry(
+            "The first PyPI package is released.", subtitle="May 14, 2021"
+        )
+        ui.timeline_entry(
+            "Large parts are rewritten to remove JustPy "
+            "and to upgrade to Vue 3 and Quasar 2.",
+            subtitle="December 15, 2022",
+        )

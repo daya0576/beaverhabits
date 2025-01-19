@@ -10,6 +10,7 @@ from beaverhabits.frontend.components import (
     HabitNotesExpansion,
     habit_heat_map,
     habit_history,
+    habit_notes,
     link,
 )
 from beaverhabits.frontend.css import CALENDAR_CSS, CHECK_BOX_CSS, EXPANSION_CSS
@@ -53,9 +54,9 @@ def habit_page(today: datetime.date, habit: Habit):
             card_title("History", target)
             habit_history(today, habit.ticked_days)
 
-        # with card(padding=0.5):
-        #     with HabitNotesExpansion("Notes", habit):
-        #         ui.label("...")
+        with card():
+            card_title("Notes", target)
+            habit_notes(today, habit)
 
         with card(target, padding=0.5):
             ui.icon("more_horiz", size="1.5em")

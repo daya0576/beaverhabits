@@ -9,7 +9,6 @@ from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.logging import logger
 from beaverhabits.storage.meta import get_page_title, get_root_path, is_demo
-from beaverhabits.storage.storage import Habit
 
 
 def redirect(x):
@@ -72,6 +71,7 @@ def menu_component() -> None:
 @contextmanager
 def layout(title: str | None = None, with_menu: bool = True):
     """Base layout for all pages."""
+
     root_path = get_root_path()
     title = title or get_page_title(root_path)
 

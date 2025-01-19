@@ -4,6 +4,7 @@ import os
 from nicegui import ui
 
 from beaverhabits.configs import settings
+from beaverhabits.frontend import javascript
 from beaverhabits.frontend.components import HabitCheckBox, IndexBadge, link
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
@@ -79,5 +80,8 @@ def habit_list_ui(days: list[datetime.date], habit_list: HabitList):
 
 
 def index_page_ui(days: list[datetime.date], habits: HabitList):
+    # Prevent long press context menu for svg image elements
+    javascript.prevent_context_menu()
+
     with layout():
         habit_list_ui(days, habits)
