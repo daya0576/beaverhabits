@@ -25,7 +25,7 @@ async def update_user_habit_list(user: User, data: dict) -> None:
             return
 
         if habit_list.data == data:
-            logger.warn(f"[CRUD] User {user.id} habit list unchanged")
+            logger.warning(f"[CRUD] User {user.id} habit list unchanged")
             return
 
         habit_list.data = data

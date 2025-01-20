@@ -1,7 +1,6 @@
 import asyncio
 import calendar
 import datetime
-import time
 from dataclasses import dataclass
 from typing import Callable, Optional
 
@@ -11,7 +10,6 @@ from nicegui.elements.button import Button
 
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
-from beaverhabits.frontend.javascript import unhover_checkboxes
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, HabitStatus
