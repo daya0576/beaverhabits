@@ -5,6 +5,7 @@ from nicegui.storage import observables
 
 from beaverhabits.app import crud
 from beaverhabits.app.db import User
+from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.storage.storage import UserStorage
 
@@ -35,6 +36,11 @@ class UserDatabaseStorage(UserStorage[DictHabitList]):
         return DictHabitList(d)
 
     async def save_user_habit_list(self, user: User, habit_list: DictHabitList) -> None:
+        user_habit_list = await crud.get_user_habit_list(user)
+        if user_habit_list and user_habit_list.data:
+            logger.warning("User already has a habit list, not overwriting it")
+            return
+
         await crud.update_user_habit_list(user, habit_list.data)
 
     async def merge_user_habit_list(

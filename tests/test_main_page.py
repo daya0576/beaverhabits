@@ -1,3 +1,5 @@
+import datetime
+
 from nicegui import app
 from nicegui.testing import Screen
 
@@ -7,10 +9,17 @@ from beaverhabits.frontend.index_page import index_page_ui
 from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.views import dummy_habit_list
 
-from .utils import dummy_days
-
 # Test cases:
 # https://github.com/zauberzeug/nicegui/tree/main/tests
+
+
+def dummy_today():
+    return datetime.date(2024, 5, 1)
+
+
+def dummy_days(count):
+    today = dummy_today()
+    return [today - datetime.timedelta(days=i) for i in reversed(range(count))]
 
 
 def test_index_page(screen: Screen) -> None:
