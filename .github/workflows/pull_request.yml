@@ -14,4 +14,4 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Test with python ${{ matrix.python-version }}
-        run: uv run --frozen pytest
+        run: DATABASE_URL="sqlite+aiosqlite:///:memory:" uv run --frozen pytest
