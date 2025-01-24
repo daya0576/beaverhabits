@@ -51,7 +51,7 @@ def menu_icon_button(
 def habit_tick_dialog(record: CheckedRecord | None):
     text = record.text if record else ""
     with ui.dialog() as dialog, ui.card().props("flat") as card:
-        dialog.props('persistent backdrop-filter="blur(4px)"')
+        dialog.props('backdrop-filter="blur(4px)"')
         card.classes("w-5/6 max-w-80")
 
         with ui.column().classes("gap-0 w-full"):

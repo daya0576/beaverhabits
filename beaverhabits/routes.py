@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRoute
 from nicegui import app, ui
@@ -13,8 +13,8 @@ from . import const, views
 from .app.auth import (
     user_authenticate,
     user_check_token,
-    user_create,
     user_create_token,
+    user_from_token,
 )
 from .app.crud import get_user_count
 from .app.db import User
@@ -24,10 +24,17 @@ from .frontend.add_page import add_page_ui
 from .frontend.cal_heatmap_page import heatmap_page
 from .frontend.habit_page import habit_page_ui
 from .frontend.index_page import index_page_ui
+from .logging import logger
 from .storage.meta import GUI_ROOT_PATH
 from .utils import dummy_days, get_user_today_date
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
+
+AUTHS = [
+    views.authorize_trusted_email,
+    views.authorize_local_email,
+    views.authorize_gui,
+]
 
 
 @ui.page("/demo")
@@ -80,6 +87,7 @@ async def demo_export() -> None:
 async def index_page(
     user: User = Depends(current_active_user),
 ) -> None:
+    ui.label(user.email)
     days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habit_list = await views.get_user_habit_list(user)
     index_page_ui(days, habit_list)
@@ -162,28 +170,19 @@ async def login_page() -> Optional[RedirectResponse]:
 
 
 @ui.page("/register")
-async def register():
-    async def validate_max_user_count():
-        if await get_user_count() >= settings.MAX_USER_COUNT > 0:
-            raise HTTPException(status_code=404, detail="User limit reached")
+async def register_page():
+    custom_header()
+    await views.validate_max_user_count()
 
     async def try_register():
         try:
-            await validate_max_user_count()
-            user = await user_create(email=email.value, password=password.value)
-            # Create a dummy habit list for the new users
-            await views.get_or_create_user_habit_list(user, await dummy_days(31))
+            await views.validate_max_user_count()
+            user = await views.register_user(email=email.value, password=password.value)
+            await views.login_user(user)
         except Exception as e:
             ui.notify(str(e), color="negative")
         else:
-            token = user and await user_create_token(user)
-            if token is not None:
-                app.storage.user.update({"auth_token": token})
-                ui.navigate.to(app.storage.user.get("referrer_path", "/"))
-
-    custom_header()
-
-    await validate_max_user_count()
+            ui.navigate.to(app.storage.user.get("referrer_path", "/"))
 
     with ui.card().classes("absolute-center shadow-none w-96"):
         email = ui.input("email").on("keydown.enter", try_register).classes("w-56")
@@ -203,31 +202,37 @@ async def register():
 
 
 def init_gui_routes(fastapi_app: FastAPI):
+
     @app.middleware("http")
     async def AuthMiddleware(request: Request, call_next):
+        user = await user_from_token(app.storage.user.get("auth_token"))
+        for auth in AUTHS:
+            if await auth(request, user):
+                access_token = app.storage.user.get("auth_token")
+                # Remove original authorization header
+                request.scope["headers"] = [
+                    e for e in request.scope["headers"] if e[0] != b"authorization"
+                ]
+                # add new authorization header
+                request.scope["headers"].append(
+                    (b"authorization", f"Bearer {access_token}".encode())
+                )
+                return await call_next(request)
+
         # Redirect unauthorized request
         client_page_routes = [
             route.path for route in app.routes if isinstance(route, APIRoute)
         ]
-        if not await user_check_token(app.storage.user.get("auth_token", None)):
-            if (
-                request.url.path in client_page_routes
-                and request.url.path not in UNRESTRICTED_PAGE_ROUTES
-            ):
-                root_path = request.scope["root_path"]
-                app.storage.user["referrer_path"] = request.url.path.removeprefix(
-                    root_path
-                )
-                return RedirectResponse(request.url_for(login_page.__name__))
-
-        # Remove original authorization header
-        request.scope["headers"] = [
-            e for e in request.scope["headers"] if not e[0] == b"authorization"
-        ]
-        # add new authorization header
-        request.scope["headers"].append(
-            (b"authorization", f"Bearer {app.storage.user.get('auth_token')}".encode())
-        )
+        if (
+            request.url.path in client_page_routes
+            and request.url.path not in UNRESTRICTED_PAGE_ROUTES
+        ):
+            logger.info(
+                f"Redirecting unauthorized request to login page: {request.url.path}"
+            )
+            root_path = request.scope["root_path"]
+            app.storage.user["referrer_path"] = request.url.path.removeprefix(root_path)
+            return RedirectResponse(request.url_for(login_page.__name__))
 
         return await call_next(request)
 

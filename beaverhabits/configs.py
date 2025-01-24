@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "SECRET"
     JWT_LIFETIME_SECONDS: int = 60 * 60 * 24 * 30
 
+    # Auth
+    WEBUI_AUTH_TRUSTED_EMAIL_HEADER: str = ""
+    LOCAL_TRUSTED_EMAIL: str = ""
+
     # Customization
     INDEX_HABIT_ITEM_COUNT: int = 5
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
