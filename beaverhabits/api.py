@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from beaverhabits import views
 from beaverhabits.app.db import User
-from beaverhabits.app.users import current_active_user
+from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
 
 api_router = APIRouter()

@@ -73,7 +73,9 @@ async def user_from_token(token: str | None) -> User | None:
                 return user
 
 
-async def user_create(email: str, password: str, is_superuser: bool = False) -> User:
+async def user_create(
+    email: str, password: str = "", is_superuser: bool = False
+) -> User:
     try:
         async with get_async_session_context() as session:
             async with get_user_db_context(session) as user_db:
@@ -91,9 +93,6 @@ async def user_create(email: str, password: str, is_superuser: bool = False) -> 
 
 
 async def user_get_by_email(email: str) -> Optional[User]:
-    if not email:
-        return None
-
     try:
         async with get_async_session_context() as session:
             async with get_user_db_context(session) as user_db:
@@ -101,6 +100,7 @@ async def user_get_by_email(email: str) -> Optional[User]:
                     user = await user_manager.get_by_email(email)
                     return user
     except:
+        logger.exception("Unkownn Exception")
         return None
 
 

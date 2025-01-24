@@ -18,7 +18,7 @@ from .app.auth import (
 )
 from .app.crud import get_user_count
 from .app.db import User
-from .app.users import current_active_user
+from .app.dependencies import current_active_user
 from .configs import settings
 from .frontend.add_page import add_page_ui
 from .frontend.cal_heatmap_page import heatmap_page
@@ -29,12 +29,6 @@ from .storage.meta import GUI_ROOT_PATH
 from .utils import dummy_days, get_user_today_date
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
-
-AUTHS = [
-    views.authorize_trusted_email,
-    views.authorize_local_email,
-    views.authorize_gui,
-]
 
 
 @ui.page("/demo")
@@ -204,34 +198,29 @@ def init_gui_routes(fastapi_app: FastAPI):
 
     @app.middleware("http")
     async def AuthMiddleware(request: Request, call_next):
-        user = await user_from_token(app.storage.user.get("auth_token"))
-        for auth in AUTHS:
-            if await auth(request, user):
-                access_token = app.storage.user.get("auth_token")
-                # Remove original authorization header
-                request.scope["headers"] = [
-                    e for e in request.scope["headers"] if e[0] != b"authorization"
-                ]
-                # add new authorization header
-                request.scope["headers"].append(
-                    (b"authorization", f"Bearer {access_token}".encode())
-                )
-                return await call_next(request)
-
         # Redirect unauthorized request
         client_page_routes = [
             route.path for route in app.routes if isinstance(route, APIRoute)
         ]
-        if (
-            request.url.path in client_page_routes
-            and request.url.path not in UNRESTRICTED_PAGE_ROUTES
-        ):
-            logger.info(
-                f"Redirecting unauthorized request to login page: {request.url.path}"
-            )
-            root_path = request.scope["root_path"]
-            app.storage.user["referrer_path"] = request.url.path.removeprefix(root_path)
-            return RedirectResponse(request.url_for(login_page.__name__))
+        if not await user_check_token(app.storage.user.get("auth_token", None)):
+            if (
+                request.url.path in client_page_routes
+                and request.url.path not in UNRESTRICTED_PAGE_ROUTES
+            ):
+                root_path = request.scope["root_path"]
+                app.storage.user["referrer_path"] = request.url.path.removeprefix(
+                    root_path
+                )
+                return RedirectResponse(request.url_for(login_page.__name__))
+
+        # Remove original authorization header
+        request.scope["headers"] = [
+            e for e in request.scope["headers"] if e[0] != b"authorization"
+        ]
+        # add new authorization header
+        request.scope["headers"].append(
+            (b"authorization", f"Bearer {app.storage.user.get('auth_token')}".encode())
+        )
 
         return await call_next(request)
 
