@@ -13,13 +13,13 @@ from beaverhabits.logging import logger
 from beaverhabits.storage import get_user_dict_storage, session_storage
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.utils import dummy_days, generate_short_hash
+from beaverhabits.utils import generate_short_hash
 
 user_storage = get_user_dict_storage()
 
 
 def dummy_habit_list(days: list[datetime.date]):
-    pick = lambda: random.randint(0, 3) == 0
+    pick = lambda: random.randint(0, 5) == 0
     items = [
         {
             "id": generate_short_hash(name),
@@ -89,7 +89,6 @@ async def get_or_create_user_habit_list(
         return await get_user_habit_list(user)
     except HTTPException:
         logger.warning(f"Failed to load habit list for user {user.email}")
-        pass
 
     logger.info(f"Creating dummy habit list for user {user.email}")
     await user_storage.save_user_habit_list(user, dummy_habit_list(days))
@@ -130,7 +129,8 @@ async def login_user(user: User) -> None:
 async def register_user(email: str, password: str = "") -> User:
     user = await user_create(email=email, password=password)
     # Create a dummy habit list for the new users
-    await get_or_create_user_habit_list(user, await dummy_days(31))
+    days = [datetime.date.today() - datetime.timedelta(days=i) for i in range(30)]
+    await get_or_create_user_habit_list(user, days)
     return user
 
 
