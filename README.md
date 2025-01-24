@@ -71,7 +71,7 @@ To avoid [permission issues](https://github.com/daya0576/beaverhabits/discussion
 | **MAX_USER_COUNT**(int) | By setting it to `1`, you can prevent others from signing up in the future. |
 | **ENABLE_IOS_STANDALONE**(bool) | Experiential feature to  enable standalone mode on iOS. The default setting is `false`. |
 | **INDEX_SHOW_HABIT_COUNT**(bool) | To display the total ticket count along with the habit name on the index page. The default setting is `false`. |
-| **TRUSTED_EMAIL_HEADER**(str) | Delegate authentication to an authenticating reverse proxy that passes in the user's details in HTTP headers. An existing account is required. |
+| **TRUSTED_EMAIL_HEADER**(str) | Delegate authentication to an authenticating reverse proxy that passes in the user's details in HTTP headers, e.g. `Cf-Access-Authenticated-User-Email`. An existing account is required. |
 | **TRUSTED_LOCAL_EMAIL**(str) | Disables authentication entirely. A new account with the specified email will be created if it does not exist. |
 
 ## Development
