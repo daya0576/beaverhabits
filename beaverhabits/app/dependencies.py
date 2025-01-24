@@ -6,9 +6,8 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from beaverhabits.app.auth import user_create, user_from_token, user_get_by_email
 from beaverhabits.app.db import User
-from beaverhabits.app.schemas import UserCreate
-from beaverhabits.app.users import UserManager, get_user_manager
 from beaverhabits.configs import settings
+from beaverhabits.logging import logger
 
 
 def get_bearer_token(request: Request) -> Optional[str]:
@@ -39,12 +38,20 @@ async def current_active_user(
     trusted_header_email: Annotated[Optional[str], Depends(get_trusted_header_email)],
     trusted_local_email: Annotated[Optional[str], Depends(get_trusted_local_email)],
 ) -> User:
-    if trusted_header_email and (user := await user_get_by_email(trusted_header_email)):
-        return user
+    if trusted_header_email:
+        if user := await user_get_by_email(trusted_header_email):
+            return user
+        else:
+            raise HTTPException(
+                status_code=HTTP_401_UNAUTHORIZED,
+                detail=f"Trusted email user not found: {trusted_header_email}",
+            )
 
     if trusted_local_email:
+        logger.info(f"Trusted local email: {trusted_local_email}")
         if user := await user_get_by_email(trusted_local_email):
             return user
+        logger.info(f"Trusted local email user not found. Creating user.")
         return await user_create(trusted_local_email)
 
     if credentials and (user := await user_from_token(credentials)):
