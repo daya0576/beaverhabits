@@ -106,5 +106,4 @@ async def user_get_by_email(email: str) -> Optional[User]:
 
 def user_logout() -> bool:
     app.storage.user.update({"auth_token": ""})
-    app.storage.user.clear()
     return True

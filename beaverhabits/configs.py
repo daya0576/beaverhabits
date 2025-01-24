@@ -48,5 +48,8 @@ class Settings(BaseSettings):
     def is_dev(self):
         return self.ENV == "dev"
 
+    def is_trusted_env(self):
+        return self.TRUSTED_EMAIL_HEADER or self.TRUSTED_LOCAL_EMAIL
+
 
 settings = Settings()

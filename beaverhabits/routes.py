@@ -2,7 +2,6 @@ from typing import Optional
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
-from fastapi.routing import APIRoute
 from nicegui import app, ui
 
 from beaverhabits.frontend.import_page import import_ui_page
@@ -12,9 +11,7 @@ from beaverhabits.frontend.order_page import order_page_ui
 from . import const, views
 from .app.auth import (
     user_authenticate,
-    user_check_token,
     user_create_token,
-    user_from_token,
 )
 from .app.crud import get_user_count
 from .app.db import User
@@ -28,7 +25,7 @@ from .logging import logger
 from .storage.meta import GUI_ROOT_PATH
 from .utils import dummy_days, get_user_today_date
 
-UNRESTRICTED_PAGE_ROUTES = ("/login", "/register", "/demo", "/demo/add")
+UNRESTRICTED_PAGE_ROUTES = ("/login", "/register")
 
 
 @ui.page("/demo")
@@ -131,6 +128,10 @@ async def gui_import(user: User = Depends(current_active_user)) -> None:
 
 @ui.page("/login")
 async def login_page() -> Optional[RedirectResponse]:
+    custom_header()
+    if await views.is_gui_authenticated():
+        return RedirectResponse(GUI_ROOT_PATH)
+
     async def try_login():
         user = await user_authenticate(email=email.value, password=password.value)
         token = user and await user_create_token(user)
@@ -140,10 +141,6 @@ async def login_page() -> Optional[RedirectResponse]:
         else:
             ui.notify("email or password wrong!", color="negative")
 
-    if await user_check_token(app.storage.user.get("auth_token", None)):
-        return RedirectResponse(GUI_ROOT_PATH)
-
-    custom_header()
     with ui.card().classes("absolute-center shadow-none w-96"):
         email = ui.input("email").on("keydown.enter", try_login)
         email.classes("w-56")
@@ -165,7 +162,8 @@ async def login_page() -> Optional[RedirectResponse]:
 @ui.page("/register")
 async def register_page():
     custom_header()
-    await views.validate_max_user_count()
+    if await views.is_gui_authenticated():
+        return RedirectResponse(GUI_ROOT_PATH)
 
     async def try_register():
         try:
@@ -177,6 +175,7 @@ async def register_page():
         else:
             ui.navigate.to(app.storage.user.get("referrer_path", "/"))
 
+    await views.validate_max_user_count()
     with ui.card().classes("absolute-center shadow-none w-96"):
         email = ui.input("email").on("keydown.enter", try_register).classes("w-56")
         password = (
@@ -198,31 +197,24 @@ def init_gui_routes(fastapi_app: FastAPI):
 
     @app.middleware("http")
     async def AuthMiddleware(request: Request, call_next):
-        # Redirect unauthorized request
-        client_page_routes = [
-            route.path for route in app.routes if isinstance(route, APIRoute)
-        ]
-        if not await user_check_token(app.storage.user.get("auth_token", None)):
-            if (
-                request.url.path in client_page_routes
-                and request.url.path not in UNRESTRICTED_PAGE_ROUTES
-            ):
-                root_path = request.scope["root_path"]
-                app.storage.user["referrer_path"] = request.url.path.removeprefix(
-                    root_path
-                )
-                return RedirectResponse(request.url_for(login_page.__name__))
+        auth_token = app.storage.user.get("auth_token")
+        if auth_token:
+            # Remove original authorization header
+            request.scope["headers"] = [
+                e for e in request.scope["headers"] if e[0] != b"authorization"
+            ]
+            # add new authorization header
+            request.scope["headers"].append(
+                (b"authorization", f"Bearer {auth_token}".encode())
+            )
 
-        # Remove original authorization header
-        request.scope["headers"] = [
-            e for e in request.scope["headers"] if e[0] != b"authorization"
-        ]
-        # add new authorization header
-        request.scope["headers"].append(
-            (b"authorization", f"Bearer {app.storage.user.get('auth_token')}".encode())
-        )
+        response = await call_next(request)
+        if response.status_code == 401:
+            root_path = request.scope["root_path"]
+            app.storage.user["referrer_path"] = request.url.path.removeprefix(root_path)
+            return RedirectResponse(request.url_for(login_page.__name__))
 
-        return await call_next(request)
+        return response
 
     app.add_static_files("/statics", "statics")
     ui.run_with(

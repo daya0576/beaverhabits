@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, Request
 from fastapi.security.utils import get_authorization_scheme_param
 from starlette.status import HTTP_401_UNAUTHORIZED
 
+from beaverhabits import views
 from beaverhabits.app.auth import user_create, user_from_token, user_get_by_email
 from beaverhabits.app.db import User
 from beaverhabits.configs import settings
@@ -52,7 +53,8 @@ async def current_active_user(
         if user := await user_get_by_email(trusted_local_email):
             return user
         logger.info(f"Trusted local email user not found. Creating user.")
-        return await user_create(trusted_local_email)
+        user = await views.register_user(trusted_local_email)
+        return user
 
     if credentials and (user := await user_from_token(credentials)):
         return user

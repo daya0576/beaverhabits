@@ -5,7 +5,12 @@ import random
 from fastapi import HTTPException, Request
 from nicegui import app, ui
 
-from beaverhabits.app.auth import user_create, user_create_token, user_get_by_email
+from beaverhabits.app.auth import (
+    user_check_token,
+    user_create,
+    user_create_token,
+    user_get_by_email,
+)
 from beaverhabits.app.crud import get_user_count
 from beaverhabits.app.db import User
 from beaverhabits.configs import settings
@@ -132,3 +137,13 @@ async def register_user(email: str, password: str = "") -> User:
     days = [datetime.date.today() - datetime.timedelta(days=i) for i in range(30)]
     await get_or_create_user_habit_list(user, days)
     return user
+
+
+async def is_gui_authenticated() -> bool:
+    if settings.is_trusted_env():
+        return True
+
+    if await user_check_token(app.storage.user.get("auth_token", None)):
+        return True
+
+    return False
