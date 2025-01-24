@@ -87,7 +87,6 @@ async def demo_export() -> None:
 async def index_page(
     user: User = Depends(current_active_user),
 ) -> None:
-    ui.label(user.email)
     days = await dummy_days(settings.INDEX_HABIT_ITEM_COUNT)
     habit_list = await views.get_user_habit_list(user)
     index_page_ui(days, habit_list)
