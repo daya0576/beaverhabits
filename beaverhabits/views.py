@@ -2,15 +2,18 @@ import datetime
 import json
 import random
 
-from fastapi import HTTPException
-from nicegui import ui
+from fastapi import HTTPException, Request
+from nicegui import app, ui
 
+from beaverhabits.app.auth import user_create, user_create_token, user_get_by_email
+from beaverhabits.app.crud import get_user_count
 from beaverhabits.app.db import User
+from beaverhabits.configs import settings
 from beaverhabits.logging import logger
 from beaverhabits.storage import get_user_dict_storage, session_storage
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.utils import generate_short_hash
+from beaverhabits.utils import dummy_days, generate_short_hash
 
 user_storage = get_user_dict_storage()
 
@@ -111,3 +114,60 @@ async def export_user_habit_list(habit_list: HabitList, user_identify: str) -> N
         ui.download(binary_data, file_name)
     else:
         ui.notification("Export failed, please try again later.")
+
+
+async def validate_max_user_count():
+    if await get_user_count() >= settings.MAX_USER_COUNT > 0:
+        raise HTTPException(status_code=404, detail="User limit reached")
+
+
+async def login_user(user: User) -> None:
+    token = await user_create_token(user)
+    if token is not None:
+        app.storage.user.update({"auth_token": token})
+
+
+async def register_user(email: str, password: str = "") -> User:
+    user = await user_create(email=email, password=password)
+    # Create a dummy habit list for the new users
+    await get_or_create_user_habit_list(user, await dummy_days(31))
+    return user
+
+
+async def authorize_gui(_: Request, user: User | None) -> bool:
+    return bool(user and user.is_active)
+
+
+async def authorize_local_email(_: Request, user: User | None) -> bool:
+    if not settings.TRUSTED_LOCAL_EMAIL:
+        return False
+
+    # Is user already authorized
+    email = settings.TRUSTED_LOCAL_EMAIL
+    if user and user.email == email:
+        return True
+
+    # Authorize user
+    local_user = await user_get_by_email(email)
+    if not local_user:
+        local_user = await register_user(email)
+    await login_user(local_user)
+    return True
+
+
+async def authorize_trusted_email(request: Request, user: User | None) -> bool:
+    if not settings.TRUSTED_EMAIL_HEADER:
+        return False
+
+    # Is user already authorized
+    email = request.headers.get(settings.TRUSTED_EMAIL_HEADER, "")
+    if user and user.email == email:
+        return True
+
+    # Authorize user
+    user = await user_get_by_email(email)
+    if user:
+        await login_user(user)
+        return True
+
+    return False
