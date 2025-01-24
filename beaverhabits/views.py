@@ -139,11 +139,11 @@ async def authorize_gui(_: Request, user: User | None) -> bool:
 
 
 async def authorize_local_email(_: Request, user: User | None) -> bool:
-    if not settings.LOCAL_TRUSTED_EMAIL:
+    if not settings.TRUSTED_LOCAL_EMAIL:
         return False
 
     # Is user already authorized
-    email = settings.LOCAL_TRUSTED_EMAIL
+    email = settings.TRUSTED_LOCAL_EMAIL
     if user and user.email == email:
         return True
 
@@ -156,11 +156,11 @@ async def authorize_local_email(_: Request, user: User | None) -> bool:
 
 
 async def authorize_trusted_email(request: Request, user: User | None) -> bool:
-    if not settings.WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
+    if not settings.TRUSTED_EMAIL_HEADER:
         return False
 
     # Is user already authorized
-    email = request.headers.get(settings.WEBUI_AUTH_TRUSTED_EMAIL_HEADER, "")
+    email = request.headers.get(settings.TRUSTED_EMAIL_HEADER, "")
     if user and user.email == email:
         return True
 
