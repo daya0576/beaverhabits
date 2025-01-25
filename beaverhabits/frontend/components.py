@@ -68,7 +68,7 @@ def habit_tick_dialog(record: CheckedRecord | None):
                 ui.button("Yes", on_click=lambda: dialog.submit((True, t.value))).props(
                     "flat"
                 )
-                ui.button("No", on_click=lambda: dialog.submit((False, None))).props(
+                ui.button("No", on_click=lambda: dialog.submit((False, t.value))).props(
                     "flat"
                 )
     return dialog
@@ -78,14 +78,16 @@ async def note_tick(habit: Habit, day: datetime.date):
     record = habit.record_by(day)
     result = await habit_tick_dialog(record)
 
-    yes, text = (False, None) if result is None else result
+    if result is None:
+        return
+
+    yes, text = result
     if text and len(text) > DAILY_NOTE_MAX_LENGTH:
         ui.notify("Note is too long", color="negative")
-        yes = False
+        return
 
-    if yes:
-        await habit.tick(day, True, text)
-        logger.info(f"Habit ticked: {day} True, note: {text}")
+    await habit.tick(day, yes, text)
+    logger.info(f"Habit ticked: {day} True, note: {text}")
 
 
 async def habit_tick(habit: Habit, day: datetime.date, value: bool):
@@ -567,8 +569,10 @@ def habit_notes(habit: Habit, limit: int = 10):
 
     with ui.timeline(side="right").classes("w-full pt-5 px-3"):
         for record in records[:limit]:
+            color = "primary" if record.done else "grey-8"
             ui.timeline_entry(
                 record.text,
                 title="title",
                 subtitle=record.day.strftime("%B %d, %Y"),
+                color=color,
             )
