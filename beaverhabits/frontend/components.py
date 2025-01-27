@@ -133,9 +133,11 @@ class HabitCheckBox(ui.checkbox):
         self.hold = asyncio.Event()
         self.on("mousedown", self._mouse_down_event)
         self.on("mouseup", self._mouse_up_event)
+        self.on("mousedown", self._mouse_up_event)
 
         self.on("touchstart", self._mouse_down_event)
         self.on("touchend", self._mouse_up_event)
+        self.on("touchmove", self._mouse_up_event)
 
     def _update_style(self, value: bool):
         self.props(
@@ -161,7 +163,7 @@ class HabitCheckBox(ui.checkbox):
     async def _mouse_down_event(self):
         self.hold.clear()
         try:
-            async with asyncio.timeout(0.15):
+            async with asyncio.timeout(0.2):
                 await self.hold.wait()
         except asyncio.TimeoutError:
             await note_tick(self.habit, self.day)
