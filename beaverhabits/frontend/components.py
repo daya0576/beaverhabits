@@ -207,7 +207,7 @@ class HabitNameInput(ui.input):
     def _validate(self, value: str) -> Optional[str]:
         if not value:
             return "Name is required"
-        if len(value) > 18:
+        if len(value) > 30:
             return "Too long"
 
 

@@ -77,7 +77,7 @@ def layout(title: str | None = None, with_menu: bool = True):
 
     with ui.column() as c:
         # Center the content on small screens
-        c.classes("max-w-sm mx-auto")
+        c.classes("mx-auto")
         if not settings.ENABLE_DESKTOP_ALGIN_CENTER:
             c.classes("sm:mx-0")
 
