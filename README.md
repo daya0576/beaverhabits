@@ -127,6 +127,9 @@ Open page `/gui/order` to change the order of habits.
 ## REST APIs
 [Beaver Habit Tracker API How‐to Guide](https://github.com/daya0576/beaverhabits/wiki/Beaver-Habit-Tracker-API-How%E2%80%90to-Guide)
 
+## Daily Notes
+Press and hold to add a note or description for the day.
+
 # Future Plans
 
 1. Quantitative metrics

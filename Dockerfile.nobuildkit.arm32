@@ -20,8 +20,7 @@ ENV OPENSSL_LIB_DIR=/usr/lib/arm-linux-gnueabihf
 ENV OPENSSL_INCLUDE_DIR=/usr/include/arm-linux-gnueabihf/openssl
 
 WORKDIR $PYSETUP_PATH
-ADD https://astral.sh/uv/install.sh /uv-installer.sh
-RUN sh /uv-installer.sh && rm /uv-installer.sh
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin/:$PATH"
 
 COPY uv.lock pyproject.toml ./

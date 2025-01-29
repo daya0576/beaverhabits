@@ -13,8 +13,7 @@ RUN apt-get update \
         curl \
         ca-certificates 
 WORKDIR $PYSETUP_PATH
-ADD https://astral.sh/uv/install.sh /uv-installer.sh
-RUN sh /uv-installer.sh && rm /uv-installer.sh
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin/:$PATH"
 
 COPY uv.lock pyproject.toml ./
