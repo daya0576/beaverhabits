@@ -31,11 +31,11 @@ def card_title(title: str, target: str):
 
 
 @contextmanager
-def card(link: str | None = None, padding: float = 3):
+def card(link: str | None = None, padding: float = 3, width: int = 350):
     with ui.card().classes("gap-0 no-shadow items-center") as card:
         card.classes(f"p-{padding}")
         card.classes("w-full")
-        card.style("max-width: 350px")
+        card.style(f"width: {width}px")
         if link:
             card.classes("cursor-pointer")
             card.on("click", lambda: redirect(link))
@@ -44,7 +44,7 @@ def card(link: str | None = None, padding: float = 3):
 
 @ui.refreshable
 def habit_page(today: datetime.date, habit: Habit):
-    with ui.column().classes("gap-y-3"):
+    with ui.column().classes("gap-y-3 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"):
         habit_calendar = CalendarHeatmap.build(today, WEEKS_TO_DISPLAY, calendar.MONDAY)
         target = get_habit_heatmap_path(habit)
 
