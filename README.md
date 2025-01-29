@@ -70,7 +70,7 @@ To avoid [permission issues](https://github.com/daya0576/beaverhabits/discussion
 | **FIRST_DAY_OF_WEEK**(int) | By default, the first day of the week is set as Monday. To change it to Sunday, you can set it as `6`. |
 | **MAX_USER_COUNT**(int) | By setting it to `1`, you can prevent others from signing up in the future. |
 | **ENABLE_IOS_STANDALONE**(bool) | Experiential feature to  enable standalone mode on iOS. The default setting is `false`. |
-| **INDEX_SHOW_HABIT_COUNT**(bool) | To display the total ticket count along with the habit name on the index page. The default setting is `false`. |
+| **INDEX_SHOW_HABIT_COUNT**(bool) | To display total completed count along with the habit name on the index page. The default setting is `false`. |
 | **TRUSTED_EMAIL_HEADER**(str) | Delegate authentication to an authenticating reverse proxy that passes in the user's details in HTTP headers, e.g. `Cf-Access-Authenticated-User-Email`. An existing account is required. |
 | **TRUSTED_LOCAL_EMAIL**(str) | Disables authentication entirely. A new account with the specified email will be created if it does not exist. |
 
@@ -88,27 +88,34 @@ uv venv && uv sync
 
 # Features
 
-1. Pages
-   - [x] Index page
-   - [x] Habit list page
-     - [x] Order habits
-   - [x] Habit detail page
-     - [x] Calendar
-     - [x] Streaks
-2. Storage:
-   - [x] Session-based disk storage
-   - [x] User-based disk storage
-   - [x] User-based db storage
-3. CICD:
-   - [x] Custom domain
-   - [x] Self-hosting option
-   - [x] Unit tests & deployment pipeline
-4. Others:
-   - [x] Export
-   - [x] Import
-   - [x] User management
-   - [x] User timezone
-   - [x] RESTful API
+1. Habit Tracking
+    - [x] Daily notes/descriptions
+    - [ ] Measurable habits 
+    - [ ] Multiple states
+2. Pages & UI
+    - [x] Reorder habits
+    - [ ] Category or tag
+    - [ ] Light mode
+    - [ ] Standalone mode for iOS
+    - [ ] **Responsive layout** for desktop & mobile
+    - [ ] **Native mobile app**
+3. Storage
+    - [x] Session-based disk storage (Demo only)
+    - [x] User-based disk storage
+    - [x] User-based db storage
+4. CICD
+    - [x] Unit tests and deployment pipeline
+    - [x] Docker build and push pipeline
+5. Authentication
+    - [x] Email & password
+    - [x] SSO Trusted email header
+    - [x] Disable authentication entirely
+6. Extensibility
+    - [x] Export & Import
+    - [x] RESTful API
+7. Others
+    - [ ] Habit calendar template, e.g. vacations
+   
 
 ## Streaks
 Here are my table tennis training sessions in the past year :)
@@ -130,10 +137,3 @@ Open page `/gui/order` to change the order of habits.
 ## Daily Notes
 Press and hold to add a note or description for the day.
 
-# Future Plans
-
-1. Quantitative metrics
-2. Native mobile app -- can't wait to try Swift or Tauri :p
-3. Habit calendar template, e.g. vacations
-4. Category or Folders
-5. ...

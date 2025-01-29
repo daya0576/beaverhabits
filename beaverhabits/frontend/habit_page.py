@@ -31,11 +31,11 @@ def card_title(title: str, target: str):
 
 
 @contextmanager
-def card(link: str | None = None, padding: float = 3, width: int = 350):
+def card(link: str | None = None, padding: float = 3):
     with ui.card().classes("gap-0 no-shadow items-center") as card:
         card.classes(f"p-{padding}")
         card.classes("w-full")
-        card.style(f"width: {width}px")
+        card.style("max-width: 350px")
         if link:
             card.classes("cursor-pointer")
             card.on("click", lambda: redirect(link))
