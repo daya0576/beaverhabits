@@ -18,7 +18,6 @@ body.desktop .q-checkbox--dense:not(.disabled):focus .q-checkbox__inner:before, 
 CALENDAR_CSS = """
 .q-date {
     width: 100%;
-    min-width: 0;
 }
 .q-date__calendar, .q-date__actions {
     padding: 0;
