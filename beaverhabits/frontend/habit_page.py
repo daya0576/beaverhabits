@@ -39,7 +39,7 @@ def grid(classes: str = ""):
 def card(link: str | None = None, padding: float = 3):
     with ui.card().classes("gap-0 no-shadow items-center") as card:
         card.classes(f"p-{padding}")
-        card.classes("w-full break-inside-avoid")
+        card.classes("w-full break-inside-avoid h-fit")
         card.style("max-width: 350px")
         if link:
             card.classes("cursor-pointer")
@@ -50,7 +50,11 @@ def card(link: str | None = None, padding: float = 3):
 
 @ui.refreshable
 def habit_page(today: datetime.date, habit: Habit):
-    with grid("lg:grid-cols-2"):
+    notes = [x for x in habit.records if x.text]
+    notes.sort(key=lambda x: x.day, reverse=True)
+    masony = "lg:grid-cols-2" if notes else "lg:grid-cols-1"
+
+    with grid(masony):
         habit_calendar = CalendarHeatmap.build(today, WEEKS_TO_DISPLAY, calendar.MONDAY)
         target = get_habit_heatmap_path(habit)
 
@@ -60,23 +64,23 @@ def habit_page(today: datetime.date, habit: Habit):
 
             with card():
                 card_title("Last 3 Months", target)
-                ui.space().classes("h-2")
+                ui.space().classes("h-1")
                 habit_heat_map(habit, habit_calendar)
 
             with card():
                 card_title("History", target)
-                ui.space().classes("h-1")
                 habit_history(today, habit.ticked_days)
 
-        with grid():
-            with card(padding=2):
-                card_title("Notes", "#").tooltip(
-                    "Press and hold to add notes/descriptions"
-                )
-                habit_notes(habit)
+        if notes:
+            with grid():
+                with card(padding=2):
+                    card_title("Notes", "#").tooltip(
+                        "Press and hold to add notes/descriptions"
+                    )
+                    habit_notes(notes)
 
-            with card(target, padding=0.5):
-                ui.icon("more_horiz", size="1.5em")
+        with card(target, padding=0.5):
+            ui.icon("more_horiz", size="1.5em")
 
 
 def habit_page_ui(today: datetime.date, habit: Habit):

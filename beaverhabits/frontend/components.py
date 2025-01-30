@@ -2,7 +2,7 @@ import asyncio
 import calendar
 import datetime
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 from dateutil.relativedelta import relativedelta
 from nicegui import events, ui
@@ -566,13 +566,7 @@ class HabitNotesExpansion(ui.expansion):
         return dialog
 
 
-def habit_notes(habit: Habit, limit: int = 10):
-    records = [x for x in habit.records if x.text]
-    records.sort(key=lambda x: x.day, reverse=True)
-
-    if not records:
-        return
-
+def habit_notes(records: List[CheckedRecord], limit: int = 10):
     with ui.timeline(side="right").classes("w-full pt-5 px-3"):
         for record in records[:limit]:
             color = "primary" if record.done else "grey-8"
