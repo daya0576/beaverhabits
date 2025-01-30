@@ -10,13 +10,7 @@ from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
 
-HABIT_LIST_RECORD_COUNT = settings.INDEX_HABIT_ITEM_COUNT
-
-
-def grid(columns, rows):
-    g = ui.grid(columns=columns, rows=rows)
-    g.classes("w-full gap-0 items-center")
-    return g
+HABIT_LIST_RECORD_COUNT = settings.INDEX_DAYS_COUNT
 
 
 def week_headers(days: list[datetime.date]):
@@ -40,42 +34,47 @@ def habit_list_ui(days: list[datetime.date], habit_list: HabitList):
         ui.label("List is empty.").classes("mx-auto w-80")
         return
 
-    # Calculate column count
-    name_columns, date_columns = 4, 2
-    count_columns = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
-    columns = name_columns + len(days) * date_columns + count_columns
-
     row_compat_classes = "pl-4 pr-1 py-0"
+    # Auto hide flex items when it overflows the flex parent
+    flex = "flex flex-row-reverse w-full justify-evenly overflow-hidden gap-x-0.5 sm:gap-x-1.5"
     left_classes, right_classes = (
         # grid 4
-        f"col-span-{name_columns} truncate",
+        f"w-32 sm:w-36 truncate self-center",
         # grid 2 2 2 2 2
-        f"col-span-{date_columns} px-1.5 justify-self-center",
+        f" self-center",
     )
-    header_styles = "font-size: 85%; font-weight: 500; color: #9e9e9e"
+    header_styles = "font-size: 85%; font-weight: 500; color: #9e9e9e; text-align: center; display: inline-block;"
 
+    # Date Headers
+    days = list(reversed(days))
     with ui.column().classes("gap-1.5"):
-        # Date Headers
-        with grid(columns, 2).classes(row_compat_classes):
+
+        with ui.column().classes("gap-0"):
             for it in (week_headers(days), day_headers(days)):
-                ui.label("").classes(left_classes)
-                for label in it:
-                    ui.label(label).classes(right_classes).style(header_styles)
+                with ui.row().classes(row_compat_classes).classes("no-wrap gap-0"):
+                    ui.label("").classes(left_classes)
+                    with ui.element("div").classes(flex).classes("h-4"):
+                        for text in it:
+                            label = ui.label(text).classes("w-10")
+                            label.classes(right_classes)
+                            label.style(header_styles)
 
         # Habit List
         for habit in active_habits:
-            with ui.card().classes(row_compat_classes).classes("shadow-none"):
-                with grid(columns, 1):
+            with ui.card().classes(row_compat_classes).classes("shadow-none gap-1.5"):
+                with ui.row().classes("no-wrap gap-0 h-10"):
                     # truncate name
-                    root_path = get_root_path()
-                    redirect_page = os.path.join(root_path, "habits", str(habit.id))
-                    name = link(habit.name, target=redirect_page).classes(left_classes)
-                    name.style(f"max-width: {52 * name_columns / date_columns}px;")
+                    redirect_page = os.path.join(
+                        get_root_path(), "habits", str(habit.id)
+                    )
+                    name = link(habit.name, target=redirect_page)
+                    name.classes(left_classes)
 
-                    ticked_days = set(habit.ticked_days)
-                    for day in days:
-                        checkbox = HabitCheckBox(habit, day, day in ticked_days)
-                        checkbox.classes(right_classes)
+                    with ui.element("div").classes(flex).classes("h-10"):
+                        ticked_days = set(habit.ticked_days)
+                        for day in days:
+                            checkbox = HabitCheckBox(habit, day, day in ticked_days)
+                            checkbox.classes(right_classes)
 
                     if settings.INDEX_SHOW_HABIT_COUNT:
                         IndexBadge(habit).classes(right_classes)
