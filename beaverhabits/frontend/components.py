@@ -18,6 +18,7 @@ from beaverhabits.utils import WEEK_DAYS
 strptime = datetime.datetime.strptime
 
 DAILY_NOTE_MAX_LENGTH = 300
+CALENDAR_EVENT_MASK = "%Y/%m/%d"
 
 
 def link(text: str, target: str):
@@ -294,8 +295,6 @@ class HabitDateInput(ui.date):
     ) -> None:
         self.today = today
         self.habit = habit
-        # self.init = True
-        # self.default_date = today
         super().__init__(self._tick_days, on_change=self._async_task)
 
         self.props("multiple minimal flat today-btn")
@@ -305,6 +304,12 @@ class HabitDateInput(ui.date):
         self.classes("shadow-none")
 
         self.bind_value_from(self, "_tick_days")
+        events = [
+            d.strftime(CALENDAR_EVENT_MASK)
+            for d, r in self.habit.ticked_data.items()
+            if r.text
+        ]
+        self.props(f'events="{events}" event-color="teal"')
 
     @property
     def _tick_days(self) -> list[str]:

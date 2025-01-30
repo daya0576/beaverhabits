@@ -88,16 +88,18 @@ uv venv && uv sync
 
 # Features
 
+[Vote](https://github.com/daya0576/beaverhabits/discussions/78) for your most wanted features.
+
 1. Habit Tracking
     - [x] Daily notes/descriptions
     - [ ] Measurable habits 
-    - [ ] Multiple states
+    - [ ] Multiple states, e.g. failed, skipped
 2. Pages & UI
     - [x] Reorder habits
     - [ ] Category or tag
     - [ ] Light mode
     - [ ] Standalone mode for iOS
-    - [ ] **Responsive layout** for desktop & mobile
+    - [ ] **Responsive layout** (wider display for desktop)
     - [ ] **Native mobile app**
 3. Storage
     - [x] Session-based disk storage (Demo only)

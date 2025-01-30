@@ -7,7 +7,6 @@ from nicegui import ui
 from beaverhabits.frontend.components import (
     CalendarHeatmap,
     HabitDateInput,
-    HabitNotesExpansion,
     habit_heat_map,
     habit_history,
     habit_notes,
@@ -34,17 +33,18 @@ def card_title(title: str, target: str):
 def card(link: str | None = None, padding: float = 3):
     with ui.card().classes("gap-0 no-shadow items-center") as card:
         card.classes(f"p-{padding}")
-        card.classes("w-full")
+        card.classes("w-full break-inside-avoid mb-2")
         card.style("max-width: 350px")
         if link:
             card.classes("cursor-pointer")
             card.on("click", lambda: redirect(link))
-        yield
+
+        yield card
 
 
 @ui.refreshable
 def habit_page(today: datetime.date, habit: Habit):
-    with ui.column().classes("gap-y-3 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"):
+    with ui.element("div").classes("columns-1 lg:columns-2 w-full gap-2"):
         habit_calendar = CalendarHeatmap.build(today, WEEKS_TO_DISPLAY, calendar.MONDAY)
         target = get_habit_heatmap_path(habit)
 
@@ -53,14 +53,16 @@ def habit_page(today: datetime.date, habit: Habit):
 
         with card():
             card_title("Last 3 Months", target)
+            ui.space().classes("h-2")
             habit_heat_map(habit, habit_calendar)
 
         with card():
             card_title("History", target)
+            ui.space().classes("h-1")
             habit_history(today, habit.ticked_days)
 
         with card(padding=2):
-            card_title("Notes", target).tooltip("Long press checkboxes to add notes")
+            card_title("Notes", "#").tooltip("Press and hold to add notes/descriptions")
             habit_notes(habit)
 
         with card(target, padding=0.5):
