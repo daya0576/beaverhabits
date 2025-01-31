@@ -1,5 +1,7 @@
 import datetime
 import os
+from contextlib import contextmanager
+from typing import Iterable
 
 from nicegui import ui
 
@@ -8,15 +10,12 @@ from beaverhabits.frontend import javascript
 from beaverhabits.frontend.components import HabitCheckBox, IndexBadge, link
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
-from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
+from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, HabitStatus
 
-HABIT_LIST_RECORD_COUNT = settings.INDEX_HABIT_ITEM_COUNT
+HABIT_LIST_RECORD_COUNT = settings.INDEX_DAYS_COUNT
 
-
-def grid(columns, rows):
-    g = ui.grid(columns=columns, rows=rows)
-    g.classes("w-full gap-0 items-center")
-    return g
+LEFT_ITEM_CLASSES = "w-32 sm:w-36 truncate self-center"
+RIGHT_ITEM_CLASSES = "w-10 self-center"
 
 
 def week_headers(days: list[datetime.date]):
@@ -33,52 +32,81 @@ def day_headers(days: list[datetime.date]):
         yield "#"
 
 
+@contextmanager
+def row():
+    with ui.row().classes("pl-4 pr-0 py-0").classes(f"no-wrap gap-0"):
+        yield
+
+
+@contextmanager
+def card():
+    with ui.card().classes("shadow-none gap-1.5 p-0"):
+        with row():
+            yield
+
+
+@contextmanager
+def flex(height: int):
+    # Responsive flex container
+    with ui.element("div") as f:
+        # Auto hide flex items when it overflows the flex parent
+        f.classes("flex flex-row-reverse w-full justify-evenly")
+        # Auto ajust gap with screen size
+        f.classes("gap-x-0.5 sm:gap-x-1.5")
+        # Auto hide overflowed items
+        f.classes(f"overflow-hidden h-{height}")
+        yield f
+
+
+def name(habit: Habit):
+    # truncate name
+    redirect_page = os.path.join(get_root_path(), "habits", str(habit.id))
+    name = link(habit.name, target=redirect_page)
+    name.classes(LEFT_ITEM_CLASSES)
+
+
+def headers(labels: Iterable[str]):
+    with flex(4):
+        for text in labels:
+            label = ui.label(text)
+            label.classes(RIGHT_ITEM_CLASSES)
+            label.style(
+                "font-size: 85%; font-weight: 500; color: #9e9e9e; text-align: center"
+            )
+
+
+def checkboxes(habit: Habit, days: list[datetime.date]):
+    with flex(10):
+        ticked_days = set(habit.ticked_days)
+        for day in days:
+            checkbox = HabitCheckBox(habit, day, day in ticked_days)
+            checkbox.classes(RIGHT_ITEM_CLASSES)
+
+
 @ui.refreshable
 def habit_list_ui(days: list[datetime.date], habit_list: HabitList):
     active_habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
     if not active_habits:
-        ui.label("List is empty.").classes("mx-auto w-80")
+        ui.label("List is empty.")
         return
 
-    # Calculate column count
-    name_columns, date_columns = 4, 2
-    count_columns = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
-    columns = name_columns + len(days) * date_columns + count_columns
-
-    row_compat_classes = "pl-4 pr-1 py-0"
-    left_classes, right_classes = (
-        # grid 4
-        f"col-span-{name_columns} truncate",
-        # grid 2 2 2 2 2
-        f"col-span-{date_columns} px-1.5 justify-self-center",
-    )
-    header_styles = "font-size: 85%; font-weight: 500; color: #9e9e9e"
+    days = list(reversed(days))
 
     with ui.column().classes("gap-1.5"):
         # Date Headers
-        with grid(columns, 2).classes(row_compat_classes):
+        with ui.column().classes("gap-0"):
             for it in (week_headers(days), day_headers(days)):
-                ui.label("").classes(left_classes)
-                for label in it:
-                    ui.label(label).classes(right_classes).style(header_styles)
+                with row():
+                    ui.label("").classes(LEFT_ITEM_CLASSES)
+                    headers(it)
 
         # Habit List
         for habit in active_habits:
-            with ui.card().classes(row_compat_classes).classes("shadow-none"):
-                with grid(columns, 1):
-                    # truncate name
-                    root_path = get_root_path()
-                    redirect_page = os.path.join(root_path, "habits", str(habit.id))
-                    name = link(habit.name, target=redirect_page).classes(left_classes)
-                    name.style(f"max-width: {52 * name_columns / date_columns}px;")
-
-                    ticked_days = set(habit.ticked_days)
-                    for day in days:
-                        checkbox = HabitCheckBox(habit, day, day in ticked_days)
-                        checkbox.classes(right_classes)
-
-                    if settings.INDEX_SHOW_HABIT_COUNT:
-                        IndexBadge(habit).classes(right_classes)
+            with card():
+                name(habit)
+                checkboxes(habit, days)
+                if settings.INDEX_SHOW_HABIT_COUNT:
+                    IndexBadge(habit).classes(RIGHT_ITEM_CLASSES)
 
 
 def index_page_ui(days: list[datetime.date], habits: HabitList):
