@@ -1,4 +1,5 @@
 FROM python:3.12-slim AS python-base
+COPY --from=ghcr.io/astral-sh/uv:0.5.26 /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 \
     \
     PYSETUP_PATH="/opt/pysetup" \
@@ -13,7 +14,8 @@ RUN apt-get update \
         curl \
         ca-certificates 
 WORKDIR $PYSETUP_PATH
-COPY --from=ghcr.io/astral-sh/uv:0.5.26 /uv /uvx /bin/
+ADD https://astral.sh/uv/0.5.26/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
 ENV PATH="/root/.local/bin/:$PATH"
 
 COPY uv.lock pyproject.toml ./
