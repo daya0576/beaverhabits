@@ -14,22 +14,22 @@ from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, Hab
 
 HABIT_LIST_RECORD_COUNT = settings.INDEX_DAYS_COUNT
 
-LEFT_ITEM_CLASSES = "w-32 sm:w-36 truncate self-center"
+LEFT_ITEM_CLASSES = "w-32 lg:w-36 truncate self-center"
 RIGHT_ITEM_CLASSES = "w-10 self-center"
 
 
 def week_headers(days: list[datetime.date]):
-    for day in days:
-        yield day.strftime("%a")
     if settings.INDEX_SHOW_HABIT_COUNT:
         yield "Sum"
+    for day in days:
+        yield day.strftime("%a")
 
 
 def day_headers(days: list[datetime.date]):
-    for day in days:
-        yield day.strftime("%d")
     if settings.INDEX_SHOW_HABIT_COUNT:
         yield "#"
+    for day in days:
+        yield day.strftime("%d")
 
 
 @contextmanager
@@ -52,7 +52,7 @@ def flex(height: int):
         # Auto hide flex items when it overflows the flex parent
         f.classes("flex flex-row-reverse w-full justify-evenly")
         # Auto ajust gap with screen size
-        f.classes("gap-x-0.5 sm:gap-x-1.5")
+        f.classes("gap-x-0.5 lg:gap-x-1")
         # Auto hide overflowed items
         f.classes(f"overflow-hidden h-{height}")
         yield f
@@ -77,6 +77,10 @@ def headers(labels: Iterable[str]):
 
 def checkboxes(habit: Habit, days: list[datetime.date]):
     with flex(10):
+        if settings.INDEX_SHOW_HABIT_COUNT:
+            with ui.element("div").classes("w-10 h-10 flex place-content-center"):
+                IndexBadge(habit)
+
         ticked_days = set(habit.ticked_days)
         for day in days:
             checkbox = HabitCheckBox(habit, day, day in ticked_days)
@@ -103,10 +107,9 @@ def habit_list_ui(days: list[datetime.date], habit_list: HabitList):
         # Habit List
         for habit in active_habits:
             with card():
+                # Truncated habit name
                 name(habit)
                 checkboxes(habit, days)
-                if settings.INDEX_SHOW_HABIT_COUNT:
-                    IndexBadge(habit).classes(RIGHT_ITEM_CLASSES)
 
 
 def index_page_ui(days: list[datetime.date], habits: HabitList):
