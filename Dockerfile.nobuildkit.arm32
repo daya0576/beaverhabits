@@ -35,6 +35,7 @@ RUN rm -rf "$NICEGUI_LIB_PATH/vanilla-jsoneditor/"
 
 
 FROM python-base AS production
+EXPOSE 8080
 COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
 WORKDIR /app
 COPY start.sh .

@@ -88,7 +88,7 @@ async def note_tick(habit: Habit, day: datetime.date):
         return
 
     await habit.tick(day, yes, text)
-    logger.info(f"Habit ticked: {day} True, note: {text}")
+    logger.info(f"Habit ticked: {day} {yes}, note: {text}")
 
 
 async def habit_tick(habit: Habit, day: datetime.date, value: bool):

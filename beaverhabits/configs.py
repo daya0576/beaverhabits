@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     ENABLE_DESKTOP_ALGIN_CENTER: bool = True
     INDEX_SHOW_HABIT_COUNT: bool = False
 
-    INDEX_DAYS_COUNT: int = 8
+    INDEX_DAYS_COUNT: int = 10
 
     def is_dev(self):
         return self.ENV == "dev"

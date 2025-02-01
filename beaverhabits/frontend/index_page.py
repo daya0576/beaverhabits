@@ -14,7 +14,7 @@ from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, Hab
 
 HABIT_LIST_RECORD_COUNT = settings.INDEX_DAYS_COUNT
 
-LEFT_ITEM_CLASSES = "w-32 lg:w-36 truncate self-center"
+LEFT_ITEM_CLASSES = "min-w-[110px] truncate self-center"
 RIGHT_ITEM_CLASSES = "w-10 self-center"
 
 
@@ -34,7 +34,7 @@ def day_headers(days: list[datetime.date]):
 
 @contextmanager
 def row():
-    with ui.row().classes("pl-4 pr-0 py-0").classes(f"no-wrap gap-0"):
+    with ui.row().classes("pl-4 pr-1 py-0").classes("no-wrap gap-0"):
         yield
 
 
@@ -50,9 +50,22 @@ def flex(height: int):
     # Responsive flex container
     with ui.element("div") as f:
         # Auto hide flex items when it overflows the flex parent
-        f.classes("flex flex-row-reverse w-full justify-evenly")
+        f.classes("flex flex-row-reverse justify-evenly")
         # Auto ajust gap with screen size
-        f.classes("gap-x-0.5 lg:gap-x-1")
+        f.classes(
+            "gap-x-0"
+            "md:gap-x-[6px] "
+            "lg:gap-x-[8px] "
+            # "xl:gap-x-[8px] "
+            # ...
+        )
+        f.classes(
+            f"max-w-[{40*6-1}px] "
+            f"md:max-w-[{40*7 + (7-1)*6}px] "
+            f"lg:max-w-[{40*10 + (10-1)*8}px] "
+            # f"xl:max-w-[{40*14 + 10*(14-1)*8}px] "
+            # ...
+        )
         # Auto hide overflowed items
         f.classes(f"overflow-hidden h-{height}")
         yield f
