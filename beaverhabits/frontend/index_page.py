@@ -14,7 +14,7 @@ from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, Hab
 
 HABIT_LIST_RECORD_COUNT = settings.INDEX_DAYS_COUNT
 
-LEFT_ITEM_CLASSES = "min-w-[110px] truncate self-center"
+LEFT_ITEM_CLASSES = "min-w-[120px] truncate self-center"
 RIGHT_ITEM_CLASSES = "w-10 self-center"
 
 
@@ -34,7 +34,7 @@ def day_headers(days: list[datetime.date]):
 
 @contextmanager
 def row():
-    with ui.row().classes("pl-4 pr-1 py-0").classes("no-wrap gap-0"):
+    with ui.row().classes("pl-4 pr-0 py-0").classes("no-wrap gap-0"):
         yield
 
 
@@ -109,20 +109,21 @@ def habit_list_ui(days: list[datetime.date], habit_list: HabitList):
 
     days = list(reversed(days))
 
-    with ui.column().classes("gap-1.5"):
-        # Date Headers
-        with ui.column().classes("gap-0"):
+    # Date Headers
+    with ui.column().classes("gap-2"):
+        with ui.column().classes("gap-0.5"):
             for it in (week_headers(days), day_headers(days)):
                 with row():
                     ui.label("").classes(LEFT_ITEM_CLASSES)
                     headers(it)
 
-        # Habit List
-        for habit in active_habits:
-            with card():
-                # Truncated habit name
-                name(habit)
-                checkboxes(habit, days)
+        with ui.column().classes("gap-1.5"):
+            # Habit List
+            for habit in active_habits:
+                with card():
+                    # Truncated habit name
+                    name(habit)
+                    checkboxes(habit, days)
 
 
 def index_page_ui(days: list[datetime.date], habits: HabitList):
