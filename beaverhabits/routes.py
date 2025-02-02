@@ -30,21 +30,21 @@ UNRESTRICTED_PAGE_ROUTES = ("/login", "/register")
 
 @ui.page("/demo")
 async def demo_index_page() -> None:
-    days = await dummy_days(settings.HABIT_DATE_COLUMNS)
+    days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
     habit_list = views.get_or_create_session_habit_list(days)
     index_page_ui(days, habit_list)
 
 
 @ui.page("/demo/add")
 async def demo_add_page() -> None:
-    days = await dummy_days(settings.HABIT_DATE_COLUMNS)
+    days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
     habit_list = views.get_or_create_session_habit_list(days)
     add_page_ui(habit_list)
 
 
 @ui.page("/demo/order")
 async def demo_order_page() -> None:
-    days = await dummy_days(settings.HABIT_DATE_COLUMNS)
+    days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
     habit_list = views.get_or_create_session_habit_list(days)
     order_page_ui(habit_list)
 
@@ -78,7 +78,7 @@ async def demo_export() -> None:
 async def index_page(
     user: User = Depends(current_active_user),
 ) -> None:
-    days = await dummy_days(settings.HABIT_DATE_COLUMNS)
+    days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
     habit_list = await views.get_user_habit_list(user)
     index_page_ui(days, habit_list)
 
