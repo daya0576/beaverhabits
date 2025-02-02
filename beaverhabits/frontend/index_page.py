@@ -38,7 +38,7 @@ def day_headers(days: list[datetime.date]):
 
 @contextmanager
 def row():
-    with ui.row().classes("pl-4 pr-2 py-0").classes("no-wrap gap-0"):
+    with ui.row().classes("pl-4 pr-1 py-0").classes("no-wrap gap-0"):
         yield
 
 
