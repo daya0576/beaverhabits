@@ -53,7 +53,7 @@ def habit_page(today: datetime.date, habit: Habit):
     notes = [x for x in habit.records if x.text]
     notes.sort(key=lambda x: x.day, reverse=True)
     # https://tailwindcss.com/docs/responsive-design#container-size-reference
-    masony = "lg:grid-cols-2" if notes else ""
+    masony = "md:grid-cols-2" if notes else ""
 
     with grid(masony):
         habit_calendar = CalendarHeatmap.build(today, WEEKS_TO_DISPLAY, calendar.MONDAY)
