@@ -232,15 +232,14 @@ wheels = [
 
 [[package]]
 name = "beautifulsoup4"
-version = "4.13.0"
+version = "4.12.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "soupsieve" },
-    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4b/d3/6f4047d1de55b7a290ef8d4b4ebf59dcc24742920ebbed0909f823424205/beautifulsoup4-4.13.0.tar.gz", hash = "sha256:b6e5afb3a2b1472c8db751a92eabf7834e5c7099f990c5e4b35f1f16b60bae64", size = 558514 }
+sdist = { url = "https://files.pythonhosted.org/packages/b3/ca/824b1195773ce6166d388573fc106ce56d4a805bd7427b624e063596ec58/beautifulsoup4-4.12.3.tar.gz", hash = "sha256:74e3d1928edc070d21748185c46e3fb33490f22f52a3addee9aee0f4f7781051", size = 581181 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/74/d53cf0c527b20fc87351e6fd9d51aac9b5d1e32ec5a3a32b84671806ab40/beautifulsoup4-4.13.0-py3-none-any.whl", hash = "sha256:9c4c3dfa67aba55f6cd03769c441b21e6a369797fd6766e4b4c6b3399aae2735", size = 184993 },
+    { url = "https://files.pythonhosted.org/packages/b1/fe/e8c672695b37eecc5cbf43e1d0638d88d66ba3a44c4d321c796f4e59167f/beautifulsoup4-4.12.3-py3-none-any.whl", hash = "sha256:b80878c9f40111313e55da8ba20bdba06d8fa3969fc68304167741bbf9e082ed", size = 147925 },
 ]
 
 [[package]]
