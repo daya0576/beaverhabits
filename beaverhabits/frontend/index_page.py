@@ -35,16 +35,16 @@ def day_headers(days: list[datetime.date]):
 @ui.refreshable
 def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     # Calculate column count
-    name_columns, date_columns = 2 * settings.INDEX_HABIT_NAME_COLUMNS, 2
+    name_columns, date_columns = settings.INDEX_HABIT_NAME_COLUMNS, 2
     count_columns = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
     columns = name_columns + len(days) * date_columns + count_columns
 
     row_compat_classes = "pl-4 pr-0 py-0"
     left_classes, right_classes = (
-        # grid 4
+        # grid 5
         f"col-span-{name_columns} truncate",
         # grid 2 2 2 2 2
-        f"col-span-{date_columns} px-1.5 place-self-center",
+        f"col-span-{date_columns} px-1 place-self-center",
     )
     header_styles = "font-size: 85%; font-weight: 500; color: #9e9e9e"
 
@@ -64,7 +64,7 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                     root_path = get_root_path()
                     redirect_page = os.path.join(root_path, "habits", str(habit.id))
                     name = link(habit.name, target=redirect_page).classes(left_classes)
-                    name.style(f"max-width: {52 * name_columns / date_columns}px;")
+                    name.style(f"max-width: {24 * name_columns}px;")
 
                     ticked_days = set(habit.ticked_days)
                     for day in days:
