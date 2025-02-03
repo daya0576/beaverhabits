@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     ENABLE_DESKTOP_ALGIN_CENTER: bool = True
 
     INDEX_SHOW_HABIT_COUNT: bool = False
-    INDEX_HABIT_NAME_WIDTH: int = 115
+    INDEX_HABIT_NAME_COLUMNS: int = 2
     INDEX_HABIT_DATE_COLUMNS: int = 5
 
     def is_dev(self):
