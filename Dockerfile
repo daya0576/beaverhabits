@@ -1,5 +1,4 @@
 FROM python:3.12-slim AS python-base
-COPY --from=ghcr.io/astral-sh/uv:0.5.26 /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 \
     \
     PYSETUP_PATH="/opt/pysetup" \
