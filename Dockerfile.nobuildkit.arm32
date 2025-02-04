@@ -25,7 +25,7 @@ RUN sh /uv-installer.sh && rm /uv-installer.sh
 ENV PATH="/root/.local/bin/:$PATH"
 
 COPY uv.lock pyproject.toml ./
-RUN uv sync --frozen --no-install-project --no-dev
+RUN uv sync --frozen --no-install-project --no-dev -v
 
 # [Experimental] Remove unused nicegui libs
 ENV NICEGUI_LIB_PATH="$VENV_PATH/lib/python3.12/site-packages/nicegui/elements/lib"
