@@ -1,8 +1,12 @@
 import datetime
 import hashlib
+import time
 
 import pytz
+from cachetools import TTLCache
+from fastapi import HTTPException
 from nicegui import app, ui
+from starlette import status
 
 from beaverhabits.logging import logger
 
@@ -44,3 +48,37 @@ def generate_short_hash(name: str) -> str:
     h.update(name.encode())
     h.update(str(datetime.datetime.now()).encode())
     return h.hexdigest()[:6]
+
+
+def ratelimiter(limit: int, window: int):
+    if window <= 0 or window > 60 * 60:
+        raise ValueError("Window must be between 1 and 3600 seconds.")
+    cache = TTLCache(maxsize=128, ttl=60 * 60)
+
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            current_time = time.time()
+            key = f"{args}_{kwargs}"
+
+            # Update timestamps
+            if key not in cache:
+                cache[key] = [current_time]
+            else:
+                cache[key].append(current_time)
+            cache[key] = [i for i in cache[key] if i >= current_time - window]
+
+            # Check with threshold
+            if len(cache[key]) > limit:
+                logger.warning(
+                    f"Rate limit exceeded for {func.__name__} with key {key}"
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail=f"Rate limit exceeded. Try again later.",
+                )
+
+            return await func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

@@ -13,7 +13,7 @@ from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, HabitStatus
-from beaverhabits.utils import WEEK_DAYS
+from beaverhabits.utils import WEEK_DAYS, ratelimiter
 
 strptime = datetime.datetime.strptime
 
@@ -92,6 +92,8 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     return record.done
 
 
+@ratelimiter(limit=30, window=30)
+@ratelimiter(limit=10, window=1)
 async def habit_tick(habit: Habit, day: datetime.date, value: bool):
     # Avoid duplicate tick
     record = habit.record_by(day)

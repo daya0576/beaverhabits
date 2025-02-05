@@ -2,7 +2,7 @@ import datetime
 import json
 import random
 
-from fastapi import HTTPException, Request
+from fastapi import HTTPException
 from nicegui import app, ui
 
 from beaverhabits.app.auth import (
@@ -42,14 +42,14 @@ def get_session_habit_list() -> HabitList | None:
     return session_storage.get_user_habit_list()
 
 
-async def get_session_habit(habit_id: str) -> Habit:
+async def get_session_habit(habit_id: str) -> Habit | None:
     habit_list = get_session_habit_list()
     if habit_list is None:
-        raise HTTPException(status_code=404, detail="Habit list not found")
+        return None
 
     habit = await habit_list.get_habit_by(habit_id)
     if habit is None:
-        raise HTTPException(status_code=404, detail="Habit not found")
+        return None
 
     return habit
 

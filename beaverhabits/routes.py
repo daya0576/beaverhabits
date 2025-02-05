@@ -1,11 +1,11 @@
 from typing import Optional
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from nicegui import app, ui
 
 from beaverhabits.frontend.import_page import import_ui_page
-from beaverhabits.frontend.layout import custom_header
+from beaverhabits.frontend.layout import custom_header, redirect
 from beaverhabits.frontend.order_page import order_page_ui
 
 from . import const, views
@@ -21,7 +21,6 @@ from .frontend.add_page import add_page_ui
 from .frontend.cal_heatmap_page import heatmap_page
 from .frontend.habit_page import habit_page_ui
 from .frontend.index_page import index_page_ui
-from .logging import logger
 from .storage.meta import GUI_ROOT_PATH
 from .utils import dummy_days, get_user_today_date
 
@@ -53,6 +52,9 @@ async def demo_order_page() -> None:
 async def demo_habit_page(habit_id: str) -> None:
     today = await get_user_today_date()
     habit = await views.get_session_habit(habit_id)
+    if habit is None:
+        redirect("")
+        return
     habit_page_ui(today, habit)
 
 
@@ -61,6 +63,9 @@ async def demo_habit_page(habit_id: str) -> None:
 async def demo_habit_page_heatmap(habit_id: str) -> None:
     today = await get_user_today_date()
     habit = await views.get_session_habit(habit_id)
+    if habit is None:
+        redirect("")
+        return
     heatmap_page(today, habit)
 
 
@@ -194,6 +199,10 @@ async def register_page():
 
 
 def init_gui_routes(fastapi_app: FastAPI):
+    def handle_exception(exception: Exception):
+        if isinstance(exception, HTTPException):
+            if exception.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
+                ui.notify(f"An error occurred: {exception}", type="negative")
 
     @app.middleware("http")
     async def AuthMiddleware(request: Request, call_next):
@@ -217,6 +226,7 @@ def init_gui_routes(fastapi_app: FastAPI):
         return response
 
     app.add_static_files("/statics", "statics")
+    app.on_exception(handle_exception)
     ui.run_with(
         fastapi_app,
         title=const.PAGE_TITLE,

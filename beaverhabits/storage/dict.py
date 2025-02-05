@@ -175,7 +175,7 @@ class DictHabit(Habit[DictRecord], DictStorage):
         return hash(self.id)
 
     def __str__(self) -> str:
-        return f"{self.name}<{self.status.value}>"
+        return f"[{self.id}]{self.name}<{self.status.value}>"
 
     __repr__ = __str__
 
