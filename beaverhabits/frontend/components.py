@@ -102,25 +102,6 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool):
     await habit.tick(day, value)
     logger.info(f"Day {day} ticked: {value}")
 
-    # Daily notes/short description
-    if habit.note and value:
-        result = await habit_tick_dialog(record)
-
-        yes, text = (False, None) if result is None else result
-
-        if text and len(text) > DAILY_NOTE_MAX_LENGTH:
-            ui.notify("Note is too long", color="negative")
-            yes = False
-
-        # Rollback if user cancel
-        if not yes:
-            await habit.tick(day, not value)
-            logger.info(f"Day {day} ticked: {value} (rollback)")
-
-        if yes:
-            await habit.tick(day, value, text)
-            logger.info(f"Habit ticked: {day} {value}, note: {text}")
-
 
 class HabitCheckBox(ui.checkbox):
     def __init__(self, habit: Habit, day: datetime.date, value: bool) -> None:
@@ -151,6 +132,7 @@ class HabitCheckBox(ui.checkbox):
             self.props("color=currentColor")
 
     async def _mouse_down_event(self):
+        logger.info(f"Mouse down event: {self.day}")
         self.hold.clear()
         try:
             async with asyncio.timeout(0.2):
@@ -166,6 +148,7 @@ class HabitCheckBox(ui.checkbox):
             await habit_tick(self.habit, self.day, value)
 
     async def _mouse_up_event(self):
+        logger.info(f"Mouse up event: {self.day}")
         self.hold.set()
 
 
@@ -525,42 +508,6 @@ class IndexBadge(HabitTotalBadge):
         super().__init__(habit)
         self.props("color=grey-9 rounded transparent")
         self.style("font-size: 80%; font-weight: 500")
-
-
-class HabitNotesExpansion(ui.expansion):
-    def __init__(self, title, habit: Habit) -> None:
-        is_expanded = bool(habit.note)
-
-        super().__init__(
-            title,
-            icon=" ",
-            value=is_expanded,
-            on_value_change=self._async_task,
-        )
-        self.habit = habit
-        self.props("dense")
-        self.classes("w-full text-base text-center")
-
-        self.bind_value_from(self, "value")
-
-    async def _async_task(self, e: events.ValueChangeEventArguments):
-        if e.value == self.habit.note:
-            return
-        if not await self.confirm_dialog():
-            self.value = self.habit.note
-            return
-
-        self.habit.note = e.value
-        logger.info(f"Habit Note changed to {e.value}")
-
-    def confirm_dialog(self):
-        msg = "enable" if not self.habit.note else "disable"
-        with ui.dialog() as dialog, ui.card():
-            ui.label(f"Are you sure to {msg} notes?")
-            with ui.row():
-                ui.button("Yes", on_click=lambda: dialog.submit(True))
-                ui.button("No", on_click=lambda: dialog.submit(False))
-        return dialog
 
 
 def habit_notes(records: List[CheckedRecord], limit: int = 10):

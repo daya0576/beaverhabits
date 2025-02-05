@@ -120,14 +120,6 @@ class DictHabit(Habit[DictRecord], DictStorage):
         return [DictRecord(d) for d in self.data["records"]]
 
     @property
-    def note(self) -> bool:
-        return bool(self.data.get("note"))
-
-    @note.setter
-    def note(self, value: bool) -> None:
-        self.data["note"] = value
-
-    @property
     def ticked_days(self) -> list[datetime.date]:
         return self.cache.ticked_days
 
