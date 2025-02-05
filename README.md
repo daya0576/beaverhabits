@@ -51,6 +51,8 @@ services:
         environment:
             # See the note below to find all the environment variables
             - HABITS_STORAGE=USER_DISK # DATABASE stores in a single SQLite database named habits.db. USER_DISK option saves in a local json file.
+            # Skip authentication
+            - TRUSTED_LOCAL_EMAIL=<your@email.address>
         volumes:
             - /path/to/beaver/habits:/app/.user/ # Change directory to match your docker file scheme.
         ports:

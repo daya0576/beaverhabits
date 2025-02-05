@@ -1,5 +1,4 @@
 FROM python:3.12-slim AS python-base
-COPY --from=ghcr.io/astral-sh/uv:0.5.26 /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 \
     \
     PYSETUP_PATH="/opt/pysetup" \
@@ -19,7 +18,7 @@ RUN sh /uv-installer.sh && rm /uv-installer.sh
 ENV PATH="/root/.local/bin/:$PATH"
 
 COPY uv.lock pyproject.toml ./
-RUN uv sync --frozen --no-install-project --no-dev
+RUN uv sync --frozen --no-install-project --no-dev -v
 
 # [Experimental] Remove unused nicegui libs
 ENV NICEGUI_LIB_PATH="$VENV_PATH/lib/python3.12/site-packages/nicegui/elements/lib"
