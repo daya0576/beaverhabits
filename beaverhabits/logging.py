@@ -1,3 +1,1 @@
-import logging
-
-logger = logging.getLogger("uvicorn")
+from loguru import logger

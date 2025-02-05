@@ -75,7 +75,7 @@ def habit_tick_dialog(record: CheckedRecord | None):
     return dialog
 
 
-async def note_tick(habit: Habit, day: datetime.date):
+async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     record = habit.record_by(day)
     result = await habit_tick_dialog(record)
 
@@ -87,8 +87,9 @@ async def note_tick(habit: Habit, day: datetime.date):
         ui.notify("Note is too long", color="negative")
         return
 
-    await habit.tick(day, yes, text)
+    record = await habit.tick(day, yes, text)
     logger.info(f"Habit ticked: {day} {yes}, note: {text}")
+    return record.done
 
 
 async def habit_tick(habit: Habit, day: datetime.date, value: bool):
@@ -126,9 +127,9 @@ class HabitCheckBox(ui.checkbox):
         super().__init__("", value=value, on_change=self._async_task)
         self.habit = habit
         self.day = day
-        self._update_style(value)
-
-        self.bind_value_from(self, "_value")
+        self.props(
+            f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
+        )
 
         # hold on event
         self.hold = asyncio.Event()
@@ -139,15 +140,6 @@ class HabitCheckBox(ui.checkbox):
         self.on("touchend", self._mouse_up_event)
         self.on("touchmove", self._mouse_up_event)
 
-    def _update_style(self, value: bool):
-        self.props(
-            f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
-        )
-        if not value:
-            self.props("color=grey-8")
-        else:
-            self.props("color=currentColor")
-
     @property
     def _value(self) -> bool:
         record = self.habit.record_by(self.day)
@@ -155,8 +147,7 @@ class HabitCheckBox(ui.checkbox):
         return result
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
-        self._update_style(e.value)
-
+        logger.info(f"Checkbox on change: {e.value}")
         # Do update completion status
         await habit_tick(self.habit, self.day, e.value)
 
@@ -166,7 +157,9 @@ class HabitCheckBox(ui.checkbox):
             async with asyncio.timeout(0.2):
                 await self.hold.wait()
         except asyncio.TimeoutError:
-            await note_tick(self.habit, self.day)
+            value = await note_tick(self.habit, self.day)
+            if value is not None:
+                self.value = value
 
     async def _mouse_up_event(self):
         self.hold.set()

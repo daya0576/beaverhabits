@@ -16,6 +16,7 @@ dependencies = [
     "pytz<2025.0,>=2024.1",
     "sentry-sdk[fastapi]<3.0.0,>=2.15.0",
     "python-dateutil<3.0.0.0,>=2.9.0.post0",
+    "loguru>=0.7.3",
 ]
 description = ""
 readme = "README.md"
