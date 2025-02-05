@@ -124,10 +124,13 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool):
 
 class HabitCheckBox(ui.checkbox):
     def __init__(self, habit: Habit, day: datetime.date, value: bool) -> None:
-        super().__init__("", value=value, on_change=self._async_task)
-        self._update_style(value)
+        super().__init__("", value=value)
         self.habit = habit
         self.day = day
+        self.props(
+            f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
+        )
+        self._update_style(value)
 
         # hold on event
         self.hold = asyncio.Event()
@@ -139,27 +142,13 @@ class HabitCheckBox(ui.checkbox):
         self.on("touchmove", self._mouse_up_event)
 
     def _update_style(self, value: bool):
-        self.props(
-            f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
-        )
+        self.value = value
 
         # update style for shadow color
         if not value:
             self.props("color=grey-8")
         else:
             self.props("color=currentColor")
-
-    @property
-    def _value(self) -> bool:
-        record = self.habit.record_by(self.day)
-        result = bool(record and record.done)
-        return result
-
-    async def _async_task(self, e: events.ValueChangeEventArguments):
-        logger.info(f"Checkbox on change: {e.value}")
-        self._update_style(e.value)
-        # Do update completion status
-        await habit_tick(self.habit, self.day, e.value)
 
     async def _mouse_down_event(self):
         self.hold.clear()
@@ -170,7 +159,11 @@ class HabitCheckBox(ui.checkbox):
             value = await note_tick(self.habit, self.day)
             if value is not None:
                 self._update_style(value)
-                self.value = value
+        else:
+            value = not self.value
+            self._update_style(value)
+            # Do update completion status
+            await habit_tick(self.habit, self.day, value)
 
     async def _mouse_up_event(self):
         self.hold.set()
