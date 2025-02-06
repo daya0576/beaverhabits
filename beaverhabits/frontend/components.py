@@ -115,14 +115,23 @@ class HabitCheckBox(ui.checkbox):
         )
         self._update_style(value)
 
-        # hold on event
+        # Hold on event flag
         self.hold = asyncio.Event()
-        self.on("mousedown", self._mouse_down_event)
-        self.on("mouseup", self._mouse_up_event)
+        self.moving = False
 
+        # Sequence of events: https://ui.toast.com/posts/en_20220106
+        # 1. Mouse click: mousedown -> mouseup -> click
+        # 2. Touch click: touchstart -> touchend -> mousemove -> mousedown -> mouseup -> click
+        # 3. Touch move:  touchstart -> touchmove -> touchend
+        self.on("mousedown", self._mouse_down_event)
         self.on("touchstart", self._mouse_down_event)
-        self.on("touchend", self._mouse_up_event)
-        self.on("touchmove", self._mouse_up_event)
+
+        # Event modifiers
+        # 1. Prevent checkbox default behavior
+        # 2. Prevent propagation of the event
+        self.on("mouseup.prevent", self._mouse_up_event)
+        self.on("touchend.prevent", self._mouse_up_event)
+        self.on("touchmove", self._mouse_move_event)
 
     def _update_style(self, value: bool):
         self.value = value
@@ -133,9 +142,10 @@ class HabitCheckBox(ui.checkbox):
         else:
             self.props("color=currentColor")
 
-    async def _mouse_down_event(self):
-        logger.info(f"Mouse down event: {self.day}")
+    async def _mouse_down_event(self, e):
+        logger.info(f"Down event: {self.day}, {e.args.get('type')}")
         self.hold.clear()
+        self.moving = False
         try:
             async with asyncio.timeout(0.2):
                 await self.hold.wait()
@@ -144,13 +154,20 @@ class HabitCheckBox(ui.checkbox):
             if value is not None:
                 self._update_style(value)
         else:
+            if self.moving:
+                logger.info("Mouse moving, skip...")
+                return
             value = not self.value
             self._update_style(value)
             # Do update completion status
             await habit_tick(self.habit, self.day, value)
 
-    async def _mouse_up_event(self):
-        logger.info(f"Mouse up event: {self.day}")
+    async def _mouse_up_event(self, e):
+        logger.info(f"Up event: {self.day}, {e.args.get('type')}")
+        self.hold.set()
+
+    async def _mouse_move_event(self):
+        self.moving = True
         self.hold.set()
 
 
