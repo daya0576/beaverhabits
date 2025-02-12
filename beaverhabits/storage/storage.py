@@ -10,10 +10,10 @@ class CheckedRecord(Protocol):
     def day(self) -> datetime.date: ...
 
     @property
-    def done(self) -> bool: ...
+    def done(self) -> bool | None: ...  # None means skipped
 
     @done.setter
-    def done(self, value: bool) -> None: ...
+    def done(self, value: bool | None) -> None: ...
 
     @property
     def text(self) -> str: ...
@@ -22,6 +22,8 @@ class CheckedRecord(Protocol):
     def text(self, value: str) -> None: ...
 
     def __str__(self):
+        if self.done is None:
+            return f"{self.day} [s]"  # skipped
         return f"{self.day} {'[x]' if self.done else '[ ]'}"
 
     __repr__ = __str__
@@ -84,7 +86,7 @@ class Habit[R: CheckedRecord](Protocol):
         return self.ticked_data.get(day)
 
     async def tick(
-        self, day: datetime.date, done: bool, text: str | None = None
+        self, day: datetime.date, done: bool | None, text: str | None = None
     ) -> CheckedRecord: ...
 
     def __str__(self):

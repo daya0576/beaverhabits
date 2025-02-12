@@ -93,16 +93,33 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         name = link(habit.name, target=redirect_page)
                         name.classes("break-words whitespace-normal w-full px-4 py-2")
                         name.props(f'data-habit-id="{habit.id}"')
+                        # Check if habit is skipped today
+                        today = datetime.date.today()
+                        is_skipped_today = (
+                            today in days and 
+                            habit.record_by(today) and 
+                            habit.record_by(today).done is None
+                        )
+                        
+                        # Set initial color
+                        if is_skipped_today:
+                            color = 'gray'
+                        else:
+                            color = 'lightgreen' if check_weekly_goal(habit, days) else 'orangered'
+                            
                         name.style(
                             "min-height: 1.5em; height: auto; "
-                            f"color: {'lightgreen' if check_weekly_goal(habit, days) else 'yellow'};"
+                            f"color: {color};"
                         )
 
                     # Checkbox row with fixed width
                     with ui.row().classes("w-full max-w-[600px] gap-2 justify-center items-center flex-nowrap"):
                         ticked_days = set(habit.ticked_days)
                         for day in days:
-                            checkbox = HabitCheckBox(habit, day, day in ticked_days, habit_list_ui.refresh)
+                            # Get the actual state (checked, unchecked, or skipped)
+                            record = habit.record_by(day)
+                            state = record.done if record else False
+                            checkbox = HabitCheckBox(habit, day, state, habit_list_ui.refresh)
 
                         if settings.INDEX_SHOW_HABIT_COUNT:
                             IndexBadge(habit)
@@ -126,15 +143,21 @@ async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User
     # Define updateHabitColor function on page load
     def define_update_habit_color():
         ui.run_javascript("""
-        window.updateHabitColor = function(habitId, weeklyGoal, currentWeekTicks) {
+        window.updateHabitColor = function(habitId, weeklyGoal, currentWeekTicks, isSkippedToday) {
             const habitLink = document.querySelector(`[data-habit-id="${habitId}"]`);
             if (!habitLink) return;
+            
+            // Show gray if skipped today
+            if (isSkippedToday) {
+                habitLink.style.color = 'gray';
+                return;
+            }
             
             // Update color based on weekly goal
             if (!weeklyGoal || currentWeekTicks >= weeklyGoal) {
                 habitLink.style.color = 'lightgreen';
             } else {
-                habitLink.style.color = 'Crimson';
+                habitLink.style.color = 'orangered';
             }
         }
         """)

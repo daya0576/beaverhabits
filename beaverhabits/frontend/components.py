@@ -94,10 +94,10 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
 
 @ratelimiter(limit=30, window=30)
 @ratelimiter(limit=10, window=1)
-async def habit_tick(habit: Habit, day: datetime.date, value: bool):
+async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
     # Avoid duplicate tick
     record = habit.record_by(day)
-    if record and record.done == value:
+    if record and record.done is value:  # Use 'is' to handle None case correctly
         return
 
     # Transaction start
@@ -106,17 +106,17 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool):
 
 
 class HabitCheckBox(ui.checkbox):
-    def __init__(self, habit: Habit, day: datetime.date, value: bool, refresh: Callable | None = None) -> None:
-        super().__init__("", value=value)
+    def __init__(self, habit: Habit, day: datetime.date, value: bool | None, refresh: Callable | None = None) -> None:
+        super().__init__("", value=bool(value))  # Convert None to False for initial state
         self.habit = habit
         self.day = day
         self.refresh = refresh
+        self.skipped = value is None  # Track skipped state
         text_color = "chartreuse" if self.day == datetime.date.today() else "white"
-        unchecked_icon = icons.SQUARE.format(color="rgb(54,54,54)", text=self.day.day, text_color=text_color)
-        checked_icon = icons.DONE
-        self.props(
-            f'checked-icon="{checked_icon}" unchecked-icon="{unchecked_icon}" keep-color'
-        )
+        self.unchecked_icon = icons.SQUARE.format(color="rgb(54,54,54)", text=self.day.day, text_color=text_color)
+        self.checked_icon = icons.DONE
+        self.skipped_icon = icons.CLOSE
+        self._update_icons()
         self._update_style(value)
 
         # Hold on event flag
@@ -137,26 +137,47 @@ class HabitCheckBox(ui.checkbox):
         self.on("touchend.prevent", self._mouse_up_event)
         self.on("touchmove", self._mouse_move_event)
 
-    def _update_style(self, value: bool):
-        self.value = value
+    def _update_icons(self):
+        if self.skipped:
+            self.props(f'checked-icon="{self.skipped_icon}" unchecked-icon="{self.skipped_icon}" keep-color')
+        else:
+            self.props(f'checked-icon="{self.checked_icon}" unchecked-icon="{self.unchecked_icon}" keep-color')
 
-        # update style for shadow color
-        if not value:
+    def _update_style(self, value: bool | None):
+        if value is None:  # Skipped state
+            self.value = True  # Keep checkbox checked for skipped state
+            self.skipped = True
             self.props("color=grey-8")
         else:
-            self.props("color=currentColor")
+            self.value = value
+            self.skipped = False
+            self.props("color=currentColor" if value else "color=grey-8")
+        
+        self._update_icons()
             
         # Update habit name color
         # Get the start and end of the current week
         week_start = self.day - datetime.timedelta(days=self.day.weekday())
         week_end = week_start + datetime.timedelta(days=6)
-        # Count ticks for current week
+        # Count ticks for current week (don't count skipped days)
         week_ticks = sum(1 for day in self.habit.ticked_days 
                         if week_start <= day <= week_end)
         
+        # Check if this habit is skipped today
+        is_skipped_today = (
+            self.day == datetime.date.today() and 
+            self.habit.record_by(self.day) and 
+            self.habit.record_by(self.day).done is None
+        )
+        
         ui.run_javascript(f"""
         if (window.updateHabitColor) {{
-            window.updateHabitColor('{self.habit.id}', {self.habit.weekly_goal or 0}, {week_ticks});
+            window.updateHabitColor(
+                '{self.habit.id}', 
+                {self.habit.weekly_goal or 0}, 
+                {week_ticks},
+                {str(is_skipped_today).lower()}
+            );
         }}
         """)
 
@@ -175,7 +196,14 @@ class HabitCheckBox(ui.checkbox):
             if self.moving:
                 logger.info("Mouse moving, skip...")
                 return
-            value = not self.value
+            # Cycle through states: unchecked -> checked -> skipped -> unchecked
+            if not self.value:  # Currently unchecked
+                value = True  # Move to checked
+            elif not self.skipped:  # Currently checked, not skipped
+                value = None  # Move to skipped
+            else:  # Currently skipped
+                value = False  # Move to unchecked
+                
             self._update_style(value)
             # Do update completion status
             await habit_tick(self.habit, self.day, value)
@@ -485,9 +513,9 @@ class CalendarCheckBox(ui.checkbox):
             self.bind_value(self, "value")  # Bind to local value
 
     @property
-    def ticked(self) -> bool:
+    def ticked(self) -> bool | None:
         record = self.habit.ticked_data.get(self.day)
-        return bool(record and record.done)
+        return record.done if record else False
 
     def _icon_svg(self):
         unchecked_color, checked_color = "rgb(54,54,54)", "rgb(103,150,207)"

@@ -50,15 +50,21 @@ def unhover_checkboxes():
     ui.run_javascript(UNHOVER_CHECKBOXES)
 
 UPDATE_HABIT_COLOR = """
-function updateHabitColor(habitId, weeklyGoal, currentWeekTicks) {
+function updateHabitColor(habitId, weeklyGoal, currentWeekTicks, isSkippedToday) {
     const habitLink = document.querySelector(`[data-habit-id="${habitId}"]`);
     if (!habitLink) return;
+    
+    // Show gray if skipped today
+    if (isSkippedToday) {
+        habitLink.style.color = 'gray';
+        return;
+    }
     
     // Update color based on weekly goal
     if (!weeklyGoal || currentWeekTicks >= weeklyGoal) {
         habitLink.style.color = 'lightgreen';
     } else {
-        habitLink.style.color = 'yellow';
+        habitLink.style.color = 'orangered';
     }
 }
 """
