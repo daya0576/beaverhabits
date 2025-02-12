@@ -11,7 +11,7 @@ if "%1"=="prd" (
     rem Set nicegui storage path to avoid permission issues if not already set
     if "%NICEGUI_STORAGE_PATH%"=="" set NICEGUI_STORAGE_PATH=.user\.nicegui
     rem we also use a single worker in production mode so socket.io connections are always handled by the same worker
-    uvicorn beaverhabits.main:app --workers 1 --log-level info --port 8080 --host 0.0.0.0
+    uvicorn beaverhabits.main:app --reload --log-level debug  --workers 1 --log-level info --port 443 --host 0.0.0.0
 ) else if "%1"=="dev" (
     echo Starting Uvicorn server in development mode...
     rem Set debug logging

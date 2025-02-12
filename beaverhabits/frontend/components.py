@@ -144,6 +144,20 @@ class HabitCheckBox(ui.checkbox):
             self.props("color=grey-8")
         else:
             self.props("color=currentColor")
+            
+        # Update habit name color
+        # Get the start and end of the current week
+        week_start = self.day - datetime.timedelta(days=self.day.weekday())
+        week_end = week_start + datetime.timedelta(days=6)
+        # Count ticks for current week
+        week_ticks = sum(1 for day in self.habit.ticked_days 
+                        if week_start <= day <= week_end)
+        
+        ui.run_javascript(f"""
+        if (window.updateHabitColor) {{
+            window.updateHabitColor('{self.habit.id}', {self.habit.weekly_goal or 0}, {week_ticks});
+        }}
+        """)
 
     async def _mouse_down_event(self, e):
         logger.info(f"Down event: {self.day}, {e.args.get('type')}")

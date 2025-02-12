@@ -48,3 +48,20 @@ def prevent_context_menu():
 
 def unhover_checkboxes():
     ui.run_javascript(UNHOVER_CHECKBOXES)
+
+UPDATE_HABIT_COLOR = """
+function updateHabitColor(habitId, weeklyGoal, currentWeekTicks) {
+    const habitLink = document.querySelector(`[data-habit-id="${habitId}"]`);
+    if (!habitLink) return;
+    
+    // Update color based on weekly goal
+    if (!weeklyGoal || currentWeekTicks >= weeklyGoal) {
+        habitLink.style.color = 'lightgreen';
+    } else {
+        habitLink.style.color = 'orangered';
+    }
+}
+"""
+
+def update_habit_color():
+    ui.run_javascript(UPDATE_HABIT_COLOR)

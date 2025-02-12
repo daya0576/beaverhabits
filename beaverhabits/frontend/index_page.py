@@ -6,6 +6,7 @@ from nicegui import ui
 
 from beaverhabits.configs import settings
 from beaverhabits.frontend import javascript
+from beaverhabits.frontend.javascript import update_habit_color
 from beaverhabits.frontend.components import HabitCheckBox, IndexBadge, link
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
@@ -70,7 +71,7 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     count_columns = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
     columns = name_columns + len(days) * date_columns + count_columns
 
-    row_compat_classes = "px-4 py-1"
+    row_compat_classes = "px-0 py-1"
     left_classes, right_classes = (
         # grid 5
         f"col-span-{name_columns} break-words whitespace-normal",
@@ -79,7 +80,7 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     )
     header_styles = "font-size: 85%; font-weight: 500; color: #9e9e9e"
 
-    with ui.column().classes("gap-1.5 w-full max-w-[600px] mx-auto pb-32"):  # Add bottom padding
+    with ui.column().classes("gap-2 w-full max-w-[600px] mx-auto pb-32"):  # Add bottom padding
         # Habit List
         for habit in active_habits:
             with ui.card().classes(row_compat_classes + " w-full max-w-[600px] mx-auto").classes("shadow-none"):
@@ -91,9 +92,10 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         redirect_page = os.path.join(root_path, "habits", str(habit.id))
                         name = link(habit.name, target=redirect_page)
                         name.classes("break-words whitespace-normal w-full px-4 py-2")
+                        name.props(f'data-habit-id="{habit.id}"')
                         name.style(
                             "min-height: 1.5em; height: auto; "
-                            f"color: {'green' if check_weekly_goal(habit, days) else 'red'};"
+                            f"color: {'lightgreen' if check_weekly_goal(habit, days) else 'orangered'};"
                         )
 
                     # Checkbox row with fixed width
@@ -118,6 +120,22 @@ async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User
         await week_navigation(days)
         await habit_list_ui(days, active_habits)
 
-    # Prevent long press context menu and preserve scroll position
+    # Initialize JavaScript functions and prevent long press context menu
     ui.context.client.on_connect(javascript.prevent_context_menu)
     ui.context.client.on_connect(javascript.preserve_scroll)
+    # Define updateHabitColor function on page load
+    def define_update_habit_color():
+        ui.run_javascript("""
+        window.updateHabitColor = function(habitId, weeklyGoal, currentWeekTicks) {
+            const habitLink = document.querySelector(`[data-habit-id="${habitId}"]`);
+            if (!habitLink) return;
+            
+            // Update color based on weekly goal
+            if (!weeklyGoal || currentWeekTicks >= weeklyGoal) {
+                habitLink.style.color = 'lightgreen';
+            } else {
+                habitLink.style.color = 'orangered';
+            }
+        }
+        """)
+    ui.context.client.on_connect(define_update_habit_color)
