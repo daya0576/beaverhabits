@@ -4,7 +4,9 @@ from typing import List as TypeList, Optional
 import json
 from nicegui import app, ui
 
-from beaverhabits.app.auth import user_authenticate, user_create_token
+from beaverhabits.logging import logger
+
+from beaverhabits.app.auth import user_authenticate, user_create_token, user_create
 from beaverhabits.app.crud import get_user_count
 from beaverhabits.app.db import User
 from beaverhabits.configs import settings
@@ -135,10 +137,17 @@ async def validate_max_user_count() -> None:
 
 async def register_user(email: str, password: str) -> User:
     """Register a new user."""
-    user = await user_authenticate(email=email, password=password)
-    if not user:
-        raise ValueError("Failed to register user")
-    return user
+    try:
+        logger.info(f"Attempting to register user with email: {email}")
+        user = await user_create(email=email, password=password)
+        if not user:
+            logger.error(f"Registration failed for email: {email} - User creation returned None")
+            raise ValueError("Failed to register user - Creation failed")
+        logger.info(f"Successfully registered user with email: {email}")
+        return user
+    except Exception as e:
+        logger.exception(f"Registration failed for email: {email}")
+        raise ValueError(f"Failed to register user: {str(e)}")
 
 
 async def login_user(user: User) -> None:

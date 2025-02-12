@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     HABITS_STORAGE: StorageType = StorageType.USER_DATABASE
     DATABASE_URL: str = f"sqlite+aiosqlite:///./{USER_DATA_FOLDER}/habits.db"
     MAX_USER_COUNT: int = -1
-    JWT_SECRET: str = "SECRET"
+    JWT_SECRET: str = "54o53o847gdlfjfdljgd"
     JWT_LIFETIME_SECONDS: int = 60 * 60 * 24 * 30
 
     # Auth
