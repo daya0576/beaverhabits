@@ -73,7 +73,9 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
 
 class BaseHabitCheckBox(ui.checkbox):
     def __init__(self, habit: Habit, day: datetime.date, value: bool | None) -> None:
-        super().__init__("", value=False)  # Always start unchecked, we'll update in _update_style
+        logger.info(f"Initializing checkbox for day {day} with value: {value}")
+        # Initialize with the actual state
+        super().__init__("", value=value if value is not None else False)
         self.habit = habit
         self.day = day
         self.skipped = value is None  # Track skipped state
@@ -81,6 +83,9 @@ class BaseHabitCheckBox(ui.checkbox):
         self.unchecked_icon = icons.SQUARE.format(color="rgb(54,54,54)", text=self.day.day, text_color=text_color)
         self.checked_icon = icons.DONE
         self.skipped_icon = icons.CLOSE
+        
+        # Set up initial state
+        logger.info(f"Setting up initial state for day {day}: value={value}, skipped={self.skipped}")
         self._update_icons()
         self._update_style(value)
 
@@ -239,14 +244,14 @@ class CalendarCheckBox(BaseHabitCheckBox):
         today: datetime.date,
         is_bind_data: bool = True,
     ) -> None:
-        super().__init__(habit, day, None)  # Start with no value
-        self.today = today
-        
-        # Get initial state
-        record = self.habit.record_by(day)
+        # Get initial state before calling super()
+        record = habit.record_by(day)
         initial_value = record.done if record else False
-        self.skipped = initial_value is None
-        logger.info(f"CalendarCheckBox init: day={day}, initial_value={initial_value}, skipped={self.skipped}")
+        logger.info(f"CalendarCheckBox init: day={day}, initial_value={initial_value}")
+        
+        # Pass the correct initial value to super()
+        super().__init__(habit, day, initial_value)
+        self.today = today
         
         self.classes("inline-block w-14")  # w-14 = width: 56px
         self.props("dense")
@@ -259,6 +264,3 @@ class CalendarCheckBox(BaseHabitCheckBox):
         self.on("touchmove", self._mouse_move_event)
         self.on("click.prevent", lambda _: None)  # Prevent default click behavior
         self.on("change.prevent", lambda _: None)  # Prevent default change behavior
-        
-        # Update initial state
-        self._update_style(initial_value)
