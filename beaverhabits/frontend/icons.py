@@ -26,7 +26,7 @@ SQUARE = """\
 img:data:image/svg+xml;charset=utf8,\
 <svg viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'>\
     <rect x='1' y='1' width='72' height='72' rx='2.5' fill='{color}'/>\
-    <text x='38' text-anchor='middle' y='38' dominant-baseline='central' fill='white' font-size='40' \
+    <text x='38' text-anchor='middle' y='38' dominant-baseline='central' fill='{text_color}' font-size='60' \
         style='font-family: Roboto,-apple-system,Helvetica Neue,Helvetica,Arial,sans-serif;'\
         class='font-light'\
     >{text}</text>\

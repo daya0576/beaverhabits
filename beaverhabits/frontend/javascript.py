@@ -58,7 +58,7 @@ function updateHabitColor(habitId, weeklyGoal, currentWeekTicks) {
     if (!weeklyGoal || currentWeekTicks >= weeklyGoal) {
         habitLink.style.color = 'lightgreen';
     } else {
-        habitLink.style.color = 'orangered';
+        habitLink.style.color = 'yellow';
     }
 }
 """

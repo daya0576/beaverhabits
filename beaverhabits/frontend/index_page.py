@@ -95,7 +95,7 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         name.props(f'data-habit-id="{habit.id}"')
                         name.style(
                             "min-height: 1.5em; height: auto; "
-                            f"color: {'lightgreen' if check_weekly_goal(habit, days) else 'orangered'};"
+                            f"color: {'lightgreen' if check_weekly_goal(habit, days) else 'yellow'};"
                         )
 
                     # Checkbox row with fixed width
@@ -134,7 +134,7 @@ async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User
             if (!weeklyGoal || currentWeekTicks >= weeklyGoal) {
                 habitLink.style.color = 'lightgreen';
             } else {
-                habitLink.style.color = 'orangered';
+                habitLink.style.color = 'Crimson';
             }
         }
         """)

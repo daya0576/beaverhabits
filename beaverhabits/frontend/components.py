@@ -111,7 +111,8 @@ class HabitCheckBox(ui.checkbox):
         self.habit = habit
         self.day = day
         self.refresh = refresh
-        unchecked_icon = icons.SQUARE.format(color="rgb(54,54,54)", text=self.day.day)
+        text_color = "chartreuse" if self.day == datetime.date.today() else "white"
+        unchecked_icon = icons.SQUARE.format(color="rgb(54,54,54)", text=self.day.day, text_color=text_color)
         checked_icon = icons.DONE
         self.props(
             f'checked-icon="{checked_icon}" unchecked-icon="{unchecked_icon}" keep-color'
@@ -474,7 +475,7 @@ class CalendarCheckBox(ui.checkbox):
         self.today = today
         super().__init__("", value=self.ticked, on_change=self._async_task)
 
-        self.classes("inline-block w-10")  # w-10 = width: 40px
+        self.classes("inline-block w-14")  # w-14 = width: 56px
         self.props("dense")
         unchecked_icon, checked_icon = self._icon_svg()
         self.props(f'unchecked-icon="{unchecked_icon}"')
@@ -490,9 +491,11 @@ class CalendarCheckBox(ui.checkbox):
 
     def _icon_svg(self):
         unchecked_color, checked_color = "rgb(54,54,54)", "rgb(103,150,207)"
+        # Use Chartreuse color for today's number
+        text_color = "chartreuse" if self.day == datetime.date.today() else "white"
         return (
-            icons.SQUARE.format(color=unchecked_color, text=self.day.day),
-            icons.SQUARE.format(color=checked_color, text=self.day.day),
+            icons.SQUARE.format(color=unchecked_color, text=self.day.day, text_color=text_color),
+            icons.SQUARE.format(color=checked_color, text=self.day.day, text_color=text_color),
         )
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
