@@ -146,9 +146,53 @@ class UserStorage[L: HabitList[H], H: Habit](Protocol):
     async def delete_list(self, user: User, list_id: str) -> None: ...
 
 
+def get_week_ticks(habit: Habit, day: datetime.date) -> tuple[int, bool]:
+    """Calculate the number of ticks and if there are any actions in the week containing the given day.
+    Returns:
+        tuple: (number of ticks, whether there are any actions (ticks or skips))
+    """
+    week_start = day - datetime.timedelta(days=day.weekday())
+    week_end = week_start + datetime.timedelta(days=6)
+    ticks = 0
+    has_actions = False
+    
+    for d in (week_start + datetime.timedelta(days=i) for i in range(7)):
+        record = habit.record_by(d)
+        if record:
+            if record.done or record.done is None:  # Only count ticks and skips as actions
+                has_actions = True
+            if record.done:
+                ticks += 1
+    
+    return ticks, has_actions
+
+def get_habit_priority(habit: Habit, days: list[datetime.date]) -> int:
+    """Calculate priority for sorting habits.
+    Returns:
+    - 0: no checks (first)
+    - 1: partially checked (second)
+    - 2: skipped today (third)
+    - 3: completed weekly goal (last)
+    """
+    today = datetime.date.today()
+    record = habit.record_by(today)
+    week_ticks, has_actions = get_week_ticks(habit, today)
+    is_skipped_today = record and record.done is None
+    is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
+
+    # Check in ascending priority order
+    if not has_actions:
+        return 0  # No checks (first)
+    if has_actions and not is_skipped_today and not is_completed:
+        return 1  # Partially checked (second)
+    if is_skipped_today:
+        return 2  # Skipped today (third)
+    return 3  # Completed (last)
+
 class HabitListBuilder[H: Habit]:
-    def __init__(self, habit_list: HabitList[H]):
+    def __init__(self, habit_list: HabitList[H], days: list[datetime.date] | None = None):
         self.habit_list = habit_list
+        self.days = days or [datetime.date.today()]  # Default to today if no days provided
         self.status_list = (
             HabitStatus.ACTIVE,
             HabitStatus.ARCHIVED,
@@ -162,17 +206,16 @@ class HabitListBuilder[H: Habit]:
         # Deep copy the list
         habits = [x for x in self.habit_list.habits if x.status in self.status_list]
 
-        # sort by order
-        if o := self.habit_list.order:
-            habits.sort(
-                key=lambda x: (o.index(str(x.id)) if str(x.id) in o else float("inf"))
-            )
+        # Get order if exists
+        o = self.habit_list.order
 
-        # sort by star
-        habits.sort(key=lambda x: x.star, reverse=True)
-
-        # Sort by status
-        all_status = HabitStatus.all()
-        habits.sort(key=lambda x: all_status.index(x.status))
+        # Sort by multiple criteria
+        habits.sort(key=lambda x: (
+            HabitStatus.all().index(x.status),  # Status first
+            get_habit_priority(x, self.days),  # Then by completion priority
+            not x.star,  # Then by star (starred on top)
+            x.name.lower(),  # Then by name
+            o.index(str(x.id)) if o and str(x.id) in o else float("inf")  # Finally by manual order
+        ))
 
         return habits

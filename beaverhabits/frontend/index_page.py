@@ -11,7 +11,10 @@ from beaverhabits.frontend.components import (
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
-from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, HabitStatus
+from beaverhabits.storage.storage import (
+    Habit, HabitList, HabitListBuilder, HabitStatus, 
+    get_habit_priority, get_week_ticks
+)
 from beaverhabits.utils import (
     get_week_offset, set_week_offset, reset_week_offset, 
     get_display_days, set_navigating, WEEK_DAYS
@@ -61,16 +64,15 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     with container:
         # Habit List
         for habit in active_habits:
-            # Calculate priority score for initial sorting
+            # Calculate priority using shared function
+            priority = get_habit_priority(habit, days)
+            
+            # Calculate state for color and data attributes
             today = datetime.date.today()
             record = habit.record_by(today)
-            week_ticks = sum(1 for day in days if day in habit.ticked_days)
+            week_ticks, _ = get_week_ticks(habit, today)
             is_skipped_today = record and record.done is None
             is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
-            has_ticks = bool(habit.ticked_days)
-            
-            # Priority: 3=no ticks (top), 2=partial ticks, 1=skipped, 0=completed (bottom)
-            priority = 0 if is_completed else (1 if is_skipped_today else (2 if has_ticks else 3))
             
             card = ui.card().classes(row_compat_classes + " w-full habit-card").classes("shadow-none")
             # Add data attributes for sorting
@@ -87,17 +89,17 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         # Name row
                         root_path = get_root_path()
                         redirect_page = os.path.join(root_path, "habits", str(habit.id))
-                        # Calculate initial color
-                        is_skipped_today = record and record.done is None
-                        is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
+                        # Calculate color
                         initial_color = (
                             settings.HABIT_COLOR_SKIPPED if is_skipped_today
                             else settings.HABIT_COLOR_COMPLETED if is_completed
                             else settings.HABIT_COLOR_INCOMPLETE
                         )
                         
-                        name = link(habit.name, target=redirect_page)
-                        name.classes("break-words whitespace-normal w-full px-4 py-2")
+                        with ui.row().classes("w-full justify-between items-start"):
+                            name = link(habit.name, target=redirect_page)
+                            name.classes("break-words whitespace-normal px-4 py-2")
+                            ui.label(f"Priority: {priority}").classes("text-xs text-gray-500 pr-2 pt-1")
                         name.props(
                             f'data-habit-id="{habit.id}" '
                             f'data-weekly-goal="{habit.weekly_goal or 0}" '
@@ -120,28 +122,8 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 
 @ui.refreshable
 async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User | None = None):
-    # Get active habits
-    active_habits = HabitListBuilder(habits).status(HabitStatus.ACTIVE).build()
-    
-    # Sort habits by priority, star status, and name
-    def get_priority(habit: Habit) -> int:
-        today = datetime.date.today()
-        record = habit.record_by(today)
-        week_ticks = sum(1 for day in days if day in habit.ticked_days)
-        is_skipped_today = record and record.done is None
-        is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
-        has_ticks = bool(habit.ticked_days)
-        
-        # Priority: 3=no ticks (top), 2=partial ticks, 1=skipped, 0=completed (bottom)
-        if is_completed:
-            return 0  # Completed at bottom
-        elif is_skipped_today:
-            return 1  # Skipped above completed
-        elif has_ticks:
-            return 2  # Partial ticks above skipped
-        return 3  # No ticks at top
-    
-    active_habits.sort(key=lambda h: (get_priority(h), not h.star, h.name.lower()))
+    # Get active habits and sort them
+    active_habits = HabitListBuilder(habits, days=days).status(HabitStatus.ACTIVE).build()
     if not active_habits:
         from beaverhabits.frontend.layout import redirect
         redirect("add")

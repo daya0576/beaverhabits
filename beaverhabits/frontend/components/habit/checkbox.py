@@ -7,7 +7,7 @@ from nicegui import ui, events
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
-from beaverhabits.storage.storage import CheckedRecord, Habit
+from beaverhabits.storage.storage import CheckedRecord, Habit, get_week_ticks
 from ..utils import ratelimiter
 
 DAILY_NOTE_MAX_LENGTH = 300
@@ -131,11 +131,6 @@ class BaseHabitCheckBox(ui.checkbox):
         # Add a small delay to ensure habit state is updated
         await asyncio.sleep(0.1)
             
-        # Update habit name color
-        # Get the start and end of the current week
-        week_start = self.day - datetime.timedelta(days=self.day.weekday())
-        week_end = week_start + datetime.timedelta(days=6)
-        
         # Get fresh ticked days after state update
         ticked_days = set(self.habit.ticked_days)
         if value:  # Add current day if it's being checked
@@ -143,9 +138,8 @@ class BaseHabitCheckBox(ui.checkbox):
         elif value is False:  # Remove current day if it's being unchecked
             ticked_days.discard(self.day)
             
-        # Count ticks for current week (don't count skipped days)
-        week_ticks = sum(1 for day in ticked_days 
-                        if week_start <= day <= week_end)
+        # Get ticks for current week using shared function
+        week_ticks, _ = get_week_ticks(self.habit, self.day)
         
         # Check if this habit is skipped today
         is_skipped_today = (

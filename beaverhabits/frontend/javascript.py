@@ -50,7 +50,7 @@ window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToda
         window.habitColorState.initialized = true;
     }}
     debugLog(`Updating color for habit ${{habitId}}`);
-    debugLog(`Parameters: weeklyGoal=${{weeklyGoal}}, weekTicks=${{weekTicks}}, isSkippedToday=${{isSkippedToday}}`);
+    debugLog(`State: weeklyGoal=${{weeklyGoal}}, weekTicks=${{weekTicks}}, isSkippedToday=${{isSkippedToday}}`);
     
     // Find all elements with this habit ID
     const habitElements = document.querySelectorAll(`[data-habit-id="${{habitId}}"]`);
@@ -80,9 +80,29 @@ window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToda
     // Update priority and check if resort needed
     const card = document.querySelector(`.habit-card[data-habit-id="${{habitId}}"]`);
     if (card) {{
-        // Calculate new priority (3=no ticks (top), 2=partial ticks, 1=skipped, 0=completed (bottom))
-        const newPriority = isSkippedToday ? 1 : (weekTicks >= weeklyGoal ? 0 : (weekTicks > 0 ? 2 : 3));
+        // Calculate new priority (0=no checks (first), 1=partial (second), 2=skipped (third), 3=completed (last))
+        const isCompleted = weeklyGoal > 0 && weekTicks >= weeklyGoal;
+        const hasActions = weekTicks > 0 || isSkippedToday;
+        let newPriority = 0;  // Default to no checks
+        
+        if (!hasActions) {{
+            newPriority = 0;  // No checks (first)
+        }} else if (hasActions && !isSkippedToday && !isCompleted) {{
+            newPriority = 1;  // Partially checked (second)
+        }} else if (isSkippedToday) {{
+            newPriority = 2;  // Skipped today (third)
+        }} else {{
+            newPriority = 3;  // Completed (last)
+        }}
+        
         const currentPriority = parseInt(card.getAttribute('data-priority'));
+        
+        debugLog(`Priority calculation:
+            isCompleted: ${{isCompleted}} (weeklyGoal=${{weeklyGoal}}, weekTicks=${{weekTicks}})
+            weekTicks > 0: ${{weekTicks > 0}}
+            isSkippedToday: ${{isSkippedToday}}
+            Final priority: ${{newPriority}}
+        `);
         
         // If this is the first change for this habit, store its original priority
         if (!pendingCards.has(habitId)) {{
@@ -184,10 +204,11 @@ window.sortHabits = function() {{
     
     // Sort cards
     cards.sort((a, b) => {{
-        // Sort by priority first (3=no ticks (top), 2=partial ticks, 1=skipped, 0=completed (bottom))
+        // Sort by priority first (0=no checks (first), 1=partial (second), 2=skipped (third), 3=completed (last))
         const priorityA = parseInt(a.getAttribute('data-priority'));
         const priorityB = parseInt(b.getAttribute('data-priority'));
-        if (priorityA !== priorityB) return priorityB - priorityA;
+        debugLog(`Comparing priorities: ${{a.getAttribute('data-name')}}=${{priorityA}} vs ${{b.getAttribute('data-name')}}=${{priorityB}}`);
+        if (priorityA !== priorityB) return priorityA - priorityB;  // Lower priority at top
         
         // Then by star status
         const starredA = parseInt(a.getAttribute('data-starred'));
