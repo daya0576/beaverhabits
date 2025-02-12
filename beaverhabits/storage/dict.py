@@ -2,7 +2,7 @@ import datetime
 from dataclasses import dataclass, field
 
 from beaverhabits.logging import logger
-from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, HabitStatus
+from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, HabitStatus, List
 from beaverhabits.utils import generate_short_hash
 
 DAY_MASK = "%Y-%m-%d"
@@ -66,10 +66,17 @@ class HabitDataCache:
 
 @dataclass
 class DictHabit(Habit[DictRecord], DictStorage):
-
     def __init__(self, data: dict) -> None:
         self.data = data
         self.cache = HabitDataCache(self)
+
+    @property
+    def list_id(self) -> str | None:
+        return self.data.get("list_id")
+    
+    @list_id.setter
+    def list_id(self, value: str | None) -> None:
+        self.data["list_id"] = value
 
     @property
     def id(self) -> str:
@@ -96,6 +103,14 @@ class DictHabit(Habit[DictRecord], DictStorage):
     @star.setter
     def star(self, value: int) -> None:
         self.data["star"] = value
+
+    @property
+    def weekly_goal(self) -> int:
+        return self.data.get("weekly_goal", 0)
+
+    @weekly_goal.setter
+    def weekly_goal(self, value: int) -> None:
+        self.data["weekly_goal"] = value
 
     @property
     def status(self) -> HabitStatus:
@@ -178,6 +193,28 @@ class DictHabit(Habit[DictRecord], DictStorage):
         return f"[{self.id}]{self.name}<{self.status.value}>"
 
     __repr__ = __str__
+
+
+@dataclass
+class DictList(List[DictHabit], DictStorage):
+    def __init__(self, data: dict) -> None:
+        self.data = data
+    
+    @property
+    def id(self) -> str:
+        return self.data["id"]
+    
+    @property
+    def name(self) -> str:
+        return self.data["name"]
+    
+    @name.setter
+    def name(self, value: str) -> None:
+        self.data["name"] = value
+    
+    @property
+    def habits(self) -> list[DictHabit]:
+        return []  # Lists don't store habits directly, they're referenced by list_id in habits
 
 
 @dataclass

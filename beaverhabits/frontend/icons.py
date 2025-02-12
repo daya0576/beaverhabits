@@ -24,9 +24,9 @@ STAR_FULL = SVG_TEMPLATE.format(height="24", color="rgb(158,158,158)", data="m30
 SQUARE_TODAY_CIRCLE = "<circle cx='10' cy='10' r='7' fill='none' stroke='white' stroke-width='0.5' opacity='0.3'/>"
 SQUARE = """\
 img:data:image/svg+xml;charset=utf8,\
-<svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'>\
-    <rect x='1' y='1' width='18' height='18' rx='2.5' fill='{color}'/>\
-    <text x='10' text-anchor='middle' y='10' dominant-baseline='central' fill='white' font-size='8' \
+<svg viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'>\
+    <rect x='1' y='1' width='72' height='72' rx='2.5' fill='{color}'/>\
+    <text x='38' text-anchor='middle' y='38' dominant-baseline='central' fill='white' font-size='40' \
         style='font-family: Roboto,-apple-system,Helvetica Neue,Helvetica,Arial,sans-serif;'\
         class='font-light'\
     >{text}</text>\

@@ -2,11 +2,14 @@ from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
-from nicegui import app, ui
+from nicegui import app, ui, context
+
+from beaverhabits.storage.dict import DictHabitList
 
 from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.layout import custom_header, redirect
 from beaverhabits.frontend.order_page import order_page_ui
+from beaverhabits.logging import logger
 
 from . import const, views
 from .app.auth import (
@@ -21,31 +24,104 @@ from .frontend.add_page import add_page_ui
 from .frontend.cal_heatmap_page import heatmap_page
 from .frontend.habit_page import habit_page_ui
 from .frontend.index_page import index_page_ui
+from .frontend.lists_page import lists_page_ui
 from .storage.meta import GUI_ROOT_PATH
-from .utils import dummy_days, get_user_today_date
+from .utils import get_display_days, get_user_today_date, reset_week_offset, is_navigating, set_navigating
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register")
 
 
+def filter_habits_by_list(habit_list: DictHabitList, list_id: str | None = None) -> DictHabitList:
+    """Filter habits by list ID."""
+    if not list_id:
+        logger.debug("No list ID provided, returning all habits")
+        logger.debug(f"Total habits: {len(habit_list.data.get('habits', []))}")
+        return habit_list
+    
+    # Create a new list with all data copied
+    filtered_data = {
+        "habits": [],
+        "lists": habit_list.data.get("lists", []).copy(),  # Deep copy lists
+        "order": habit_list.data.get("order", []).copy()   # Deep copy order
+    }
+    filtered_list = DictHabitList(filtered_data)
+    
+    # Log original habits
+    logger.debug(f"Original habits: {len(habit_list.data.get('habits', []))}")
+    logger.debug(f"Filtering by list_id: {list_id}")
+    
+    # Filter habits by list_id
+    filtered_habits = []
+    for habit in habit_list.data.get("habits", []):
+        habit_list_id = habit.get("list_id")
+        habit_name = habit.get("name", "unknown")
+        logger.debug(f"Checking habit '{habit_name}' (list_id={habit_list_id})")
+        
+        # Compare as strings to ensure exact matching
+        if str(habit_list_id) == str(list_id):
+            logger.debug(f"Adding habit '{habit_name}' to filtered list")
+            filtered_habits.append(habit.copy())
+    
+    filtered_list.data["habits"] = filtered_habits
+    logger.debug(f"Filtered habits: {len(filtered_habits)}")
+    return filtered_list
+
+
+def get_current_list_id() -> str | None:
+    """Get current list ID from query parameters or storage."""
+    try:
+        # First try to get from URL
+        list_id = context.client.page.query.get("list", "")
+        logger.debug(f"Raw list ID from query: {list_id}")
+        
+        if list_id == "None" or not list_id:
+            # If not in URL, try storage
+            stored_id = app.storage.user.get("current_list")
+            logger.debug(f"List ID from storage: {stored_id}")
+            if stored_id:
+                return stored_id
+            
+            logger.debug("No list selected")
+            return None
+        
+        # Clean up list ID
+        list_id = list_id.strip()
+        logger.debug(f"Using list ID from URL: {list_id}")
+        
+        # Store for persistence
+        app.storage.user.update({"current_list": list_id})
+        return list_id
+    except AttributeError:
+        # Try storage as fallback
+        stored_id = app.storage.user.get("current_list")
+        logger.debug(f"List ID from storage (fallback): {stored_id}")
+        return stored_id
+
+
 @ui.page("/demo")
 async def demo_index_page() -> None:
-    days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
+    # Reset to current week only if not navigating
+    if not is_navigating():
+        reset_week_offset()
+    else:
+        set_navigating(False)  # Clear navigation flag
+    days = await get_display_days()
     habit_list = views.get_or_create_session_habit_list(days)
-    index_page_ui(days, habit_list)
+    await index_page_ui(days, habit_list, None)  # Demo mode doesn't have a user
 
 
 @ui.page("/demo/add")
 async def demo_add_page() -> None:
-    days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
+    days = await get_display_days()
     habit_list = views.get_or_create_session_habit_list(days)
-    add_page_ui(habit_list)
+    await add_page_ui(habit_list, None)  # Demo mode doesn't have a user
 
 
 @ui.page("/demo/order")
 async def demo_order_page() -> None:
-    days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
+    days = await get_display_days()
     habit_list = views.get_or_create_session_habit_list(days)
-    order_page_ui(habit_list)
+    await order_page_ui(habit_list, None)  # Demo mode doesn't have a user
 
 
 @ui.page("/demo/habits/{habit_id}")
@@ -55,7 +131,7 @@ async def demo_habit_page(habit_id: str) -> None:
     if habit is None:
         redirect("")
         return
-    habit_page_ui(today, habit)
+    await habit_page_ui(today, habit, None)  # Demo mode doesn't have a user
 
 
 @ui.page("/demo/habits/{habit_id}/streak")
@@ -66,7 +142,7 @@ async def demo_habit_page_heatmap(habit_id: str) -> None:
     if habit is None:
         redirect("")
         return
-    heatmap_page(today, habit)
+    await heatmap_page(today, habit, None)  # Demo mode doesn't have a user
 
 
 @ui.page("/demo/export")
@@ -78,33 +154,67 @@ async def demo_export() -> None:
     await views.export_user_habit_list(habit_list, "demo")
 
 
+@ui.page("/gui/lists")
+async def lists_page(user: User = Depends(current_active_user)) -> None:
+    lists = await views.get_user_lists(user)
+    await lists_page_ui(lists, user)
+
+
 @ui.page("/gui")
 @ui.page("/")
 async def index_page(
     user: User = Depends(current_active_user),
 ) -> None:
-    days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
+    # Reset to current week only if not navigating
+    if not is_navigating():
+        reset_week_offset()
+    else:
+        set_navigating(False)  # Clear navigation flag
+    days = await get_display_days()
     habit_list = await views.get_user_habit_list(user)
-    index_page_ui(days, habit_list)
+    
+    # Create empty habit list if none exists
+    if not habit_list:
+        habit_list = DictHabitList({"habits": []})
+    
+    # Filter habits by list if specified
+    list_id = get_current_list_id()
+    habit_list = filter_habits_by_list(habit_list, list_id)
+    
+    await index_page_ui(days, habit_list, user)
 
 
 @ui.page("/gui/add")
 async def add_page(user: User = Depends(current_active_user)) -> None:
     habit_list = await views.get_user_habit_list(user)
-    add_page_ui(habit_list)
+    if not habit_list:
+        habit_list = DictHabitList({"habits": []})
+    
+    # Filter habits by list if specified
+    list_id = get_current_list_id()
+    if list_id:
+        habit_list = filter_habits_by_list(habit_list, list_id)
+    await add_page_ui(habit_list, user)
 
 
 @ui.page("/gui/order")
 async def order_page(user: User = Depends(current_active_user)) -> None:
     habit_list = await views.get_user_habit_list(user)
-    order_page_ui(habit_list)
+    if not habit_list:
+        habit_list = DictHabitList({"habits": []})
+    
+    # Filter habits by list if specified
+    list_id = get_current_list_id()
+    habit_list = filter_habits_by_list(habit_list, list_id)
+    
+    await order_page_ui(habit_list, user)
 
 
 @ui.page("/gui/habits/{habit_id}")
 async def habit_page(habit_id: str, user: User = Depends(current_active_user)) -> None:
     today = await get_user_today_date()
     habit = await views.get_user_habit(user, habit_id)
-    habit_page_ui(today, habit)
+    await habit_page_ui(today, habit, user)
 
 
 @ui.page("/gui/habits/{habit_id}/streak")
@@ -114,7 +224,7 @@ async def gui_habit_page_heatmap(
 ) -> None:
     habit = await views.get_user_habit(user, habit_id)
     today = await get_user_today_date()
-    heatmap_page(today, habit)
+    await heatmap_page(today, habit, user)
 
 
 @ui.page("/gui/export")
@@ -128,7 +238,7 @@ async def gui_export(user: User = Depends(current_active_user)) -> None:
 
 @ui.page("/gui/import")
 async def gui_import(user: User = Depends(current_active_user)) -> None:
-    import_ui_page(user)
+    await import_ui_page(user)
 
 
 @ui.page("/login")

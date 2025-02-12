@@ -1,5 +1,21 @@
 from nicegui import ui
 
+PRESERVE_SCROLL = """\
+// Store scroll position in localStorage before refresh
+window.addEventListener('beforeunload', () => {
+    localStorage.setItem('scrollPos', window.scrollY);
+});
+
+// Restore scroll position after refresh
+window.addEventListener('load', () => {
+    const scrollPos = localStorage.getItem('scrollPos');
+    if (scrollPos) {
+        window.scrollTo(0, parseInt(scrollPos));
+        localStorage.removeItem('scrollPos');
+    }
+});
+"""
+
 PREVENT_CONTEXT_MENU = """\
 document.body.style.webkitTouchCallout='none';
 
@@ -22,6 +38,9 @@ elements.forEach(element => {
 });
 """
 
+
+def preserve_scroll():
+    ui.run_javascript(PRESERVE_SCROLL)
 
 def prevent_context_menu():
     ui.run_javascript(PREVENT_CONTEXT_MENU)

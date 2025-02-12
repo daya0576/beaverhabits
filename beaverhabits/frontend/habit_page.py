@@ -21,6 +21,7 @@ from beaverhabits.frontend.css import (
 from beaverhabits.frontend.layout import layout, redirect
 from beaverhabits.storage.meta import get_habit_heatmap_path
 from beaverhabits.storage.storage import Habit
+from beaverhabits.app.db import User
 
 WEEKS_TO_DISPLAY = 15
 
@@ -49,7 +50,7 @@ def card(link: str | None = None, padding: float = 3):
 
 
 @ui.refreshable
-def habit_page(today: datetime.date, habit: Habit):
+async def habit_page(today: datetime.date, habit: Habit):
     notes = [x for x in habit.records if x.text]
     notes.sort(key=lambda x: x.day, reverse=True)
     # https://tailwindcss.com/docs/responsive-design#container-size-reference
@@ -84,11 +85,11 @@ def habit_page(today: datetime.date, habit: Habit):
             ui.icon("more_horiz", size="1.5em")
 
 
-def habit_page_ui(today: datetime.date, habit: Habit):
+async def habit_page_ui(today: datetime.date, habit: Habit, user: User | None = None):
     ui.add_css(CHECK_BOX_CSS)
     ui.add_css(CALENDAR_CSS)
     ui.add_css(EXPANSION_CSS)
     ui.add_css(HIDE_TIMELINE_TITLE)
 
-    with layout(title=habit.name):
-        habit_page(today, habit)
+    async with layout(title=habit.name, user=user):
+        await habit_page(today, habit)

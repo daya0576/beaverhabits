@@ -65,7 +65,7 @@ async def import_from_csv(text: str) -> HabitList:
     return DictHabitList(output)
 
 
-def import_ui_page(user: User):
+async def import_ui_page(user: User | None = None):
     async def handle_upload(e: events.UploadEventArguments):
         try:
             text = e.content.read().decode("utf-8")
@@ -117,7 +117,7 @@ def import_ui_page(user: User):
             logger.exception("Import failed")
             ui.notify(str(error), color="negative", position="top")
 
-    with layout(title="Import", with_menu=False):
+    async with layout(title="Import", with_menu=False, user=user):
         with ui.column().classes("gap-2"):
             # Upload: https://nicegui.io/documentation/upload
             upload = ui.upload(on_upload=handle_upload, max_files=1)

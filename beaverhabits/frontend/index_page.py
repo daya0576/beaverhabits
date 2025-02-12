@@ -10,79 +10,114 @@ from beaverhabits.frontend.components import HabitCheckBox, IndexBadge, link
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, HabitStatus
+from beaverhabits.utils import (
+    get_week_offset, set_week_offset, reset_week_offset, 
+    get_display_days, set_navigating, WEEK_DAYS
+)
+from beaverhabits.app.db import User
 
 
 def grid(columns, rows):
     g = ui.grid(columns=columns, rows=rows)
-    g.classes("w-full gap-0 items-center")
+    g.classes("w-full gap-0")
     return g
 
 
-def week_headers(days: list[datetime.date]):
-    for day in days:
-        yield day.strftime("%a")
-    if settings.INDEX_SHOW_HABIT_COUNT:
-        yield "Sum"
+def check_weekly_goal(habit: Habit, days: list[datetime.date]) -> bool:
+    """Check if habit has met its weekly goal for the displayed week"""
+    if not habit.weekly_goal:
+        return True
+    week_ticks = sum(1 for day in days if day in habit.ticked_days)
+    return week_ticks >= habit.weekly_goal
 
-
-def day_headers(days: list[datetime.date]):
-    for day in days:
-        yield day.strftime("%d")
-    if settings.INDEX_SHOW_HABIT_COUNT:
-        yield "#"
+def format_week_range(days: list[datetime.date]) -> str:
+    if not days:
+        return ""
+    start, end = days[0], days[-1]
+    if start.month == end.month:
+        return f"{start.strftime('%b %d')} - {end.strftime('%d')}"
+    return f"{start.strftime('%b %d')} - {end.strftime('%b %d')}"
 
 
 @ui.refreshable
-def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
+async def week_navigation(days: list[datetime.date]):
+    offset = get_week_offset()
+    state = ui.state(dict(can_go_forward=offset < 0))
+    
+    with ui.row().classes("w-full items-center justify-center gap-4 mb-4"):
+        ui.button(
+            "←",
+            on_click=lambda: change_week(offset - 1)
+        ).props('flat')
+        ui.label(format_week_range(days)).classes("text-lg")
+        ui.button(
+            "→",
+            on_click=lambda: change_week(offset + 1)
+        ).props('flat').bind_enabled_from(state, 'can_go_forward')
+
+
+async def change_week(new_offset: int) -> None:
+    set_week_offset(new_offset)
+    set_navigating(True)  # Mark that we're navigating
+    # Navigate to the same page to get fresh data
+    ui.navigate.reload()
+
+
+@ui.refreshable
+async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     # Calculate column count
     name_columns, date_columns = settings.INDEX_HABIT_NAME_COLUMNS, 2
     count_columns = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
     columns = name_columns + len(days) * date_columns + count_columns
 
-    row_compat_classes = "pl-4 pr-0 py-0"
+    row_compat_classes = "px-4 py-1"
     left_classes, right_classes = (
         # grid 5
-        f"col-span-{name_columns} truncate",
+        f"col-span-{name_columns} break-words whitespace-normal",
         # grid 2 2 2 2 2
         f"col-span-{date_columns} px-1 place-self-center",
     )
     header_styles = "font-size: 85%; font-weight: 500; color: #9e9e9e"
 
-    with ui.column().classes("gap-1.5"):
-        # Date Headers
-        with grid(columns, 2).classes(row_compat_classes):
-            for it in (week_headers(days), day_headers(days)):
-                ui.label("").classes(left_classes)
-                for label in it:
-                    ui.label(label).classes(right_classes).style(header_styles)
-
+    with ui.column().classes("gap-1.5 w-full max-w-[600px] mx-auto pb-32"):  # Add bottom padding
         # Habit List
         for habit in active_habits:
-            with ui.card().classes(row_compat_classes).classes("shadow-none"):
-                with grid(columns, 1):
-                    # truncate name
-                    root_path = get_root_path()
-                    redirect_page = os.path.join(root_path, "habits", str(habit.id))
-                    name = link(habit.name, target=redirect_page).classes(left_classes)
-                    name.style(f"max-width: {24 * name_columns}px;")
+            with ui.card().classes(row_compat_classes + " w-full max-w-[600px] mx-auto").classes("shadow-none"):
+                with ui.column().classes("w-full gap-1"):
+                    # Fixed width container
+                    with ui.element("div").classes("w-full max-w-[600px] flex justify-start"):
+                        # Name row
+                        root_path = get_root_path()
+                        redirect_page = os.path.join(root_path, "habits", str(habit.id))
+                        name = link(habit.name, target=redirect_page)
+                        name.classes("break-words whitespace-normal w-full px-4 py-2")
+                        name.style(
+                            "min-height: 1.5em; height: auto; "
+                            f"color: {'green' if check_weekly_goal(habit, days) else 'red'};"
+                        )
 
-                    ticked_days = set(habit.ticked_days)
-                    for day in days:
-                        checkbox = HabitCheckBox(habit, day, day in ticked_days)
-                        checkbox.classes(right_classes)
+                    # Checkbox row with fixed width
+                    with ui.row().classes("w-full max-w-[600px] gap-2 justify-center items-center flex-nowrap"):
+                        ticked_days = set(habit.ticked_days)
+                        for day in days:
+                            checkbox = HabitCheckBox(habit, day, day in ticked_days, habit_list_ui.refresh)
 
-                    if settings.INDEX_SHOW_HABIT_COUNT:
-                        IndexBadge(habit).classes(right_classes)
+                        if settings.INDEX_SHOW_HABIT_COUNT:
+                            IndexBadge(habit)
 
 
-def index_page_ui(days: list[datetime.date], habits: HabitList):
+@ui.refreshable
+async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User | None = None):
     active_habits = HabitListBuilder(habits).status(HabitStatus.ACTIVE).build()
     if not active_habits:
-        ui.label("List is empty.").classes("mx-auto w-80")
+        from beaverhabits.frontend.layout import redirect
+        redirect("add")
         return
 
-    with layout():
-        habit_list_ui(days, active_habits)
+    async with layout(user=user):
+        await week_navigation(days)
+        await habit_list_ui(days, active_habits)
 
-    # Prevent long press context menu for svg image elements
+    # Prevent long press context menu and preserve scroll position
     ui.context.client.on_connect(javascript.prevent_context_menu)
+    ui.context.client.on_connect(javascript.preserve_scroll)

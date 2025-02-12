@@ -8,6 +8,7 @@ from beaverhabits.frontend.components import (
 from beaverhabits.frontend.layout import layout
 from beaverhabits.logging import logger
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
+from beaverhabits.app.db import User
 
 
 async def item_drop(e, habit_list: HabitList):
@@ -48,7 +49,7 @@ async def item_drop(e, habit_list: HabitList):
 
 
 @ui.refreshable
-def add_ui(habit_list: HabitList):
+async def add_ui(habit_list: HabitList):
     active_habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
     archived_habits = HabitListBuilder(habit_list).status(HabitStatus.ARCHIVED).build()
     habits = [*active_habits, None, *archived_habits]
@@ -76,10 +77,10 @@ def add_ui(habit_list: HabitList):
     ui.space()
 
 
-def order_page_ui(habit_list: HabitList):
-    with layout():
+async def order_page_ui(habit_list: HabitList, user: User | None = None):
+    async with layout(user=user):
         with ui.column().classes("items-center sortable gap-2 w-full"):
-            add_ui(habit_list)
+            await add_ui(habit_list)
 
     ui.add_body_html(
         """

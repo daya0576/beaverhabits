@@ -106,12 +106,15 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool):
 
 
 class HabitCheckBox(ui.checkbox):
-    def __init__(self, habit: Habit, day: datetime.date, value: bool) -> None:
+    def __init__(self, habit: Habit, day: datetime.date, value: bool, refresh: Callable | None = None) -> None:
         super().__init__("", value=value)
         self.habit = habit
         self.day = day
+        self.refresh = refresh
+        unchecked_icon = icons.SQUARE.format(color="rgb(54,54,54)", text=self.day.day)
+        checked_icon = icons.DONE
         self.props(
-            f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
+            f'checked-icon="{checked_icon}" unchecked-icon="{unchecked_icon}" keep-color'
         )
         self._update_style(value)
 
@@ -161,6 +164,8 @@ class HabitCheckBox(ui.checkbox):
             self._update_style(value)
             # Do update completion status
             await habit_tick(self.habit, self.day, value)
+            # Update local state only
+            self._update_style(value)
 
     async def _mouse_up_event(self, e):
         logger.info(f"Up event: {self.day}, {e.args.get('type')}")
@@ -190,6 +195,20 @@ class HabitOrderCard(ui.card):
             "mouseover", lambda: self.btn and self.btn.classes("transition opacity-100")
         )
         self.on("mouseout", lambda: self.btn and self.btn.classes(remove="opacity-100"))
+
+
+class WeeklyGoalInput(ui.number):
+    def __init__(self, habit: Habit, refresh: Callable) -> None:
+        super().__init__(value=habit.weekly_goal or 0, min=0, max=7)
+        self.habit = habit
+        self.refresh = refresh
+        self.props("dense hide-bottom-space")
+        self.on("blur", self._async_task)
+
+    async def _async_task(self):
+        self.habit.weekly_goal = self.value or 0  # Default to 0 if None
+        logger.info(f"Weekly goal changed to {self.habit.weekly_goal}")
+        self.refresh()
 
 
 class HabitNameInput(ui.input):
@@ -268,19 +287,55 @@ class HabitDeleteButton(ui.button):
         self.refresh()
 
 
-class HabitAddButton(ui.input):
-    def __init__(self, habit_list: HabitList, refresh: Callable) -> None:
-        super().__init__("New item")
+class HabitAddButton:
+    def __init__(self, habit_list: HabitList, refresh: Callable, list_options: list[dict]) -> None:
         self.habit_list = habit_list
         self.refresh = refresh
-        self.on("keydown.enter", self._async_task)
-        self.props('dense color="white" label-color="white"')
+        
+        with ui.column().classes("w-full gap-2"):
+            with ui.row().classes("w-full items-center gap-2"):
+                self.name_input = ui.input("New habit name").props('dense outlined')
+                self.name_input.classes("flex-grow")
+                
+                self.goal_input = ui.number(min=0, max=7).props('dense outlined')
+                self.goal_input.style("width: 120px")
+                
+                # Create name-to-id mapping for list selector
+                self.name_to_id = {"No List": None}
+                self.name_to_id.update({opt["label"]: opt["value"] for opt in list_options[1:]})
+                
+                # Use just the names as options
+                options = list(self.name_to_id.keys())
+                
+                self.list_select = ui.select(
+                    options=options,
+                    value="No List",
+                ).props('dense outlined options-dense')
+                self.list_select.style("width: 150px")
+            
+            with ui.row().classes("w-full justify-end"):
+                ui.button("Add Habit", on_click=self._async_task).props("unelevated")
+            
+        # Keep enter key functionality
+        self.name_input.on("keydown.enter", self._async_task)
+        self.goal_input.on("keydown.enter", self._async_task)
 
     async def _async_task(self):
-        await self.habit_list.add(self.value)
-        logger.info(f"Added new habit: {self.value}")
+        if not self.name_input.value:
+            return
+        await self.habit_list.add(self.name_input.value)
+        # Set weekly goal and list after habit is created
+        habits = self.habit_list.habits
+        if habits:
+            habits[-1].weekly_goal = self.goal_input.value or 0  # Default to 0 if empty
+            habits[-1].list_id = self.name_to_id[self.list_select.value]
+            logger.info(f"Set weekly goal to {habits[-1].weekly_goal}")
+            logger.info(f"Set list to {habits[-1].list_id}")
+        logger.info(f"Added new habit: {self.name_input.value}")
         self.refresh()
-        self.set_value("")
+        self.name_input.set_value("")
+        self.goal_input.set_value(None)
+        self.list_select.set_value(None)
 
 
 TODAY = "today"
@@ -405,14 +460,14 @@ class CalendarCheckBox(ui.checkbox):
         self.today = today
         super().__init__("", value=self.ticked, on_change=self._async_task)
 
-        self.classes("inline-block")
+        self.classes("inline-block w-10")  # w-10 = width: 40px
         self.props("dense")
         unchecked_icon, checked_icon = self._icon_svg()
         self.props(f'unchecked-icon="{unchecked_icon}"')
         self.props(f'checked-icon="{checked_icon}"')
 
         if is_bind_data:
-            self.bind_value_from(self, "ticked")
+            self.bind_value(self, "value")  # Bind to local value
 
     @property
     def ticked(self) -> bool:

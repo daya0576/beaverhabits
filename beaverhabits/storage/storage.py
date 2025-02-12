@@ -1,6 +1,6 @@
 import datetime
 from enum import Enum
-from typing import List, Optional, Protocol, Self
+from typing import List as TypeList, Optional, Protocol, Self
 
 from beaverhabits.app.db import User
 
@@ -39,6 +39,12 @@ class HabitStatus(Enum):
 
 class Habit[R: CheckedRecord](Protocol):
     @property
+    def list_id(self) -> str | None: ...
+
+    @list_id.setter
+    def list_id(self, value: str | None) -> None: ...
+
+    @property
     def id(self) -> str | int: ...
 
     @property
@@ -54,13 +60,19 @@ class Habit[R: CheckedRecord](Protocol):
     def star(self, value: int) -> None: ...
 
     @property
-    def records(self) -> List[R]: ...
+    def records(self) -> TypeList[R]: ...
 
     @property
     def status(self) -> HabitStatus: ...
 
     @status.setter
     def status(self, value: HabitStatus) -> None: ...
+
+    @property
+    def weekly_goal(self) -> int: ...
+
+    @weekly_goal.setter
+    def weekly_goal(self, value: int) -> None: ...
 
     @property
     def ticked_days(self) -> list[datetime.date]: ...
@@ -81,16 +93,32 @@ class Habit[R: CheckedRecord](Protocol):
     __repr__ = __str__
 
 
+class List[H: Habit](Protocol):
+    @property
+    def id(self) -> str: ...
+    
+    @property
+    def name(self) -> str: ...
+    
+    @name.setter
+    def name(self, value: str) -> None: ...
+    
+    @property
+    def habits(self) -> TypeList[H]: ...
+
+
+
+
 class HabitList[H: Habit](Protocol):
 
     @property
-    def habits(self) -> List[H]: ...
+    def habits(self) -> TypeList[H]: ...
 
     @property
-    def order(self) -> List[str]: ...
+    def order(self) -> TypeList[str]: ...
 
     @order.setter
-    def order(self, value: List[str]) -> None: ...
+    def order(self, value: TypeList[str]) -> None: ...
 
     async def add(self, name: str) -> None: ...
 
@@ -99,22 +127,25 @@ class HabitList[H: Habit](Protocol):
     async def get_habit_by(self, habit_id: str) -> Optional[H]: ...
 
 
-class SessionStorage[L: HabitList](Protocol):
+class SessionStorage[L: HabitList[H], H: Habit](Protocol):
     def get_user_habit_list(self) -> Optional[L]: ...
 
     def save_user_habit_list(self, habit_list: L) -> None: ...
 
 
-class UserStorage[L: HabitList](Protocol):
+class UserStorage[L: HabitList[H], H: Habit](Protocol):
     async def get_user_habit_list(self, user: User) -> Optional[L]: ...
-
     async def save_user_habit_list(self, user: User, habit_list: L) -> None: ...
-
     async def merge_user_habit_list(self, user: User, other: L) -> L: ...
 
+    async def get_user_lists(self, user: User) -> TypeList[List[H]]: ...
+    async def add_list(self, user: User, name: str) -> List[H]: ...
+    async def update_list(self, user: User, list_id: str, name: str) -> None: ...
+    async def delete_list(self, user: User, list_id: str) -> None: ...
 
-class HabitListBuilder:
-    def __init__(self, habit_list: HabitList):
+
+class HabitListBuilder[H: Habit]:
+    def __init__(self, habit_list: HabitList[H]):
         self.habit_list = habit_list
         self.status_list = (
             HabitStatus.ACTIVE,
@@ -125,7 +156,7 @@ class HabitListBuilder:
         self.status_list = status
         return self
 
-    def build(self) -> List[Habit]:
+    def build(self) -> TypeList[H]:
         # Deep copy the list
         habits = [x for x in self.habit_list.habits if x.status in self.status_list]
 

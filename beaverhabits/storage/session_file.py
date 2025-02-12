@@ -2,13 +2,13 @@ from typing import Optional
 
 import nicegui
 
-from .dict import DictHabitList
+from .dict import DictHabit, DictHabitList
 from .storage import SessionStorage
 
 KEY_NAME = "user_habit_list"
 
 
-class SessionDictStorage(SessionStorage[DictHabitList]):
+class SessionDictStorage(SessionStorage[DictHabitList, DictHabit]):
     def get_user_habit_list(self) -> Optional[DictHabitList]:
         d = nicegui.app.storage.user.get(KEY_NAME)
         if not d:

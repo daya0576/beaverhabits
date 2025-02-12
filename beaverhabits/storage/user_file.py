@@ -9,7 +9,8 @@ from nicegui import background_tasks, core, observables
 from beaverhabits.app.db import User
 from beaverhabits.configs import USER_DATA_FOLDER
 from beaverhabits.logging import logger
-from beaverhabits.storage.dict import DictHabitList
+from beaverhabits.utils import generate_short_hash
+from beaverhabits.storage.dict import DictHabit, DictHabitList, DictList
 from beaverhabits.storage.storage import UserStorage
 
 KEY_NAME = "data"
@@ -47,7 +48,7 @@ class FilePersistentDict(observables.ObservableDict):
             core.app.on_startup(backup())
 
 
-class UserDiskStorage(UserStorage[DictHabitList]):
+class UserDiskStorage(UserStorage[DictHabitList, DictHabit]):
     def __init__(self):
         self.user: dict[UUID_ID, FilePersistentDict] = {}
 
@@ -71,11 +72,6 @@ class UserDiskStorage(UserStorage[DictHabitList]):
 
     async def save_user_habit_list(self, user: User, habit_list: DictHabitList) -> None:
         d = self._get_persistent_dict(user)
-        if d.get(KEY_NAME):
-            logger.warning(
-                f"Failed to save habit list for user {user.email} because it already exists"
-            )
-            return
         d[KEY_NAME] = habit_list.data
 
     async def merge_user_habit_list(
@@ -86,3 +82,47 @@ class UserDiskStorage(UserStorage[DictHabitList]):
             return other
 
         return await current.merge(other)
+
+    async def get_user_lists(self, user: User) -> list[DictList]:
+        d = self._get_persistent_dict(user)
+        lists = d.get("lists", [])
+        return [DictList(l) for l in lists]
+
+    async def add_list(self, user: User, name: str) -> DictList:
+        d = self._get_persistent_dict(user)
+        if "lists" not in d:
+            d["lists"] = []
+        
+        list_data = {"id": generate_short_hash(name), "name": name}
+        d["lists"].append(list_data)
+        return DictList(list_data)
+
+    async def update_list(self, user: User, list_id: str, name: str) -> None:
+        d = self._get_persistent_dict(user)
+        for list_data in d.get("lists", []):
+            if list_data["id"] == list_id:
+                list_data["name"] = name
+                break
+
+    async def delete_list(self, user: User, list_id: str) -> None:
+        d = self._get_persistent_dict(user)
+        
+        # Remove list
+        d["lists"] = [l for l in d.get("lists", []) if l["id"] != list_id]
+        
+        # Unassign habits
+        habit_list = d.get(KEY_NAME)
+        if habit_list:
+            for habit in habit_list.get("habits", []):
+                if habit.get("list_id") == list_id:
+                    habit["list_id"] = None
+
+
+_user_storage: UserDiskStorage | None = None
+
+def get_user_storage() -> UserDiskStorage:
+    """Get the user storage instance."""
+    global _user_storage
+    if _user_storage is None:
+        _user_storage = UserDiskStorage()
+    return _user_storage
