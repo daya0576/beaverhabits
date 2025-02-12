@@ -6,8 +6,9 @@ from nicegui import ui
 
 from beaverhabits.configs import settings
 from beaverhabits.frontend import javascript
-from beaverhabits.frontend.javascript import update_habit_color
-from beaverhabits.frontend.components import HabitCheckBox, IndexBadge, link
+from beaverhabits.frontend.components import (
+    HabitCheckBox, IndexBadge, link, grid
+)
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, HabitStatus
@@ -17,20 +18,6 @@ from beaverhabits.utils import (
 )
 from beaverhabits.app.db import User
 
-
-def grid(columns, rows):
-    g = ui.grid(columns=columns, rows=rows)
-    g.classes("w-full gap-0")
-    return g
-
-
-def check_weekly_goal(habit: Habit, days: list[datetime.date]) -> bool:
-    """Check if habit has met its weekly goal for the displayed week"""
-    if not habit.weekly_goal:
-        return True
-    week_ticks = sum(1 for day in days if day in habit.ticked_days)
-    return week_ticks >= habit.weekly_goal
-
 def format_week_range(days: list[datetime.date]) -> str:
     if not days:
         return ""
@@ -38,7 +25,6 @@ def format_week_range(days: list[datetime.date]) -> str:
     if start.month == end.month:
         return f"{start.strftime('%b %d')} - {end.strftime('%d')}"
     return f"{start.strftime('%b %d')} - {end.strftime('%b %d')}"
-
 
 @ui.refreshable
 async def week_navigation(days: list[datetime.date]):
@@ -56,13 +42,11 @@ async def week_navigation(days: list[datetime.date]):
             on_click=lambda: change_week(offset + 1)
         ).props('flat').bind_enabled_from(state, 'can_go_forward')
 
-
 async def change_week(new_offset: int) -> None:
     set_week_offset(new_offset)
     set_navigating(True)  # Mark that we're navigating
     # Navigate to the same page to get fresh data
     ui.navigate.reload()
-
 
 @ui.refreshable
 async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
@@ -72,13 +56,6 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     columns = name_columns + len(days) * date_columns + count_columns
 
     row_compat_classes = "px-0 py-1"
-    left_classes, right_classes = (
-        # grid 5
-        f"col-span-{name_columns} break-words whitespace-normal",
-        # grid 2 2 2 2 2
-        f"col-span-{date_columns} px-1 place-self-center",
-    )
-    header_styles = "font-size: 85%; font-weight: 500; color: #9e9e9e"
 
     container = ui.column().classes("habit-card-container pb-32")  # Add bottom padding
     with container:
@@ -113,26 +90,7 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         name = link(habit.name, target=redirect_page)
                         name.classes("break-words whitespace-normal w-full px-4 py-2")
                         name.props(f'data-habit-id="{habit.id}"')
-                        # Check if habit is skipped today
-                        today = datetime.date.today()
-                        is_skipped_today = (
-                            today in days and 
-                            habit.record_by(today) and 
-                            habit.record_by(today).done is None
-                        )
-                        
-                        # Add data attributes for JavaScript
-                        name.props(f'data-habit-id="{habit.id}"')
-                        
-                        # Set initial color based on state
-                        if is_skipped_today:
-                            color = 'gray'
-                        else:
-                            color = 'lightgreen' if check_weekly_goal(habit, days) else 'orangered'
-                        name.style(
-                            "min-height: 1.5em; height: auto; "
-                            f"color: {color};"
-                        )
+                        name.style("min-height: 1.5em; height: auto;")
 
                     # Checkbox row with fixed width
                     with ui.row().classes("w-full gap-2 justify-center items-center flex-nowrap"):
@@ -145,7 +103,6 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 
                         if settings.INDEX_SHOW_HABIT_COUNT:
                             IndexBadge(habit)
-
 
 @ui.refreshable
 async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User | None = None):
