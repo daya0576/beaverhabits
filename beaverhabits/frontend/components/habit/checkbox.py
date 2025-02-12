@@ -153,14 +153,22 @@ class BaseHabitCheckBox(ui.checkbox):
             self.habit.record_by(self.day).done is None
         )
         
+        # Update the data attributes first
         ui.run_javascript(f"""
-        if (window.updateHabitColor) {{
-            window.updateHabitColor(
-                '{self.habit.id}', 
-                {self.habit.weekly_goal or 0}, 
-                {week_ticks},
-                {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'}
-            );
+        const habitElement = document.querySelector(`[href*="/habits/{self.habit.id}"]`);
+        if (habitElement) {{
+            habitElement.setAttribute('data-weekly-goal', '{self.habit.weekly_goal or 0}');
+            habitElement.setAttribute('data-week-ticks', '{week_ticks}');
+            
+            // Then update the color
+            if (window.updateHabitColor) {{
+                window.updateHabitColor(
+                    '{self.habit.id}', 
+                    {self.habit.weekly_goal or 0}, 
+                    {week_ticks},
+                    {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'}
+                );
+            }}
         }}
         """)
 

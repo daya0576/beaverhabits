@@ -87,10 +87,23 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         # Name row
                         root_path = get_root_path()
                         redirect_page = os.path.join(root_path, "habits", str(habit.id))
+                        # Calculate initial color
+                        is_skipped_today = record and record.done is None
+                        is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
+                        initial_color = (
+                            'orangered' if is_skipped_today
+                            else 'lightgreen' if is_completed
+                            else 'orangered'
+                        )
+                        
                         name = link(habit.name, target=redirect_page)
                         name.classes("break-words whitespace-normal w-full px-4 py-2")
-                        name.props(f'data-habit-id="{habit.id}"')
-                        name.style("min-height: 1.5em; height: auto;")
+                        name.props(
+                            f'data-habit-id="{habit.id}" '
+                            f'data-weekly-goal="{habit.weekly_goal or 0}" '
+                            f'data-week-ticks="{week_ticks}"'
+                        )
+                        name.style(f"min-height: 1.5em; height: auto; color: {initial_color};")
 
                     # Checkbox row with fixed width
                     with ui.row().classes("w-full gap-2 justify-center items-center flex-nowrap"):

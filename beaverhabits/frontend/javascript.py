@@ -39,7 +39,31 @@ window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToda
 
     // If weekly goal is met, set to lightgreen, otherwise orangered
     habitElement.style.color = weekTicks >= weeklyGoal ? 'lightgreen' : 'orangered';
+    console.log(`Updated color for habit ${habitId}: weeklyGoal=${weeklyGoal}, weekTicks=${weekTicks}, color=${habitElement.style.color}`);
 };
+
+// Function to update all habit colors
+window.updateAllHabitColors = function() {
+    // Find all habit elements
+    const habitElements = document.querySelectorAll('[data-habit-id]');
+    habitElements.forEach(element => {
+        const habitId = element.getAttribute('data-habit-id');
+        if (habitId) {
+            // Get the current state from the element's style
+            const isSkippedToday = element.style.color === 'orangered';
+            const weeklyGoal = parseInt(element.getAttribute('data-weekly-goal') || '0');
+            const weekTicks = parseInt(element.getAttribute('data-week-ticks') || '0');
+            
+            // Update the color
+            window.updateHabitColor(habitId, weeklyGoal, weekTicks, isSkippedToday);
+        }
+    });
+};
+
+// Update colors when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    window.updateAllHabitColors();
+});
 """
 
 __all__ = [
