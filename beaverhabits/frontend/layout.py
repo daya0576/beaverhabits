@@ -10,7 +10,7 @@ from beaverhabits.storage.storage import List, Habit
 
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
-from beaverhabits.frontend import icons, javascript
+from beaverhabits.frontend import icons, javascript, css
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.logging import logger
 from beaverhabits.storage.meta import get_page_title, get_root_path, is_demo
@@ -25,10 +25,11 @@ def open_tab(x):
 
 
 def add_page_scripts():
-    """Add JavaScript to the page."""
+    """Add JavaScript and CSS to the page."""
     ui.add_head_html(f'<script>{javascript.prevent_context_menu}</script>')
     ui.add_head_html(f'<script>{javascript.preserve_scroll}</script>')
     ui.add_head_html(f'<script>{javascript.update_habit_color}</script>')
+    ui.add_head_html(f'<style>{css.habit_animations}</style>')
 
 def custom_header():
     ui.add_head_html(

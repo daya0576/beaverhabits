@@ -40,6 +40,10 @@ function debugLog(...args) {{
 
 debugLog('Initializing habit color update script');
 
+// Track resort timer and affected cards
+let resortTimer = null;
+let pendingCards = new Map();  // Map of habitId -> original priority
+
 window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToday) {{
     if (!window.habitColorState.initialized) {{
         debugLog('Script not initialized yet, initializing now');
@@ -73,20 +77,79 @@ window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToda
         element.style.color = newColor;
     }});
 
-    // Update priority and resort
+    // Update priority and check if resort needed
     const card = document.querySelector(`.habit-card[data-habit-id="${{habitId}}"]`);
     if (card) {{
         // Calculate new priority (3=no ticks (top), 2=partial ticks, 1=skipped, 0=completed (bottom))
-        const priority = isSkippedToday ? 1 : (weekTicks >= weeklyGoal ? 0 : (weekTicks > 0 ? 2 : 3));
-        card.setAttribute('data-priority', priority);
-        debugLog(`Updated priority to ${{priority}}`);
+        const newPriority = isSkippedToday ? 1 : (weekTicks >= weeklyGoal ? 0 : (weekTicks > 0 ? 2 : 3));
+        const currentPriority = parseInt(card.getAttribute('data-priority'));
         
-        // Resort the list
-        window.sortHabits();
+        // If this is the first change for this habit, store its original priority
+        if (!pendingCards.has(habitId)) {{
+            pendingCards.set(habitId, currentPriority);
+            debugLog(`Storing original priority ${{currentPriority}} for habit ${{habitId}}`);
+        }}
+        
+        // If we're back to original priority, remove from pending
+        if (newPriority === pendingCards.get(habitId)) {{
+            debugLog(`Habit ${{habitId}} back to original priority ${{newPriority}}, removing pending state`);
+            pendingCards.delete(habitId);
+            card.classList.remove('resort-pending');
+            
+            // If no more pending changes, clear timer
+            if (pendingCards.size === 0 && resortTimer) {{
+                debugLog('No more pending changes, clearing timer');
+                clearTimeout(resortTimer);
+                resortTimer = null;
+            }}
+            return;  // No need to continue
+        }}
+        
+        // Update priority attribute
+        card.setAttribute('data-priority', newPriority);
+        debugLog(`Updated priority to ${{newPriority}}`);
+        
+        // Add/refresh progress bar
+        card.classList.add('resort-pending');
+        
+        // Clear existing timer
+        if (resortTimer) {{
+            clearTimeout(resortTimer);
+            // Restart progress bars for all pending cards
+            pendingCards.forEach((_, id) => {{
+                const pendingCard = document.querySelector(`[data-habit-id="${{id}}"]`);
+                pendingCard.classList.remove('resort-pending');
+                void pendingCard.offsetWidth;  // Force reflow
+                pendingCard.classList.add('resort-pending');
+            }});
+        }}
+        
+        // Set new timer
+        resortTimer = setTimeout(() => {{
+            debugLog('Resort timer triggered');
+            // Remove progress bars
+            pendingCards.forEach((_, id) => {{
+                const pendingCard = document.querySelector(`[data-habit-id="${{id}}"]`);
+                pendingCard.classList.remove('resort-pending');
+            }});
+            pendingCards.clear();
+            
+            // Add highlight before moving
+            const cards = document.querySelectorAll('.habit-card');
+            cards.forEach(card => card.classList.add('highlight-card'));
+            
+            // Resort with animation
+            window.sortHabits();
+            
+            // Remove highlights after animation
+            setTimeout(() => {{
+                cards.forEach(card => card.classList.remove('highlight-card'));
+            }}, 2000);
+        }}, 2000);
     }}
 }};
 
-// Function to sort habits
+// Function to sort habits with animation
 window.sortHabits = function() {{
     debugLog('Sorting habits');
     const container = document.querySelector('.habit-card-container');
@@ -98,6 +161,14 @@ window.sortHabits = function() {{
     const cards = Array.from(container.querySelectorAll('.habit-card'));
     debugLog(`Found ${{cards.length}} cards to sort`);
     
+    // Get current positions
+    const oldPositions = new Map();
+    cards.forEach(card => {{
+        const rect = card.getBoundingClientRect();
+        oldPositions.set(card, {{ top: rect.top, left: rect.left }});
+    }});
+    
+    // Sort cards
     cards.sort((a, b) => {{
         // Sort by priority first (3=no ticks (top), 2=partial ticks, 1=skipped, 0=completed (bottom))
         const priorityA = parseInt(a.getAttribute('data-priority'));
@@ -115,8 +186,28 @@ window.sortHabits = function() {{
         return nameA.localeCompare(nameB);
     }});
     
-    debugLog('Reordering elements');
+    // Reorder elements
+    debugLog('Reordering elements with animation');
     cards.forEach(card => container.appendChild(card));
+    
+    // Animate to new positions
+    cards.forEach(card => {{
+        const oldPos = oldPositions.get(card);
+        const newPos = card.getBoundingClientRect();
+        
+        // Calculate the difference
+        const deltaY = oldPos.top - newPos.top;
+        const deltaX = oldPos.left - newPos.left;
+        
+        // Apply the reverse transform to start
+        card.style.transform = `translate(${{deltaX}}px, ${{deltaY}}px)`;
+        
+        // Force reflow
+        void card.offsetWidth;
+        
+        // Remove the transform with transition
+        card.style.transform = '';
+    }});
 }};
 
 // Function to update all habit colors
