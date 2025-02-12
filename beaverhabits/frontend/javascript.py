@@ -127,6 +127,9 @@ window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToda
         // Set new timer
         resortTimer = setTimeout(() => {{
             debugLog('Resort timer triggered');
+            // Get all pending cards before clearing
+            const pendingCardIds = Array.from(pendingCards.keys());
+            
             // Remove progress bars
             pendingCards.forEach((_, id) => {{
                 const pendingCard = document.querySelector(`[data-habit-id="${{id}}"]`);
@@ -134,17 +137,28 @@ window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToda
             }});
             pendingCards.clear();
             
-            // Add highlight before moving
-            const cards = document.querySelectorAll('.habit-card');
-            cards.forEach(card => card.classList.add('highlight-card'));
-            
             // Resort with animation
             window.sortHabits();
             
-            // Remove highlights after animation
-            setTimeout(() => {{
-                cards.forEach(card => card.classList.remove('highlight-card'));
-            }}, 2000);
+            // Add highlight to only the changed cards
+            pendingCardIds.forEach(id => {{
+                const card = document.querySelector(`[data-habit-id="${{id}}"]`);
+                if (card) {{
+                    // Add highlight immediately
+                    card.classList.add('highlight-card');
+                    
+                    // Delay scroll to happen after reordering animation
+                    setTimeout(() => {{
+                        // Scroll to the card
+                        card.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+                        
+                        // Remove highlight after scroll animation
+                        setTimeout(() => {{
+                            card.classList.remove('highlight-card');
+                        }}, 1000);  // Remove highlight 1s after scroll starts
+                    }}, 300);  // Start scroll 300ms after reordering
+                }}
+            }});
         }}, 2000);
     }}
 }};
