@@ -72,6 +72,51 @@ window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToda
         debugLog('Updating element:', element);
         element.style.color = newColor;
     }});
+
+    // Update priority and resort
+    const card = document.querySelector(`.habit-card[data-habit-id="${{habitId}}"]`);
+    if (card) {{
+        // Calculate new priority (3=no ticks (top), 2=partial ticks, 1=skipped, 0=completed (bottom))
+        const priority = isSkippedToday ? 1 : (weekTicks >= weeklyGoal ? 0 : (weekTicks > 0 ? 2 : 3));
+        card.setAttribute('data-priority', priority);
+        debugLog(`Updated priority to ${{priority}}`);
+        
+        // Resort the list
+        window.sortHabits();
+    }}
+}};
+
+// Function to sort habits
+window.sortHabits = function() {{
+    debugLog('Sorting habits');
+    const container = document.querySelector('.habit-card-container');
+    if (!container) {{
+        console.error('Habit container not found');
+        return;
+    }}
+
+    const cards = Array.from(container.querySelectorAll('.habit-card'));
+    debugLog(`Found ${{cards.length}} cards to sort`);
+    
+    cards.sort((a, b) => {{
+        // Sort by priority first (3=no ticks (top), 2=partial ticks, 1=skipped, 0=completed (bottom))
+        const priorityA = parseInt(a.getAttribute('data-priority'));
+        const priorityB = parseInt(b.getAttribute('data-priority'));
+        if (priorityA !== priorityB) return priorityB - priorityA;
+        
+        // Then by star status
+        const starredA = parseInt(a.getAttribute('data-starred'));
+        const starredB = parseInt(b.getAttribute('data-starred'));
+        if (starredA !== starredB) return starredB - starredA;
+        
+        // Finally by name
+        const nameA = a.getAttribute('data-name').toLowerCase();
+        const nameB = b.getAttribute('data-name').toLowerCase();
+        return nameA.localeCompare(nameB);
+    }});
+    
+    debugLog('Reordering elements');
+    cards.forEach(card => container.appendChild(card));
 }};
 
 // Function to update all habit colors
@@ -101,12 +146,19 @@ window.updateAllHabitColors = function() {{
 // Initialize when the page loads
 debugLog('Setting up load event listener');
 window.addEventListener('load', function() {{
-    debugLog('Page loaded, checking for updateAllHabitColors');
+    debugLog('Page loaded, initializing');
     if (window.updateAllHabitColors) {{
         debugLog('Calling updateAllHabitColors');
         window.updateAllHabitColors();
     }} else {{
         console.error('updateAllHabitColors not found');
+    }}
+    
+    if (window.sortHabits) {{
+        debugLog('Calling initial sort');
+        window.sortHabits();
+    }} else {{
+        console.error('sortHabits not found');
     }}
 }});
 """

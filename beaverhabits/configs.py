@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     HABIT_COLOR_INCOMPLETE: str = "yellow"
     HABIT_COLOR_SKIPPED: str = "grey"
 
+    # Features
+    ENABLE_HABIT_NOTES: bool = False  # Set to False to disable notes
+
     def is_dev(self):
         return self.ENV == "dev"
 

@@ -208,8 +208,14 @@ class BaseHabitCheckBox(ui.checkbox):
             async with asyncio.timeout(0.2):
                 await self.hold.wait()
         except asyncio.TimeoutError:
-            value = await note_tick(self.habit, self.day)
-            if value is not None:
+            if settings.ENABLE_HABIT_NOTES:
+                value = await note_tick(self.habit, self.day)
+                if value is not None:
+                    await self._update_style(value)
+            else:
+                # Skip note dialog, just toggle to checked state
+                value = True
+                await habit_tick(self.habit, self.day, value)
                 await self._update_style(value)
         else:
             if self.moving:

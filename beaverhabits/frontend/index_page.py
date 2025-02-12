@@ -69,8 +69,8 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
             is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
             has_ticks = bool(habit.ticked_days)
             
-            # Priority: 0=no ticks, 1=some ticks, 2=skipped today, 3=completed
-            priority = 3 if is_completed else (2 if is_skipped_today else (1 if has_ticks else 0))
+            # Priority: 3=no ticks (top), 2=partial ticks, 1=skipped, 0=completed (bottom)
+            priority = 0 if is_completed else (1 if is_skipped_today else (2 if has_ticks else 3))
             
             card = ui.card().classes(row_compat_classes + " w-full habit-card").classes("shadow-none")
             # Add data attributes for sorting
@@ -132,14 +132,14 @@ async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User
         is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
         has_ticks = bool(habit.ticked_days)
         
-        # Priority: 0=no ticks, 1=some ticks, 2=skipped today, 3=completed
+        # Priority: 3=no ticks (top), 2=partial ticks, 1=skipped, 0=completed (bottom)
         if is_completed:
-            return 3
+            return 0  # Completed at bottom
         elif is_skipped_today:
-            return 2
+            return 1  # Skipped above completed
         elif has_ticks:
-            return 1
-        return 0
+            return 2  # Partial ticks above skipped
+        return 3  # No ticks at top
     
     active_habits.sort(key=lambda h: (get_priority(h), not h.star, h.name.lower()))
     if not active_habits:
