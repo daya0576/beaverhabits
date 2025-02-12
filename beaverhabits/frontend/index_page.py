@@ -80,13 +80,33 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     )
     header_styles = "font-size: 85%; font-weight: 500; color: #9e9e9e"
 
-    with ui.column().classes("gap-2 w-full max-w-[600px] mx-auto pb-32"):  # Add bottom padding
+    container = ui.column().classes("habit-card-container pb-32")  # Add bottom padding
+    with container:
         # Habit List
         for habit in active_habits:
-            with ui.card().classes(row_compat_classes + " w-full max-w-[600px] mx-auto").classes("shadow-none"):
+            # Calculate priority score for initial sorting
+            today = datetime.date.today()
+            record = habit.record_by(today)
+            week_ticks = sum(1 for day in days if day in habit.ticked_days)
+            is_skipped_today = record and record.done is None
+            is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
+            has_ticks = bool(habit.ticked_days)
+            
+            # Priority: 0=no ticks, 1=some ticks, 2=skipped today, 3=completed
+            priority = 3 if is_completed else (2 if is_skipped_today else (1 if has_ticks else 0))
+            
+            card = ui.card().classes(row_compat_classes + " w-full habit-card").classes("shadow-none")
+            # Add data attributes for sorting
+            card.props(
+                f'data-habit-id="{habit.id}" '
+                f'data-priority="{priority}" '
+                f'data-starred="{int(habit.star)}" '
+                f'data-name="{habit.name}"'
+            )
+            with card:
                 with ui.column().classes("w-full gap-1"):
                     # Fixed width container
-                    with ui.element("div").classes("w-full max-w-[600px] flex justify-start"):
+                    with ui.element("div").classes("w-full flex justify-start"):
                         # Name row
                         root_path = get_root_path()
                         redirect_page = os.path.join(root_path, "habits", str(habit.id))
@@ -113,7 +133,7 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         )
 
                     # Checkbox row with fixed width
-                    with ui.row().classes("w-full max-w-[600px] gap-2 justify-center items-center flex-nowrap"):
+                    with ui.row().classes("w-full gap-2 justify-center items-center flex-nowrap"):
                         ticked_days = set(habit.ticked_days)
                         for day in days:
                             # Get the actual state (checked, unchecked, or skipped)
@@ -127,7 +147,28 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 
 @ui.refreshable
 async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User | None = None):
+    # Get active habits
     active_habits = HabitListBuilder(habits).status(HabitStatus.ACTIVE).build()
+    
+    # Sort habits by priority, star status, and name
+    def get_priority(habit: Habit) -> int:
+        today = datetime.date.today()
+        record = habit.record_by(today)
+        week_ticks = sum(1 for day in days if day in habit.ticked_days)
+        is_skipped_today = record and record.done is None
+        is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
+        has_ticks = bool(habit.ticked_days)
+        
+        # Priority: 0=no ticks, 1=some ticks, 2=skipped today, 3=completed
+        if is_completed:
+            return 3
+        elif is_skipped_today:
+            return 2
+        elif has_ticks:
+            return 1
+        return 0
+    
+    active_habits.sort(key=lambda h: (get_priority(h), not h.star, h.name.lower()))
     if not active_habits:
         from beaverhabits.frontend.layout import redirect
         redirect("add")
@@ -137,28 +178,7 @@ async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User
         await week_navigation(days)
         await habit_list_ui(days, active_habits)
 
-    # Initialize JavaScript functions and prevent long press context menu
+    # Initialize JavaScript functions
     ui.context.client.on_connect(javascript.prevent_context_menu)
     ui.context.client.on_connect(javascript.preserve_scroll)
-    # Define updateHabitColor function on page load
-    def define_update_habit_color():
-        ui.run_javascript("""
-        window.updateHabitColor = function(habitId, weeklyGoal, currentWeekTicks, isSkippedToday) {
-            const habitLink = document.querySelector(`[data-habit-id="${habitId}"]`);
-            if (!habitLink) return;
-            
-            // Show gray if skipped today
-            if (isSkippedToday) {
-                habitLink.style.color = 'gray';
-                return;
-            }
-            
-            // Update color based on weekly goal
-            if (!weeklyGoal || currentWeekTicks >= weeklyGoal) {
-                habitLink.style.color = 'lightgreen';
-            } else {
-                habitLink.style.color = 'orangered';
-            }
-        }
-        """)
-    ui.context.client.on_connect(define_update_habit_color)
+    ui.context.client.on_connect(javascript.update_habit_color)

@@ -176,7 +176,7 @@ class HabitCheckBox(ui.checkbox):
                 '{self.habit.id}', 
                 {self.habit.weekly_goal or 0}, 
                 {week_ticks},
-                {str(is_skipped_today).lower()}
+                {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'}
             );
         }}
         """)
