@@ -82,8 +82,8 @@ window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToda
     if (card) {{
         // Calculate new priority (0=no checks (first), 1=partial (second), 2=skipped (third), 3=completed (last))
         const isCompleted = weeklyGoal > 0 && weekTicks >= weeklyGoal;
-        const hasActions = weekTicks > 0 || isSkippedToday;
-        let newPriority = 0;  // Default to no checks
+        const hasActions = weekTicks > 0 || isSkippedToday;  // Count ticks and skips as actions
+        let newPriority;
         
         if (!hasActions) {{
             newPriority = 0;  // No checks (first)
@@ -101,6 +101,7 @@ window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToda
             isCompleted: ${{isCompleted}} (weeklyGoal=${{weeklyGoal}}, weekTicks=${{weekTicks}})
             weekTicks > 0: ${{weekTicks > 0}}
             isSkippedToday: ${{isSkippedToday}}
+            hasActions: ${{hasActions}}
             Final priority: ${{newPriority}}
         `);
         
@@ -208,7 +209,7 @@ window.sortHabits = function() {{
         const priorityA = parseInt(a.getAttribute('data-priority'));
         const priorityB = parseInt(b.getAttribute('data-priority'));
         debugLog(`Comparing priorities: ${{a.getAttribute('data-name')}}=${{priorityA}} vs ${{b.getAttribute('data-name')}}=${{priorityB}}`);
-        if (priorityA !== priorityB) return priorityA - priorityB;  // Lower priority at top
+        if (priorityA !== priorityB) return -priorityA + priorityB;  // Higher priority at top
         
         // Then by star status
         const starredA = parseInt(a.getAttribute('data-starred'));
@@ -278,13 +279,6 @@ window.addEventListener('load', function() {{
         window.updateAllHabitColors();
     }} else {{
         console.error('updateAllHabitColors not found');
-    }}
-    
-    if (window.sortHabits) {{
-        debugLog('Calling initial sort');
-        window.sortHabits();
-    }} else {{
-        console.error('sortHabits not found');
     }}
 }});
 """

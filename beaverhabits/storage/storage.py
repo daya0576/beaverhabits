@@ -3,6 +3,7 @@ from enum import Enum
 from typing import List as TypeList, Optional, Protocol, Self
 
 from beaverhabits.app.db import User
+from beaverhabits.logging import logger
 
 
 class CheckedRecord(Protocol):
@@ -180,14 +181,25 @@ def get_habit_priority(habit: Habit, days: list[datetime.date]) -> int:
     is_skipped_today = record and record.done is None
     is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
 
+    logger.info(f"Priority calculation for {habit.name}:")
+    logger.info(f"  - week_ticks: {week_ticks}")
+    logger.info(f"  - has_actions: {has_actions}")
+    logger.info(f"  - is_skipped_today: {is_skipped_today}")
+    logger.info(f"  - is_completed: {is_completed}")
+
     # Check in ascending priority order
+    priority = None
     if not has_actions:
-        return 0  # No checks (first)
-    if has_actions and not is_skipped_today and not is_completed:
-        return 1  # Partially checked (second)
-    if is_skipped_today:
-        return 2  # Skipped today (third)
-    return 3  # Completed (last)
+        priority = 0  # No checks (first)
+    elif has_actions and not is_skipped_today and not is_completed:
+        priority = 1  # Partially checked (second)
+    elif is_skipped_today:
+        priority = 2  # Skipped today (third)
+    else:
+        priority = 3  # Completed (last)
+    
+    logger.info(f"  => Final priority: {priority}")
+    return priority
 
 class HabitListBuilder[H: Habit]:
     def __init__(self, habit_list: HabitList[H], days: list[datetime.date] | None = None):
@@ -206,16 +218,56 @@ class HabitListBuilder[H: Habit]:
         # Deep copy the list
         habits = [x for x in self.habit_list.habits if x.status in self.status_list]
 
+        logger.info("\nBefore sorting:")
+        for habit in habits:
+            logger.info(f"  {habit.name}: priority {get_habit_priority(habit, self.days)}")
+
         # Get order if exists
         o = self.habit_list.order
 
-        # Sort by multiple criteria
-        habits.sort(key=lambda x: (
-            HabitStatus.all().index(x.status),  # Status first
-            get_habit_priority(x, self.days),  # Then by completion priority
-            not x.star,  # Then by star (starred on top)
-            x.name.lower(),  # Then by name
-            o.index(str(x.id)) if o and str(x.id) in o else float("inf")  # Finally by manual order
-        ))
+        def compare_habits(a: H, b: H) -> int:
+            logger.info(f"\nComparing habits: {a.name} vs {b.name}")
+            
+            # First compare by status
+            status_a = HabitStatus.all().index(a.status)
+            status_b = HabitStatus.all().index(b.status)
+            if status_a != status_b:
+                logger.info(f"  Status diff: {status_a} vs {status_b} = {status_a - status_b}")
+                return status_a - status_b
+            
+            # Then by priority
+            priority_a = get_habit_priority(a, self.days)
+            priority_b = get_habit_priority(b, self.days)
+            if priority_a != priority_b:
+                logger.info(f"  Priority diff: {priority_a} vs {priority_b} = {priority_a - priority_b}")
+                return priority_a - priority_b  # Lower priority first
+            
+            # Then by star
+            if a.star != b.star:
+                result = -1 if a.star else 1  # Starred on top
+                logger.info(f"  Star diff: {a.star} vs {b.star} = {result}")
+                return result
+            
+            # Then by name
+            name_cmp = (a.name.lower() > b.name.lower()) - (a.name.lower() < b.name.lower())
+            if name_cmp != 0:
+                logger.info(f"  Name diff: {a.name} vs {b.name} = {name_cmp}")
+                return name_cmp
+            
+            # Finally by manual order
+            if o:
+                a_idx = o.index(str(a.id)) if str(a.id) in o else float("inf")
+                b_idx = o.index(str(b.id)) if str(b.id) in o else float("inf")
+                result = (a_idx > b_idx) - (a_idx < b_idx)
+                logger.info(f"  Manual order diff: {a_idx} vs {b_idx} = {result}")
+                return result
+            return 0
 
+        from functools import cmp_to_key
+        habits.sort(key=cmp_to_key(compare_habits))
+        
+        logger.info("\nFinal sort order:")
+        for habit in habits:
+            logger.info(f"  {habit.name}: priority {get_habit_priority(habit, self.days)}")
+        
         return habits

@@ -51,6 +51,8 @@ async def change_week(new_offset: int) -> None:
     # Navigate to the same page to get fresh data
     ui.navigate.reload()
 
+from beaverhabits.logging import logger
+
 @ui.refreshable
 async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     # Calculate column count
@@ -59,6 +61,10 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     columns = name_columns + len(days) * date_columns + count_columns
 
     row_compat_classes = "px-0 py-1"
+
+    logger.info("\nRendering habits in UI:")
+    for habit in active_habits:
+        logger.info(f"  {habit.name}: priority {get_habit_priority(habit, days)}")
 
     container = ui.column().classes("habit-card-container pb-32")  # Add bottom padding
     with container:
