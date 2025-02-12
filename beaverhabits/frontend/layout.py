@@ -10,7 +10,7 @@ from beaverhabits.storage.storage import List, Habit
 
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
-from beaverhabits.frontend import icons, javascript, css
+from beaverhabits.frontend import icons, css
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.logging import logger
 from beaverhabits.storage.meta import get_page_title, get_root_path, is_demo
@@ -26,10 +26,58 @@ def open_tab(x):
 
 def add_page_scripts():
     """Add JavaScript and CSS to the page."""
-    ui.add_head_html(f'<script>{javascript.prevent_context_menu}</script>')
-    ui.add_head_html(f'<script>{javascript.preserve_scroll}</script>')
-    ui.add_head_html(f'<script>{javascript.update_habit_color}</script>')
+    # Add settings as JavaScript variables
+    ui.add_head_html(f'''
+        <script>
+        window.HABIT_SETTINGS = {{
+            colors: {{
+                skipped: "{settings.HABIT_COLOR_SKIPPED}",
+                completed: "{settings.HABIT_COLOR_COMPLETED}",
+                incomplete: "{settings.HABIT_COLOR_INCOMPLETE}"
+            }}
+        }};
+        </script>
+    ''')
+    
+    # Add JavaScript files
+    from beaverhabits.frontend.javascript import js_paths
+    for js_file in js_paths.values():
+        ui.add_head_html(f'<script src="{js_file}"></script>')
+    
+    # Add CSS for animations
     ui.add_head_html(f'<style>{css.habit_animations}</style>')
+    # Add CSS for transitions
+    ui.add_head_html('''
+        <style>
+        .habit-card {
+            transition: transform 0.3s ease-out;
+        }
+        .resort-pending {
+            position: relative;
+        }
+        .resort-pending::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #4CAF50;
+            animation: progress 2s linear;
+        }
+        @keyframes progress {
+            0% { width: 100%; }
+            100% { width: 0%; }
+        }
+        .highlight-card {
+            animation: highlight 1s ease-out;
+        }
+        @keyframes highlight {
+            0% { background-color: rgba(76, 175, 80, 0.2); }
+            100% { background-color: transparent; }
+        }
+        </style>
+    ''')
 
 def custom_header():
     ui.add_head_html(
