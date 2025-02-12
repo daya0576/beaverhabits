@@ -63,15 +63,17 @@ if (!window.updateHabitColor) {
         gap: 8px;
     }
     .habit-card {
-        transition: all 0.3s ease-in-out;
+        transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
         border: 1px solid transparent;
         width: 100%;
         min-width: 0;
         box-sizing: border-box;
+        transform-origin: center;
     }
     .habit-card.reordering {
-        border-color: rgba(0, 0, 255, 0.1);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-color: rgba(0, 0, 255, 0.15);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: scale(1.01);
     }
     `;
     document.head.appendChild(style);
@@ -85,17 +87,24 @@ if (!window.updateHabitColor) {
             return;
         }
         
+        let newColor;
         // Show gray if skipped today
         if (isSkippedToday === true) {  // Explicit check for true
-            habitLink.style.color = 'gray';
+            newColor = 'gray';
+            console.log('Setting color to gray (skipped)');
         } else {
             // Update color based on weekly goal
             if (!weeklyGoal || currentWeekTicks >= weeklyGoal) {
-                habitLink.style.color = 'lightgreen';
+                newColor = 'lightgreen';
+                console.log('Setting color to lightgreen (goal met)');
             } else {
-                habitLink.style.color = 'orangered';
+                newColor = 'orangered';
+                console.log('Setting color to orangered (goal not met)');
             }
         }
+        
+        console.log(`Updating color for habit ${habitId} from ${habitLink.style.color} to ${newColor}`);
+        habitLink.style.color = newColor;
         
         // Update priority and trigger reordering
         const habitCard = document.querySelector(`.habit-card[data-habit-id="${habitId}"]`);
@@ -155,15 +164,20 @@ if (!window.updateHabitColor) {
         // Set up container
         container.classList.add('habit-card-container');
         
-        // Add reordering class and set order
+        // Add reordering class and set order with staggered animation
         cards.forEach((card, index) => {
-            card.classList.add('reordering');
+            // Delay adding reordering class to create cascade effect
+            setTimeout(() => {
+                card.classList.add('reordering');
+            }, index * 150);  // 150ms delay between each card
+            
+            // Set order immediately
             card.style.order = index;
             
             // Remove reordering class after animation
             setTimeout(() => {
                 card.classList.remove('reordering');
-            }, 300);
+            }, 1500 + (index * 150));  // Wait for transition + cascade delay
         });
     };
 }

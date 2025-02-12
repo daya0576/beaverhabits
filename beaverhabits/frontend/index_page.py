@@ -121,12 +121,14 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                             habit.record_by(today).done is None
                         )
                         
-                        # Set initial color
+                        # Add data attributes for JavaScript
+                        name.props(f'data-habit-id="{habit.id}"')
+                        
+                        # Set initial color based on state
                         if is_skipped_today:
                             color = 'gray'
                         else:
                             color = 'lightgreen' if check_weekly_goal(habit, days) else 'orangered'
-                            
                         name.style(
                             "min-height: 1.5em; height: auto; "
                             f"color: {color};"
