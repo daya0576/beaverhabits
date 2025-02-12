@@ -85,8 +85,8 @@ window.updateAllHabitColors = function() {{
         const habitId = element.getAttribute('data-habit-id');
         if (habitId) {{
             debugLog(`Processing habit: ${{habitId}}`);
-            // Get the current state from the element's style
-            const isSkippedToday = element.style.color === '{settings.HABIT_COLOR_SKIPPED}';
+            // Get the skipped state from data attribute
+            const isSkippedToday = element.getAttribute('data-skipped') === 'true';
             const weeklyGoal = parseInt(element.getAttribute('data-weekly-goal') || '0');
             const weekTicks = parseInt(element.getAttribute('data-week-ticks') || '0');
             

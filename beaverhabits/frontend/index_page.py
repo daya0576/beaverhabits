@@ -101,7 +101,8 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         name.props(
                             f'data-habit-id="{habit.id}" '
                             f'data-weekly-goal="{habit.weekly_goal or 0}" '
-                            f'data-week-ticks="{week_ticks}"'
+                            f'data-week-ticks="{week_ticks}" '
+                            f'data-skipped="{str(is_skipped_today).lower()}"'
                         )
                         name.style(f"min-height: 1.5em; height: auto; color: {initial_color};")
 

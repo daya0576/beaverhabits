@@ -49,8 +49,8 @@ class Settings(BaseSettings):
 
     # Colors
     HABIT_COLOR_COMPLETED: str = "lightgreen"
-    HABIT_COLOR_INCOMPLETE: str = "orangered"
-    HABIT_COLOR_SKIPPED: str = "orangered"
+    HABIT_COLOR_INCOMPLETE: str = "yellow"
+    HABIT_COLOR_SKIPPED: str = "grey"
 
     def is_dev(self):
         return self.ENV == "dev"

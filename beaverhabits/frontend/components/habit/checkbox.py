@@ -180,6 +180,7 @@ class BaseHabitCheckBox(ui.checkbox):
                 debugLog('Updating element:', element);
                 element.setAttribute('data-weekly-goal', '{self.habit.weekly_goal or 0}');
                 element.setAttribute('data-week-ticks', '{week_ticks}');
+                element.setAttribute('data-skipped', '{str(is_skipped_today).lower()}');
             }});
             
             // Call updateHabitColor to update the colors
