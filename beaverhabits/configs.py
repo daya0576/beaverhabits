@@ -47,6 +47,11 @@ class Settings(BaseSettings):
     INDEX_HABIT_NAME_COLUMNS: int = 8
     INDEX_HABIT_DATE_COLUMNS: int = -1  # -1 for week view (Mon-Sun), positive number for past N days
 
+    # Colors
+    HABIT_COLOR_COMPLETED: str = "lightgreen"
+    HABIT_COLOR_INCOMPLETE: str = "orangered"
+    HABIT_COLOR_SKIPPED: str = "orangered"
+
     def is_dev(self):
         return self.ENV == "dev"
 

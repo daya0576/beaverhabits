@@ -4,6 +4,7 @@ from typing import Callable
 
 from nicegui import ui, events
 
+from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.storage import CheckedRecord, Habit
@@ -153,22 +154,48 @@ class BaseHabitCheckBox(ui.checkbox):
             self.habit.record_by(self.day).done is None
         )
         
-        # Update the data attributes first
+        # Log Python-side state
+        logger.info(f"Updating habit color: id={self.habit.id}, goal={self.habit.weekly_goal}, ticks={week_ticks}, skipped={is_skipped_today}")
+        
+        # Update state directly without refreshing
         ui.run_javascript(f"""
-        const habitElement = document.querySelector(`[href*="/habits/{self.habit.id}"]`);
-        if (habitElement) {{
-            habitElement.setAttribute('data-weekly-goal', '{self.habit.weekly_goal or 0}');
-            habitElement.setAttribute('data-week-ticks', '{week_ticks}');
+        if (!window.habitColorState) {{
+            console.error('Habit color state not initialized - check script loading');
+            return;
+        }}
+
+        debugLog('Updating habit from Python:', {{
+            habitId: '{self.habit.id}',
+            weeklyGoal: {self.habit.weekly_goal or 0},
+            weekTicks: {week_ticks},
+            isSkippedToday: {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'}
+        }});
+
+        try {{
+            // Update all elements with this habit ID
+            const habitElements = document.querySelectorAll(`[data-habit-id="{self.habit.id}"]`);
+            debugLog(`Found ${{habitElements.length}} elements for habit {self.habit.id}`);
             
-            // Then update the color
+            habitElements.forEach(element => {{
+                debugLog('Updating element:', element);
+                element.setAttribute('data-weekly-goal', '{self.habit.weekly_goal or 0}');
+                element.setAttribute('data-week-ticks', '{week_ticks}');
+            }});
+            
+            // Call updateHabitColor to update the colors
             if (window.updateHabitColor) {{
+                debugLog('Calling updateHabitColor');
                 window.updateHabitColor(
                     '{self.habit.id}', 
                     {self.habit.weekly_goal or 0}, 
                     {week_ticks},
                     {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'}
                 );
+            }} else {{
+                console.error('updateHabitColor function not found - check script loading');
             }}
+        }} catch (error) {{
+            console.error('Error updating habit color:', error);
         }}
         """)
 
@@ -229,6 +256,9 @@ class HabitCheckBox(BaseHabitCheckBox):
         self.on("mouseup.prevent", self._mouse_up_event)
         self.on("touchend.prevent", self._mouse_up_event)
         self.on("touchmove", self._mouse_move_event)
+        
+        # Log initialization
+        logger.info(f"HabitCheckBox initialized with refresh function: {refresh is not None}")
 
 class HabitStarCheckbox(ui.checkbox):
     def __init__(self, habit: Habit, refresh: Callable) -> None:

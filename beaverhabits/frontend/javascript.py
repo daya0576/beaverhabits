@@ -22,48 +22,93 @@ window.addEventListener('load', function() {
 });
 """
 
-update_habit_color = """
-window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToday) {
-    // Find the habit name element by ID
-    const habitElement = document.querySelector(`[href*="/habits/${habitId}"]`);
-    if (!habitElement) {
-        console.log('Habit element not found:', habitId);
-        return;
-    }
+from beaverhabits.configs import settings
 
-    // If habit is skipped today, keep it orangered
-    if (isSkippedToday) {
-        habitElement.style.color = 'orangered';
-        return;
-    }
+update_habit_color = f"""
+// Global state to track initialization
+window.habitColorState = {{
+    initialized: false,
+    debug: true
+}};
 
-    // If weekly goal is met, set to lightgreen, otherwise orangered
-    habitElement.style.color = weekTicks >= weeklyGoal ? 'lightgreen' : 'orangered';
-    console.log(`Updated color for habit ${habitId}: weeklyGoal=${weeklyGoal}, weekTicks=${weekTicks}, color=${habitElement.style.color}`);
-};
+// Debug logging function
+function debugLog(...args) {{
+    if (window.habitColorState.debug) {{
+        console.log('[Habit Color]', ...args);
+    }}
+}}
+
+debugLog('Initializing habit color update script');
+
+window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToday) {{
+    if (!window.habitColorState.initialized) {{
+        debugLog('Script not initialized yet, initializing now');
+        window.habitColorState.initialized = true;
+    }}
+    debugLog(`Updating color for habit ${{habitId}}`);
+    debugLog(`Parameters: weeklyGoal=${{weeklyGoal}}, weekTicks=${{weekTicks}}, isSkippedToday=${{isSkippedToday}}`);
+    
+    // Find all elements with this habit ID
+    const habitElements = document.querySelectorAll(`[data-habit-id="${{habitId}}"]`);
+    debugLog(`Found ${{habitElements.length}} elements for habit ${{habitId}}`);
+    
+    if (habitElements.length === 0) {{
+        console.error('No habit elements found for id:', habitId);
+        return;
+    }}
+
+    // Determine the new color
+    let newColor;
+    if (isSkippedToday) {{
+        debugLog(`Setting skipped color: {settings.HABIT_COLOR_SKIPPED}`);
+        newColor = '{settings.HABIT_COLOR_SKIPPED}';
+    }} else {{
+        newColor = weekTicks >= weeklyGoal ? '{settings.HABIT_COLOR_COMPLETED}' : '{settings.HABIT_COLOR_INCOMPLETE}';
+        debugLog(`Setting color to ${{newColor}} based on weekTicks=${{weekTicks}} >= weeklyGoal=${{weeklyGoal}}`);
+    }}
+
+    // Update all elements
+    habitElements.forEach(element => {{
+        debugLog('Updating element:', element);
+        element.style.color = newColor;
+    }});
+}};
 
 // Function to update all habit colors
-window.updateAllHabitColors = function() {
+window.updateAllHabitColors = function() {{
+    debugLog('Updating all habit colors');
     // Find all habit elements
     const habitElements = document.querySelectorAll('[data-habit-id]');
-    habitElements.forEach(element => {
+    debugLog(`Found ${{habitElements.length}} habit elements`);
+    
+    habitElements.forEach(element => {{
         const habitId = element.getAttribute('data-habit-id');
-        if (habitId) {
+        if (habitId) {{
+            debugLog(`Processing habit: ${{habitId}}`);
             // Get the current state from the element's style
-            const isSkippedToday = element.style.color === 'orangered';
+            const isSkippedToday = element.style.color === '{settings.HABIT_COLOR_SKIPPED}';
             const weeklyGoal = parseInt(element.getAttribute('data-weekly-goal') || '0');
             const weekTicks = parseInt(element.getAttribute('data-week-ticks') || '0');
             
+            debugLog(`Element data: isSkippedToday=${{isSkippedToday}}, weeklyGoal=${{weeklyGoal}}, weekTicks=${{weekTicks}}`);
+            
             // Update the color
             window.updateHabitColor(habitId, weeklyGoal, weekTicks, isSkippedToday);
-        }
-    });
-};
+        }}
+    }});
+}};
 
-// Update colors when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-    window.updateAllHabitColors();
-});
+// Initialize when the page loads
+debugLog('Setting up load event listener');
+window.addEventListener('load', function() {{
+    debugLog('Page loaded, checking for updateAllHabitColors');
+    if (window.updateAllHabitColors) {{
+        debugLog('Calling updateAllHabitColors');
+        window.updateAllHabitColors();
+    }} else {{
+        console.error('updateAllHabitColors not found');
+    }}
+}});
 """
 
 __all__ = [

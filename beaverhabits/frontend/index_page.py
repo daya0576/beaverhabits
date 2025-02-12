@@ -91,9 +91,9 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         is_skipped_today = record and record.done is None
                         is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
                         initial_color = (
-                            'orangered' if is_skipped_today
-                            else 'lightgreen' if is_completed
-                            else 'orangered'
+                            settings.HABIT_COLOR_SKIPPED if is_skipped_today
+                            else settings.HABIT_COLOR_COMPLETED if is_completed
+                            else settings.HABIT_COLOR_INCOMPLETE
                         )
                         
                         name = link(habit.name, target=redirect_page)
@@ -149,8 +149,3 @@ async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User
     async with layout(user=user):
         await week_navigation(days)
         await habit_list_ui(days, active_habits)
-
-    # Initialize JavaScript functions
-    ui.context.client.on_connect(javascript.prevent_context_menu)
-    ui.context.client.on_connect(javascript.preserve_scroll)
-    ui.context.client.on_connect(javascript.update_habit_color)
