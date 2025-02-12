@@ -54,7 +54,7 @@ async def change_week(new_offset: int) -> None:
 from beaverhabits.logging import logger
 
 @ui.refreshable
-async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
+async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], habit_list: HabitList):
     # Calculate column count
     name_columns, date_columns = settings.INDEX_HABIT_NAME_COLUMNS, 2
     count_columns = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
@@ -82,11 +82,15 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
             
             card = ui.card().classes(row_compat_classes + " w-full habit-card").classes("shadow-none")
             # Add data attributes for sorting
+            # Get order if exists
+            order = habit_list.order.index(str(habit.id)) if habit_list.order and str(habit.id) in habit_list.order else float("inf")
             card.props(
                 f'data-habit-id="{habit.id}" '
                 f'data-priority="{priority}" '
                 f'data-starred="{int(habit.star)}" '
-                f'data-name="{habit.name}"'
+                f'data-name="{habit.name}" '
+                f'data-status="{habit.status.value}" '
+                f'data-order="{order}"'
             )
             with card:
                 with ui.column().classes("w-full gap-1"):
@@ -105,7 +109,7 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         with ui.row().classes("w-full justify-between items-start"):
                             name = link(habit.name, target=redirect_page)
                             name.classes("break-words whitespace-normal px-4 py-2")
-                            ui.label(f"Priority: {priority}").classes("text-xs text-gray-500 pr-2 pt-1")
+                            ui.label(f"Priority: {priority}").classes("text-xs text-gray-500 pr-2 pt-1 priority-label")
                         name.props(
                             f'data-habit-id="{habit.id}" '
                             f'data-weekly-goal="{habit.weekly_goal or 0}" '
@@ -137,4 +141,4 @@ async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User
 
     async with layout(user=user):
         await week_navigation(days)
-        await habit_list_ui(days, active_habits)
+        await habit_list_ui(days, active_habits, habits)
