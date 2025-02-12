@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     # Features
     ENABLE_HABIT_NOTES: bool = False  # Set to False to disable notes
 
+    # Logging
+    LOG_LEVEL: str = "WARNING"  # Can be DEBUG, INFO, WARNING, ERROR, CRITICAL
+
     def is_dev(self):
         return self.ENV == "dev"
 
