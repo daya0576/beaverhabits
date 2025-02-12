@@ -109,7 +109,8 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], h
                         with ui.row().classes("w-full justify-between items-start"):
                             name = link(habit.name, target=redirect_page)
                             name.classes("break-words whitespace-normal px-4 py-2")
-                            ui.label(f"Priority: {priority}").classes("text-xs text-gray-500 pr-2 pt-1 priority-label")
+                            if settings.INDEX_SHOW_PRIORITY:
+                                ui.label(f"Priority: {priority}").classes("text-xs text-gray-500 pr-2 pt-1 priority-label")
                         name.props(
                             f'data-habit-id="{habit.id}" '
                             f'data-weekly-goal="{habit.weekly_goal or 0}" '
