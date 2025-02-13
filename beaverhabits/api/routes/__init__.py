@@ -1,4 +1,4 @@
 """API route modules for the BeaverHabits application."""
-from . import habits, export
+from . import habits, export, lists
 
-__all__ = ["habits", "export"]
+__all__ = ["habits", "export", "lists"]

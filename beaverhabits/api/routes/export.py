@@ -40,9 +40,17 @@ async def export_habits(credentials: ExportCredentials):
         end_date = datetime.now().date()
         start_date = end_date - timedelta(days=30)
 
+        # Filter habits by list if specified
+        habits = habit_list.habits
+        if credentials.list_id is not None:
+            habits = [
+                habit for habit in habits
+                if habit.list_id == credentials.list_id
+            ]
+
         # Prepare response data
         habits_data = []
-        for habit in habit_list.habits:
+        for habit in habits:
             # Get ticked days within the date range
             ticked_days = [
                 day for day in habit.ticked_days 

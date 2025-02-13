@@ -8,6 +8,7 @@ class HabitListMeta(BaseModel):
 class ExportCredentials(BaseModel):
     email: EmailStr
     password: str
+    list_id: str | None = None
 
 
 class Tick(BaseModel):
