@@ -13,6 +13,19 @@ class ExportCredentials(BaseModel):
 
 
 class Tick(BaseModel):
-    done: bool
+    done: bool | None  # None means skipped
     date: str
     date_fmt: str = "%d-%m-%Y"
+
+
+class HabitCompletion(BaseModel):
+    date: str
+    done: bool | None  # None means skipped
+
+
+class HabitCompletions(BaseModel):
+    email: EmailStr
+    password: str
+    habit_id: str
+    completions: list[HabitCompletion]
+    date_fmt: str = "%Y-%m-%d"

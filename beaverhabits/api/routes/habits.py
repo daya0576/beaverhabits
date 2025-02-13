@@ -2,7 +2,9 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from beaverhabits import views
 from beaverhabits.api.dependencies import current_habit_list
-from beaverhabits.api.models import HabitListMeta, Tick
+from beaverhabits.api.models import HabitListMeta, Tick, HabitCompletions
+from beaverhabits.app.auth import user_authenticate
+from beaverhabits.logging import logger
 from beaverhabits.app.db import User
 from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
@@ -109,3 +111,64 @@ async def put_habit_completions(
     habit = await views.get_user_habit(user, habit_id)
     await habit.tick(day, tick.done)
     return {"day": day.strftime(tick.date_fmt), "done": tick.done}
+
+
+@router.post("/habits/batch-completions")
+async def batch_update_completions(data: HabitCompletions):
+    """Update multiple completion statuses for a habit."""
+    try:
+        # Authenticate user
+        user = await user_authenticate(data.email, data.password)
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid email or password"
+            )
+
+        # Get the habit
+        habit = await views.get_user_habit(user, data.habit_id)
+        if not habit:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Habit with ID {data.habit_id} not found"
+            )
+
+        # Process each completion
+        updated = []
+        for completion in data.completions:
+            try:
+                # Parse date using the provided format
+                day = datetime.strptime(completion.date, data.date_fmt).date()
+                # Update the habit
+                await habit.tick(day, completion.done)
+                # Add to updated list
+                updated.append({
+                    "date": completion.date,
+                    "done": completion.done
+                })
+            except ValueError as e:
+                logger.error(f"Invalid date format for {completion.date}: {str(e)}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid date format for {completion.date}"
+                )
+            except Exception as e:
+                logger.error(f"Error updating habit for date {completion.date}: {str(e)}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to update habit for date {completion.date}"
+                )
+
+        return {
+            "habit_id": data.habit_id,
+            "updated": updated
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Unexpected error in batch_update_completions")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred while processing your request"
+        ) from e
