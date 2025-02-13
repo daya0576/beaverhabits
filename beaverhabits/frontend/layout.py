@@ -138,9 +138,17 @@ async def list_selector(lists: TypeList[List[Habit]], current_list_id: str | Non
             on_change=lambda e: (
                 app.storage.user.update({"current_list": name_to_id[e.value]}),
                 # Update URL without navigation on add page
-                ui.query_parameters.update({"list": name_to_id[e.value]} if name_to_id[e.value] else {}) if path.endswith("/add") else None,
-                # Navigate to root on main page
-                ui.navigate.to(f"{get_root_path()}" + (f"?list={name_to_id[e.value]}" if name_to_id[e.value] else "")) if not path.endswith("/add") else None
+                # Update URL based on page type
+                ui.navigate.to(
+                    # For add page: update current path with list parameter
+                    f"{path}?list={name_to_id[e.value]}" if path.endswith("/add") and name_to_id[e.value] else
+                    # For add page with no list: keep current path
+                    path if path.endswith("/add") else
+                    # For main page: navigate to root with list parameter
+                    f"{get_root_path()}?list={name_to_id[e.value]}" if name_to_id[e.value] else
+                    # For main page with no list: navigate to root
+                    get_root_path()
+                )
             )
         ).props('outlined dense options-dense')
         
