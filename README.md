@@ -11,6 +11,53 @@ A self-hosted habit tracking app without "Goals"
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/c0ce98cf-5a44-4bbc-8cd3-c7afb20af671' width='250'>
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/516c19ca-9f55-4c21-9e6d-c8f0361a5eb2' width='250'>
 
+# What's New in This Fork
+
+## Enhanced API Support
+
+This fork adds a new powerful API endpoint for retrieving habit data:
+
+### Export Habits API
+
+- **Endpoint**: `/api/v1/export/habits`
+- **Method**: POST
+- **Description**: Retrieve all habit information for the last 30 days in JSON format
+- **Authentication**: Requires email and password
+- **Example Usage**:
+  ```bash
+  curl -X POST http://localhost:8000/api/v1/export/habits \
+    -H "Content-Type: application/json" \
+    -d '{
+      "email": "your.email@example.com",
+      "password": "your_password"
+    }'
+  ```
+- **Response Format**:
+  ```json
+  {
+    "habits": [
+      {
+        "id": "habit_id",
+        "name": "Habit Name",
+        "star": true,
+        "status": "active",
+        "weekly_goal": 5,
+        "records": {
+          "2025-02-13": {
+            "done": true,
+            "text": "Optional note"
+          }
+        }
+      }
+    ],
+    "order": ["habit_id1", "habit_id2"],
+    "date_range": {
+      "start": "2025-01-14",
+      "end": "2025-02-13"
+    }
+  }
+  ```
+
 # Derivatives
 
 - [HabitDeck](https://github.com/nov1n/HabitDeck): Turn your Stream Deck into an interactive habit tracker
@@ -43,22 +90,23 @@ docker run -d --name beaverhabits \
 ```
 
 Or Docker Compose:
+
 ```yaml
 services:
-    beaverhabits:
-        container_name: beaverhabits
-        user: 1000:1000 # User permissions of your docker or default user.
-        environment:
-            # See the note below to find all the environment variables
-            - HABITS_STORAGE=USER_DISK # DATABASE stores in a single SQLite database named habits.db. USER_DISK option saves in a local json file.
-            # Skip authentication
-            - TRUSTED_LOCAL_EMAIL=<your@email.address>
-        volumes:
-            - /path/to/beaver/habits:/app/.user/ # Change directory to match your docker file scheme.
-        ports:
-            - 8080:8080
-        restart: unless-stopped
-        image: daya0576/beaverhabits:latest
+  beaverhabits:
+    container_name: beaverhabits
+    user: 1000:1000 # User permissions of your docker or default user.
+    environment:
+      # See the note below to find all the environment variables
+      - HABITS_STORAGE=USER_DISK # DATABASE stores in a single SQLite database named habits.db. USER_DISK option saves in a local json file.
+      # Skip authentication
+      - TRUSTED_LOCAL_EMAIL=<your@email.address>
+    volumes:
+      - /path/to/beaver/habits:/app/.user/ # Change directory to match your docker file scheme.
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    image: daya0576/beaverhabits:latest
 ```
 
 P.S. The container starts as nobody to increase the security and make it OpenShift compatible.
@@ -66,17 +114,17 @@ To avoid [permission issues](https://github.com/daya0576/beaverhabits/discussion
 
 ## Options
 
-| Name | Description |
-|:--|:--|
-| **HABITS_STORAGE**(str) | The `DATABASE` option stores everything in a single SQLite database file named habits.db. On the other hand, the `USER_DISK` option saves habits and records in a local json file. |
-| **FIRST_DAY_OF_WEEK**(int) | By default, the first day of the week is set as Monday. To change it to Sunday, you can set it as `6`. |
-| **MAX_USER_COUNT**(int) | By setting it to `1`, you can prevent others from signing up in the future. |
-| **ENABLE_IOS_STANDALONE**(bool) | Experiential feature to  enable standalone mode on iOS. The default setting is `false`. |
-| **INDEX_SHOW_HABIT_COUNT**(bool) | To display total completed count along with the habit name on the index page. The default setting is `false`. |
-| **INDEX_HABIT_NAME_COLUMNS**(int) | Customize the habit name column count for the index page. The default value is `5`. |
-| **INDEX_HABIT_DATE_COLUMNS**(int) | Customize the date column count for the index page. The default value is `5`. |
-| **TRUSTED_EMAIL_HEADER**(str) | Delegate authentication to an authenticating reverse proxy that passes in the user's details in HTTP headers, e.g. `Cf-Access-Authenticated-User-Email`. An existing account is required. |
-| **TRUSTED_LOCAL_EMAIL**(str) | Disables authentication entirely. A new account with the specified email will be created if it does not exist. |
+| Name                              | Description                                                                                                                                                                               |
+| :-------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **HABITS_STORAGE**(str)           | The `DATABASE` option stores everything in a single SQLite database file named habits.db. On the other hand, the `USER_DISK` option saves habits and records in a local json file.        |
+| **FIRST_DAY_OF_WEEK**(int)        | By default, the first day of the week is set as Monday. To change it to Sunday, you can set it as `6`.                                                                                    |
+| **MAX_USER_COUNT**(int)           | By setting it to `1`, you can prevent others from signing up in the future.                                                                                                               |
+| **ENABLE_IOS_STANDALONE**(bool)   | Experiential feature to enable standalone mode on iOS. The default setting is `false`.                                                                                                    |
+| **INDEX_SHOW_HABIT_COUNT**(bool)  | To display total completed count along with the habit name on the index page. The default setting is `false`.                                                                             |
+| **INDEX_HABIT_NAME_COLUMNS**(int) | Customize the habit name column count for the index page. The default value is `5`.                                                                                                       |
+| **INDEX_HABIT_DATE_COLUMNS**(int) | Customize the date column count for the index page. The default value is `5`.                                                                                                             |
+| **TRUSTED_EMAIL_HEADER**(str)     | Delegate authentication to an authenticating reverse proxy that passes in the user's details in HTTP headers, e.g. `Cf-Access-Authenticated-User-Email`. An existing account is required. |
+| **TRUSTED_LOCAL_EMAIL**(str)      | Disables authentication entirely. A new account with the specified email will be created if it does not exist.                                                                            |
 
 ## Development
 
@@ -95,51 +143,55 @@ uv venv && uv sync
 [Vote](https://github.com/daya0576/beaverhabits/discussions/78) for your most wanted features.
 
 1. Habit Tracking
-    - [x] Daily notes/descriptions
-    - [ ] Measurable habits 
-    - [ ] Multiple states, e.g. failed, skipped
+   - [x] Daily notes/descriptions
+   - [ ] Measurable habits
+   - [ ] Multiple states, e.g. failed, skipped
 2. Pages & UI
-    - [x] Reorder habits
-    - [ ] Category or tag
-    - [ ] Light mode
-    - [ ] Standalone mode for iOS
-    - [ ] **Responsive layout** (wider display for desktop)
-    - [ ] **Native mobile app**
+   - [x] Reorder habits
+   - [ ] Category or tag
+   - [ ] Light mode
+   - [ ] Standalone mode for iOS
+   - [ ] **Responsive layout** (wider display for desktop)
+   - [ ] **Native mobile app**
 3. Storage
-    - [x] Session-based disk storage (Demo only)
-    - [x] User-based disk storage
-    - [x] User-based db storage
+   - [x] Session-based disk storage (Demo only)
+   - [x] User-based disk storage
+   - [x] User-based db storage
 4. CICD
-    - [x] Unit tests and deployment pipeline
-    - [x] Docker build and push pipeline
+   - [x] Unit tests and deployment pipeline
+   - [x] Docker build and push pipeline
 5. Authentication
-    - [x] Email & password
-    - [x] SSO Trusted email header
-    - [x] Disable authentication entirely
+   - [x] Email & password
+   - [x] SSO Trusted email header
+   - [x] Disable authentication entirely
 6. Extensibility
-    - [x] Export & Import
-    - [x] RESTful API
+   - [x] Export & Import
+   - [x] RESTful API
 7. Others
-    - [ ] Habit calendar template, e.g. vacations
-   
+   - [ ] Habit calendar template, e.g. vacations
 
 ## Streaks
+
 Here are my table tennis training sessions in the past year :)
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/db795af7-ed32-4879-b629-9fd3a2700440" />
 
 ## Import
+
 To import from an existing setup, e.g. uhabit, please check this [wiki](https://github.com/daya0576/beaverhabits/wiki/Import-from-Existing-Setup) for more details.
 
 ## Standalone mode for iOS (Web Application)
-Please follow this [wiki](https://github.com/daya0576/beaverhabits/wiki/To-Add-Standalone-Mode-for-iOS-(Web-Application)) to add it as an icon on the home screen and make it launch in a separate window
+
+Please follow this [wiki](<https://github.com/daya0576/beaverhabits/wiki/To-Add-Standalone-Mode-for-iOS-(Web-Application)>) to add it as an icon on the home screen and make it launch in a separate window
 
 ## Reorder Habits
+
 Open page `/gui/order` to change the order of habits.
 
 ## REST APIs
+
 [Beaver Habit Tracker API How‐to Guide](https://github.com/daya0576/beaverhabits/wiki/Beaver-Habit-Tracker-API-How%E2%80%90to-Guide)
 
 ## Daily Notes
-Press and hold to add a note or description for the day.
 
+Press and hold to add a note or description for the day.

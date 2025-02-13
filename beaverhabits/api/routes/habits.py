@@ -1,58 +1,50 @@
 from datetime import datetime
-
-from fastapi import APIRouter, Depends, FastAPI, HTTPException
-from pydantic import BaseModel
-
+from fastapi import APIRouter, Depends, HTTPException
 from beaverhabits import views
+from beaverhabits.api.dependencies import current_habit_list
+from beaverhabits.api.models import HabitListMeta, Tick
 from beaverhabits.app.db import User
 from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
 
-api_router = APIRouter()
+router = APIRouter(tags=["habits"])
 
 
-async def current_habit_list(user: User = Depends(current_active_user)) -> HabitList:
-    habit_list = await views.get_user_habit_list(user)
-    if not habit_list:
-        raise HTTPException(status_code=404, detail="No habits found")
-    return habit_list
-
-
-class HabitListMeta(BaseModel):
-    order: list[str] | None = None
-
-
-@api_router.get("/habits/meta", tags=["habits"])
+@router.get("/habits/meta")
 async def get_habits_meta(
     habit_list: HabitList = Depends(current_habit_list),
 ):
+    """Get habit list metadata."""
     return HabitListMeta(order=habit_list.order)
 
 
-@api_router.put("/habits/meta", tags=["habits"])
+@router.put("/habits/meta")
 async def put_habits_meta(
     meta: HabitListMeta,
     habit_list: HabitList = Depends(current_habit_list),
 ):
+    """Update habit list metadata."""
     if meta.order is not None:
         habit_list.order = meta.order
     return {"order": habit_list.order}
 
 
-@api_router.get("/habits", tags=["habits"])
+@router.get("/habits")
 async def get_habits(
     status: HabitStatus = HabitStatus.ACTIVE,
     habit_list: HabitList = Depends(current_habit_list),
 ):
+    """Get list of habits."""
     habits = HabitListBuilder(habit_list).status(status).build()
     return [{"id": x.id, "name": x.name} for x in habits]
 
 
-@api_router.get("/habits/{habit_id}", tags=["habits"])
+@router.get("/habits/{habit_id}")
 async def get_habit_detail(
     habit_id: str,
     user: User = Depends(current_active_user),
 ):
+    """Get detailed information about a specific habit."""
     habit = await views.get_user_habit(user, habit_id)
     return {
         "id": habit.id,
@@ -63,16 +55,17 @@ async def get_habit_detail(
     }
 
 
-@api_router.get("/habits/{habit_id}/completions", tags=["habits"])
+@router.get("/habits/{habit_id}/completions")
 async def get_habit_completions(
     habit_id: str,
     date_fmt: str = "%d-%m-%Y",
     date_start: str | None = None,
     date_end: str | None = None,
     limit: int | None = 10,
-    sort="acs",
+    sort="asc",
     user: User = Depends(current_active_user),
 ):
+    """Get completion records for a specific habit."""
     habit = await views.get_user_habit(user, habit_id)
     ticked_days = habit.ticked_days
     if not ticked_days:
@@ -101,18 +94,13 @@ async def get_habit_completions(
     return [x.strftime(date_fmt) for x in ticked_days]
 
 
-class Tick(BaseModel):
-    done: bool
-    date: str
-    date_fmt: str = "%d-%m-%Y"
-
-
-@api_router.post("/habits/{habit_id}/completions", tags=["habits"])
+@router.post("/habits/{habit_id}/completions")
 async def put_habit_completions(
     habit_id: str,
     tick: Tick,
     user: User = Depends(current_active_user),
 ):
+    """Update completion status for a specific habit."""
     try:
         day = datetime.strptime(tick.date, tick.date_fmt.strip()).date()
     except ValueError:
@@ -121,7 +109,3 @@ async def put_habit_completions(
     habit = await views.get_user_habit(user, habit_id)
     await habit.tick(day, tick.done)
     return {"day": day.strftime(tick.date_fmt), "done": tick.done}
-
-
-def init_api_routes(app: FastAPI) -> None:
-    app.include_router(api_router, prefix="/api/v1")

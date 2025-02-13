@@ -5,7 +5,7 @@ import sentry_sdk
 from fastapi import FastAPI
 from nicegui import ui
 
-from beaverhabits.api import init_api_routes
+from beaverhabits.api import init_api_routes  # Using new modular API structure
 from beaverhabits.app import crud
 
 from .app.app import init_auth_routes
