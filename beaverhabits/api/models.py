@@ -9,6 +9,7 @@ class ExportCredentials(BaseModel):
     email: EmailStr
     password: str
     list_id: str | None = None
+    archive: bool = False
 
 
 class Tick(BaseModel):

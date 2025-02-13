@@ -17,21 +17,66 @@ A self-hosted habit tracking app without "Goals"
 
 This fork adds a new powerful API endpoint for retrieving habit data:
 
-### Export Habits API
+### Lists API
 
-- **Endpoint**: `/api/v1/export/habits`
+- **Endpoint**: `/api/v1/lists`
 - **Method**: POST
-- **Description**: Retrieve all habit information for the last 30 days in JSON format
+- **Description**: Get all lists for the authenticated user
 - **Authentication**: Requires email and password
 - **Example Usage**:
   ```bash
-  curl -X POST http://localhost:8000/api/v1/export/habits \
+  curl -X POST http://localhost:8000/api/v1/lists \
     -H "Content-Type: application/json" \
     -d '{
       "email": "your.email@example.com",
       "password": "your_password"
     }'
   ```
+- **Response Format**:
+  ```json
+  {
+    "lists": [
+      {
+        "id": "list_id",
+        "name": "List Name"
+      }
+    ]
+  }
+  ```
+
+### Export Habits API
+
+- **Endpoint**: `/api/v1/export/habits`
+- **Method**: POST
+- **Description**: Retrieve habit information for the last 30 days in JSON format
+- **Authentication**: Requires email and password
+- **Parameters**:
+  - `email`: User's email address (required)
+  - `password`: User's password (required)
+  - `list_id`: Filter habits by list ID (optional)
+  - `archive`: Include archived habits (optional, default: false)
+- **Example Usage**:
+
+  ```bash
+  # Get active habits from a specific list
+  curl -X POST http://localhost:8000/api/v1/export/habits \
+    -H "Content-Type: application/json" \
+    -d '{
+      "email": "your.email@example.com",
+      "password": "your_password",
+      "list_id": "specific_list_id"
+    }'
+
+  # Get both active and archived habits
+  curl -X POST http://localhost:8000/api/v1/export/habits \
+    -H "Content-Type: application/json" \
+    -d '{
+      "email": "your.email@example.com",
+      "password": "your_password",
+      "archive": true
+    }'
+  ```
+
 - **Response Format**:
   ```json
   {
@@ -57,6 +102,11 @@ This fork adds a new powerful API endpoint for retrieving habit data:
     }
   }
   ```
+- **Notes**:
+  - By default, only returns active habits
+  - Set `archive: true` to include both active and archived habits
+  - Use `list_id` to filter habits by a specific list
+  - Soft-deleted habits are never included
 
 # Derivatives
 
