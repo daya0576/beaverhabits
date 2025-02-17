@@ -1,0 +1,62 @@
+OS
+You are working on windows.
+
+Shell
+You have a windows powershell to exectute commands.
+
+Powershell does not support && to combine commands.
+For example this will not work
+python -m venv venv && .venv\Scripts\activate
+PowerShell, doesn't support that syntax. 
+Execute the commands separately.
+
+Entry Point
+Use main.py for argument parsing and overall flow.
+
+Coding Conventions
+You split large code blocks into managble files and classes.
+Follow PEP 8 style guidelines.
+Use docstrings, type hints, and linters (e.g., flake8).
+Auto-format code with tools like black.
+Modular Design
+
+Group related classes/functions into separate files under modules.
+Import them in main.py as needed.
+Configuration
+
+Store settings in settings.ini at the project root.
+Parse these using Python’s configparser.
+Dependencies
+
+Maintain a requirements.txt file with all library dependencies.
+Update it after adding new libraries (e.g., pip freeze > requirements.txt).
+Use the latest stable versions for new features and fixes.
+Execution
+
+In main.py, parse arguments (if needed) and invoke core functions.
+Use if **name** == "**main**": for direct script execution.
+Use Virtual Environments
+
+Create a venv (python -m venv venv) to isolate dependencies.
+Activate it and install requirements (venv\Scripts\activate && pip install -r requirements.txt).
+
+Implement Logging
+Employ Python’s logging module with various log levels (e.g., INFO, WARNING, ERROR).
+Adopt Exception Handling
+
+Always use a logging class, do not use print statements directly.
+
+Handle errors gracefully, with clear messages or fallback procedures.
+Document & Automate
+
+Keep a concise README.md explaining setup and usage.
+
+Provide .bat files to automate setup and execution:
+install.bat:
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+
+run.bat:
+venv\Scripts\activate
+python main.py

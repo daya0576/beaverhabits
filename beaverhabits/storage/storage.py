@@ -147,6 +147,15 @@ class UserStorage[L: HabitList[H], H: Habit](Protocol):
     async def delete_list(self, user: User, list_id: str) -> None: ...
 
 
+def get_last_week_completion(habit: Habit, day: datetime.date) -> bool:
+    """Check if the habit met its weekly goal in the previous week.
+    Returns:
+        bool: True if the weekly goal was met last week, False otherwise
+    """
+    last_week = day - datetime.timedelta(days=7)
+    week_ticks, _ = get_week_ticks(habit, last_week)
+    return habit.weekly_goal > 0 and week_ticks >= habit.weekly_goal
+
 def get_week_ticks(habit: Habit, day: datetime.date) -> tuple[int, bool]:
     """Calculate the number of ticks and if there are any actions in the week containing the given day.
     Returns:

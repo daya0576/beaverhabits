@@ -8,7 +8,7 @@ window.habitColorState = {
 let resortTimer = null;
 let pendingCards = new Map();  // Map of habitId -> original priority
 
-window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToday) {
+window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToday, lastWeekComplete) {
     if (!window.habitColorState.initialized) {
         debugLog('Script not initialized yet, initializing now');
         window.habitColorState.initialized = true;
@@ -30,6 +30,9 @@ window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToda
     if (isSkippedToday) {
         debugLog(`Setting skipped color: ${HABIT_SETTINGS.colors.skipped}`);
         newColor = HABIT_SETTINGS.colors.skipped;
+    } else if (!lastWeekComplete && weeklyGoal > 0) {
+        debugLog(`Setting last week incomplete color: ${HABIT_SETTINGS.colors.last_week_incomplete}`);
+        newColor = HABIT_SETTINGS.colors.last_week_incomplete;
     } else {
         newColor = weekTicks >= weeklyGoal ? HABIT_SETTINGS.colors.completed : HABIT_SETTINGS.colors.incomplete;
         debugLog(`Setting color to ${newColor} based on weekTicks=${weekTicks} >= weeklyGoal=${weeklyGoal}`);
@@ -167,11 +170,12 @@ window.updateAllHabitColors = function() {
             const isSkippedToday = element.getAttribute('data-skipped') === 'true';
             const weeklyGoal = parseInt(element.getAttribute('data-weekly-goal') || '0');
             const weekTicks = parseInt(element.getAttribute('data-week-ticks') || '0');
+            const lastWeekComplete = element.getAttribute('data-last-week-complete') === 'true';
             
-            debugLog(`Element data: isSkippedToday=${isSkippedToday}, weeklyGoal=${weeklyGoal}, weekTicks=${weekTicks}`);
+            debugLog(`Element data: isSkippedToday=${isSkippedToday}, weeklyGoal=${weeklyGoal}, weekTicks=${weekTicks}, lastWeekComplete=${lastWeekComplete}`);
             
             // Update the color
-            window.updateHabitColor(habitId, weeklyGoal, weekTicks, isSkippedToday);
+            window.updateHabitColor(habitId, weeklyGoal, weekTicks, isSkippedToday, lastWeekComplete);
         }
     });
 };

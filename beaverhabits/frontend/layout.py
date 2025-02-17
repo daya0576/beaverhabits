@@ -33,7 +33,8 @@ def add_page_scripts():
             colors: {{
                 skipped: "{settings.HABIT_COLOR_SKIPPED}",
                 completed: "{settings.HABIT_COLOR_COMPLETED}",
-                incomplete: "{settings.HABIT_COLOR_INCOMPLETE}"
+                incomplete: "{settings.HABIT_COLOR_INCOMPLETE}",
+                last_week_incomplete: "{settings.HABIT_COLOR_LAST_WEEK_INCOMPLETE}"
             }}
         }};
         </script>

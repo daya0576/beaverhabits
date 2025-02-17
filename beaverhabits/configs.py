@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     HABIT_COLOR_COMPLETED: str = "lightgreen"
     HABIT_COLOR_INCOMPLETE: str = "yellow"
     HABIT_COLOR_SKIPPED: str = "grey"
+    HABIT_COLOR_LAST_WEEK_INCOMPLETE: str = "red"
 
     # Features
     ENABLE_HABIT_NOTES: bool = False  # Set to False to disable notes

@@ -13,7 +13,7 @@ from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import (
     Habit, HabitList, HabitListBuilder, HabitStatus, 
-    get_habit_priority, get_week_ticks
+    get_habit_priority, get_week_ticks, get_last_week_completion
 )
 from beaverhabits.utils import (
     get_week_offset, set_week_offset, reset_week_offset, 
@@ -79,6 +79,7 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], h
             week_ticks, _ = get_week_ticks(habit, today)
             is_skipped_today = record and record.done is None
             is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
+            last_week_complete = get_last_week_completion(habit, today)
             
             card = ui.card().classes(row_compat_classes + " w-full habit-card").classes("shadow-none")
             # Add data attributes for sorting
@@ -102,6 +103,7 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], h
                         # Calculate color
                         initial_color = (
                             settings.HABIT_COLOR_SKIPPED if is_skipped_today
+                            else settings.HABIT_COLOR_LAST_WEEK_INCOMPLETE if not last_week_complete and habit.weekly_goal > 0
                             else settings.HABIT_COLOR_COMPLETED if is_completed
                             else settings.HABIT_COLOR_INCOMPLETE
                         )
@@ -115,7 +117,8 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], h
                             f'data-habit-id="{habit.id}" '
                             f'data-weekly-goal="{habit.weekly_goal or 0}" '
                             f'data-week-ticks="{week_ticks}" '
-                            f'data-skipped="{str(is_skipped_today).lower()}"'
+                            f'data-skipped="{str(is_skipped_today).lower()}" '
+                            f'data-last-week-complete="{str(last_week_complete).lower()}"'
                         )
                         name.style(f"min-height: 1.5em; height: auto; color: {initial_color};")
 

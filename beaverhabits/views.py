@@ -6,7 +6,7 @@ from nicegui import app, ui
 
 from beaverhabits.logging import logger
 
-from beaverhabits.app.auth import user_authenticate, user_create_token, user_create
+from beaverhabits.app.auth import user_authenticate, user_create_token, user_create, user_check_token
 from beaverhabits.app.crud import get_user_count
 from beaverhabits.app.db import User
 from beaverhabits.configs import settings
@@ -124,9 +124,11 @@ async def delete_list(user: User, list_id: str) -> None:
 
 
 async def is_gui_authenticated() -> bool:
-    """Check if user is authenticated."""
+    """Check if user is authenticated with a valid token."""
     token = app.storage.user.get("auth_token")
-    return bool(token)
+    if not token:
+        return False
+    return await user_check_token(token)
 
 
 async def validate_max_user_count() -> None:

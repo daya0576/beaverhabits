@@ -7,7 +7,7 @@ from nicegui import ui, events
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
-from beaverhabits.storage.storage import CheckedRecord, Habit, get_week_ticks
+from beaverhabits.storage.storage import CheckedRecord, Habit, get_week_ticks, get_last_week_completion
 from ..utils import ratelimiter
 
 DAILY_NOTE_MAX_LENGTH = 300
@@ -138,8 +138,9 @@ class BaseHabitCheckBox(ui.checkbox):
         elif value is False:  # Remove current day if it's being unchecked
             ticked_days.discard(self.day)
             
-        # Get ticks for current week using shared function
+        # Get ticks for current week and last week's completion status
         week_ticks, _ = get_week_ticks(self.habit, self.day)
+        last_week_complete = get_last_week_completion(self.habit, self.day)
         
         # Check if this habit is skipped today
         is_skipped_today = (
@@ -174,7 +175,8 @@ class BaseHabitCheckBox(ui.checkbox):
                 debugLog('Updating element:', element);
                 element.setAttribute('data-weekly-goal', '{self.habit.weekly_goal or 0}');
                 element.setAttribute('data-week-ticks', '{week_ticks}');
-                element.setAttribute('data-skipped', '{str(is_skipped_today).lower()}');
+            element.setAttribute('data-skipped', '{str(is_skipped_today).lower()}');
+            element.setAttribute('data-last-week-complete', '{str(last_week_complete).lower()}');
             }});
             
             // Call updateHabitColor to update the colors
@@ -184,7 +186,8 @@ class BaseHabitCheckBox(ui.checkbox):
                     '{self.habit.id}', 
                     {self.habit.weekly_goal or 0}, 
                     {week_ticks},
-                    {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'}
+                    {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'},
+                    {str(last_week_complete).lower()}
                 );
             }} else {{
                 console.error('updateHabitColor function not found - check script loading');
