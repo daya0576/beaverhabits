@@ -257,7 +257,7 @@ async def login_page() -> Optional[RedirectResponse]:
             ui.notify("email or password wrong!", color="negative")
 
     with ui.card().classes("absolute-center shadow-none w-96"):
-        email = ui.input("email").on("keydown.enter", try_login)
+        email = ui.input("email", type="email").on("keydown.enter", try_login)
         email.classes("w-56")
 
         password = ui.input("password", password=True, password_toggle_button=True)
@@ -292,7 +292,7 @@ async def register_page():
 
     await views.validate_max_user_count()
     with ui.card().classes("absolute-center shadow-none w-96"):
-        email = ui.input("email").on("keydown.enter", try_register).classes("w-56")
+        email = ui.input("email", type="email").on("keydown.enter", try_register).classes("w-56")
         password = (
             ui.input("password", password=True, password_toggle_button=True)
             .on("keydown.enter", try_register)

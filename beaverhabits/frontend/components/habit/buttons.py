@@ -45,51 +45,48 @@ class HabitDeleteButton(ui.button):
         self.refresh()
 
 class HabitAddButton:
-    def __init__(self, habit_list: HabitList, refresh: Callable, list_options: list[dict]) -> None:
+    def __init__(self, habit_list: HabitList, refresh: Callable, list_options: list[dict] = None) -> None:
         self.habit_list = habit_list
         self.refresh = refresh
         
-        with ui.column().classes("w-full gap-2"):
-            with ui.row().classes("w-full items-center gap-2"):
-                self.name_input = ui.input("New habit name").props('dense outlined')
-                self.name_input.classes("flex-grow")
-                
-                self.goal_input = ui.number(min=0, max=7).props('dense outlined')
-                self.goal_input.style("width: 120px")
-                
-                # Create name-to-id mapping for list selector
-                self.name_to_id = {"No List": None}
-                self.name_to_id.update({opt["label"]: opt["value"] for opt in list_options[1:]})
-                
-                # Use just the names as options
-                options = list(self.name_to_id.keys())
-                
-                self.list_select = ui.select(
-                    options=options,
-                    value="No List",
-                ).props('dense outlined options-dense')
-                self.list_select.style("width: 150px")
-            
-            with ui.row().classes("w-full justify-end"):
-                ui.button("Add Habit", on_click=self._async_task).props("unelevated")
+        with ui.row().classes("w-full items-center gap-2"):
+            self.name_input = ui.input("New habit name").props('dense outlined')
+            self.name_input.classes("flex-grow")
+            ui.button("Add Habit", on_click=self._async_task).props("unelevated")
             
         # Keep enter key functionality
         self.name_input.on("keydown.enter", self._async_task)
-        self.goal_input.on("keydown.enter", self._async_task)
 
     async def _async_task(self):
         if not self.name_input.value:
             return
         await self.habit_list.add(self.name_input.value)
-        # Set weekly goal and list after habit is created
+        logger.info(f"Added new habit: {self.name_input.value}")
+        
+        # Get the new habit's ID (it's the last one in the list)
         habits = self.habit_list.habits
         if habits:
-            habits[-1].weekly_goal = self.goal_input.value or 0  # Default to 0 if empty
-            habits[-1].list_id = self.name_to_id[self.list_select.value]
-            logger.info(f"Set weekly goal to {habits[-1].weekly_goal}")
-            logger.info(f"Set list to {habits[-1].list_id}")
-        logger.info(f"Added new habit: {self.name_input.value}")
-        self.refresh()
+            new_habit_id = habits[-1].id
+            # Refresh the UI
+            self.refresh()
+            # Scroll to the new habit
+            ui.run_javascript(f"""
+            setTimeout(() => {{
+                const cards = document.querySelectorAll(`[data-habit-id="{new_habit_id}"]`);
+                const card = cards[cards.length - 1];  // Get the last matching card
+                if (card) {{
+                    // First scroll to make sure the card is in view
+                    card.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+                    
+                    // Add highlight effect
+                    card.classList.add('highlight-card');
+                    setTimeout(() => {{
+                        card.classList.remove('highlight-card');
+                    }}, 1000);
+                }}
+            }}, 300);  // Increased delay to ensure DOM is updated
+            """)
+        else:
+            self.refresh()
+            
         self.name_input.set_value("")
-        self.goal_input.set_value(None)
-        self.list_select.set_value(None)

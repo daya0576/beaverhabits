@@ -109,10 +109,19 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], h
                         )
                         
                         with ui.row().classes("w-full justify-between items-start"):
-                            name = link(habit.name, target=redirect_page)
-                            name.classes("break-words whitespace-normal px-4 py-2")
-                            if settings.INDEX_SHOW_PRIORITY:
-                                ui.label(f"Priority: {priority}").classes("text-xs text-gray-500 pr-2 pt-1 priority-label")
+                            # Left side: Title with proper wrapping
+                            with ui.element("div").classes("flex-grow"):
+                                name = link(habit.name, target=redirect_page)
+                                name.classes("break-words whitespace-normal px-4 py-2")
+                            
+                            # Right side: Weekly goal count and priority
+                            with ui.element("div").classes("flex items-center gap-2"):
+                                if habit.weekly_goal:
+                                    goal_label = ui.label(f"{habit.weekly_goal}x").classes("text-sm pr-4")
+                                    goal_label.style(f"color: {initial_color};")
+                                if settings.INDEX_SHOW_PRIORITY:
+                                    ui.label(f"Priority: {priority}").classes("text-xs text-gray-500 priority-label")
+
                         name.props(
                             f'data-habit-id="{habit.id}" '
                             f'data-weekly-goal="{habit.weekly_goal or 0}" '
@@ -138,10 +147,6 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], h
 async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User | None = None):
     # Get active habits and sort them
     active_habits = HabitListBuilder(habits, days=days).status(HabitStatus.ACTIVE).build()
-    if not active_habits:
-        from beaverhabits.frontend.layout import redirect
-        redirect("add")
-        return
 
     async with layout(user=user):
         await week_navigation(days)

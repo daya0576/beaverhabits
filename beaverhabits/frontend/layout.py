@@ -152,9 +152,6 @@ async def list_selector(lists: TypeList[List[Habit]], current_list_id: str | Non
                 )
             )
         ).props('outlined dense options-dense')
-        
-        # Add list button
-        ui.button(icon=icons.ADD, on_click=lambda: redirect("lists")).props("flat dense")
 
 
 def menu_component() -> None:
@@ -167,10 +164,10 @@ def menu_component() -> None:
         if "add" in path:
             compat_menu("Reorder", lambda: redirect("order"))
         else:
-            compat_menu("Add", lambda: redirect("add"))
+            compat_menu("Configure habits", lambda: redirect("add"))
         ui.separator()
 
-        compat_menu("Lists", lambda: redirect("lists"))
+        compat_menu("Configure lists", lambda: redirect("lists"))
         ui.separator()
 
         if show_export:
@@ -206,8 +203,8 @@ async def layout(title: str | None = None, with_menu: bool = True, user=None):
         with ui.row().classes("min-w-full gap-x-0 items-center"):
             menu_header(title, target=root_path)
             
-            # Add list selector if not on lists or add page
-            if not path.endswith("/lists") and user:
+            # Add list selector if not on lists, add, or order pages
+            if not any(x in path for x in ["/lists", "/add", "/order"]) and user:
                 ui.space()
                 lists = await views.get_user_lists(user)
                 try:

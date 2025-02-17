@@ -139,16 +139,10 @@ window.updateHabitColor = function(habitId, weeklyGoal, weekTicks, isSkippedToda
                     // Add highlight immediately
                     card.classList.add('highlight-card');
                     
-                    // Delay scroll to happen after reordering animation
+                    // Remove highlight after animation
                     setTimeout(() => {
-                        // Scroll to the card
-                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        
-                        // Remove highlight after scroll animation
-                        setTimeout(() => {
-                            card.classList.remove('highlight-card');
-                        }, 1000);  // Remove highlight 1s after scroll starts
-                    }, 300);  // Start scroll 300ms after reordering
+                        card.classList.remove('highlight-card');
+                    }, 1000);
                 }
             });
         }, 2000);
