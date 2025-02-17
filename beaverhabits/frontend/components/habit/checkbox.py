@@ -80,7 +80,7 @@ class BaseHabitCheckBox(ui.checkbox):
         self.habit = habit
         self.day = day
         self.skipped = value is None  # Track skipped state
-        text_color = "chartreuse" if self.day == datetime.date.today() else "white"
+        text_color = "chartreuse" if self.day == datetime.date.today() else settings.HABIT_COLOR_DAY_NUMBER
         self.unchecked_icon = icons.SQUARE.format(color="rgb(54,54,54)", text=self.day.day, text_color=text_color)
         self.checked_icon = icons.DONE
         self.skipped_icon = icons.CLOSE

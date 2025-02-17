@@ -108,18 +108,22 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], h
                             else settings.HABIT_COLOR_INCOMPLETE
                         )
                         
-                        with ui.row().classes("w-full justify-between items-start"):
-                            # Left side: Title with proper wrapping
-                            with ui.element("div").classes("flex-grow"):
+                        # Container with relative positioning
+                        with ui.element("div").classes("relative w-full"):
+                            # Title container with space for goal
+                            with ui.element("div").classes("pr-16"):
                                 name = link(habit.name, target=redirect_page)
-                                name.classes("break-words whitespace-normal px-4 py-2")
+                                name.classes("block break-words whitespace-normal w-full px-4 py-2")
                             
-                            # Right side: Weekly goal count and priority
-                            with ui.element("div").classes("flex items-center gap-2"):
-                                if habit.weekly_goal:
-                                    goal_label = ui.label(f"{habit.weekly_goal}x").classes("text-sm pr-4")
+                            # Goal count fixed to top right
+                            if habit.weekly_goal:
+                                with ui.element("div").classes("absolute top-2 right-4"):
+                                    goal_label = ui.label(f"{habit.weekly_goal}x").classes("text-sm")
                                     goal_label.style(f"color: {initial_color};")
-                                if settings.INDEX_SHOW_PRIORITY:
+                            
+                            # Priority label if enabled
+                            if settings.INDEX_SHOW_PRIORITY:
+                                with ui.element("div").classes("absolute top-2 right-16"):
                                     ui.label(f"Priority: {priority}").classes("text-xs text-gray-500 priority-label")
 
                         name.props(
