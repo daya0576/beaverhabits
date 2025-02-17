@@ -7,7 +7,7 @@ You have a windows powershell to exectute commands.
 Powershell does not support && to combine commands.
 For example this will not work
 python -m venv venv && .venv\Scripts\activate
-PowerShell, doesn't support that syntax. 
+PowerShell, doesn't support that syntax.
 Execute the commands separately.
 
 Entry Point
@@ -47,8 +47,54 @@ Adopt Exception Handling
 Always use a logging class, do not use print statements directly.
 
 Handle errors gracefully, with clear messages or fallback procedures.
-Document & Automate
 
+NiceGUI Framework
+This project uses NiceGUI for the frontend.
+
+- Use ui.refreshable for components that need to update
+- Prefer data binding (bind_value, bind_value_from) over manual refresh callbacks
+- Use props() for button styling (e.g., "dense", "unelevated", "flat")
+- Use classes() for layout and spacing (e.g., "w-full", "gap-2", "items-center")
+
+List Filtering
+When filtering habit lists:
+
+- Create a new filtered copy of the list for display only
+- Keep modifications on the main unfiltered list
+- Use filter_habits_by_list() only for display purposes, not for adding/editing
+
+Logging Levels
+The project uses Python's logging module with a configurable level in configs.py:
+
+- Set LOG_LEVEL to WARNING by default to reduce console output
+- Use logger.debug for detailed flow tracking
+- Use logger.info for important state changes
+- Use logger.error for error conditions
+
+Storage Architecture
+The project uses a layered storage approach:
+
+- Protocols (storage.py) define the interfaces for Habit, HabitList, and storage operations
+- DictStorage is the base class for storing data as dictionaries
+- HabitDataCache maintains an in-memory cache of ticked days and records
+- Lists don't store habits directly, they're referenced by list_id in habits
+- Each habit has a save_fn that gets passed from the storage layer
+- Changes to habits must be saved explicitly using save() method
+
+Data Flow:
+
+- View layer binds to habit properties (name, weekly_goal, etc.)
+- Changes update the in-memory dictionary
+- save() method must be called to persist changes to database
+- Avoid modifying filtered copies of lists, always modify the main list
+
+Storage Types (in configs.py):
+
+- SESSION: In-memory storage for demo mode
+- USER_DATABASE: SQLite database for authenticated users
+- USER_DISK: File-based storage
+
+Document & Automate
 Keep a concise README.md explaining setup and usage.
 
 Provide .bat files to automate setup and execution:
