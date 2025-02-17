@@ -62,10 +62,6 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], h
 
     row_compat_classes = "px-0 py-1"
 
-    logger.info("\nRendering habits in UI:")
-    for habit in active_habits:
-        logger.info(f"  {habit.name}: priority {get_habit_priority(habit, days)}")
-
     container = ui.column().classes("habit-card-container pb-32")  # Add bottom padding
     with container:
         # Habit List
