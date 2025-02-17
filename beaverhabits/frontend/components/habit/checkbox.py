@@ -50,7 +50,6 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
         return
 
     record = await habit.tick(day, yes, text)
-    logger.info(f"Habit ticked: {day} {yes}, note: {text}")
     
     # Scroll to the updated habit
     ui.run_javascript(f"scrollToHabit('{habit.id}')")
@@ -62,19 +61,12 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
 async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
     # Avoid duplicate tick
     record = habit.record_by(day)
-    logger.info(f"habit_tick: Initial record state: {record.done if record else None}")
     
     if record and record.done is value:  # Use 'is' to handle None case correctly
-        logger.info(f"habit_tick: Skipping duplicate tick (value={value})")
         return
 
     # Transaction start
-    logger.info(f"habit_tick: Setting new state to: {value}")
     await habit.tick(day, value)
-    
-    # Verify the state change
-    new_record = habit.record_by(day)
-    logger.info(f"habit_tick: New record state: {new_record.done if new_record else None}")
     
     # Scroll to the updated habit
     ui.run_javascript(f"""
@@ -95,7 +87,6 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
 
 class BaseHabitCheckBox(ui.checkbox):
     def __init__(self, habit: Habit, day: datetime.date, value: bool | None) -> None:
-        logger.info(f"Initializing checkbox for day {day} with value: {value}")
         # Initialize with the actual state
         super().__init__("", value=value if value is not None else False)
         self.habit = habit
@@ -107,7 +98,6 @@ class BaseHabitCheckBox(ui.checkbox):
         self.skipped_icon = icons.CLOSE
         
         # Set up initial state
-        logger.info(f"Setting up initial state for day {day}: value={value}, skipped={self.skipped}")
         self._update_icons()
         self._update_style(value)
 
@@ -116,27 +106,19 @@ class BaseHabitCheckBox(ui.checkbox):
         self.moving = False
 
     def _update_icons(self):
-        logger.info(f"_update_icons: skipped={self.skipped}, value={self.value}")
         if self.skipped:
-            logger.info("Setting skipped icons")
             self.props(f'checked-icon="{self.skipped_icon}" unchecked-icon="{self.skipped_icon}" keep-color')
         elif self.value:
-            logger.info("Setting checked icons")
             self.props(f'checked-icon="{self.checked_icon}" unchecked-icon="{self.checked_icon}" keep-color')
         else:
-            logger.info("Setting unchecked icons")
             self.props(f'checked-icon="{self.unchecked_icon}" unchecked-icon="{self.unchecked_icon}" keep-color')
 
     async def _update_style(self, value: bool | None):
-        logger.info(f"_update_style called with value: {value}, current skipped: {self.skipped}")
-        
         # First update internal state
         if value is None:  # Skipped state
-            logger.info("Setting skipped state")
             self.value = True  # Show skipped icon
             self.skipped = True
         else:
-            logger.info(f"Setting normal state: value={value}")
             self.value = value
             self.skipped = False
         
@@ -147,7 +129,6 @@ class BaseHabitCheckBox(ui.checkbox):
             self.props("color=currentColor" if self.value else "color=grey-8")
         
         self._update_icons()
-        logger.info(f"After _update_style: value={self.value}, skipped={self.skipped}")
             
         # Add a small delay to ensure habit state is updated
         await asyncio.sleep(0.1)
@@ -170,14 +151,10 @@ class BaseHabitCheckBox(ui.checkbox):
             self.habit.record_by(self.day).done is None
         )
         
-        # Log Python-side state
-        logger.info(f"Updating habit color: id={self.habit.id}, goal={self.habit.weekly_goal}, ticks={week_ticks}, skipped={is_skipped_today}")
-        
         # Update state directly without refreshing
         ui.run_javascript(f"updateHabitAttributes('{self.habit.id}', {self.habit.weekly_goal or 0}, {week_ticks}, {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'}, {str(last_week_complete).lower()})")
 
     async def _mouse_down_event(self, e):
-        logger.info(f"Down event: {self.day}, {e.args.get('type')}")
         self.hold.clear()
         self.moving = False
         try:
@@ -195,33 +172,25 @@ class BaseHabitCheckBox(ui.checkbox):
                 await self._update_style(value)
         else:
             if self.moving:
-                logger.info("Mouse moving, skip...")
                 return
             # Get current state from database
             record = self.habit.record_by(self.day)
             current_state = record.done if record else False
-            logger.info(f"Current database state: {current_state}")
             
             # Determine next state based on current database state
             if current_state is None:  # Currently skipped
-                logger.info("State: skipped -> original")
                 value = False  # Move to original state
             elif current_state:  # Currently checked
-                logger.info("State: checked -> skipped")
                 value = None  # Move to skipped
             else:  # Currently unchecked
-                logger.info("State: original -> checked")
                 value = True  # Move to checked
             
-            logger.info(f"Setting new state to: {value}")
             # Do update completion status
             await habit_tick(self.habit, self.day, value)
             # Update local state with latest data
             await self._update_style(value)
-            logger.info(f"After state update: value={self.value}, skipped={self.skipped}")
 
     async def _mouse_up_event(self, e):
-        logger.info(f"Up event: {self.day}, {e.args.get('type')}")
         self.hold.set()
 
     async def _mouse_move_event(self):
@@ -239,9 +208,6 @@ class HabitCheckBox(BaseHabitCheckBox):
         self.on("mouseup.prevent", self._mouse_up_event)
         self.on("touchend.prevent", self._mouse_up_event)
         self.on("touchmove", self._mouse_move_event)
-        
-        # Log initialization
-        logger.info(f"HabitCheckBox initialized with refresh function: {refresh is not None}")
 
 class HabitStarCheckbox(ui.checkbox):
     def __init__(self, habit: Habit, refresh: Callable) -> None:
@@ -254,7 +220,6 @@ class HabitStarCheckbox(ui.checkbox):
 
     async def _async_task(self, e):
         self.habit.star = e.value
-        logger.info(f"Star changed to {e.value}")
         
         self.refresh()
         
@@ -272,7 +237,6 @@ class CalendarCheckBox(BaseHabitCheckBox):
         # Get initial state before calling super()
         record = habit.record_by(day)
         initial_value = record.done if record else False
-        logger.info(f"CalendarCheckBox init: day={day}, initial_value={initial_value}")
         
         # Pass the correct initial value to super()
         super().__init__(habit, day, initial_value)
