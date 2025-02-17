@@ -148,10 +148,30 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], h
                             IndexBadge(habit)
 
 @ui.refreshable
+async def letter_filter_ui(active_habits: List[Habit]):
+    # Get unique first letters
+    available_letters = sorted(set(habit.name[0].upper() for habit in active_habits))
+    
+    with ui.row().classes("w-full justify-center gap-2 mb-4"):
+        for letter in available_letters:
+            ui.button(
+                letter,
+                on_click=lambda l=letter: ui.run_javascript(
+                    f'filterHabits("{l}");'
+                )
+            ).props('flat dense').classes('letter-filter-btn')
+
 async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User | None = None):
     # Get active habits and sort them
     active_habits = HabitListBuilder(habits, days=days).status(HabitStatus.ACTIVE).build()
 
     async with layout(user=user):
+        # Add habit-filter.js to the page if feature is enabled
+        if settings.ENABLE_LETTER_FILTER:
+            ui.add_head_html(
+                '<script src="/statics/js/habit-filter.js"></script>'
+            )
         await week_navigation(days)
+        if settings.ENABLE_LETTER_FILTER:
+            await letter_filter_ui(active_habits)
         await habit_list_ui(days, active_habits, habits)

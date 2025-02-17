@@ -5,8 +5,9 @@ __all__ = [
 ]
 
 js_paths = {
-    'settings': '/statics/js/settings.js',
-    'utils': '/statics/js/utils.js',
-    'habit_color': '/statics/js/habit-color.js',
-    'habit_sort': '/statics/js/habit-sort.js',
+    "habit-color": "/statics/js/habit-color.js",
+    "habit-sort": "/statics/js/habit-sort.js",
+    "habit-filter": "/statics/js/habit-filter.js",
+    "utils": "/statics/js/utils.js",
+    "settings": "/statics/js/settings.js",
 }

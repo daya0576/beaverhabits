@@ -57,6 +57,7 @@ class Settings(BaseSettings):
 
     # Features
     ENABLE_HABIT_NOTES: bool = False  # Set to False to disable notes
+    ENABLE_LETTER_FILTER: bool = True  # Set to False to disable letter filter bar
 
     # Logging
     LOG_LEVEL: str = "WARNING"  # Can be DEBUG, INFO, WARNING, ERROR, CRITICAL
