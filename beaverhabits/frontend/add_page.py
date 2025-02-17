@@ -27,12 +27,12 @@ async def add_ui(habit_list: HabitList, lists: list):
             with ui.column().classes("w-full gap-4"):
                 # First line: Name (full width)
                 with ui.row().classes("w-full"):
-                    name = HabitNameInput(item, add_ui.refresh)
+                    name = HabitNameInput(item, None)
                     name.classes("w-full")
 
                 # Second line: Weekly Goal
                 with ui.row().classes("items-center gap-2"):
-                    goal = WeeklyGoalInput(item, add_ui.refresh)
+                    goal = WeeklyGoalInput(item, None)
                     ui.label("times per week")
 
                 # Third line: List Selection (full width)
