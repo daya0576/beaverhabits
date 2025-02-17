@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     ENABLE_LETTER_FILTER: bool = True  # Set to False to disable letter filter bar
 
     # Logging
-    LOG_LEVEL: str = "WARNING"  # Can be DEBUG, INFO, WARNING, ERROR, CRITICAL
+    LOG_LEVEL: str = "DEBUG"  # Can be DEBUG, INFO, WARNING, ERROR, CRITICAL
 
     def is_dev(self):
         return self.ENV == "dev"

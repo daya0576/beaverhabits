@@ -243,8 +243,16 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
                 return habit
 
     async def add(self, name: str) -> None:
+        logger.debug(f"Adding habit '{name}' to list")
         d = {"name": name, "records": [], "id": generate_short_hash(name)}
         self.data["habits"].append(d)
+        logger.debug(f"List data after add: {self.data}")
+        
+        # Save the list after adding the habit
+        if hasattr(self.data, 'save'):
+            logger.debug("Saving habit list to database")
+            await self.data.save()
+            logger.debug("Habit list saved successfully")
 
     async def remove(self, item: DictHabit) -> None:
         self.data["habits"].remove(item.data)

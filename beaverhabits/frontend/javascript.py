@@ -10,4 +10,5 @@ js_paths = {
     "habit-filter": "/statics/js/habit-filter.js",
     "utils": "/statics/js/utils.js",
     "settings": "/statics/js/settings.js",
+    "habit-ui": "/statics/js/habit-ui.js",
 }

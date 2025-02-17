@@ -190,10 +190,7 @@ async def add_page(user: User = Depends(current_active_user)) -> None:
     if not habit_list:
         habit_list = DictHabitList({"habits": []})
     
-    # Filter habits by list if specified
-    list_id = get_current_list_id()
-    if list_id:
-        habit_list = filter_habits_by_list(habit_list, list_id)
+    # Don't filter habits in add page since we want to add to main list
     await add_page_ui(habit_list, user)
 
 
@@ -257,7 +254,7 @@ async def login_page() -> Optional[RedirectResponse]:
             ui.notify("email or password wrong!", color="negative")
 
     with ui.card().classes("absolute-center shadow-none w-96"):
-        email = ui.input("email", type="email").on("keydown.enter", try_login)
+        email = ui.input("email").on("keydown.enter", try_login)
         email.classes("w-56")
 
         password = ui.input("password", password=True, password_toggle_button=True)
@@ -292,7 +289,7 @@ async def register_page():
 
     await views.validate_max_user_count()
     with ui.card().classes("absolute-center shadow-none w-96"):
-        email = ui.input("email", type="email").on("keydown.enter", try_register).classes("w-56")
+        email = ui.input("email").on("keydown.enter", try_register).classes("w-56")
         password = (
             ui.input("password", password=True, password_toggle_button=True)
             .on("keydown.enter", try_register)

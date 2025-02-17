@@ -20,6 +20,9 @@ class HabitSaveButton(ui.button):
             logger.info(f"Saved habit: {self.habit.name}")
             ui.notify(f"Saved {self.habit.name}")
             self.refresh()
+            
+            # Scroll to the saved habit
+            ui.run_javascript(f"scrollToHabit('{self.habit.id}')")
         else:
             logger.error(f"Habit {self.habit.name} does not have a save method")
             ui.notify(f"Error saving {self.habit.name}", type="error")
@@ -67,6 +70,9 @@ class HabitDeleteButton(ui.button):
             logger.info(f"Saved status change for: {self.habit.name}")
 
         self.refresh()
+        
+        # Scroll to the updated habit
+        ui.run_javascript(f"scrollToHabit('{self.habit.id}')")
 
 class HabitAddButton:
     def __init__(self, habit_list: HabitList, refresh: Callable, list_options: list[dict] = None) -> None:
@@ -84,7 +90,9 @@ class HabitAddButton:
     async def _async_task(self):
         if not self.name_input.value:
             return
+        logger.debug(f"Adding habit to list: {self.habit_list}")
         await self.habit_list.add(self.name_input.value)
+        logger.debug(f"Habit list after add: {self.habit_list}")
         logger.info(f"Added new habit: {self.name_input.value}")
         
         # Get the new habit's ID (it's the last one in the list)
@@ -94,22 +102,7 @@ class HabitAddButton:
             # Refresh the UI
             self.refresh()
             # Scroll to the new habit
-            ui.run_javascript(f"""
-            setTimeout(() => {{
-                const cards = document.querySelectorAll(`[data-habit-id="{new_habit_id}"]`);
-                const card = cards[cards.length - 1];  // Get the last matching card
-                if (card) {{
-                    // First scroll to make sure the card is in view
-                    card.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
-                    
-                    // Add highlight effect
-                    card.classList.add('highlight-card');
-                    setTimeout(() => {{
-                        card.classList.remove('highlight-card');
-                    }}, 1000);
-                }}
-            }}, 300);  // Increased delay to ensure DOM is updated
-            """)
+            ui.run_javascript(f"scrollToHabit('{new_habit_id}')")
         else:
             self.refresh()
             

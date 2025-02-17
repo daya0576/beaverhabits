@@ -52,10 +52,8 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     record = await habit.tick(day, yes, text)
     logger.info(f"Habit ticked: {day} {yes}, note: {text}")
     
-    # Save the note change
-    if hasattr(habit, 'save'):
-        await habit.save()
-        logger.info(f"Saved note change for: {habit.name}")
+    # Scroll to the updated habit
+    ui.run_javascript(f"scrollToHabit('{habit.id}')")
     
     return record.done
 
@@ -74,14 +72,26 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
     logger.info(f"habit_tick: Setting new state to: {value}")
     await habit.tick(day, value)
     
-    # Save the tick change
-    if hasattr(habit, 'save'):
-        await habit.save()
-        logger.info(f"Saved tick change for: {habit.name}")
-    
     # Verify the state change
     new_record = habit.record_by(day)
     logger.info(f"habit_tick: New record state: {new_record.done if new_record else None}")
+    
+    # Scroll to the updated habit
+    ui.run_javascript(f"""
+    setTimeout(() => {{
+        const cards = document.querySelectorAll(`[data-habit-id="{habit.id}"]`);
+        const card = cards[cards.length - 1];
+        if (card) {{
+            card.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+            
+            // Add highlight effect
+            card.classList.add('highlight-card');
+            setTimeout(() => {{
+                card.classList.remove('highlight-card');
+            }}, 1000);
+        }}
+    }}, 300);  // Delay to ensure DOM is updated
+    """)
 
 class BaseHabitCheckBox(ui.checkbox):
     def __init__(self, habit: Habit, day: datetime.date, value: bool | None) -> None:
@@ -164,49 +174,7 @@ class BaseHabitCheckBox(ui.checkbox):
         logger.info(f"Updating habit color: id={self.habit.id}, goal={self.habit.weekly_goal}, ticks={week_ticks}, skipped={is_skipped_today}")
         
         # Update state directly without refreshing
-        ui.run_javascript(f"""
-        if (!window.habitColorState) {{
-            console.error('Habit color state not initialized - check script loading');
-            return;
-        }}
-
-        debugLog('Updating habit from Python:', {{
-            habitId: '{self.habit.id}',
-            weeklyGoal: {self.habit.weekly_goal or 0},
-            weekTicks: {week_ticks},
-            isSkippedToday: {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'}
-        }});
-
-        try {{
-            // Update all elements with this habit ID
-            const habitElements = document.querySelectorAll(`[data-habit-id="{self.habit.id}"]`);
-            debugLog(`Found ${{habitElements.length}} elements for habit {self.habit.id}`);
-            
-            habitElements.forEach(element => {{
-                debugLog('Updating element:', element);
-                element.setAttribute('data-weekly-goal', '{self.habit.weekly_goal or 0}');
-                element.setAttribute('data-week-ticks', '{week_ticks}');
-            element.setAttribute('data-skipped', '{str(is_skipped_today).lower()}');
-            element.setAttribute('data-last-week-complete', '{str(last_week_complete).lower()}');
-            }});
-            
-            // Call updateHabitColor to update the colors
-            if (window.updateHabitColor) {{
-                debugLog('Calling updateHabitColor');
-                window.updateHabitColor(
-                    '{self.habit.id}', 
-                    {self.habit.weekly_goal or 0}, 
-                    {week_ticks},
-                    {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'},
-                    {str(last_week_complete).lower()}
-                );
-            }} else {{
-                console.error('updateHabitColor function not found - check script loading');
-            }}
-        }} catch (error) {{
-            console.error('Error updating habit color:', error);
-        }}
-        """)
+        ui.run_javascript(f"updateHabitAttributes('{self.habit.id}', {self.habit.weekly_goal or 0}, {week_ticks}, {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'}, {str(last_week_complete).lower()})")
 
     async def _mouse_down_event(self, e):
         logger.info(f"Down event: {self.day}, {e.args.get('type')}")
@@ -280,20 +248,18 @@ class HabitStarCheckbox(ui.checkbox):
         super().__init__("", value=habit.star)
         self.habit = habit
         self.refresh = refresh
-        self.props("dense color=yellow-8")
-        self.props('checked-icon="star" unchecked-icon="star_outline"')
+        self.props("dense fab-mini color=yellow-8")
+        self.props('checked-icon="star" unchecked-icon="star_outline" size="sm"')
         self.on("change", self._async_task)
 
     async def _async_task(self, e):
         self.habit.star = e.value
         logger.info(f"Star changed to {e.value}")
         
-        # Save the star change
-        if hasattr(self.habit, 'save'):
-            await self.habit.save()
-            logger.info(f"Saved star change for: {self.habit.name}")
-        
         self.refresh()
+        
+        # Scroll to the updated habit
+        ui.run_javascript(f"scrollToHabit('{self.habit.id}')")
 
 class CalendarCheckBox(BaseHabitCheckBox):
     def __init__(
