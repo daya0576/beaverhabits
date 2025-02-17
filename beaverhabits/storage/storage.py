@@ -192,25 +192,15 @@ def get_habit_priority(habit: Habit, days: list[datetime.date]) -> int:
     is_skipped_today = record and record.done is None
     is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
 
-    logger.info(f"Priority calculation for {habit.name}:")
-    logger.info(f"  - week_ticks: {week_ticks}")
-    logger.info(f"  - has_actions: {has_actions}")
-    logger.info(f"  - is_skipped_today: {is_skipped_today}")
-    logger.info(f"  - is_completed: {is_completed}")
-
     # Check in ascending priority order
-    priority = None
     if not has_actions:
-        priority = 0  # No checks (first)
+        return 0  # No checks (first)
     elif has_actions and not is_skipped_today and not is_completed:
-        priority = 1  # Partially checked (second)
+        return 1  # Partially checked (second)
     elif is_skipped_today:
-        priority = 2  # Skipped today (third)
+        return 2  # Skipped today (third)
     else:
-        priority = 3  # Completed (last)
-    
-    logger.info(f"  => Final priority: {priority}")
-    return priority
+        return 3  # Completed (last)
 
 class HabitListBuilder[H: Habit]:
     def __init__(self, habit_list: HabitList[H], days: list[datetime.date] | None = None):
