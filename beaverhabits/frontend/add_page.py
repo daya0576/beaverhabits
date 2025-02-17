@@ -6,6 +6,7 @@ from beaverhabits.frontend.components import (
     HabitAddButton,
     HabitDeleteButton,
     HabitNameInput,
+    HabitSaveButton,
     HabitStarCheckbox,
     WeeklyGoalInput,
 )
@@ -51,8 +52,9 @@ async def add_ui(habit_list: HabitList, lists: list):
                     on_change=lambda e, h=item: setattr(h, 'list_id', name_to_id[e.value])
                 ).props('dense outlined options-dense').classes("w-full")
 
-                # Fourth line: Star and Delete buttons (right-aligned)
+                # Fourth line: Save, Star and Delete buttons (right-aligned)
                 with ui.row().classes("w-full justify-end gap-2"):
+                    save = HabitSaveButton(item, add_ui.refresh)
                     star = HabitStarCheckbox(item, add_ui.refresh)
                     delete = HabitDeleteButton(item, habit_list, add_ui.refresh)
 

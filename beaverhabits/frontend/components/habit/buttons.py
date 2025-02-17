@@ -5,6 +5,20 @@ from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.storage import Habit, HabitList, HabitStatus
 
+class HabitSaveButton(ui.button):
+    def __init__(self, habit: Habit, refresh: Callable) -> None:
+        super().__init__(on_click=self._async_task, icon=icons.SAVE)
+        self.habit = habit
+        self.refresh = refresh
+        self.props("flat fab-mini color=grey-9")
+
+    async def _async_task(self):
+        # Save the habit
+        await self.habit.data.save()
+        logger.info(f"Saved habit: {self.habit.name}")
+        ui.notify(f"Saved {self.habit.name}")
+        self.refresh()
+
 class HabitEditButton(ui.button):
     def __init__(self, habit: Habit) -> None:
         super().__init__(on_click=self._async_task, icon="edit_square")

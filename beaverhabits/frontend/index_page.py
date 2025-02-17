@@ -34,7 +34,7 @@ async def week_navigation(days: list[datetime.date]):
     offset = get_week_offset()
     state = ui.state(dict(can_go_forward=offset < 0))
     
-    with ui.row().classes("w-full items-center justify-center gap-4 mb-4"):
+    with ui.row().classes("w-full items-center justify-center gap-4 mb-2"):
         ui.button(
             "←",
             on_click=lambda: change_week(offset - 1)
@@ -118,7 +118,7 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], h
                             # Goal count fixed to top right
                             if habit.weekly_goal:
                                 with ui.element("div").classes("absolute top-2 right-4"):
-                                    goal_label = ui.label(f"{habit.weekly_goal}x").classes("text-sm")
+                                    goal_label = ui.label(f"{int(habit.weekly_goal)}x").classes("text-sm")
                                     goal_label.style(f"color: {initial_color};")
                             
                             # Priority label if enabled
@@ -152,7 +152,7 @@ async def letter_filter_ui(active_habits: List[Habit]):
     # Get unique first letters
     available_letters = sorted(set(habit.name[0].upper() for habit in active_habits))
     
-    with ui.row().classes("w-full justify-center gap-2 mb-4"):
+    with ui.row().classes("w-full justify-center gap-2 mb-2"):
         for letter in available_letters:
             ui.button(
                 letter,

@@ -24,9 +24,9 @@ STAR_FULL = SVG_TEMPLATE.format(height="24", color="rgb(158,158,158)", data="m30
 SQUARE_TODAY_CIRCLE = "<circle cx='10' cy='10' r='7' fill='none' stroke='white' stroke-width='0.5' opacity='0.3'/>"
 SQUARE = """\
 img:data:image/svg+xml;charset=utf8,\
-<svg viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'>\
+<svg viewBox='0 0 72 72' xmlns='http://www.w3.org/2000/svg'>\
     <rect x='1' y='1' width='72' height='72' rx='2.5' fill='{color}'/>\
-    <text x='38' text-anchor='middle' y='38' dominant-baseline='central' fill='{text_color}' font-size='60' \
+    <text x='35' text-anchor='middle' y='38' dominant-baseline='central' fill='{text_color}' font-size='50' \
         style='font-family: Roboto,-apple-system,Helvetica Neue,Helvetica,Arial,sans-serif;'\
         class='font-light'\
     >{text}</text>\
@@ -34,4 +34,6 @@ img:data:image/svg+xml;charset=utf8,\
 """
 
 HELP = SVG_TEMPLATE.format(height="24", color="rgb(204,204,204)", data="M478-240q21 0 35.5-14.5T528-290q0-21-14.5-35.5T478-340q-21 0-35.5 14.5T428-290q0 21 14.5 35.5T478-240Zm-36-154h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z")
+
+SAVE = SVG_TEMPLATE.format(height="24", color="rgb(158,158,158)", data="M720-120H240q-33 0-56.5-23.5T160-200v-560q0-33 23.5-56.5T240-840h480q33 0 56.5 23.5T800-760v560q0 33-23.5 56.5T720-120Zm0-80v-560H240v560h480Zm-400-80h320v-200H320v200Zm0-280h320v-80H320v80Zm80 200v-120h160v120H400ZM240-200v-560 560Z")
 # fmt: on

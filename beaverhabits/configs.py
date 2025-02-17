@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     # Storage
     HABITS_STORAGE: StorageType = StorageType.USER_DATABASE
     DATABASE_URL: str = f"sqlite+aiosqlite:///./{USER_DATA_FOLDER}/habits.db"
+    ENABLE_AUTOSAVE: bool = False  # Set to True to enable autosave (may cause issues with concurrent edits)
     MAX_USER_COUNT: int = -1
     JWT_SECRET: str = "54o53o847gdlfjfdljgd"
     JWT_LIFETIME_SECONDS: int = 60 * 60 * 24 * 30

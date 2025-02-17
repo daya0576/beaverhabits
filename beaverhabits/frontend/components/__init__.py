@@ -7,7 +7,7 @@ from .base import (
 )
 
 from .habit.badges import HabitTotalBadge, IndexBadge
-from .habit.buttons import HabitEditButton, HabitDeleteButton, HabitAddButton
+from .habit.buttons import HabitEditButton, HabitDeleteButton, HabitAddButton, HabitSaveButton
 from .habit.cards import HabitOrderCard
 from .habit.checkbox import HabitCheckBox, CalendarCheckBox, HabitStarCheckbox, habit_tick, note_tick
 from .habit.inputs import WeeklyGoalInput, HabitNameInput, HabitDateInput
@@ -30,6 +30,7 @@ __all__ = [
     'HabitEditButton',
     'HabitDeleteButton',
     'HabitAddButton',
+    'HabitSaveButton',
     'HabitOrderCard',
     'HabitCheckBox',
     'CalendarCheckBox',

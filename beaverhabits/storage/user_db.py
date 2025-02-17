@@ -5,6 +5,7 @@ from nicegui.storage import observables
 
 from beaverhabits.app import crud
 from beaverhabits.app.db import User
+from beaverhabits.configs import settings
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DictHabit, DictHabitList, DictList
 from beaverhabits.utils import generate_short_hash
@@ -15,7 +16,8 @@ class DatabasePersistentDict(observables.ObservableDict):
 
     def __init__(self, user: User, data: dict) -> None:
         self.user = user
-        super().__init__(data, on_change=self.backup)
+        # Only use on_change callback if autosave is enabled
+        super().__init__(data, on_change=self.backup if settings.ENABLE_AUTOSAVE else None)
 
     def backup(self) -> None:
         async def backup():
@@ -25,6 +27,9 @@ class DatabasePersistentDict(observables.ObservableDict):
             background_tasks.create_lazy(backup(), name=self.user.email)
         else:
             core.app.on_startup(backup())
+
+    async def save(self) -> None:
+        await crud.update_user_habit_list(self.user, self)
 
 
 class UserDatabaseStorage(UserStorage[DictHabitList, DictHabit]):
