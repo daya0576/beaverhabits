@@ -27,7 +27,7 @@ async def add_ui(habit_list: HabitList, lists: list):
             with ui.column().classes("w-full gap-4"):
                 # First line: Name (full width)
                 with ui.row().classes("w-full"):
-                    name = HabitNameInput(item)
+                    name = HabitNameInput(item, add_ui.refresh)
                     name.classes("w-full")
 
                 # Second line: Weekly Goal
@@ -49,12 +49,16 @@ async def add_ui(habit_list: HabitList, lists: list):
                 list_select = ui.select(
                     options=options,
                     value=current_name,
-                    on_change=lambda e, h=item: setattr(h, 'list_id', name_to_id[e.value])
+                    on_change=lambda e, h=item: (setattr(h, 'list_id', name_to_id[e.value]))
                 ).props('dense outlined options-dense').classes("w-full")
+                list_select.bind_value_from(lambda: next(
+                    (name for name, id in name_to_id.items() if id == item.list_id),
+                    "No List"
+                ))
 
                 # Fourth line: Save, Star and Delete buttons (right-aligned)
                 with ui.row().classes("w-full justify-end gap-2"):
-                    save = HabitSaveButton(item, add_ui.refresh)
+                    save = HabitSaveButton(item, habit_list, add_ui.refresh)
                     star = HabitStarCheckbox(item, add_ui.refresh)
                     delete = HabitDeleteButton(item, habit_list, add_ui.refresh)
 

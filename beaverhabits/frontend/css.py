@@ -5,6 +5,20 @@ CHECK_BOX_CSS = """
 }
 """
 
+# Expansion styles
+EXPANSION_CSS = """
+.q-expansion-item__container {
+    border: none !important;
+}
+"""
+
+# Hide timeline title
+HIDE_TIMELINE_TITLE = """
+.q-timeline__title {
+    display: none;
+}
+"""
+
 # Calendar styles
 CALENDAR_CSS = """
 .calendar-heatmap {
@@ -79,20 +93,6 @@ CALENDAR_CSS = """
 .calendar-heatmap .graph-rect:hover {
     stroke: #000;
     stroke-width: 1px;
-}
-"""
-
-# Expansion styles
-EXPANSION_CSS = """
-.q-expansion-item__container {
-    border: none !important;
-}
-"""
-
-# Hide timeline title
-HIDE_TIMELINE_TITLE = """
-.q-timeline__title {
-    display: none;
 }
 """
 

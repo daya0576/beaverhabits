@@ -90,6 +90,8 @@ class Habit[R: CheckedRecord](Protocol):
         self, day: datetime.date, done: bool | None, text: str | None = None
     ) -> CheckedRecord: ...
 
+    async def save(self) -> None: ...
+
     def __str__(self):
         return self.name
 
@@ -224,59 +226,41 @@ class HabitListBuilder[H: Habit]:
         return self
 
     def build(self) -> TypeList[H]:
-        # Deep copy the list
+        # Filter and return original habits
         habits = [x for x in self.habit_list.habits if x.status in self.status_list]
-
-        logger.info("\nBefore sorting:")
-        for habit in habits:
-            logger.info(f"  {habit.name}: priority {get_habit_priority(habit, self.days)}")
 
         # Get order if exists
         o = self.habit_list.order
 
         def compare_habits(a: H, b: H) -> int:
-            logger.info(f"\nComparing habits: {a.name} vs {b.name}")
-            
             # First compare by status
             status_a = HabitStatus.all().index(a.status)
             status_b = HabitStatus.all().index(b.status)
             if status_a != status_b:
-                logger.info(f"  Status diff: {status_a} vs {status_b} = {status_a - status_b}")
                 return status_a - status_b
             
             # Then by priority
             priority_a = get_habit_priority(a, self.days)
             priority_b = get_habit_priority(b, self.days)
             if priority_a != priority_b:
-                logger.info(f"  Priority diff: {priority_a} vs {priority_b} = {priority_a - priority_b}")
                 return priority_a - priority_b  # Lower priority first
             
             # Then by star
             if a.star != b.star:
-                result = -1 if a.star else 1  # Starred on top
-                logger.info(f"  Star diff: {a.star} vs {b.star} = {result}")
-                return result
+                return -1 if a.star else 1  # Starred on top
             
             # Then by name
             name_cmp = (a.name.lower() > b.name.lower()) - (a.name.lower() < b.name.lower())
             if name_cmp != 0:
-                logger.info(f"  Name diff: {a.name} vs {b.name} = {name_cmp}")
                 return name_cmp
             
             # Finally by manual order
             if o:
                 a_idx = o.index(str(a.id)) if str(a.id) in o else float("inf")
                 b_idx = o.index(str(b.id)) if str(b.id) in o else float("inf")
-                result = (a_idx > b_idx) - (a_idx < b_idx)
-                logger.info(f"  Manual order diff: {a_idx} vs {b_idx} = {result}")
-                return result
+                return (a_idx > b_idx) - (a_idx < b_idx)
             return 0
 
         from functools import cmp_to_key
         habits.sort(key=cmp_to_key(compare_habits))
-        
-        logger.info("\nFinal sort order:")
-        for habit in habits:
-            logger.info(f"  {habit.name}: priority {get_habit_priority(habit, self.days)}")
-        
         return habits

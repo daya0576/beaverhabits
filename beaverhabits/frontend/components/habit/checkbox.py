@@ -51,6 +51,12 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
 
     record = await habit.tick(day, yes, text)
     logger.info(f"Habit ticked: {day} {yes}, note: {text}")
+    
+    # Save the note change
+    if hasattr(habit, 'save'):
+        await habit.save()
+        logger.info(f"Saved note change for: {habit.name}")
+    
     return record.done
 
 @ratelimiter(limit=30, window=30)
@@ -67,6 +73,11 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
     # Transaction start
     logger.info(f"habit_tick: Setting new state to: {value}")
     await habit.tick(day, value)
+    
+    # Save the tick change
+    if hasattr(habit, 'save'):
+        await habit.save()
+        logger.info(f"Saved tick change for: {habit.name}")
     
     # Verify the state change
     new_record = habit.record_by(day)
@@ -276,6 +287,12 @@ class HabitStarCheckbox(ui.checkbox):
     async def _async_task(self, e):
         self.habit.star = e.value
         logger.info(f"Star changed to {e.value}")
+        
+        # Save the star change
+        if hasattr(self.habit, 'save'):
+            await self.habit.save()
+            logger.info(f"Saved star change for: {self.habit.name}")
+        
         self.refresh()
 
 class CalendarCheckBox(BaseHabitCheckBox):

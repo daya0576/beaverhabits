@@ -66,9 +66,14 @@ class HabitDataCache:
 
 @dataclass
 class DictHabit(Habit[DictRecord], DictStorage):
-    def __init__(self, data: dict) -> None:
+    def __init__(self, data: dict, save_fn=None) -> None:
         self.data = data
+        self._save = save_fn
         self.cache = HabitDataCache(self)
+
+    async def save(self):
+        if self._save:
+            await self._save()
 
     @property
     def list_id(self) -> str | None:
@@ -221,7 +226,8 @@ class DictList(List[DictHabit], DictStorage):
 class DictHabitList(HabitList[DictHabit], DictStorage):
     @property
     def habits(self) -> list[DictHabit]:
-        return [DictHabit(d) for d in self.data["habits"]]
+        return [DictHabit(d, save_fn=self.data.save if hasattr(self.data, 'save') else None) 
+                for d in self.data["habits"]]
 
     @property
     def order(self) -> list[str]:

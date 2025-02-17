@@ -6,18 +6,23 @@ from beaverhabits.logging import logger
 from beaverhabits.storage.storage import Habit, HabitList, HabitStatus
 
 class HabitSaveButton(ui.button):
-    def __init__(self, habit: Habit, refresh: Callable) -> None:
+    def __init__(self, habit: Habit, habit_list: HabitList, refresh: Callable) -> None:
         super().__init__(on_click=self._async_task, icon=icons.SAVE)
         self.habit = habit
+        self.habit_list = habit_list
         self.refresh = refresh
         self.props("flat fab-mini color=grey-9")
 
     async def _async_task(self):
         # Save the habit
-        await self.habit.data.save()
-        logger.info(f"Saved habit: {self.habit.name}")
-        ui.notify(f"Saved {self.habit.name}")
-        self.refresh()
+        if hasattr(self.habit, 'save'):
+            await self.habit.save()
+            logger.info(f"Saved habit: {self.habit.name}")
+            ui.notify(f"Saved {self.habit.name}")
+            self.refresh()
+        else:
+            logger.error(f"Habit {self.habit.name} does not have a save method")
+            ui.notify(f"Error saving {self.habit.name}", type="error")
 
 class HabitEditButton(ui.button):
     def __init__(self, habit: Habit) -> None:
@@ -55,6 +60,11 @@ class HabitDeleteButton(ui.button):
                 return
             self.habit.status = HabitStatus.SOLF_DELETED
             logger.info(f"Soft delete habit: {self.habit.name}")
+
+        # Save the status change
+        if hasattr(self.habit, 'save'):
+            await self.habit.save()
+            logger.info(f"Saved status change for: {self.habit.name}")
 
         self.refresh()
 

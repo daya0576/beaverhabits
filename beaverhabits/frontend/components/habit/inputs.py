@@ -19,24 +19,26 @@ class WeeklyGoalInput(ui.number):
         self.habit = habit
         self.refresh = refresh
         self.props("dense hide-bottom-space")
+        self.bind_value(target_object=habit, target_name='weekly_goal')
         self.on("blur", self._async_task)
 
     async def _async_task(self):
-        self.habit.weekly_goal = self.value or 0  # Default to 0 if None
-        logger.info(f"Weekly goal changed to {self.habit.weekly_goal}")
+        logger.info(f"Weekly goal changed to {self.value}")
         self.refresh()
 
 class HabitNameInput(ui.input):
-    def __init__(self, habit: Habit) -> None:
+    def __init__(self, habit: Habit, refresh: Callable) -> None:
         super().__init__(value=habit.name)
         self.habit = habit
+        self.refresh = refresh
         self.validation = self._validate
         self.props("dense hide-bottom-space")
+        self.bind_value(target_object=habit, target_name='name')
         self.on("blur", self._async_task)
 
     async def _async_task(self):
-        self.habit.name = self.value
         logger.info(f"Habit Name changed to {self.value}")
+        self.refresh()
 
     def _validate(self, value: str) -> Optional[str]:
         if not value:
