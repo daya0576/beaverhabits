@@ -56,11 +56,15 @@ async def add_ui(habit_list: HabitList, lists: list):
                     "No List"
                 ))
 
-                # Fourth line: Save, Star and Delete buttons (right-aligned)
-                with ui.row().classes("w-full justify-end gap-2 items-center"):
+                # Fourth line: Save button on left, Star and Delete on right
+                with ui.row().classes("w-full justify-between items-center"):
+                    # Left side - Save button
                     save = HabitSaveButton(item, habit_list, add_ui.refresh)
-                    star = HabitStarCheckbox(item, add_ui.refresh)
-                    delete = HabitDeleteButton(item, habit_list, add_ui.refresh)
+                    
+                    # Right side - Star and Delete buttons
+                    with ui.row().classes("gap-2 items-center"):
+                        star = HabitStarCheckbox(item, add_ui.refresh)
+                        delete = HabitDeleteButton(item, habit_list, add_ui.refresh)
 
 
 async def add_page_ui(habit_list: HabitList, user: User):

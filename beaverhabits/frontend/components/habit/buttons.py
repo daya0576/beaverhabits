@@ -7,11 +7,11 @@ from beaverhabits.storage.storage import Habit, HabitList, HabitStatus
 
 class HabitSaveButton(ui.button):
     def __init__(self, habit: Habit, habit_list: HabitList, refresh: Callable) -> None:
-        super().__init__(on_click=self._async_task, icon=icons.SAVE)
+        super().__init__(on_click=self._async_task, text="Save")
         self.habit = habit
         self.habit_list = habit_list
         self.refresh = refresh
-        self.props("flat fab-mini color=grey-9")
+        self.props("unelevated dense")
 
     async def _async_task(self):
         # Save the habit
