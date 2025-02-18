@@ -13,9 +13,14 @@ A self-hosted habit tracking app without "Goals"
 
 # What's New in This Fork
 
-## Enhanced API Support
+## Enhanced Features
 
-This fork adds powerful API endpoints for managing habits and lists. See [API Documentation](API.md) for detailed information about available endpoints and usage examples.
+This fork adds several powerful enhancements:
+
+1. **List Support**: Organize habits into custom lists for better organization
+2. **Weekly Goals**: Set target number of completions per week for each habit
+3. **Quick Filtering**: Filter habits by first letter for faster access
+4. **Enhanced API Support**: Powerful API endpoints for managing habits and lists. See [API Documentation](API.md) for detailed information about available endpoints and usage examples.
 
 # Derivatives
 
@@ -103,10 +108,13 @@ uv venv && uv sync
 
 1. Habit Tracking
    - [x] Daily notes/descriptions
+   - [x] Weekly goals (set target number of completions per week)
    - [ ] Measurable habits
    - [ ] Multiple states, e.g. failed, skipped
 2. Pages & UI
    - [x] Reorder habits
+   - [x] Organize habits into lists
+   - [x] Quick filter habits by first letter
    - [ ] Category or tag
    - [ ] Light mode
    - [ ] Standalone mode for iOS
