@@ -71,7 +71,7 @@ pause
 
 # Virtual Environments
 
-- Create venv for dependency isolation
+- Create venv for dependency isolation. But only if the directory doesnt exist yet.
 - Maintain requirements.txt
 - Use latest stable versions of packages
 
@@ -99,8 +99,6 @@ pause
 - Always use logging class, not print statements
 - Handle errors gracefully with clear messages
 - Implement fallback procedures when needed
-
-
 ### BEGIN LANGUAGE JAVASCRIPT
 
 # Code Organization
