@@ -85,8 +85,10 @@ class BaseHabitCheckBox(ui.checkbox):
         
         # Set up initial state
         self._update_icons()
-        self._update_style(value)
-
+        
+        # Initialize async state
+        ui.run_async(self._init_async(value))
+        
         # Hold on event flag
         self.hold = asyncio.Event()
         self.moving = False
@@ -99,6 +101,10 @@ class BaseHabitCheckBox(ui.checkbox):
         else:
             self.props(f'checked-icon="{self.unchecked_icon}" unchecked-icon="{self.unchecked_icon}" keep-color')
 
+    async def _init_async(self, value: bool | None) -> None:
+        """Initialize async state for the checkbox."""
+        await self._update_style(value)
+        
     async def _update_style(self, value: bool | None):
         # First update internal state
         if value is None:  # Skipped state
