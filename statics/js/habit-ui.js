@@ -1,11 +1,8 @@
-function scrollToHabit(habitId) {
+function highlightHabit(habitId) {
     setTimeout(() => {
         const cards = document.querySelectorAll(`[data-habit-id="${habitId}"]`);
         const card = cards[cards.length - 1];
         if (card) {
-            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Add highlight effect
             card.classList.add('highlight-card');
             setTimeout(() => {
                 card.classList.remove('highlight-card');

@@ -51,8 +51,8 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
 
     record = await habit.tick(day, yes, text)
     
-    # Scroll to the updated habit
-    ui.run_javascript(f"scrollToHabit('{habit.id}')")
+    # Highlight the updated habit
+    ui.run_javascript(f"highlightHabit('{habit.id}')")
     
     return record.done
 
@@ -68,22 +68,8 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
     # Transaction start
     await habit.tick(day, value)
     
-    # Scroll to the updated habit
-    ui.run_javascript(f"""
-    setTimeout(() => {{
-        const cards = document.querySelectorAll(`[data-habit-id="{habit.id}"]`);
-        const card = cards[cards.length - 1];
-        if (card) {{
-            card.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
-            
-            // Add highlight effect
-            card.classList.add('highlight-card');
-            setTimeout(() => {{
-                card.classList.remove('highlight-card');
-            }}, 1000);
-        }}
-    }}, 300);  // Delay to ensure DOM is updated
-    """)
+    # Highlight the updated habit
+    ui.run_javascript(f"highlightHabit('{habit.id}')")
 
 class BaseHabitCheckBox(ui.checkbox):
     def __init__(self, habit: Habit, day: datetime.date, value: bool | None) -> None:
@@ -223,8 +209,8 @@ class HabitStarCheckbox(ui.checkbox):
         
         self.refresh()
         
-        # Scroll to the updated habit
-        ui.run_javascript(f"scrollToHabit('{self.habit.id}')")
+        # Highlight the updated habit
+        ui.run_javascript(f"highlightHabit('{self.habit.id}')")
 
 class CalendarCheckBox(BaseHabitCheckBox):
     def __init__(
