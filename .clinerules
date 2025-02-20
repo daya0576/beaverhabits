@@ -44,7 +44,21 @@ activate_environment.bat
 
 - Keep a concise README.md explaining setup and usage
 - Group related functionality into separate modules
-- Store configuration in separate files
+- Store configuration in appropriate config files
+
+# Documentation & Automation
+
+Provide .bat files for automation:
+install.bat:
+@echo off
+npm install
+echo Dependencies installed successfully
+pause
+
+run.bat:
+@echo off
+npm start
+pause
 
 ### BEGIN LANGUAGE PYTHON
 
@@ -85,6 +99,7 @@ activate_environment.bat
 - Always use logging class, not print statements
 - Handle errors gracefully with clear messages
 - Implement fallback procedures when needed
+
 ### BEGIN LANGUAGE JAVASCRIPT
 
 # Code Organization
@@ -131,3 +146,8 @@ activate_environment.bat
 
 - Use appropriate polyfills
 - Handle vendor prefixes
+
+### BEGIN Local project specific hints
+
+
+
