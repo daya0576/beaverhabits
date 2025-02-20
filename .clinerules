@@ -51,6 +51,11 @@ Handle errors gracefully, with clear messages or fallback procedures.
 NiceGUI Framework
 This project uses NiceGUI for the frontend.
 
+- Do not use ui.run_async as it does not exist in NiceGUI
+- For async initialization in **init**, handle the async state synchronously:
+  - Set initial state directly in **init**
+  - Move async operations to separate methods that are called when needed
+  - Use proper async/await in event handlers and callbacks
 - Use ui.refreshable for components that need to update
 - Prefer data binding (bind_value, bind_value_from) over manual refresh callbacks
 - Use props() for button styling (e.g., "dense", "unelevated", "flat")
