@@ -1,55 +1,86 @@
-OS
-You are working on windows.
+### BEGIN LANGUAGE_AGNOSTIC
 
-Shell
-You have a windows powershell to exectute commands.
+# System Environment
 
-Powershell does not support && to combine commands.
-For example this will not work
+OS: Windows
+Shell: Windows PowerShell
+
+# Shell Limitations
+
+PowerShell does not support && to combine commands.
+For example this will not work:
 python -m venv venv && .venv\Scripts\activate
-PowerShell, doesn't support that syntax.
-Execute the commands separately.
+Execute commands separately.
 
-Entry Point
-Use main.py for argument parsing and overall flow.
+# Project Structure
 
-Coding Conventions
-You split large code blocks into managble files and classes.
-Follow PEP 8 style guidelines.
-Use docstrings, type hints, and linters (e.g., flake8).
-Auto-format code with tools like black.
-Modular Design
+- Keep a concise README.md explaining setup and usage
+- Group related functionality into separate modules
+- Store configuration in settings.ini at project root
 
-Group related classes/functions into separate files under modules.
-Import them in main.py as needed.
-Configuration
+# Documentation & Automation
 
-Store settings in settings.ini at the project root.
-Parse these using Python’s configparser.
-Dependencies
+Provide .bat files for automation:
+install.bat:
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
 
-Maintain a requirements.txt file with all library dependencies.
-Update it after adding new libraries (e.g., pip freeze > requirements.txt).
-Use the latest stable versions for new features and fixes.
-Execution
+run.bat:
+venv\Scripts\activate
+python main.py
 
-In main.py, parse arguments (if needed) and invoke core functions.
-Use if **name** == "**main**": for direct script execution.
-Use Virtual Environments
+### BEGIN PYTHON_HINTS
 
-Create a venv (python -m venv venv) to isolate dependencies.
-Activate it and install requirements (venv\Scripts\activate && pip install -r requirements.txt).
+# Coding Standards
 
-Implement Logging
-Employ Python’s logging module with various log levels (e.g., INFO, WARNING, ERROR).
-Adopt Exception Handling
+- Follow PEP 8 style guidelines
+- Use docstrings and type hints
+- Auto-format code with black
+- Use flake8 for linting
 
-Always use a logging class, do not use print statements directly.
+# Virtual Environments
 
-Handle errors gracefully, with clear messages or fallback procedures.
+- Create venv for dependency isolation
+- Maintain requirements.txt
+- Use latest stable versions of packages
 
-NiceGUI Framework
-This project uses NiceGUI for the frontend.
+# Logging Best Practices
+
+- Use Python's logging module
+- Avoid print statements
+- Handle exceptions with proper error messages
+- Use appropriate log levels (INFO, WARNING, ERROR)
+
+# Entry Points
+
+- Use main.py for argument parsing and flow
+- Use if **name** == "**main**" pattern
+- Import modules as needed
+
+### BEGIN JAVASCRIPT_HINTS
+
+# Frontend Organization
+
+- Keep JavaScript files modular
+- Use consistent naming conventions
+- Separate concerns (UI logic, data handling, etc.)
+
+# Component Guidelines
+
+- Follow component lifecycle best practices
+- Handle events properly
+- Manage state consistently
+
+# Browser Interactions
+
+- Handle async operations properly
+- Manage DOM updates efficiently
+- Use proper error handling
+
+### BEGIN PROJECT_PYTHON
+
+# NiceGUI Framework
 
 - Do not use ui.run_async as it does not exist in NiceGUI
 - For async initialization in **init**, handle the async state synchronously:
@@ -61,53 +92,53 @@ This project uses NiceGUI for the frontend.
 - Use props() for button styling (e.g., "dense", "unelevated", "flat")
 - Use classes() for layout and spacing (e.g., "w-full", "gap-2", "items-center")
 
-List Filtering
-When filtering habit lists:
+# Storage Architecture
 
-- Create a new filtered copy of the list for display only
-- Keep modifications on the main unfiltered list
-- Use filter_habits_by_list() only for display purposes, not for adding/editing
+- Use layered storage approach with protocols in storage.py
+- DictStorage as base class for dictionary storage
+- HabitDataCache for in-memory caching
+- Lists reference habits by list_id
+- Use save_fn from storage layer
+- Explicit save() calls required
 
-Logging Levels
-The project uses Python's logging module with a configurable level in configs.py:
+# Data Flow
 
-- Set LOG_LEVEL to WARNING by default to reduce console output
-- Use logger.debug for detailed flow tracking
-- Use logger.info for important state changes
-- Use logger.error for error conditions
+- View layer binds to habit properties
+- Changes update in-memory dictionary
+- save() persists to database
+- Work with main list, not filtered copies
 
-Storage Architecture
-The project uses a layered storage approach:
+# Storage Types
 
-- Protocols (storage.py) define the interfaces for Habit, HabitList, and storage operations
-- DictStorage is the base class for storing data as dictionaries
-- HabitDataCache maintains an in-memory cache of ticked days and records
-- Lists don't store habits directly, they're referenced by list_id in habits
-- Each habit has a save_fn that gets passed from the storage layer
-- Changes to habits must be saved explicitly using save() method
-
-Data Flow:
-
-- View layer binds to habit properties (name, weekly_goal, etc.)
-- Changes update the in-memory dictionary
-- save() method must be called to persist changes to database
-- Avoid modifying filtered copies of lists, always modify the main list
-
-Storage Types (in configs.py):
-
-- SESSION: In-memory storage for demo mode
-- USER_DATABASE: SQLite database for authenticated users
+- SESSION: In-memory demo storage
+- USER_DATABASE: SQLite for authenticated users
 - USER_DISK: File-based storage
 
-Document & Automate
-Keep a concise README.md explaining setup and usage.
+# Logging Configuration
 
-Provide .bat files to automate setup and execution:
-install.bat:
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
+- Default LOG_LEVEL: WARNING
+- Use logger.debug for flow tracking
+- Use logger.info for state changes
+- Use logger.error for error conditions
 
-run.bat:
-venv\Scripts\activate
-python main.py
+### BEGIN PROJECT_JAVASCRIPT
+
+# Habit UI Interactions
+
+- Manage habit state updates
+- Handle user interactions
+- Update visual feedback
+
+# List Management
+
+- Create filtered copies for display
+- Keep modifications on main list
+- Use filter_habits_by_list() for display only
+
+# Component State
+
+- Handle async operations properly
+- Manage component lifecycle
+- Update UI state efficiently
+
+### END
