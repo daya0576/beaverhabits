@@ -44,21 +44,7 @@ activate_environment.bat
 
 - Keep a concise README.md explaining setup and usage
 - Group related functionality into separate modules
-- Store configuration in appropriate config files
-
-# Documentation & Automation
-
-Provide .bat files for automation:
-install.bat:
-@echo off
-npm install
-echo Dependencies installed successfully
-pause
-
-run.bat:
-@echo off
-npm start
-pause
+- Store configuration in separate files
 
 ### BEGIN LANGUAGE PYTHON
 
