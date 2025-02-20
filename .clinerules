@@ -1,4 +1,4 @@
-### BEGIN LANGUAGE_AGNOSTIC
+### BEGIN SYSTEM
 
 # System Environment
 
@@ -9,28 +9,32 @@ Shell: Windows PowerShell
 
 PowerShell does not support && to combine commands.
 For example this will not work:
-python -m venv venv && .venv\Scripts\activate
+npm install && npm start
 Execute commands separately.
 
-# Project Structure
+### BEGIN PROJECT
+
+# Structure
 
 - Keep a concise README.md explaining setup and usage
 - Group related functionality into separate modules
-- Store configuration in settings.ini at project root
+- Store configuration in appropriate config files
 
 # Documentation & Automation
 
 Provide .bat files for automation:
 install.bat:
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
+@echo off
+npm install
+echo Dependencies installed successfully
+pause
 
 run.bat:
-venv\Scripts\activate
-python main.py
+@echo off
+npm start
+pause
 
-### BEGIN PYTHON_HINTS
+### BEGIN LANGUAGE PYTHON
 
 # Coding Standards
 
@@ -58,87 +62,62 @@ python main.py
 - Use if **name** == "**main**" pattern
 - Import modules as needed
 
-### BEGIN JAVASCRIPT_HINTS
+# Dependencies
 
-# Frontend Organization
+- Maintain requirements.txt file
+- Update after adding new libraries (pip freeze > requirements.txt)
+- Use latest stable versions for new features and fixes
 
-- Keep JavaScript files modular
-- Use consistent naming conventions
-- Separate concerns (UI logic, data handling, etc.)
+# Error Handling
 
-# Component Guidelines
+- Always use logging class, not print statements
+- Handle errors gracefully with clear messages
+- Implement fallback procedures when needed
 
-- Follow component lifecycle best practices
-- Handle events properly
-- Manage state consistently
 
-# Browser Interactions
+### BEGIN LANGUAGE JAVASCRIPT
 
-- Handle async operations properly
-- Manage DOM updates efficiently
-- Use proper error handling
+# Code Organization
 
-### BEGIN PROJECT_PYTHON
+- Use ES6+ features appropriately
+- Follow consistent module pattern
+- Implement proper error handling
+- Use async/await for asynchronous code
 
-# NiceGUI Framework
+# Coding Standards
 
-- Do not use ui.run_async as it does not exist in NiceGUI
-- For async initialization in **init**, handle the async state synchronously:
-  - Set initial state directly in **init**
-  - Move async operations to separate methods that are called when needed
-  - Use proper async/await in event handlers and callbacks
-- Use ui.refreshable for components that need to update
-- Prefer data binding (bind_value, bind_value_from) over manual refresh callbacks
-- Use props() for button styling (e.g., "dense", "unelevated", "flat")
-- Use classes() for layout and spacing (e.g., "w-full", "gap-2", "items-center")
+- Use ESLint for code quality
+- Follow consistent naming conventions
+- Implement proper type checking
 
-# Storage Architecture
+# File Structure
 
-- Use layered storage approach with protocols in storage.py
-- DictStorage as base class for dictionary storage
-- HabitDataCache for in-memory caching
-- Lists reference habits by list_id
-- Use save_fn from storage layer
-- Explicit save() calls required
+- Organize by feature or type
+- Keep modules small and focused
+- Use clear, descriptive names
+- Separate concerns appropriately
 
-# Data Flow
+# Error Handling
 
-- View layer binds to habit properties
-- Changes update in-memory dictionary
-- save() persists to database
-- Work with main list, not filtered copies
+- Use try/catch blocks for async code
+- Implement proper error boundaries
+- Log errors with context
+- Provide user-friendly error messages
 
-# Storage Types
+# Performance
 
-- SESSION: In-memory demo storage
-- USER_DATABASE: SQLite for authenticated users
-- USER_DISK: File-based storage
+- Optimize bundle size
+- Implement code splitting
+- Use lazy loading where appropriate
 
-# Logging Configuration
+# Security
 
-- Default LOG_LEVEL: WARNING
-- Use logger.debug for flow tracking
-- Use logger.info for state changes
-- Use logger.error for error conditions
+- Validate all inputs
+- Sanitize data appropriately
+- Use secure dependencies
+- Follow OWASP guidelines
 
-### BEGIN PROJECT_JAVASCRIPT
+# Browser Compatibility
 
-# Habit UI Interactions
-
-- Manage habit state updates
-- Handle user interactions
-- Update visual feedback
-
-# List Management
-
-- Create filtered copies for display
-- Keep modifications on main list
-- Use filter_habits_by_list() for display only
-
-# Component State
-
-- Handle async operations properly
-- Manage component lifecycle
-- Update UI state efficiently
-
-### END
+- Use appropriate polyfills
+- Handle vendor prefixes
