@@ -1,3 +1,13 @@
+### BEGIN GENERAL RULES
+
+If you encounter any new information that could improve the efficiency of AI assistants when working on this project, add it to the `.clinerules` file.
+
+Ensure that the information is added to the appropriate section:
+- **BEGIN SYSTEM:** Add information relevant only to the current system.
+- **BEGIN Local project specific hints:** Add information specific to the current project.
+
+Organizing information correctly ensures accurate and efficient assistance in future tasks.
+
 ### BEGIN SYSTEM
 
 # System Environment
@@ -20,6 +30,10 @@ For example create the directories one by one.
 "del" command does not work in powershell.
 use "Remove-Item"
 
+## How to create multiple folders
+
+Example: mkdir src\core\rules; mkdir src\core\compare
+
 
 # Helper Scripts
 
@@ -34,7 +48,7 @@ run.bat:
 echo Running application...
 pause
 
-activate_environment.bat
+activate_environment.bat (for python)
 @echo off
 %~dp0\venv\Scripts\activate.bat
 
@@ -64,15 +78,18 @@ pause
 
 # Coding Standards
 
+- You split large code blocks into managble files and classes.
+- Group related classes/functions into separate files under modules.
 - Follow PEP 8 style guidelines
 - Use docstrings and type hints
 - Auto-format code with black
 - Use flake8 for linting
+- Modular Design
 
 # Virtual Environments
 
 - Create venv for dependency isolation. But only if the directory doesnt exist yet.
-- Maintain requirements.txt
+- Maintain requirements.txt. Update it after adding new libraries (e.g., pip freeze > requirements.txt). 
 - Use latest stable versions of packages
 
 # Logging Best Practices
@@ -97,9 +114,12 @@ pause
 # Error Handling
 
 - Always use logging class, not print statements
-- Handle errors gracefully with clear messages
+- Handle errors gracefully with clear messages or fallback procedures
 - Implement fallback procedures when needed
 
+# Configuration
+
+- Store settings in settings.ini at the project root. Parse these using Python’s configparser.
 ### BEGIN LANGUAGE JAVASCRIPT
 
 # Code Organization

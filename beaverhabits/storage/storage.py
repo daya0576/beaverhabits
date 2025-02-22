@@ -151,10 +151,23 @@ class UserStorage[L: HabitList[H], H: Habit](Protocol):
 
 def get_last_week_completion(habit: Habit, day: datetime.date) -> bool:
     """Check if the habit met its weekly goal in the previous week.
+    For new habits created this week, returns True since they couldn't have failed last week's goal.
+    
     Returns:
-        bool: True if the weekly goal was met last week, False otherwise
+        bool: True if the weekly goal was met last week or if it's a new habit, False otherwise
     """
     last_week = day - datetime.timedelta(days=7)
+    week_start = last_week - datetime.timedelta(days=last_week.weekday())
+    
+    # Check if there are any records from last week or earlier
+    has_old_records = any(record_date <= week_start + datetime.timedelta(days=6) 
+                         for record_date in habit.ticked_days)
+    
+    # If no old records exist, this is a new habit
+    if not has_old_records:
+        return True
+        
+    # Otherwise check if the weekly goal was met
     week_ticks, _ = get_week_ticks(habit, last_week)
     return habit.weekly_goal > 0 and week_ticks >= habit.weekly_goal
 
