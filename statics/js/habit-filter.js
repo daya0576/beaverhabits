@@ -2,6 +2,10 @@
 let currentFilter = null;
 
 window.filterHabits = function(letter) {
+    // Don't filter if disabled
+    if (!window.letterFilterEnabled) {
+        return;
+    }
     // Toggle filter if clicking same letter
     if (currentFilter === letter) {
         currentFilter = null;

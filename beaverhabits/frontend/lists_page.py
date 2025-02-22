@@ -59,12 +59,17 @@ async def lists_ui(lists: list[HabitList], user: User | None = None):
                     
                     # Buttons row
                     with ui.row().classes("col-span-8 gap-2"):
-                        async def update_list_name(list_id: int, input_element: ui.input):
+                        async def update_list_name(list_id: int, input_element: ui.input, checkbox: ui.checkbox):
                             if not input_element.value:
                                 ui.notify("List name cannot be empty", color="negative")
                                 return
                             try:
-                                await update_list(list_id, user.id, name=input_element.value)
+                                await update_list(
+                                    list_id, 
+                                    user.id, 
+                                    name=input_element.value,
+                                    enable_letter_filter=checkbox.value
+                                )
                                 ui.notify("List updated successfully", color="positive")
                                 ui.navigate.to("/gui/lists")  # Reload the page with fresh data
                             except Exception as e:
@@ -80,7 +85,7 @@ async def lists_ui(lists: list[HabitList], user: User | None = None):
                         
                         ui.button(
                             "Save", 
-                            on_click=lambda l=list_item, i=edit_input: update_list_name(l.id, i)
+                            on_click=lambda l=list_item, i=edit_input, c=filter_checkbox: update_list_name(l.id, i, c)
                         ).props("flat")
                         ui.button(
                             "Delete", 

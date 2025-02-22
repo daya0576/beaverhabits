@@ -184,7 +184,7 @@ async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: Us
         
         # Get list details if a list is selected
         current_list = None
-        if current_list_id is not None:
+        if current_list_id is not None and current_list_id != "None":
             async with get_async_session_context() as session:
                 stmt = select(HabitList).where(HabitList.id == current_list_id)
                 result = await session.execute(stmt)
@@ -222,14 +222,27 @@ async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: Us
 
     async with layout(user=user):
         with ui.column().classes("w-full"):
-            # Add habit-filter.js to the page if feature is enabled
-            if settings.ENABLE_LETTER_FILTER:
-                ui.add_head_html(
-                    '<script src="/statics/js/habit-filter.js"></script>'
-                )
+            # Add habit-filter.js and initialize settings
+            ui.add_head_html(
+                '<script src="/statics/js/habit-filter.js"></script>'
+            )
+            
+            # Determine if letter filter should be enabled
+            show_filter = False
+            if current_list_id == "None":
+                # For "No List" view, use global setting
+                show_filter = settings.ENABLE_LETTER_FILTER
+            elif current_list is not None:
+                # For specific list, use list's setting
+                show_filter = current_list.enable_letter_filter
+            else:
+                # For main view (no list selected), use global setting
+                show_filter = settings.ENABLE_LETTER_FILTER
+            
+            # Initialize letter filter state in JavaScript
+            ui.run_javascript(f'window.letterFilterEnabled = {str(show_filter).lower()};')
+            
             await week_navigation(days)
-            # Show letter filter if enabled for the current list
-            if (current_list is None and settings.ENABLE_LETTER_FILTER) or \
-               (current_list is not None and current_list.enable_letter_filter):
+            if show_filter:
                 await letter_filter_ui(active_habits)
             await habit_list_ui(days, active_habits)
