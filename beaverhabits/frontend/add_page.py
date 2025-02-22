@@ -121,10 +121,8 @@ async def add_page_ui(habits: list[Habit], user: User):
                 habit = await create_habit(user, name, list_id)
                 if habit:
                     await update_habit(habit.id, habit.user_id, weekly_goal=weekly_goal)
-                    name_input.value = ""  # Clear the input
-                    goal_input.value = 0   # Reset goal
-                    list_select.value = "No List"  # Reset list
-                    refresh()
+                    # Reload the page to show the new habit and reset form
+                    ui.navigate.reload()
             
             # Get all lists for the user
             lists = await get_user_lists(user)

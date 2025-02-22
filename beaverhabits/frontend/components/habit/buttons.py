@@ -4,7 +4,7 @@ from nicegui import ui
 
 from beaverhabits.sql.models import Habit, HabitList
 from beaverhabits.frontend.components.habit.inputs import WeeklyGoalInput
-from beaverhabits.app.crud import update_habit, create_habit
+from beaverhabits.app.crud import update_habit, create_habit, get_user_habits, get_user_lists
 from beaverhabits.frontend import icons
 from beaverhabits.app.db import User
 
@@ -62,7 +62,8 @@ class HabitDeleteButton(ui.button):
         if result:
             # Delete habit
             await update_habit(self.habit.id, self.habit.user_id, deleted=True)
-            self.refresh()
+            # Reload the page to show the updated list
+            ui.navigate.reload()
 
 class HabitAddButton(ui.button):
     def __init__(self, user: User, list_id: Optional[int], refresh: Callable) -> None:

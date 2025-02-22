@@ -2,7 +2,7 @@ import datetime
 import os
 from typing import List
 
-from nicegui import ui
+from nicegui import ui, context, app
 
 from beaverhabits.configs import settings
 from beaverhabits.frontend import javascript
@@ -16,6 +16,7 @@ from beaverhabits.utils import (
     get_week_offset, set_week_offset, reset_week_offset, 
     get_display_days, set_navigating, WEEK_DAYS
 )
+from beaverhabits.logging import logger
 from beaverhabits.app.db import User
 
 def format_week_range(days: list[datetime.date]) -> str:
@@ -171,8 +172,17 @@ async def letter_filter_ui(active_habits: List[Habit]):
             ).props('flat dense').classes('letter-filter-btn')
 
 async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: User | None = None):
-    # Get active habits and sort them
-    active_habits = [h for h in habits if not h.deleted]
+    # Get current list from storage
+    current_list = app.storage.user.get("current_list")
+
+    # Filter habits by list and active status
+    active_habits = [h for h in habits if not h.deleted and (
+        # Show habit if:
+        # - No list is selected and habit has no list
+        (current_list is None and h.list_id is None) or
+        # - A list is selected and habit belongs to that list
+        (current_list is not None and h.list_id == current_list)
+    )]
     active_habits.sort(key=lambda h: h.order)
 
     async with layout(user=user):
