@@ -35,6 +35,7 @@ class HabitList(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     order: Mapped[int] = mapped_column(default=0)
     deleted: Mapped[bool] = mapped_column(default=False)
+    enable_letter_filter: Mapped[bool] = mapped_column(default=True)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
 
     user: Mapped["User"] = relationship(back_populates="lists")

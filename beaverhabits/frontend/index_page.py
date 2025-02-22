@@ -10,8 +10,10 @@ from beaverhabits.frontend.components import (
     HabitCheckBox, IndexBadge, link, grid
 )
 from beaverhabits.frontend.layout import layout
-from beaverhabits.sql.models import Habit
+from beaverhabits.sql.models import Habit, HabitList
 from beaverhabits.app.crud import get_habit_checks
+from beaverhabits.app.db import get_async_session
+from sqlalchemy import select
 from beaverhabits.utils import (
     get_week_offset, set_week_offset, reset_week_offset, 
     get_display_days, set_navigating, WEEK_DAYS
@@ -172,18 +174,51 @@ async def letter_filter_ui(active_habits: List[Habit]):
             ).props('flat dense').classes('letter-filter-btn')
 
 async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: User | None = None):
-    # Get current list from storage
-    current_list = app.storage.user.get("current_list")
+    # Get current list from URL and fetch list details if needed
+    try:
+        current_list_id = context.client.page.query.get("list", "")
+        # Handle "None" string from URL
+        current_list_id = None if current_list_id == "None" else (
+            int(current_list_id) if current_list_id.isdigit() else None
+        )
+        
+        # Get list details if a list is selected
+        current_list = None
+        if current_list_id is not None:
+            async with get_async_session_context() as session:
+                stmt = select(HabitList).where(HabitList.id == current_list_id)
+                result = await session.execute(stmt)
+                current_list = result.scalar_one_or_none()
+    except (AttributeError, ValueError):
+        current_list_id = None
+        current_list = None
+
+    # Debug logging
+    logger.info(f"Current list ID: {current_list_id}")
+    logger.info(f"All habits: {[(h.id, h.name, h.list_id) for h in habits]}")
 
     # Filter habits by list and active status
-    active_habits = [h for h in habits if not h.deleted and (
+    active_habits = []
+    for h in habits:
+        if h.deleted:
+            continue
+        
         # Show habit if:
         # - No list is selected and habit has no list
-        (current_list is None and h.list_id is None) or
+        if current_list_id == "None" and h.list_id is None:
+            logger.info(f"Adding habit {h.name} (no list)")
+            active_habits.append(h)
         # - A list is selected and habit belongs to that list
-        (current_list is not None and h.list_id == current_list)
-    )]
+        elif current_list_id is not None and str(h.list_id) == current_list_id:
+            logger.info(f"Adding habit {h.name} (list {current_list_id})")
+            active_habits.append(h)
+        # - Show all habits when no list is selected
+        elif current_list_id is None:
+            logger.info(f"Adding habit {h.name} (all lists)")
+            active_habits.append(h)
+
     active_habits.sort(key=lambda h: h.order)
+    logger.info(f"Active habits: {[h.name for h in active_habits]}")
 
     async with layout(user=user):
         with ui.column().classes("w-full"):
@@ -193,6 +228,8 @@ async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: Us
                     '<script src="/statics/js/habit-filter.js"></script>'
                 )
             await week_navigation(days)
-            if settings.ENABLE_LETTER_FILTER:
+            # Show letter filter if enabled for the current list
+            if (current_list is None and settings.ENABLE_LETTER_FILTER) or \
+               (current_list is not None and current_list.enable_letter_filter):
                 await letter_filter_ui(active_habits)
             await habit_list_ui(days, active_habits)

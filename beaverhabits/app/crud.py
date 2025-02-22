@@ -32,7 +32,8 @@ async def get_user_lists(user: User) -> List[HabitList]:
         return list(result.scalars())
 
 async def update_list(list_id: int, user_id: UUID, name: Optional[str] = None, 
-                     order: Optional[int] = None, deleted: bool = False) -> Optional[HabitList]:
+                     order: Optional[int] = None, deleted: bool = False,
+                     enable_letter_filter: Optional[bool] = None) -> Optional[HabitList]:
     async with get_async_session_context() as session:
         stmt = select(HabitList).where(HabitList.id == list_id, HabitList.user_id == user_id)
         result = await session.execute(stmt)
@@ -43,7 +44,12 @@ async def update_list(list_id: int, user_id: UUID, name: Optional[str] = None,
                 habit_list.name = name
             if order is not None:
                 habit_list.order = order
-            if deleted:
+            if enable_letter_filter is not None:
+                habit_list.enable_letter_filter = enable_letter_filter
+                await session.commit()
+                await session.refresh(habit_list)
+                logger.info(f"[CRUD] Updated list {list_id} letter filter to {enable_letter_filter}")
+            elif deleted:
                 # Mark list as deleted
                 habit_list.deleted = True
                 

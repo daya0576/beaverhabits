@@ -2,6 +2,7 @@ from typing import AsyncGenerator
 import configparser
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import text
 
 # Read database settings from settings.ini
 config = configparser.ConfigParser()
@@ -34,7 +35,17 @@ engine = create_async_engine(
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 async def create_db_and_tables():
-    """Create all tables that don't yet exist"""
+    """Create database and tables if they don't exist"""
+    # Create database if it doesn't exist
+    root_url = f"mysql+aiomysql://{db_user}{db_password_part}{db_host}:{db_port}"
+    root_engine = create_async_engine(root_url)
+    
+    async with root_engine.begin() as conn:
+        await conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {db_name}"))
+    
+    await root_engine.dispose()
+    
+    # Create tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
