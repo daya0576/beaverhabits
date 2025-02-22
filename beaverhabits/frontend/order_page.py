@@ -7,11 +7,12 @@ from beaverhabits.frontend.components import (
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.logging import logger
-from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
+from beaverhabits.sql.models import Habit
+from beaverhabits.app.crud import update_habit
 from beaverhabits.app.db import User
 
 
-async def item_drop(e, habit_list: HabitList):
+async def item_drop(e, habits: list[Habit]):
     new_index = e.args["new_index"]
     logger.info(f"Item drop: {e.args['id']} -> {new_index}")
 
@@ -21,38 +22,48 @@ async def item_drop(e, habit_list: HabitList):
     assert dragged.parent_slot is not None
     dragged.move(target_index=e.args["new_index"])
 
-    # Unarchive dragged habit
-    is_archived = False
-    habits = []
+    # Update habit states
+    is_deleted = False
+    updated_habits = []
     for card in dragged.parent_slot:
         if not isinstance(card, components.HabitOrderCard):
             continue
         if not card.habit:
-            is_archived = True
+            is_deleted = True
             continue
 
-        if not is_archived and card.habit.status == HabitStatus.ARCHIVED:
-            card.habit.status = HabitStatus.ACTIVE
-        if is_archived and card.habit.status == HabitStatus.ACTIVE:
-            card.habit.status = HabitStatus.ARCHIVED
+        # Update habit state
+        if not is_deleted and card.habit.deleted:
+            await update_habit(card.habit.id, card.habit.user_id, deleted=False)
+        if is_deleted and not card.habit.deleted:
+            await update_habit(card.habit.id, card.habit.user_id, deleted=True)
 
-        if card.habit.star:
-            card.habit.star = False
+        # Reset star if moving to deleted section
+        if is_deleted and card.habit.star:
+            await update_habit(card.habit.id, card.habit.user_id, star=False)
 
-        habits.append(card.habit)
+        updated_habits.append(card.habit)
 
     # Update order
-    habit_list.order = [str(x.id) for x in habits]
-    logger.info(f"New order: {habits}")
+    for i, habit in enumerate(updated_habits):
+        await update_habit(habit.id, habit.user_id, order=i)
 
+    logger.info(f"New order: {updated_habits}")
     add_ui.refresh()
 
 
 @ui.refreshable
-async def add_ui(habit_list: HabitList):
-    active_habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
-    archived_habits = HabitListBuilder(habit_list).status(HabitStatus.ARCHIVED).build()
-    habits = [*active_habits, None, *archived_habits]
+async def add_ui(habits: list[Habit]):
+    # Split habits into active and deleted
+    active_habits = [h for h in habits if not h.deleted]
+    deleted_habits = [h for h in habits if h.deleted]
+    
+    # Sort by order
+    active_habits.sort(key=lambda h: h.order)
+    deleted_habits.sort(key=lambda h: h.order)
+    
+    # Combine with separator
+    habits = [*active_habits, None, *deleted_habits]
 
     for item in habits:
         if not item:
@@ -66,8 +77,8 @@ async def add_ui(habit_list: HabitList):
 
                 ui.space()
 
-                if item.status == HabitStatus.ARCHIVED:
-                    btn = HabitDeleteButton(item, habit_list, add_ui.refresh)
+                if item.deleted:
+                    btn = HabitDeleteButton(item, None, add_ui.refresh)
                     btn.classes("opacity-0")
                     card.btn = btn
                 badge = HabitTotalBadge(item)
@@ -77,10 +88,10 @@ async def add_ui(habit_list: HabitList):
     ui.space()
 
 
-async def order_page_ui(habit_list: HabitList, user: User | None = None):
+async def order_page_ui(habits: list[Habit], user: User | None = None):
     async with layout(user=user):
         with ui.column().classes("items-center sortable gap-2 w-full"):
-            await add_ui(habit_list)
+            await add_ui(habits)
 
     ui.add_body_html(
         """
@@ -97,4 +108,4 @@ async def order_page_ui(habit_list: HabitList, user: User | None = None):
         """
     )
 
-    ui.on("item_drop", lambda e: item_drop(e, habit_list))
+    ui.on("item_drop", lambda e: item_drop(e, habits))

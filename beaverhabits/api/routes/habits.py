@@ -1,171 +1,117 @@
 from datetime import datetime
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
-from beaverhabits import views
-from beaverhabits.api.dependencies import current_habit_list
-from beaverhabits.api.models import HabitListMeta, Tick, HabitCompletions
+
 from beaverhabits.app.auth import user_authenticate
-from beaverhabits.logging import logger
+from beaverhabits.app.crud import (
+    get_user_habits,
+    update_habit,
+    toggle_habit_check,
+    get_habit_checks,
+)
 from beaverhabits.app.db import User
 from beaverhabits.app.dependencies import current_active_user
-from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
+from beaverhabits.app.schemas import (
+    HabitRead,
+    HabitUpdate,
+    CheckedRecordRead,
+)
+from beaverhabits.logging import logger
 
 router = APIRouter(tags=["habits"])
 
-
-@router.get("/habits/meta")
-async def get_habits_meta(
-    habit_list: HabitList = Depends(current_habit_list),
-):
-    """Get habit list metadata."""
-    return HabitListMeta(order=habit_list.order)
-
-
-@router.put("/habits/meta")
-async def put_habits_meta(
-    meta: HabitListMeta,
-    habit_list: HabitList = Depends(current_habit_list),
-):
-    """Update habit list metadata."""
-    if meta.order is not None:
-        habit_list.order = meta.order
-    return {"order": habit_list.order}
-
-
-@router.get("/habits")
+@router.get("/habits", response_model=List[HabitRead])
 async def get_habits(
-    status: HabitStatus = HabitStatus.ACTIVE,
-    habit_list: HabitList = Depends(current_habit_list),
+    list_id: int | None = None,
+    user: User = Depends(current_active_user),
 ):
     """Get list of habits."""
-    habits = HabitListBuilder(habit_list).status(status).build()
-    return [{"id": x.id, "name": x.name} for x in habits]
+    return await get_user_habits(user, list_id)
 
-
-@router.get("/habits/{habit_id}")
+@router.get("/habits/{habit_id}", response_model=HabitRead)
 async def get_habit_detail(
-    habit_id: str,
+    habit_id: int,
     user: User = Depends(current_active_user),
 ):
     """Get detailed information about a specific habit."""
-    habit = await views.get_user_habit(user, habit_id)
-    return {
-        "id": habit.id,
-        "name": habit.name,
-        "star": habit.star,
-        "records": habit.records,
-        "status": habit.status,
-    }
+    habit = await update_habit(habit_id, user.id)
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+    return habit
 
+@router.patch("/habits/{habit_id}", response_model=HabitRead)
+async def update_habit_details(
+    habit_id: int,
+    habit_update: HabitUpdate,
+    user: User = Depends(current_active_user),
+):
+    """Update habit details."""
+    habit = await update_habit(
+        habit_id,
+        user.id,
+        name=habit_update.name,
+        order=habit_update.order,
+        list_id=habit_update.list_id,
+    )
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+    return habit
 
-@router.get("/habits/{habit_id}/completions")
+@router.get("/habits/{habit_id}/completions", response_model=List[CheckedRecordRead])
 async def get_habit_completions(
-    habit_id: str,
-    date_fmt: str = "%d-%m-%Y",
-    date_start: str | None = None,
-    date_end: str | None = None,
-    limit: int | None = 10,
-    sort="asc",
+    habit_id: int,
     user: User = Depends(current_active_user),
 ):
     """Get completion records for a specific habit."""
-    habit = await views.get_user_habit(user, habit_id)
-    ticked_days = habit.ticked_days
-    if not ticked_days:
-        return []
+    return await get_habit_checks(habit_id, user.id)
 
-    if date_start or date_end:
-        if date_start and date_end:
-            try:
-                start = datetime.strptime(date_start, date_fmt.strip())
-                end = datetime.strptime(date_end, date_fmt.strip())
-            except ValueError:
-                raise HTTPException(status_code=400, detail="Invalid date format")
-            ticked_days = [x for x in ticked_days if start.date() <= x <= end.date()]
-        else:
-            raise HTTPException(
-                status_code=400, detail="Both date_start and date_end are required"
-            )
-
-    if sort not in ("asc", "desc"):
-        raise HTTPException(status_code=400, detail="Invalid sort value")
-    ticked_days = sorted(ticked_days, reverse=sort == "desc")
-
-    if limit:
-        ticked_days = ticked_days[:limit]
-
-    return [x.strftime(date_fmt) for x in ticked_days]
-
-
-@router.post("/habits/{habit_id}/completions")
-async def put_habit_completions(
-    habit_id: str,
-    tick: Tick,
+@router.post("/habits/{habit_id}/completions", response_model=CheckedRecordRead)
+async def toggle_completion(
+    habit_id: int,
+    date: str,
     user: User = Depends(current_active_user),
 ):
-    """Update completion status for a specific habit."""
+    """Toggle completion status for a specific habit on a given date."""
     try:
-        day = datetime.strptime(tick.date, tick.date_fmt.strip()).date()
+        day = datetime.strptime(date, "%Y-%m-%d").date()
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid date format. Use YYYY-MM-DD"
+        )
 
-    habit = await views.get_user_habit(user, habit_id)
-    await habit.tick(day, tick.done)
-    return {"day": day.strftime(tick.date_fmt), "done": tick.done}
-
+    record = await toggle_habit_check(habit_id, user.id, day)
+    if not record:
+        raise HTTPException(status_code=404, detail="Habit not found")
+    return record
 
 @router.post("/habits/batch-completions")
-async def batch_update_completions(data: HabitCompletions):
+async def batch_update_completions(
+    habit_id: int,
+    dates: List[str],
+    user: User = Depends(current_active_user),
+):
     """Update multiple completion statuses for a habit."""
     try:
-        # Authenticate user
-        user = await user_authenticate(data.email, data.password)
-        if not user:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid email or password"
-            )
-
-        # Get the habit
-        habit = await views.get_user_habit(user, data.habit_id)
-        if not habit:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Habit with ID {data.habit_id} not found"
-            )
-
-        # Process each completion
         updated = []
-        for completion in data.completions:
+        for date_str in dates:
             try:
-                # Parse date using the provided format
-                day = datetime.strptime(completion.date, data.date_fmt).date()
-                # Update the habit
-                await habit.tick(day, completion.done)
-                # Add to updated list
-                updated.append({
-                    "date": completion.date,
-                    "done": completion.done
-                })
-            except ValueError as e:
-                logger.error(f"Invalid date format for {completion.date}: {str(e)}")
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Invalid date format for {completion.date}"
-                )
-            except Exception as e:
-                logger.error(f"Error updating habit for date {completion.date}: {str(e)}")
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Failed to update habit for date {completion.date}"
-                )
+                day = datetime.strptime(date_str, "%Y-%m-%d").date()
+                record = await toggle_habit_check(habit_id, user.id, day)
+                if record:
+                    updated.append({
+                        "date": date_str,
+                        "done": record.done
+                    })
+            except ValueError:
+                logger.error(f"Invalid date format for {date_str}")
+                continue
 
         return {
-            "habit_id": data.habit_id,
+            "habit_id": habit_id,
             "updated": updated
         }
 
-    except HTTPException:
-        raise
     except Exception as e:
         logger.exception("Unexpected error in batch_update_completions")
         raise HTTPException(

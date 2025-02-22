@@ -10,11 +10,8 @@ from beaverhabits.frontend.components import (
     HabitCheckBox, IndexBadge, link, grid
 )
 from beaverhabits.frontend.layout import layout
-from beaverhabits.storage.meta import get_root_path
-from beaverhabits.storage.storage import (
-    Habit, HabitList, HabitListBuilder, HabitStatus, 
-    get_habit_priority, get_week_ticks, get_last_week_completion
-)
+from beaverhabits.sql.models import Habit
+from beaverhabits.app.crud import get_habit_checks
 from beaverhabits.utils import (
     get_week_offset, set_week_offset, reset_week_offset, 
     get_display_days, set_navigating, WEEK_DAYS
@@ -51,10 +48,33 @@ async def change_week(new_offset: int) -> None:
     # Navigate to the same page to get fresh data
     ui.navigate.reload()
 
-from beaverhabits.logging import logger
+async def get_habit_priority(habit: Habit, days: List[datetime.date]) -> int:
+    """Calculate habit priority based on completion status."""
+    records = await get_habit_checks(habit.id, habit.user_id)
+    week_ticks = sum(1 for record in records if record.day in days and record.done)
+    return 1 if week_ticks >= (habit.weekly_goal or 0) else 0
+
+async def get_week_ticks(habit: Habit, today: datetime.date) -> tuple[int, int]:
+    """Get the number of ticks for the current week."""
+    records = await get_habit_checks(habit.id, habit.user_id)
+    week_start = today - datetime.timedelta(days=today.weekday())
+    week_end = week_start + datetime.timedelta(days=6)
+    week_ticks = sum(1 for record in records 
+                    if week_start <= record.day <= week_end and record.done)
+    total_ticks = sum(1 for record in records if record.done)
+    return week_ticks, total_ticks
+
+async def get_last_week_completion(habit: Habit, today: datetime.date) -> bool:
+    """Check if the habit was completed last week."""
+    records = await get_habit_checks(habit.id, habit.user_id)
+    last_week_start = today - datetime.timedelta(days=today.weekday() + 7)
+    last_week_end = last_week_start + datetime.timedelta(days=6)
+    last_week_ticks = sum(1 for record in records 
+                         if last_week_start <= record.day <= last_week_end and record.done)
+    return last_week_ticks >= (habit.weekly_goal or 0)
 
 @ui.refreshable
-async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], habit_list: HabitList):
+async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     # Calculate column count
     name_columns, date_columns = settings.INDEX_HABIT_NAME_COLUMNS, 2
     count_columns = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
@@ -67,39 +87,34 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], h
         # Habit List
         for habit in active_habits:
             # Calculate priority using shared function
-            priority = get_habit_priority(habit, days)
+            priority = await get_habit_priority(habit, days)
             
             # Calculate state for color and data attributes
             today = datetime.date.today()
-            record = habit.record_by(today)
-            week_ticks, _ = get_week_ticks(habit, today)
-            is_skipped_today = record and record.done is None
+            records = await get_habit_checks(habit.id, habit.user_id)
+            today_record = next((r for r in records if r.day == today), None)
+            week_ticks, _ = await get_week_ticks(habit, today)
             is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
-            last_week_complete = get_last_week_completion(habit, today)
+            last_week_complete = await get_last_week_completion(habit, today)
             
             card = ui.card().classes(row_compat_classes + " w-full habit-card").classes("shadow-none")
             # Add data attributes for sorting
-            # Get order if exists
-            order = habit_list.order.index(str(habit.id)) if habit_list.order and str(habit.id) in habit_list.order else float("inf")
             card.props(
                 f'data-habit-id="{habit.id}" '
                 f'data-priority="{priority}" '
                 f'data-starred="{int(habit.star)}" '
                 f'data-name="{habit.name}" '
-                f'data-status="{habit.status.value}" '
-                f'data-order="{order}"'
+                f'data-order="{habit.order}"'
             )
             with card:
                 with ui.column().classes("w-full gap-1"):
                     # Fixed width container
                     with ui.element("div").classes("w-full flex justify-start"):
                         # Name row
-                        root_path = get_root_path()
-                        redirect_page = os.path.join(root_path, "habits", str(habit.id))
+                        redirect_page = f"{settings.GUI_MOUNT_PATH}/habits/{habit.id}"
                         # Calculate color
                         initial_color = (
-                            settings.HABIT_COLOR_SKIPPED if is_skipped_today
-                            else settings.HABIT_COLOR_LAST_WEEK_INCOMPLETE if not last_week_complete and habit.weekly_goal > 0
+                            settings.HABIT_COLOR_LAST_WEEK_INCOMPLETE if not last_week_complete and habit.weekly_goal > 0
                             else settings.HABIT_COLOR_COMPLETED if is_completed
                             else settings.HABIT_COLOR_INCOMPLETE
                         )
@@ -126,17 +141,15 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit], h
                             f'data-habit-id="{habit.id}" '
                             f'data-weekly-goal="{habit.weekly_goal or 0}" '
                             f'data-week-ticks="{week_ticks}" '
-                            f'data-skipped="{str(is_skipped_today).lower()}" '
                             f'data-last-week-complete="{str(last_week_complete).lower()}"'
                         )
                         name.style(f"min-height: 1.5em; height: auto; color: {initial_color};")
 
                     # Checkbox row with fixed width
                     with ui.row().classes("w-full gap-2 justify-center items-center flex-nowrap"):
-                        ticked_days = set(habit.ticked_days)
                         for day in days:
-                            # Get the actual state (checked, unchecked, or skipped)
-                            record = habit.record_by(day)
+                            # Get the actual state from checked_records
+                            record = next((r for r in records if r.day == day), None)
                             state = record.done if record else False
                             checkbox = HabitCheckBox(habit, day, state, habit_list_ui.refresh)
 
@@ -157,9 +170,10 @@ async def letter_filter_ui(active_habits: List[Habit]):
                 )
             ).props('flat dense').classes('letter-filter-btn')
 
-async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User | None = None):
+async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: User | None = None):
     # Get active habits and sort them
-    active_habits = HabitListBuilder(habits, days=days).status(HabitStatus.ACTIVE).build()
+    active_habits = [h for h in habits if not h.deleted]
+    active_habits.sort(key=lambda h: h.order)
 
     async with layout(user=user):
         # Add habit-filter.js to the page if feature is enabled
@@ -170,4 +184,4 @@ async def index_page_ui(days: list[datetime.date], habits: HabitList, user: User
         await week_navigation(days)
         if settings.ENABLE_LETTER_FILTER:
             await letter_filter_ui(active_habits)
-        await habit_list_ui(days, active_habits, habits)
+        await habit_list_ui(days, active_habits)

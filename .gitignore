@@ -158,3 +158,4 @@ test.db
 screenshots/
 tags
 .env
+settings.ini

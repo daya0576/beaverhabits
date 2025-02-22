@@ -7,13 +7,14 @@ from nicegui import ui, events
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
-from beaverhabits.storage.storage import CheckedRecord, Habit, get_week_ticks, get_last_week_completion
+from beaverhabits.sql.models import Habit, CheckedRecord
+from beaverhabits.app.crud import toggle_habit_check, get_habit_checks
 from ..utils import ratelimiter
 
 DAILY_NOTE_MAX_LENGTH = 300
 
 def habit_tick_dialog(record: CheckedRecord | None):
-    text = record.text if record else ""
+    text = record.text if record and hasattr(record, 'text') else ""
     with ui.dialog() as dialog, ui.card().props("flat") as card:
         dialog.props('backdrop-filter="blur(4px)"')
         card.classes("w-5/6 max-w-80")
@@ -38,9 +39,11 @@ def habit_tick_dialog(record: CheckedRecord | None):
     return dialog
 
 async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
-    record = habit.record_by(day)
+    # Get current record
+    records = await get_habit_checks(habit.id, habit.user_id)
+    record = next((r for r in records if r.day == day), None)
+    
     result = await habit_tick_dialog(record)
-
     if result is None:
         return
 
@@ -49,27 +52,46 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
         ui.notify("Note is too long", color="negative")
         return
 
-    record = await habit.tick(day, yes, text)
+    record = await toggle_habit_check(habit.id, habit.user_id, day, text)
     
     # Highlight the updated habit
     ui.run_javascript(f"highlightHabit('{habit.id}')")
     
-    return record.done
+    return record.done if record else None
 
 @ratelimiter(limit=30, window=30)
 @ratelimiter(limit=10, window=1)
 async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
-    # Avoid duplicate tick
-    record = habit.record_by(day)
+    # Get current record
+    records = await get_habit_checks(habit.id, habit.user_id)
+    record = next((r for r in records if r.day == day), None)
     
-    if record and record.done is value:  # Use 'is' to handle None case correctly
+    if record and record.done == value:  # Use == to handle None case correctly
         return
 
-    # Transaction start
-    await habit.tick(day, value)
+    # Toggle the habit check, preserving any existing note
+    text = record.text if record and hasattr(record, 'text') else None
+    await toggle_habit_check(habit.id, habit.user_id, day, text)
     
     # Highlight the updated habit
     ui.run_javascript(f"highlightHabit('{habit.id}')")
+
+def get_week_ticks(habit: Habit, today: datetime.date) -> tuple[int, int]:
+    """Get the number of ticks for the current week."""
+    week_start = today - datetime.timedelta(days=today.weekday())
+    week_end = week_start + datetime.timedelta(days=6)
+    week_ticks = sum(1 for record in habit.checked_records 
+                    if week_start <= record.day <= week_end and record.done)
+    total_ticks = sum(1 for record in habit.checked_records if record.done)
+    return week_ticks, total_ticks
+
+def get_last_week_completion(habit: Habit, today: datetime.date) -> bool:
+    """Check if the habit was completed last week."""
+    last_week_start = today - datetime.timedelta(days=today.weekday() + 7)
+    last_week_end = last_week_start + datetime.timedelta(days=6)
+    last_week_ticks = sum(1 for record in habit.checked_records 
+                         if last_week_start <= record.day <= last_week_end and record.done)
+    return last_week_ticks >= (habit.weekly_goal or 0)
 
 class BaseHabitCheckBox(ui.checkbox):
     def __init__(self, habit: Habit, day: datetime.date, value: bool | None) -> None:
@@ -128,8 +150,9 @@ class BaseHabitCheckBox(ui.checkbox):
         # Add a small delay to ensure habit state is updated
         await asyncio.sleep(0.1)
             
-        # Get fresh ticked days after state update
-        ticked_days = set(self.habit.ticked_days)
+        # Get fresh records after state update
+        records = await get_habit_checks(self.habit.id, self.habit.user_id)
+        ticked_days = {record.day for record in records if record.done}
         if value:  # Add current day if it's being checked
             ticked_days.add(self.day)
         elif value is False:  # Remove current day if it's being unchecked
@@ -140,11 +163,8 @@ class BaseHabitCheckBox(ui.checkbox):
         last_week_complete = get_last_week_completion(self.habit, self.day)
         
         # Check if this habit is skipped today
-        is_skipped_today = (
-            self.day == datetime.date.today() and 
-            self.habit.record_by(self.day) and 
-            self.habit.record_by(self.day).done is None
-        )
+        today_record = next((r for r in records if r.day == datetime.date.today()), None)
+        is_skipped_today = today_record and today_record.done is None
         
         # Update state directly without refreshing
         ui.run_javascript(f"updateHabitAttributes('{self.habit.id}', {self.habit.weekly_goal or 0}, {week_ticks}, {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'}, {str(last_week_complete).lower()})")
@@ -169,7 +189,8 @@ class BaseHabitCheckBox(ui.checkbox):
             if self.moving:
                 return
             # Get current state from database
-            record = self.habit.record_by(self.day)
+            records = await get_habit_checks(self.habit.id, self.habit.user_id)
+            record = next((r for r in records if r.day == self.day), None)
             current_state = record.done if record else False
             
             # Determine next state based on current database state
@@ -227,13 +248,9 @@ class CalendarCheckBox(BaseHabitCheckBox):
         habit: Habit,
         day: datetime.date,
         today: datetime.date,
-        is_bind_data: bool = True,
+        initial_value: bool | None = False,
     ) -> None:
-        # Get initial state before calling super()
-        record = habit.record_by(day)
-        initial_value = record.done if record else False
-        
-        # Pass the correct initial value to super()
+        # Pass the initial value to super()
         super().__init__(habit, day, initial_value)
         self.today = today
         
@@ -248,3 +265,19 @@ class CalendarCheckBox(BaseHabitCheckBox):
         self.on("touchmove", self._mouse_move_event)
         self.on("click.prevent", lambda _: None)  # Prevent default click behavior
         self.on("change.prevent", lambda _: None)  # Prevent default change behavior
+
+    @classmethod
+    async def create(
+        cls,
+        habit: Habit,
+        day: datetime.date,
+        today: datetime.date,
+    ) -> 'CalendarCheckBox':
+        """Factory method to create a CalendarCheckBox with async initialization."""
+        # Get initial state
+        records = await get_habit_checks(habit.id, habit.user_id)
+        record = next((r for r in records if r.day == day), None)
+        initial_value = record.done if record else False
+        
+        # Create instance with initial value
+        return cls(habit, day, today, initial_value)

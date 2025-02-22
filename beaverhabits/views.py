@@ -1,126 +1,44 @@
 import datetime
+import json
 from typing import List as TypeList, Optional
 
-import json
 from nicegui import app, ui
 
 from beaverhabits.logging import logger
-
 from beaverhabits.app.auth import user_authenticate, user_create_token, user_create, user_check_token
-from beaverhabits.app.crud import get_user_count
+from beaverhabits.app.crud import (
+    get_user_count, get_user_habits, get_user_lists,
+    create_list, update_list as update_list_db,
+    update_habit, get_habit_checks
+)
 from beaverhabits.app.db import User
 from beaverhabits.configs import settings
-from beaverhabits.storage.dict import DictList, DictHabit, DictHabitList
-from beaverhabits.storage.storage import List, Habit
-from beaverhabits.storage.user_file import get_user_storage
-from beaverhabits.storage.session_file import SessionDictStorage
+from beaverhabits.sql.models import Habit, HabitList, CheckedRecord
 from beaverhabits.utils import generate_short_hash
 
-user_storage = get_user_storage()
-session_storage = SessionDictStorage()
 
-
-def get_session_habit_list() -> Optional[DictHabitList]:
-    """Get session habit list."""
-    return session_storage.get_user_habit_list()
-
-
-def get_or_create_session_habit_list(days: list[datetime.date]) -> DictHabitList:
-    """Get or create session habit list."""
-    habit_list = get_session_habit_list()
-    if not habit_list:
-        habit_list = DictHabitList({"habits": []})
-        session_storage.save_user_habit_list(habit_list)
-    return habit_list
-
-
-async def get_session_habit(habit_id: str) -> Optional[DictHabit]:
-    """Get a specific habit from session."""
-    habit_list = get_session_habit_list()
-    if not habit_list:
-        return None
-    return await habit_list.get_habit_by(habit_id)
-
-
-async def get_user_habit_list(user: User) -> DictHabitList:
-    """Get or create user's habit list."""
-    habit_list = await user_storage.get_user_habit_list(user)
-    if not habit_list:
-        habit_list = DictHabitList({"habits": []})
-        await user_storage.save_user_habit_list(user, habit_list)
-    return habit_list
-
-
-async def get_user_habit(user: User, habit_id: str) -> Optional[DictHabit]:
+async def get_user_habit(user: User, habit_id: str) -> Optional[Habit]:
     """Get a specific habit for a user."""
-    habit_list = await user_storage.get_user_habit_list(user)
-    if not habit_list:
-        return None
-    return await habit_list.get_habit_by(habit_id)
+    habits = await get_user_habits(user)
+    for habit in habits:
+        if str(habit.id) == habit_id:
+            return habit
+    return None
 
 
-async def get_user_lists(user: User) -> TypeList[List[Habit]]:
-    """Get all lists for a user."""
-    data = await user_storage.get_user_habit_list(user)
-    if not data:
-        data = DictHabitList({"habits": [], "lists": []})
-    
-    # Get lists from storage
-    lists = data.data.get("lists", [])
-    return [DictList(d) for d in lists]
-
-
-async def add_list(user: User, name: str) -> List[Habit]:
+async def add_list(user: User, name: str) -> HabitList:
     """Add a new list for a user."""
-    data = await user_storage.get_user_habit_list(user)
-    if not data:
-        data = DictHabitList({"habits": [], "lists": []})
-    
-    # Create new list
-    list_id = generate_short_hash(name)
-    list_data = {"id": list_id, "name": name}
-    
-    # Add to storage
-    if "lists" not in data.data:
-        data.data["lists"] = []
-    data.data["lists"].append(list_data)
-    
-    await user_storage.save_user_habit_list(user, data)
-    return DictList(list_data)
+    return await create_list(user, name)
 
 
-async def update_list(user: User, list_id: str, name: str) -> None:
+async def update_list(user: User, list_id: int, name: str) -> None:
     """Update a list's name."""
-    data = await user_storage.get_user_habit_list(user)
-    if not data:
-        return
-    
-    # Find and update list
-    for list_data in data.data.get("lists", []):
-        if list_data["id"] == list_id:
-            list_data["name"] = name
-            await user_storage.save_user_habit_list(user, data)
-            break
+    await update_list_db(list_id, user.id, name=name)
 
 
-async def delete_list(user: User, list_id: str) -> None:
+async def delete_list(user: User, list_id: int) -> None:
     """Delete a list and unassign its habits."""
-    data = await user_storage.get_user_habit_list(user)
-    if not data:
-        return
-    
-    # Remove list
-    data.data["lists"] = [
-        l for l in data.data.get("lists", []) 
-        if l["id"] != list_id
-    ]
-    
-    # Unassign habits
-    for habit in data.data.get("habits", []):
-        if habit.get("list_id") == list_id:
-            habit["list_id"] = None
-    
-    await user_storage.save_user_habit_list(user, data)
+    await update_list_db(list_id, user.id, deleted=True)
 
 
 async def is_gui_authenticated() -> bool:
@@ -137,7 +55,7 @@ async def validate_max_user_count() -> None:
         raise ValueError("Maximum number of users reached")
 
 
-async def register_user(email: str, password: str) -> User:
+async def register_user(email: str, password: str = "") -> User:
     """Register a new user."""
     try:
         logger.info(f"Attempting to register user with email: {email}")
@@ -160,6 +78,43 @@ async def login_user(user: User) -> None:
     app.storage.user.update({"auth_token": token})
 
 
-async def export_user_habit_list(habit_list: DictHabitList, filename: str) -> None:
-    """Export user habit list."""
-    ui.download(json.dumps(habit_list.data, indent=2), filename=f"{filename}.json")
+async def export_user_habits(habits: TypeList[Habit], filename: str) -> None:
+    """Export user habits."""
+    # Convert habits to JSON-friendly format
+    data = {
+        "habits": [],
+        "lists": []
+    }
+    
+    # Add habits with their records
+    for habit in habits:
+        records = await get_habit_checks(habit.id, habit.user_id)
+        habit_data = {
+            "id": habit.id,
+            "name": habit.name,
+            "order": habit.order,
+            "weekly_goal": habit.weekly_goal,
+            "list_id": habit.list_id,
+            "records": [
+                {
+                    "day": record.day.isoformat(),
+                    "done": record.done,
+                    "text": record.text
+                }
+                for record in records
+            ]
+        }
+        data["habits"].append(habit_data)
+    
+    # Add lists
+    lists = await get_user_lists(habits[0].user if habits else None)
+    data["lists"] = [
+        {
+            "id": list.id,
+            "name": list.name,
+            "order": list.order
+        }
+        for list in lists
+    ]
+    
+    ui.download(json.dumps(data, indent=2), filename=f"{filename}.json")

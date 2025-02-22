@@ -6,11 +6,13 @@ from datetime import datetime as strptime
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
-from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
-from beaverhabits.storage.storage import Habit
+from beaverhabits.sql.models import Habit
+from beaverhabits.app.crud import update_habit, get_habit_checks
 from .checkbox import habit_tick
 
 TODAY = "today"
+DAY_MASK = "%Y-%m-%d"
+MONTH_MASK = "%Y/%m"
 CALENDAR_EVENT_MASK = "%Y/%m/%d"
 
 class WeeklyGoalInput(ui.number):
@@ -18,11 +20,13 @@ class WeeklyGoalInput(ui.number):
         super().__init__(value=habit.weekly_goal or 0, min=0, max=7)
         self.habit = habit
         self.props("dense hide-bottom-space")
-        self.bind_value(target_object=habit, target_name='weekly_goal')
 
     def _validate(self, value: str) -> Optional[str]:
         if value is None or value < 0 or value > 7:
             return "Value must be between 0 and 7"
+
+    def get_value(self) -> int:
+        return self.value
 
 class HabitNameInput(ui.input):
     def __init__(self, habit: Habit, refresh: Callable) -> None:
@@ -30,13 +34,16 @@ class HabitNameInput(ui.input):
         self.habit = habit
         self.validation = self._validate
         self.props("dense hide-bottom-space")
-        self.bind_value(target_object=habit, target_name='name')
+        self.on('change', self._async_task)
 
     def _validate(self, value: str) -> Optional[str]:
         if not value:
             return "Name is required"
         if len(value) > 130:
             return "Too long"
+
+    async def _async_task(self, e):
+        await update_habit(self.habit.id, self.habit.user_id, name=e.value)
 
 class HabitDateInput(ui.date):
     def __init__(
@@ -55,21 +62,26 @@ class HabitDateInput(ui.date):
         self.classes("shadow-none")
 
         self.bind_value_from(self, "_tick_days")
+        # Get events (days with notes)
         events = [
-            d.strftime(CALENDAR_EVENT_MASK)
-            for d, r in self.habit.ticked_data.items()
-            if r.text
+            r.day.strftime(CALENDAR_EVENT_MASK)
+            for r in habit.checked_records
+            if hasattr(r, 'text') and r.text
         ]
         self.props(f'events="{events}" event-color="teal"')
 
     @property
-    def _tick_days(self) -> list[str]:
-        ticked_days = [x.strftime(DAY_MASK) for x in self.habit.ticked_days]
+    async def _tick_days(self) -> list[str]:
+        # Get completed days
+        records = await get_habit_checks(self.habit.id, self.habit.user_id)
+        ticked_days = [r.day.strftime(DAY_MASK) for r in records if r.done]
         return [*ticked_days, TODAY]
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
-        old_values = set(self.habit.ticked_days)
-        new_values = set(strptime(x, DAY_MASK).date() for x in e.value if x != TODAY)
+        # Get current completed days
+        records = await get_habit_checks(self.habit.id, self.habit.user_id)
+        old_values = {r.day for r in records if r.done}
+        new_values = {strptime(x, DAY_MASK).date() for x in e.value if x != TODAY}
 
         if diff := new_values - old_values:
             day, value = diff.pop(), True
@@ -80,4 +92,4 @@ class HabitDateInput(ui.date):
 
         self.props(f"default-year-month={day.strftime(MONTH_MASK)}")
         await habit_tick(self.habit, day, bool(value))
-        self.value = self._tick_days
+        self.value = await self._tick_days

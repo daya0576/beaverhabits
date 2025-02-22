@@ -1,5 +1,6 @@
 import csv
 import json
+from datetime import datetime
 from io import StringIO
 
 from nicegui import events, ui
@@ -9,12 +10,17 @@ from beaverhabits.app.db import User
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.layout import layout
 from beaverhabits.logging import logger
-from beaverhabits.storage.dict import DictHabitList
-from beaverhabits.storage.storage import HabitList
-from beaverhabits.views import user_storage
+from beaverhabits.sql.models import Habit, HabitList, CheckedRecord
+from beaverhabits.app.crud import (
+    create_list,
+    create_habit,
+    get_user_lists,
+    get_user_habits,
+    toggle_habit_check,
+)
 
 
-async def import_from_json(text: str) -> HabitList:
+async def import_from_json(text: str, user: User) -> list[dict]:
     """Import from JSON
 
     Example:
@@ -29,13 +35,13 @@ async def import_from_json(text: str) -> HabitList:
             },
             ...
     """
-    habit_list = DictHabitList(json.loads(text))
-    if not habit_list.habits:
+    data = json.loads(text)
+    if not data.get("habits"):
         raise ValueError("No habits found")
-    return habit_list
+    return data["habits"]
 
 
-async def import_from_csv(text: str) -> HabitList:
+async def import_from_csv(text: str) -> list[dict]:
     """Import from CSV
 
     Example:
@@ -61,8 +67,7 @@ async def import_from_csv(text: str) -> HabitList:
             habit["records"].append({"day": day, "done": done})
         habits.append(habit)
 
-    output = {"habits": habits}
-    return DictHabitList(output)
+    return habits
 
 
 async def import_ui_page(user: User | None = None):
@@ -70,31 +75,28 @@ async def import_ui_page(user: User | None = None):
         try:
             text = e.content.read().decode("utf-8")
             if e.name.endswith(".json"):
-                other = await import_from_json(text)
+                habits_data = await import_from_json(text, user)
             elif e.name.endswith(".csv"):
-                other = await import_from_csv(text)
+                habits_data = await import_from_csv(text)
             else:
                 raise ValueError("Unsupported format")
 
-            from_habit_list = await user_storage.get_user_habit_list(user)
-            if not from_habit_list:
-                added = other.habits
-                merged = set()
-                unchanged = set()
-            else:
-                added = set(other.habits) - set(from_habit_list.habits)
-                merged = set(other.habits) & set(from_habit_list.habits)
-                unchanged = set(from_habit_list.habits) - set(other.habits)
+            # Get existing habits
+            existing_habits = await get_user_habits(user)
+            existing_names = {h.name for h in existing_habits}
 
-            logger.info(f"added: {added}")
-            logger.info(f"merged: {merged}")
-            logger.info(f"unchanged: {unchanged}")
+            # Separate new and existing habits
+            new_habits = [h for h in habits_data if h["name"] not in existing_names]
+            merge_habits = [h for h in habits_data if h["name"] in existing_names]
+
+            logger.info(f"New habits: {len(new_habits)}")
+            logger.info(f"Merge habits: {len(merge_habits)}")
 
             with ui.dialog() as dialog, ui.card().classes("w-64"):
                 ui.label(
                     "Are you sure? "
-                    + f"{len(added)} habits will be added and "
-                    + f"{len(merged)} habits will be merged.",
+                    + f"{len(new_habits)} habits will be added and "
+                    + f"{len(merge_habits)} habits will be merged.",
                 )
                 with ui.row():
                     ui.button("Yes", on_click=lambda: dialog.submit("Yes"))
@@ -104,10 +106,34 @@ async def import_ui_page(user: User | None = None):
             if result != "Yes":
                 return
 
-            to_habit_list = await user_storage.merge_user_habit_list(user, other)
-            await user_storage.save_user_habit_list(user, to_habit_list)
+            # Create a default list for imported habits if none exists
+            lists = await get_user_lists(user)
+            if not lists:
+                default_list = await create_list(user, "Default")
+                list_id = default_list.id
+            else:
+                list_id = lists[0].id
+
+            # Import new habits
+            for habit_data in new_habits:
+                habit = await create_habit(user, list_id, habit_data["name"])
+                # Import records
+                for record in habit_data["records"]:
+                    day = datetime.strptime(record["day"], "%Y-%m-%d").date()
+                    if record["done"]:
+                        await toggle_habit_check(habit.id, user.id, day)
+
+            # Merge existing habits
+            for habit_data in merge_habits:
+                habit = next(h for h in existing_habits if h.name == habit_data["name"])
+                # Import records
+                for record in habit_data["records"]:
+                    day = datetime.strptime(record["day"], "%Y-%m-%d").date()
+                    if record["done"]:
+                        await toggle_habit_check(habit.id, user.id, day)
+
             ui.notify(
-                f"Imported {len(added) + len(merged)} habits",
+                f"Imported {len(new_habits) + len(merge_habits)} habits",
                 position="top",
                 color="positive",
             )

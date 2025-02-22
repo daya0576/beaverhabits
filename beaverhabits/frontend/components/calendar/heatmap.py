@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from nicegui import ui
 
-from beaverhabits.storage.storage import Habit
+from beaverhabits.sql.models import Habit
 from ..habit.checkbox import CalendarCheckBox
 
 @dataclass
@@ -67,10 +67,9 @@ class CalendarHeatmap:
             for i in reversed(range(7))
         ]
 
-def habit_heat_map(
+async def habit_heat_map(
     habit: Habit,
     habit_calendar: CalendarHeatmap,
-    readonly: bool = False,
 ):
     today = habit_calendar.today
 
@@ -86,7 +85,8 @@ def habit_heat_map(
         with ui.row(wrap=False).classes("gap-0"):
             for day in weekday_days:
                 if day <= habit_calendar.today:
-                    CalendarCheckBox(habit, day, today, is_bind_data=False)  # Never bind data
+                    # Use the factory method to create CalendarCheckBox with async initialization
+                    checkbox = await CalendarCheckBox.create(habit, day, today)
                 else:
                     ui.label().style("width: 20px; height: 20px;")
 

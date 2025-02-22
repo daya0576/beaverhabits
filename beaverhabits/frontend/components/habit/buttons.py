@@ -1,109 +1,121 @@
-from typing import Callable
-from nicegui import ui, events
+from typing import Callable, Optional
 
+from nicegui import ui
+
+from beaverhabits.sql.models import Habit, HabitList
+from beaverhabits.frontend.components.habit.inputs import WeeklyGoalInput
+from beaverhabits.app.crud import update_habit, create_habit
 from beaverhabits.frontend import icons
-from beaverhabits.logging import logger
-from beaverhabits.storage.storage import Habit, HabitList, HabitStatus
-
-class HabitSaveButton(ui.button):
-    def __init__(self, habit: Habit, habit_list: HabitList, refresh: Callable) -> None:
-        super().__init__(on_click=self._async_task, text="Save")
-        self.habit = habit
-        self.habit_list = habit_list
-        self.refresh = refresh
-        self.props("unelevated dense")
-
-    async def _async_task(self):
-        # Save the habit
-        if hasattr(self.habit, 'save'):
-            await self.habit.save()
-            logger.info(f"Saved habit: {self.habit.name}")
-            ui.notify(f"Saved {self.habit.name}")
-            self.refresh()
-            
-            # Scroll to the saved habit
-            ui.run_javascript(f"scrollToHabit('{self.habit.id}')")
-        else:
-            logger.error(f"Habit {self.habit.name} does not have a save method")
-            ui.notify(f"Error saving {self.habit.name}", type="error")
+from beaverhabits.app.db import User
 
 class HabitEditButton(ui.button):
-    def __init__(self, habit: Habit) -> None:
-        super().__init__(on_click=self._async_task, icon="edit_square")
+    def __init__(self, habit: Habit, refresh: Callable) -> None:
+        super().__init__()
         self.habit = habit
-        self.props("flat fab-mini color=grey-8")
+        self.refresh = refresh
+        self.props("flat fab-mini")
+        self.props(f'icon="{icons.EDIT}"')
 
-    async def _async_task(self):
-        pass
+        self.on("click", self._async_task)
+
+    async def _async_task(self, e):
+        with ui.dialog() as dialog, ui.card().props("flat"):
+            with ui.column().classes("gap-0 w-full"):
+                t = ui.input(
+                    label="Name",
+                    value=self.habit.name,
+                    validation={"Required": lambda value: bool(value.strip())},
+                )
+                t.classes("w-full")
+
+                with ui.row():
+                    ui.button("Save", on_click=lambda: dialog.submit(t.value)).props(
+                        "flat"
+                    )
+                    ui.button("Cancel", on_click=dialog.close).props("flat")
+
+        result = await dialog
+        if result:
+            await update_habit(self.habit.id, self.habit.user_id, name=result)
+            self.refresh()
 
 class HabitDeleteButton(ui.button):
-    def __init__(self, habit: Habit, habit_list: HabitList, refresh: Callable) -> None:
-        icon = icons.DELETE if habit.status == HabitStatus.ACTIVE else icons.DELETE_F
-        super().__init__(on_click=self._async_task, icon=icon)
+    def __init__(self, habit: Habit, refresh: Callable) -> None:
+        super().__init__()
         self.habit = habit
-        self.habit_list = habit_list
         self.refresh = refresh
-        self.props("flat fab-mini color=grey-9")
+        self.props("flat fab-mini")
+        self.props(f'icon="{icons.DELETE}"')
 
-        # Double confirm dialog to delete habit
-        with ui.dialog() as dialog, ui.card():
-            ui.label(f"Are you sure to delete habit: {habit.name}?")
-            with ui.row():
-                ui.button("Yes", on_click=lambda: dialog.submit(True))
-                ui.button("No", on_click=lambda: dialog.submit(False))
-        self.dialog = dialog
+        self.on("click", self._async_task)
 
-    async def _async_task(self):
-        if self.habit.status == HabitStatus.ACTIVE:
-            self.habit.status = HabitStatus.ARCHIVED
-            logger.info(f"Archive habit: {self.habit.name}")
+    async def _async_task(self, e):
+        with ui.dialog() as dialog, ui.card().props("flat"):
+            with ui.column().classes("gap-0 w-full"):
+                ui.label(f"Delete habit '{self.habit.name}'?")
 
-        elif self.habit.status == HabitStatus.ARCHIVED:
-            if not await self.dialog:
-                return
-            self.habit.status = HabitStatus.SOLF_DELETED
-            logger.info(f"Soft delete habit: {self.habit.name}")
+                with ui.row():
+                    ui.button("Yes", on_click=lambda: dialog.submit(True)).props("flat")
+                    ui.button("No", on_click=dialog.close).props("flat")
 
-        # Save the status change
-        if hasattr(self.habit, 'save'):
-            await self.habit.save()
-            logger.info(f"Saved status change for: {self.habit.name}")
+        result = await dialog
+        if result:
+            # Delete habit
+            await update_habit(self.habit.id, self.habit.user_id, deleted=True)
+            self.refresh()
 
+class HabitAddButton(ui.button):
+    def __init__(self, user: User, list_id: Optional[int], refresh: Callable) -> None:
+        super().__init__()
+        self.user = user
+        self.list_id = list_id
+        self.refresh = refresh
+        self.props("flat fab-mini")
+        self.props(f'icon="{icons.ADD}"')
+
+        self.on("click", self._async_task)
+
+    async def _async_task(self, e):
+        with ui.dialog() as dialog, ui.card().props("flat"):
+            with ui.column().classes("gap-0 w-full"):
+                t = ui.input(
+                    label="Name",
+                    validation={"Required": lambda value: bool(value.strip())},
+                )
+                t.classes("w-full")
+
+                with ui.row():
+                    ui.button("Add", on_click=lambda: dialog.submit(t.value)).props("flat")
+                    ui.button("Cancel", on_click=dialog.close).props("flat")
+
+        result = await dialog
+        if result:
+            # Create new habit
+            await create_habit(self.user, result, self.list_id)
+            ui.navigate.reload()  # Reload the page to show the new habit
+
+class HabitSaveButton(ui.button):
+    def __init__(self, habit: Habit, weekly_goal_input: WeeklyGoalInput, refresh: Callable) -> None:
+        super().__init__("Save")
+        self.habit = habit
+        self.weekly_goal_input = weekly_goal_input
+        self.refresh = refresh
+        self.props("flat")
+
+        self.on("click", self._async_task)
+
+    async def _async_task(self, e):
+        # Save all changes to the habit
+        weekly_goal = self.weekly_goal_input.get_value()
+        await update_habit(
+            self.habit.id,
+            self.habit.user_id,
+            name=self.habit.name,
+            weekly_goal=weekly_goal,
+            list_id=self.habit.list_id
+        )
+        # Update the habit object with new values
+        self.habit.weekly_goal = weekly_goal
+        # Update the UI
+        self.weekly_goal_input.value = weekly_goal
         self.refresh()
-        
-        # Scroll to the updated habit
-        ui.run_javascript(f"scrollToHabit('{self.habit.id}')")
-
-class HabitAddButton:
-    def __init__(self, habit_list: HabitList, refresh: Callable, list_options: list[dict] = None) -> None:
-        self.habit_list = habit_list
-        self.refresh = refresh
-        
-        with ui.row().classes("w-full items-center gap-2"):
-            self.name_input = ui.input("New habit name").props('dense outlined')
-            self.name_input.classes("flex-grow")
-            ui.button("Add Habit", on_click=self._async_task).props("unelevated")
-            
-        # Keep enter key functionality
-        self.name_input.on("keydown.enter", self._async_task)
-
-    async def _async_task(self):
-        if not self.name_input.value:
-            return
-        logger.debug(f"Adding habit to list: {self.habit_list}")
-        await self.habit_list.add(self.name_input.value)
-        logger.debug(f"Habit list after add: {self.habit_list}")
-        logger.info(f"Added new habit: {self.name_input.value}")
-        
-        # Get the new habit's ID (it's the last one in the list)
-        habits = self.habit_list.habits
-        if habits:
-            new_habit_id = habits[-1].id
-            # Refresh the UI
-            self.refresh()
-            # Scroll to the new habit
-            ui.run_javascript(f"scrollToHabit('{new_habit_id}')")
-        else:
-            self.refresh()
-            
-        self.name_input.set_value("")

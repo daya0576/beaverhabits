@@ -1,13 +1,19 @@
-from fastapi import Depends, HTTPException
-from beaverhabits import views
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+
 from beaverhabits.app.db import User
 from beaverhabits.app.dependencies import current_active_user
-from beaverhabits.storage.storage import HabitList
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/jwt/login")
 
-async def current_habit_list(user: User = Depends(current_active_user)) -> HabitList:
-    """Get the current user's habit list."""
-    habit_list = await views.get_user_habit_list(user)
-    if not habit_list:
-        raise HTTPException(status_code=404, detail="No habits found")
-    return habit_list
+async def get_current_user(
+    user: User = Depends(current_active_user),
+) -> User:
+    """Get the current authenticated user."""
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user

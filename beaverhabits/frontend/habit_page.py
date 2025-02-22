@@ -19,8 +19,8 @@ from beaverhabits.frontend.css import (
     HIDE_TIMELINE_TITLE,
 )
 from beaverhabits.frontend.layout import layout, redirect
-from beaverhabits.storage.meta import get_habit_heatmap_path
-from beaverhabits.storage.storage import Habit
+from beaverhabits.sql.models import Habit, CheckedRecord
+from beaverhabits.app.crud import get_habit_checks
 from beaverhabits.app.db import User
 
 WEEKS_TO_DISPLAY = 15
@@ -51,14 +51,22 @@ def card(link: str | None = None, padding: float = 3):
 
 @ui.refreshable
 async def habit_page(today: datetime.date, habit: Habit):
-    notes = [x for x in habit.records if x.text]
+    # Get all checked records for this habit
+    records = await get_habit_checks(habit.id, habit.user_id)
+    
+    # Get notes and sort them by date
+    notes = [r for r in records if r.text]
     notes.sort(key=lambda x: x.day, reverse=True)
+    
+    # Get completed days
+    completed_days = [r.day for r in records if r.done]
+    
     # https://tailwindcss.com/docs/responsive-design#container-size-reference
     masony = "md:grid-cols-2" if notes else ""
 
     with grid(masony):
         habit_calendar = CalendarHeatmap.build(today, WEEKS_TO_DISPLAY, calendar.MONDAY)
-        target = get_habit_heatmap_path(habit)
+        target = f"{habit.id}/heatmap"
 
         with grid():
             with card():
@@ -67,11 +75,11 @@ async def habit_page(today: datetime.date, habit: Habit):
             with card():
                 card_title("Last 3 Months", target)
                 ui.space().classes("h-1")
-                habit_heat_map(habit, habit_calendar)
+                await habit_heat_map(habit, habit_calendar)
 
             with card():
                 card_title("History", target)
-                habit_history(today, habit.ticked_days)
+                habit_history(today, completed_days)
 
         if notes:
             with grid():

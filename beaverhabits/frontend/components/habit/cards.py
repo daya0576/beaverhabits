@@ -1,6 +1,6 @@
 from nicegui import ui
 
-from beaverhabits.storage.storage import Habit, HabitStatus
+from beaverhabits.sql.models import Habit
 
 class HabitOrderCard(ui.card):
     def __init__(self, habit: Habit | None = None) -> None:
@@ -12,7 +12,7 @@ class HabitOrderCard(ui.card):
         # Drag and drop
         self.props("draggable")
         self.classes("cursor-grab")
-        if not habit or habit.status == HabitStatus.ARCHIVED:
+        if not habit or habit.deleted:
             self.classes("opacity-50")
 
         # Button to delete habit

@@ -1,45 +1,69 @@
-from fastapi import APIRouter, HTTPException
-from beaverhabits import views
-from beaverhabits.app.auth import user_authenticate
-from beaverhabits.api.models import ExportCredentials
-from beaverhabits.logging import logger
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException
+
+from beaverhabits.app.crud import (
+    create_list,
+    get_user_lists,
+    update_list,
+    create_habit,
+)
+from beaverhabits.app.db import User
+from beaverhabits.app.dependencies import current_active_user
+from beaverhabits.app.schemas import (
+    HabitListCreate,
+    HabitListRead,
+    HabitListUpdate,
+    HabitCreate,
+    HabitRead,
+)
 
 router = APIRouter(tags=["lists"])
 
+@router.get("/lists", response_model=List[HabitListRead])
+async def get_lists(
+    user: User = Depends(current_active_user),
+):
+    """Get all lists for the current user."""
+    return await get_user_lists(user)
 
-@router.post("/lists", response_model=dict[str, list[dict[str, str]]])
-async def get_lists(credentials: ExportCredentials):
-    """Get all lists for the authenticated user."""
-    # Handle authentication first
-    try:
-        user = await user_authenticate(credentials.email, credentials.password)
-        if not user:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid email or password"
-            )
-    except Exception as auth_error:
-        logger.error(f"Authentication error: {str(auth_error)}")
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication failed"
-        ) from auth_error
+@router.post("/lists", response_model=HabitListRead)
+async def create_new_list(
+    list_create: HabitListCreate,
+    user: User = Depends(current_active_user),
+):
+    """Create a new list."""
+    return await create_list(user, list_create.name, list_create.order)
 
-    # Get lists
-    try:
-        lists = await views.get_user_lists(user)
-        return {
-            "lists": [
-                {
-                    "id": list_obj.id,
-                    "name": list_obj.name
-                }
-                for list_obj in lists
-            ]
-        }
-    except Exception as e:
-        logger.exception("Error getting user lists")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to retrieve lists"
-        ) from e
+@router.patch("/lists/{list_id}", response_model=HabitListRead)
+async def update_list_details(
+    list_id: int,
+    list_update: HabitListUpdate,
+    user: User = Depends(current_active_user),
+):
+    """Update list details."""
+    updated_list = await update_list(
+        list_id,
+        user.id,
+        name=list_update.name,
+        order=list_update.order,
+    )
+    if not updated_list:
+        raise HTTPException(status_code=404, detail="List not found")
+    return updated_list
+
+@router.post("/lists/{list_id}/habits", response_model=HabitRead)
+async def create_list_habit(
+    list_id: int,
+    habit_create: HabitCreate,
+    user: User = Depends(current_active_user),
+):
+    """Create a new habit in a list."""
+    habit = await create_habit(
+        user,
+        list_id,
+        habit_create.name,
+        habit_create.order,
+    )
+    if not habit:
+        raise HTTPException(status_code=404, detail="List not found")
+    return habit

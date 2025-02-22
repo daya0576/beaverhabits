@@ -1,31 +1,23 @@
-from pydantic import BaseModel, EmailStr
+from datetime import date
+from typing import List, Optional
+from pydantic import BaseModel
 
-
-class HabitListMeta(BaseModel):
-    order: list[str] | None = None
-
-
-class ExportCredentials(BaseModel):
-    email: EmailStr
-    password: str
-    list_id: str | None = None
-    archive: bool = False
-
-
-class Tick(BaseModel):
-    done: bool | None  # None means skipped
+class CompletionRecord(BaseModel):
+    """Single completion record for batch updates"""
     date: str
-    date_fmt: str = "%d-%m-%Y"
-
-
-class HabitCompletion(BaseModel):
-    date: str
-    done: bool | None  # None means skipped
-
+    done: bool
 
 class HabitCompletions(BaseModel):
-    email: EmailStr
-    password: str
-    habit_id: str
-    completions: list[HabitCompletion]
+    """Batch update model for habit completions"""
+    habit_id: int
+    dates: List[str]
+
+class Tick(BaseModel):
+    """Single habit completion toggle"""
+    date: str
     date_fmt: str = "%Y-%m-%d"
+    done: bool = True
+
+class HabitListMeta(BaseModel):
+    """Metadata for habit lists"""
+    order: Optional[List[int]] = None

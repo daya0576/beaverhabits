@@ -9,8 +9,8 @@ from beaverhabits.frontend.components import (
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.frontend.css import CHECK_BOX_CSS
-from beaverhabits.storage.meta import get_habit_page_path
-from beaverhabits.storage.storage import Habit
+from beaverhabits.sql.models import Habit
+from beaverhabits.app.crud import get_habit_checks
 from beaverhabits.app.db import User
 
 WEEKS_TO_DISPLAY = 53
@@ -20,8 +20,10 @@ async def heatmap_page(today: datetime.date, habit: Habit, user: User | None = N
     ui.add_css(CHECK_BOX_CSS)
 
     async with layout(title=habit.name, user=user):
-        ticked_data = {x: True for x in habit.ticked_days}
-        start_date = min(ticked_data.keys()) if ticked_data else today
+        # Get all completed records
+        records = await get_habit_checks(habit.id, habit.user_id)
+        completed_days = [r.day for r in records if r.done]
+        start_date = min(completed_days) if completed_days else today
 
         with ui.column():
             while today > start_date:
@@ -31,6 +33,4 @@ async def heatmap_page(today: datetime.date, habit: Habit, user: User | None = N
                     habit_calendar = CalendarHeatmap.build(
                         today, WEEKS_TO_DISPLAY, settings.FIRST_DAY_OF_WEEK
                     )
-                    habit_heat_map(habit, habit_calendar, readonly=True)
-
-                    today -= datetime.timedelta(days=7 * WEEKS_TO_DISPLAY)
+                    await habit_heat_map(habit, habit_calendar)

@@ -1,27 +1,24 @@
 import os
 from contextlib import asynccontextmanager
-
 from typing import List as TypeList
 
 from nicegui import app, context, ui
 
-from beaverhabits import views
-from beaverhabits.storage.storage import List, Habit
-
+from beaverhabits.app.crud import get_user_lists
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons, css
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.logging import logger
-from beaverhabits.storage.meta import get_page_title, get_root_path, is_demo
+from beaverhabits.sql.models import HabitList
 
 
 def redirect(x):
-    ui.navigate.to(os.path.join(get_root_path(), x))
+    ui.navigate.to(os.path.join(settings.GUI_MOUNT_PATH, x))
 
 
 def open_tab(x):
-    ui.navigate.to(os.path.join(get_root_path(), x), new_tab=True)
+    ui.navigate.to(os.path.join(settings.GUI_MOUNT_PATH, x), new_tab=True)
 
 
 def add_page_scripts():
@@ -107,13 +104,13 @@ def add_umami_headers():
 
 
 @ui.refreshable
-async def list_selector(lists: TypeList[List[Habit]], current_list_id: str | None = None, path: str = ""):
+async def list_selector(lists: TypeList[HabitList], current_list_id: int | None = None, path: str = ""):
     """Dropdown for selecting current list."""
     with ui.row().classes("items-center gap-2"):
         # Dropdown for list selection
         # Create name-to-id mapping
         name_to_id = {"No List": None}
-        name_to_id.update({list.name: list.id for list in lists})
+        name_to_id.update({list.name: list.id for list in lists if not list.deleted})
         
         # Create options list
         options = list(name_to_id.keys())
@@ -146,9 +143,9 @@ async def list_selector(lists: TypeList[List[Habit]], current_list_id: str | Non
                     # For add page with no list: keep current path
                     path if path.endswith("/add") else
                     # For main page: navigate to root with list parameter
-                    f"{get_root_path()}?list={name_to_id[e.value]}" if name_to_id[e.value] else
+                    f"{settings.GUI_MOUNT_PATH}?list={name_to_id[e.value]}" if name_to_id[e.value] else
                     # For main page with no list: navigate to root
-                    get_root_path()
+                    settings.GUI_MOUNT_PATH
                 )
             )
         ).props('outlined dense options-dense')
@@ -157,7 +154,7 @@ async def list_selector(lists: TypeList[List[Habit]], current_list_id: str | Non
 def menu_component() -> None:
     """Dropdown menu for the top-right corner of the page."""
     with ui.menu():
-        show_import = not is_demo()
+        show_import = True
         show_export = True
 
         path = context.client.page.path
@@ -184,8 +181,7 @@ def menu_component() -> None:
 async def layout(title: str | None = None, with_menu: bool = True, user=None):
     """Base layout for all pages."""
 
-    root_path = get_root_path()
-    title = title or get_page_title(root_path)
+    title = title or "Beaver Habits"
 
     with ui.column() as c:
         # Center the content on small screens
@@ -201,12 +197,12 @@ async def layout(title: str | None = None, with_menu: bool = True, user=None):
         path = context.client.page.path
         logger.info(f"Rendering page: {path}")
         with ui.row().classes("min-w-full gap-x-0 items-center"):
-            menu_header(title, target=root_path)
+            menu_header(title, target=settings.GUI_MOUNT_PATH)
             
             # Add list selector if not on lists, add, or order pages
             if not any(x in path for x in ["/lists", "/add", "/order"]) and user:
                 ui.space()
-                lists = await views.get_user_lists(user)
+                lists = await get_user_lists(user)
                 try:
                     current_list = context.client.page.query.get("list", "")
                     # Handle "None" string from URL

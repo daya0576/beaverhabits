@@ -1,6 +1,7 @@
 import calendar
 import logging
-from enum import Enum
+import configparser
+from pathlib import Path
 
 import dotenv
 from pydantic_settings import BaseSettings
@@ -8,14 +9,20 @@ from pydantic_settings import BaseSettings
 logging.getLogger("niceGUI").setLevel(logging.INFO)
 dotenv.load_dotenv()
 
-USER_DATA_FOLDER = ".user"
+# Read database settings from settings.ini
+config = configparser.ConfigParser()
+config.read('settings.ini')
 
+db_config = config['database']
+db_host = db_config.get('host', 'localhost')
+db_port = db_config.get('port', '3306')
+db_name = db_config.get('database', 'beaverhabits')
+db_user = db_config.get('user', 'root')
+db_password = db_config.get('password', '')
 
-class StorageType(Enum):
-    SESSION = "SESSION"
-    USER_DATABASE = "DATABASE"
-    USER_DISK = "USER_DISK"
-
+# Construct database URL
+db_password_part = f":{db_password}@" if db_password else "@"
+DATABASE_URL = f"mysql+aiomysql://{db_user}{db_password_part}{db_host}:{db_port}/{db_name}"
 
 class Settings(BaseSettings):
     ENV: str = "dev"
@@ -27,9 +34,8 @@ class Settings(BaseSettings):
     GUI_MOUNT_PATH: str = "/gui"
     DEMO_MOUNT_PATH: str = "/demo"
 
-    # Storage
-    HABITS_STORAGE: StorageType = StorageType.USER_DATABASE
-    DATABASE_URL: str = f"sqlite+aiosqlite:///./{USER_DATA_FOLDER}/habits.db"
+    # Database
+    DATABASE_URL: str = DATABASE_URL
     ENABLE_AUTOSAVE: bool = False  # Set to True to enable autosave (may cause issues with concurrent edits)
     MAX_USER_COUNT: int = -1
     JWT_SECRET: str = "54o53o847gdlfjfdljgd"

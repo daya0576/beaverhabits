@@ -3,9 +3,13 @@ from dateutil.relativedelta import relativedelta
 from nicegui import ui
 
 from beaverhabits.frontend import icons
+from beaverhabits.sql.models import Habit
 
-def habit_history(today: datetime.date, ticked_days: list[datetime.date]):
-    # get lastest 6 months, e.g. Feb
+async def habit_history(habit: Habit, today: datetime.date):
+    # Get completed days from checked_records
+    completed_days = [record.day for record in habit.checked_records if record.done]
+    
+    # get latest 6 months, e.g. Feb
     months, data = [], []
     for i in range(13, 0, -1):
         offset_date = today - relativedelta(months=i)
@@ -13,8 +17,8 @@ def habit_history(today: datetime.date, ticked_days: list[datetime.date]):
 
         count = sum(
             1
-            for x in ticked_days
-            if x.month == offset_date.month and x.year == offset_date.year
+            for day in completed_days
+            if day.month == offset_date.month and day.year == offset_date.year
         )
         data.append(count)
 
