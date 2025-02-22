@@ -143,7 +143,7 @@ async def update_habit(habit_id: int, user_id: UUID, name: Optional[str] = None,
         return habit
 
 # Checked records operations
-async def toggle_habit_check(habit_id: int, user_id: UUID, day: date, text: str | None = None) -> Optional[CheckedRecord]:
+async def toggle_habit_check(habit_id: int, user_id: UUID, day: date, text: str | None = None, value: bool | None = None) -> Optional[CheckedRecord]:
     async with get_async_session_context() as session:
         # Verify habit belongs to user and list is not deleted
         habit_stmt = select(Habit).join(HabitList).where(
@@ -166,20 +166,27 @@ async def toggle_habit_check(habit_id: int, user_id: UUID, day: date, text: str 
         result = await session.execute(stmt)
         record = result.scalar_one_or_none()
         
-        if record:
-            # Toggle existing record
-            record.done = not record.done
-            if text is not None:  # Update text only if provided
-                record.text = text
-        else:
-            # Create new record
-            record = CheckedRecord(habit_id=habit_id, day=day, done=True, text=text)
-            session.add(record)
+        if value is None:  # Not set - delete record if exists
+            if record:
+                await session.delete(record)
+                await session.commit()
+                logger.info(f"[CRUD] Deleted habit {habit_id} check for {day}")
+                return None
+        else:  # Checked or Skipped
+            if record:
+                # Update existing record
+                record.done = value
+                if text is not None:  # Update text only if provided
+                    record.text = text
+            else:
+                # Create new record
+                record = CheckedRecord(habit_id=habit_id, day=day, done=value, text=text)
+                session.add(record)
             
-        await session.commit()
-        await session.refresh(record)
-        logger.info(f"[CRUD] Toggled habit {habit_id} check for {day}")
-        return record
+            await session.commit()
+            await session.refresh(record)
+            logger.info(f"[CRUD] Set habit {habit_id} check for {day} to {value}")
+            return record
 
 async def get_habit_checks(habit_id: int, user_id: UUID) -> List[CheckedRecord]:
     async with get_async_session_context() as session:

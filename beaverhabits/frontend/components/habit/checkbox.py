@@ -52,7 +52,7 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
         ui.notify("Note is too long", color="negative")
         return
 
-    record = await toggle_habit_check(habit.id, habit.user_id, day, text)
+    record = await toggle_habit_check(habit.id, habit.user_id, day, text, True)  # Always set to checked when using notes
     
     # Highlight the updated habit
     ui.run_javascript(f"highlightHabit('{habit.id}')")
@@ -71,25 +71,27 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
 
     # Toggle the habit check, preserving any existing note
     text = record.text if record and hasattr(record, 'text') else None
-    await toggle_habit_check(habit.id, habit.user_id, day, text)
+    await toggle_habit_check(habit.id, habit.user_id, day, text, value)
     
     # Highlight the updated habit
     ui.run_javascript(f"highlightHabit('{habit.id}')")
 
-def get_week_ticks(habit: Habit, today: datetime.date) -> tuple[int, int]:
+async def get_week_ticks(habit: Habit, today: datetime.date) -> tuple[int, int]:
     """Get the number of ticks for the current week."""
+    records = await get_habit_checks(habit.id, habit.user_id)
     week_start = today - datetime.timedelta(days=today.weekday())
     week_end = week_start + datetime.timedelta(days=6)
-    week_ticks = sum(1 for record in habit.checked_records 
+    week_ticks = sum(1 for record in records 
                     if week_start <= record.day <= week_end and record.done)
-    total_ticks = sum(1 for record in habit.checked_records if record.done)
+    total_ticks = sum(1 for record in records if record.done)
     return week_ticks, total_ticks
 
-def get_last_week_completion(habit: Habit, today: datetime.date) -> bool:
+async def get_last_week_completion(habit: Habit, today: datetime.date) -> bool:
     """Check if the habit was completed last week."""
+    records = await get_habit_checks(habit.id, habit.user_id)
     last_week_start = today - datetime.timedelta(days=today.weekday() + 7)
     last_week_end = last_week_start + datetime.timedelta(days=6)
-    last_week_ticks = sum(1 for record in habit.checked_records 
+    last_week_ticks = sum(1 for record in records 
                          if last_week_start <= record.day <= last_week_end and record.done)
     return last_week_ticks >= (habit.weekly_goal or 0)
 
@@ -99,7 +101,7 @@ class BaseHabitCheckBox(ui.checkbox):
         super().__init__("", value=value if value is not None else False)
         self.habit = habit
         self.day = day
-        self.skipped = value is None  # Track skipped state
+        self.skipped = value is False  # Track skipped state (False means skipped, None means not set)
         text_color = "chartreuse" if self.day == datetime.date.today() else settings.HABIT_COLOR_DAY_NUMBER
         self.unchecked_icon = icons.SQUARE.format(color="rgb(54,54,54)", text=self.day.day, text_color=text_color)
         self.checked_icon = icons.DONE
@@ -110,7 +112,7 @@ class BaseHabitCheckBox(ui.checkbox):
         
         # Initialize state without async
         self.value = value if value is not None else False
-        self.skipped = value is None
+        self.skipped = value is False  # False means skipped, None means not set
         
         # Update visual state
         if self.skipped:
@@ -132,11 +134,14 @@ class BaseHabitCheckBox(ui.checkbox):
 
     async def _update_style(self, value: bool | None):
         # First update internal state
-        if value is None:  # Skipped state
+        if value is None:  # Not set state
+            self.value = False  # Show empty icon
+            self.skipped = False
+        elif value is False:  # Skipped state
             self.value = True  # Show skipped icon
             self.skipped = True
-        else:
-            self.value = value
+        else:  # Checked state
+            self.value = True
             self.skipped = False
         
         # Then update visual state
@@ -159,8 +164,8 @@ class BaseHabitCheckBox(ui.checkbox):
             ticked_days.discard(self.day)
             
         # Get ticks for current week and last week's completion status
-        week_ticks, _ = get_week_ticks(self.habit, self.day)
-        last_week_complete = get_last_week_completion(self.habit, self.day)
+        week_ticks, _ = await get_week_ticks(self.habit, self.day)
+        last_week_complete = await get_last_week_completion(self.habit, self.day)
         
         # Check if this habit is skipped today
         today_record = next((r for r in records if r.day == datetime.date.today()), None)
@@ -191,15 +196,15 @@ class BaseHabitCheckBox(ui.checkbox):
             # Get current state from database
             records = await get_habit_checks(self.habit.id, self.habit.user_id)
             record = next((r for r in records if r.day == self.day), None)
-            current_state = record.done if record else False
+            current_state = record.done if record else None
             
             # Determine next state based on current database state
-            if current_state is None:  # Currently skipped
-                value = False  # Move to original state
-            elif current_state:  # Currently checked
-                value = None  # Move to skipped
-            else:  # Currently unchecked
+            if current_state is None:  # Currently not set
                 value = True  # Move to checked
+            elif current_state:  # Currently checked
+                value = False  # Move to skipped
+            else:  # Currently skipped
+                value = None  # Move to not set
             
             # Do update completion status
             await habit_tick(self.habit, self.day, value)
@@ -277,7 +282,7 @@ class CalendarCheckBox(BaseHabitCheckBox):
         # Get initial state
         records = await get_habit_checks(habit.id, habit.user_id)
         record = next((r for r in records if r.day == day), None)
-        initial_value = record.done if record else False
+        initial_value = record.done if record else None  # None means not set
         
         # Create instance with initial value
         return cls(habit, day, today, initial_value)

@@ -183,11 +183,7 @@ async def layout(title: str | None = None, with_menu: bool = True, user=None):
 
     title = title or "Beaver Habits"
 
-    with ui.column() as c:
-        # Center the content on small screens
-        c.classes("mx-auto")
-        if not settings.ENABLE_DESKTOP_ALGIN_CENTER:
-            c.classes("sm:mx-0")
+    with ui.column().classes("w-full") as c:
 
         # Standard headers and scripts
         custom_header()
@@ -196,12 +192,23 @@ async def layout(title: str | None = None, with_menu: bool = True, user=None):
 
         path = context.client.page.path
         logger.info(f"Rendering page: {path}")
-        with ui.row().classes("min-w-full gap-x-0 items-center"):
-            menu_header(title, target=settings.GUI_MOUNT_PATH)
+        with ui.row().classes("w-full items-center justify-between p-4"):
+            # Show title on all pages except main /gui page
+            if path != settings.GUI_MOUNT_PATH:
+                # Get page-specific title
+                page_title = (
+                    "Add Habit" if "/add" in path
+                    else "Configure Lists" if "/lists" in path
+                    else "Reorder Habits" if "/order" in path
+                    else "Import" if "/import" in path
+                    else "Export" if "/export" in path
+                    else "Habit Details" if "/habits/" in path
+                    else title
+                )
+                menu_header(page_title, target=settings.GUI_MOUNT_PATH)
             
             # Add list selector if not on lists, add, or order pages
             if not any(x in path for x in ["/lists", "/add", "/order"]) and user:
-                ui.space()
                 lists = await get_user_lists(user)
                 try:
                     current_list = context.client.page.query.get("list", "")
@@ -210,8 +217,9 @@ async def layout(title: str | None = None, with_menu: bool = True, user=None):
                 except AttributeError:
                     current_list = None
                 await list_selector(lists, current_list, path)
+            else:
+                ui.space()  # Empty space on the left when no list selector
                 
-                ui.space()
             if with_menu:
                 with menu_icon_button(icons.MENU):
                     menu_component()

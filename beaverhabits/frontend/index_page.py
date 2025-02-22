@@ -82,7 +82,7 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 
     row_compat_classes = "px-0 py-1"
 
-    container = ui.column().classes("habit-card-container pb-32")  # Add bottom padding
+    container = ui.column().classes("w-full habit-card-container pb-32 px-4")  # Add padding
     with container:
         # Habit List
         for habit in active_habits:
@@ -150,7 +150,7 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         for day in days:
                             # Get the actual state from checked_records
                             record = next((r for r in records if r.day == day), None)
-                            state = record.done if record else False
+                            state = record.done if record else None  # None means not set
                             checkbox = HabitCheckBox(habit, day, state, habit_list_ui.refresh)
 
                         if settings.INDEX_SHOW_HABIT_COUNT:
@@ -176,12 +176,13 @@ async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: Us
     active_habits.sort(key=lambda h: h.order)
 
     async with layout(user=user):
-        # Add habit-filter.js to the page if feature is enabled
-        if settings.ENABLE_LETTER_FILTER:
-            ui.add_head_html(
-                '<script src="/statics/js/habit-filter.js"></script>'
-            )
-        await week_navigation(days)
-        if settings.ENABLE_LETTER_FILTER:
-            await letter_filter_ui(active_habits)
-        await habit_list_ui(days, active_habits)
+        with ui.column().classes("w-full"):
+            # Add habit-filter.js to the page if feature is enabled
+            if settings.ENABLE_LETTER_FILTER:
+                ui.add_head_html(
+                    '<script src="/statics/js/habit-filter.js"></script>'
+                )
+            await week_navigation(days)
+            if settings.ENABLE_LETTER_FILTER:
+                await letter_filter_ui(active_habits)
+            await habit_list_ui(days, active_habits)
