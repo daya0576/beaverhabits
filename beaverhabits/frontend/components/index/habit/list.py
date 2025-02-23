@@ -7,7 +7,8 @@ from beaverhabits.configs import settings
 from beaverhabits.frontend.components import HabitCheckBox, IndexBadge, link
 from beaverhabits.sql.models import Habit
 from beaverhabits.app.crud import get_habit_checks
-from .utils import get_habit_priority, get_week_ticks, get_last_week_completion
+from beaverhabits.logging import logger
+from .utils import get_habit_priority, get_week_ticks, get_last_week_completion, should_check_last_week
 
 @ui.refreshable
 async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
@@ -53,12 +54,22 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
             with ui.element("div").classes("w-full flex justify-start"):
                 # Name row
                 redirect_page = f"{settings.GUI_MOUNT_PATH}/habits/{habit.id}"
-                # Calculate color
-                initial_color = (
-                    settings.HABIT_COLOR_LAST_WEEK_INCOMPLETE if not last_week_complete and habit.weekly_goal > 0
-                    else settings.HABIT_COLOR_COMPLETED if is_completed
-                    else settings.HABIT_COLOR_INCOMPLETE
-                )
+                # Calculate color based on completion and creation date
+                if not should_check_last_week(habit, today):
+                    # New habit - only check current week
+                    initial_color = (
+                        settings.HABIT_COLOR_COMPLETED if is_completed
+                        else settings.HABIT_COLOR_INCOMPLETE
+                    )
+                    logger.debug(f"Habit {habit.name} is new, color: {initial_color}")
+                else:
+                    # Existing habit - check both weeks
+                    initial_color = (
+                        settings.HABIT_COLOR_COMPLETED if is_completed
+                        else settings.HABIT_COLOR_LAST_WEEK_INCOMPLETE if not last_week_complete and habit.weekly_goal > 0
+                        else settings.HABIT_COLOR_INCOMPLETE
+                    )
+                    logger.debug(f"Habit {habit.name} is existing, color: {initial_color}")
                 
                 # Container with relative positioning
                 with ui.element("div").classes("relative w-full"):

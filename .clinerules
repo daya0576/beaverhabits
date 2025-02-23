@@ -3,6 +3,7 @@
 If you encounter any new information that could improve the efficiency of AI assistants when working on this project, add it to the `.clinerules` file.
 
 Ensure that the information is added to the appropriate section:
+
 - **BEGIN SYSTEM:** Add information relevant only to the current system.
 - **BEGIN Local project specific hints:** Add information specific to the current project.
 
@@ -33,7 +34,6 @@ use "Remove-Item"
 ## How to create multiple folders
 
 Example: mkdir src\core\rules; mkdir src\core\compare
-
 
 # Helper Scripts
 
@@ -89,7 +89,7 @@ pause
 # Virtual Environments
 
 - Create venv for dependency isolation. But only if the directory doesnt exist yet.
-- Maintain requirements.txt. Update it after adding new libraries (e.g., pip freeze > requirements.txt). 
+- Maintain requirements.txt. Update it after adding new libraries (e.g., pip freeze > requirements.txt).
 - Use latest stable versions of packages
 
 # Logging Best Practices
@@ -120,6 +120,7 @@ pause
 # Configuration
 
 - Store settings in settings.ini at the project root. Parse these using Python’s configparser.
+
 ### BEGIN LANGUAGE JAVASCRIPT
 
 # Code Organization
@@ -169,5 +170,15 @@ pause
 
 ### BEGIN Local project specific hints
 
+# Habit Colors
 
+Colors indicate habit completion status:
 
+- Yellow: Current week's goal not yet reached
+- Green: Current week's goal reached
+- Red: Last week's goal not reached (only for habits that existed during last week)
+
+For newly created habits:
+
+- Start as yellow (incomplete) or green (complete)
+- Cannot be red until they have existed for a full week
