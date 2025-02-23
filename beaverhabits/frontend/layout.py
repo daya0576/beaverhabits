@@ -21,6 +21,26 @@ def open_tab(x):
     ui.navigate.to(os.path.join(settings.GUI_MOUNT_PATH, x), new_tab=True)
 
 
+def handle_list_change(e, name_to_id: dict, path: str):
+    """Handle list selection change."""
+    # Update storage
+    app.storage.user.update({"current_list": name_to_id[e.value]})
+    
+    # Get list parameter
+    list_param = name_to_id[e.value]
+    
+    # Determine target URL
+    if path.endswith("/add"):
+        # For add page
+        target_url = f"{path}?list={list_param}" if list_param is not None else f"{path}?list=None"
+    else:
+        # For main page
+        target_url = f"{settings.GUI_MOUNT_PATH}?list={list_param}" if list_param is not None else f"{settings.GUI_MOUNT_PATH}?list=None"
+    
+    logger.debug(f"List selector - navigating to: {target_url}")
+    ui.navigate.to(target_url)
+
+
 def add_page_scripts():
     """Add JavaScript and CSS to the page."""
     # Add settings as JavaScript variables
@@ -41,6 +61,9 @@ def add_page_scripts():
     from beaverhabits.frontend.javascript import js_paths
     for js_file in js_paths.values():
         ui.add_head_html(f'<script src="{js_file}"></script>')
+    
+    # Add habit filter script
+    ui.add_head_html('<script src="/statics/js/habit-filter.js"></script>')
     
     # Add CSS for animations
     ui.add_head_html(f'<style>{css.habit_animations}</style>')
@@ -115,15 +138,28 @@ async def list_selector(lists: TypeList[HabitList], current_list_id: int | None 
         # Create options list
         options = list(name_to_id.keys())
         
-        # Get current list ID from storage or URL
-        stored_list_id = app.storage.user.get("current_list")
-        current_list_id = current_list_id or stored_list_id
-        
-        # Find current name from ID
-        current_name = next(
-            (name for name, id in name_to_id.items() if id == current_list_id),
-            "No List"
-        )
+        # Get current list ID from URL
+        try:
+            current_list_param = current_list_id if current_list_id is not None else ""
+            logger.debug(f"List selector - current_list_param: {current_list_param}")
+            
+            # Handle different list parameter cases
+            if current_list_param == "None":
+                current_name = "No List"
+                logger.debug("List selector - using 'No List'")
+            elif current_list_param.isdigit():
+                list_id = int(current_list_param)
+                current_name = next(
+                    (name for name, id in name_to_id.items() if id == list_id),
+                    "No List"
+                )
+                logger.debug(f"List selector - found name: {current_name} for ID: {list_id}")
+            else:
+                current_name = "No List"
+                logger.debug("List selector - defaulting to 'No List'")
+        except (AttributeError, ValueError) as e:
+            logger.error(f"List selector - error parsing list ID: {e}")
+            current_name = "No List"
         
         # Log debug info
         logger.debug(f"List options: {options}")
@@ -133,21 +169,7 @@ async def list_selector(lists: TypeList[HabitList], current_list_id: int | None 
         ui.select(
             options=options,
             value=current_name,
-            on_change=lambda e: (
-                app.storage.user.update({"current_list": name_to_id[e.value]}),
-                # Update URL without navigation on add page
-                # Update URL based on page type
-                ui.navigate.to(
-                    # For add page: update current path with list parameter
-                    f"{path}?list={name_to_id[e.value]}" if path.endswith("/add") and name_to_id[e.value] else
-                    # For add page with no list: keep current path
-                    path if path.endswith("/add") else
-                    # For main page: navigate to root with list parameter
-                    f"{settings.GUI_MOUNT_PATH}?list={name_to_id[e.value]}" if name_to_id[e.value] else
-                    # For main page with no list: navigate to root
-                    settings.GUI_MOUNT_PATH
-                )
-            )
+            on_change=lambda e: handle_list_change(e, name_to_id, path)
         ).props('outlined dense options-dense')
 
 
@@ -210,12 +232,13 @@ async def layout(title: str | None = None, with_menu: bool = True, user=None):
             # Add list selector if not on lists, add, or order pages
             if not any(x in path for x in ["/lists", "/add", "/order"]) and user:
                 lists = await get_user_lists(user)
+                # Get current list from URL parameter
                 try:
-                    current_list = context.client.page.query.get("list", "")
-                    # Handle "None" string from URL
-                    current_list = None if current_list == "None" else current_list
-                except AttributeError:
-                    current_list = None
+                    current_list = context.client.page.query.get("list", "") if hasattr(context.client.page, "query") else ""
+                    logger.debug(f"Layout - current list from URL: {current_list}")
+                except Exception as e:
+                    logger.debug(f"Layout - error getting list from URL: {e}")
+                    current_list = ""
                 await list_selector(lists, current_list, path)
             else:
                 ui.space()  # Empty space on the left when no list selector

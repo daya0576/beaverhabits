@@ -9,7 +9,7 @@ from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.sql.models import Habit, CheckedRecord
 from beaverhabits.app.crud import toggle_habit_check, get_habit_checks
-from ..utils import ratelimiter
+from beaverhabits.frontend.components.utils import ratelimiter
 
 DAILY_NOTE_MAX_LENGTH = 300
 
