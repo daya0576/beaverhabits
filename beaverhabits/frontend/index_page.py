@@ -41,12 +41,20 @@ async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: Us
 
     async with layout(user=user):
         with ui.column().classes("w-full"):
+            # Log filter settings
+            logger.debug(f"Letter filter settings:")
+            logger.debug(f"  - ENABLE_LETTER_FILTER: {settings.ENABLE_LETTER_FILTER}")
+            logger.debug(f"  - Current list ID: {current_list_id!r}")
+            logger.debug(f"  - Current list: {current_list!r}")
+            
             # Determine if letter filter should be enabled
             show_filter = should_show_filter(
                 current_list_id,
                 current_list,
                 settings.ENABLE_LETTER_FILTER
             )
+            
+            logger.debug(f"Letter filter decision: {show_filter}")
             
             # Initialize letter filter state in JavaScript
             ui.run_javascript(f'window.HabitFilter.setEnabled({str(show_filter).lower()});')

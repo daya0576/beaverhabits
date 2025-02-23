@@ -35,10 +35,13 @@ def get_list_from_url() -> Tuple[Optional[str | int], Optional[HabitList]]:
 async def get_list_details(list_id: int) -> Optional[HabitList]:
     """Get list details from database."""
     try:
-        async with get_async_session() as session:
+        from beaverhabits.sql.database import async_session_maker
+        async with async_session_maker() as session:
             stmt = select(HabitList).where(HabitList.id == list_id)
             result = await session.execute(stmt)
-            return result.scalar_one_or_none()
+            list_details = result.scalar_one_or_none()
+            logger.debug(f"Retrieved list details for ID {list_id}: {list_details!r}")
+            return list_details
     except Exception as e:
         logger.error(f"Error fetching list details: {e}")
         return None
