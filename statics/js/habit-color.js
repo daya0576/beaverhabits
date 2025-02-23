@@ -1,9 +1,3 @@
-// Icons
-const icons = {
-    DONE: '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill="currentColor"/></svg>',
-    CLOSE: '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/></svg>'
-};
-
 // Debug logging
 function debugLog(...args) {
     if (window.habitColorState?.debug) {
@@ -44,44 +38,17 @@ window.updateHabitState = function(habitId, state) {
         
         // Update checkbox state if it's a checkbox
         if (element.classList.contains('q-checkbox')) {
-            debugLog('Updating checkbox state:', {
-                element,
-                state: state.state,
-                color: state.color,
-                hasVModel: !!element._vModel,
-                currentValue: element._vModel?.value,
-                currentSkipped: element._vModel?.skipped
-            });
-            
-            if (element._vModel) {
-                // Update based on explicit state
-                element._vModel.value = state.state === 'checked' || state.state === 'skipped';
-                element._vModel.skipped = state.state === 'skipped';
-                debugLog('Updated vModel:', {
-                    newValue: element._vModel.value,
-                    newSkipped: element._vModel.skipped,
-                    state: state.state
-                });
+            try {
+                // Convert state to Python's expected value (true/null/false)
+                const value = state.state === 'checked' ? true : state.state === 'skipped' ? null : false;
                 
-                try {
-                    // Update icons based on state
-                    if (element._vModel.skipped) {
-                        element.props(`checked-icon="${icons.CLOSE}" unchecked-icon="${icons.CLOSE}" keep-color`);
-                    } else if (element._vModel.value) {
-                        element.props(`checked-icon="${icons.DONE}" unchecked-icon="${icons.DONE}" keep-color`);
-                    } else {
-                        const text_color = element.day === new Date().toISOString().split('T')[0] ? "chartreuse" : "grey";
-                        const unchecked_icon = `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><rect fill="rgb(54,54,54)" height="18" width="18" x="3" y="3"/><text x="12" y="15" fill="${text_color}" text-anchor="middle" style="font-size: 12px">${element.day.split('-')[2]}</text></svg>`;
-                        element.props(`checked-icon="${unchecked_icon}" unchecked-icon="${unchecked_icon}" keep-color`);
-                    }
-                    
-                    element._update();
-                    debugLog('Called _update() successfully');
-                } catch (error) {
-                    console.error('Error updating checkbox:', error);
+                // Let Python handle all updates
+                if (element._instance?.exposed?._update_style) {
+                    element._instance.exposed._update_style(value);
+                    debugLog('Called Python update with value:', value);
                 }
-            } else {
-                console.error('Checkbox missing _vModel:', element);
+            } catch (error) {
+                console.error('Error updating checkbox:', error);
             }
         }
     });
