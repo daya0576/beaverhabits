@@ -17,6 +17,8 @@ from beaverhabits.app.schemas import (
     CheckedRecordRead,
 )
 from beaverhabits.logging import logger
+from beaverhabits.api.models import HabitUpdateResponse
+from beaverhabits.frontend.components.index.habit.state import get_habit_state
 
 router = APIRouter(tags=["habits"])
 
@@ -65,7 +67,7 @@ async def get_habit_completions(
     """Get completion records for a specific habit."""
     return await get_habit_checks(habit_id, user.id)
 
-@router.post("/habits/{habit_id}/completions", response_model=CheckedRecordRead)
+@router.post("/habits/{habit_id}/completions", response_model=HabitUpdateResponse)
 async def toggle_completion(
     habit_id: int,
     date: str,
@@ -80,10 +82,15 @@ async def toggle_completion(
             detail="Invalid date format. Use YYYY-MM-DD"
         )
 
+    # Toggle the habit check
     record = await toggle_habit_check(habit_id, user.id, day)
     if not record:
         raise HTTPException(status_code=404, detail="Habit not found")
-    return record
+    
+    # Get the habit's current state
+    habit = await update_habit(habit_id, user.id)
+    state = await get_habit_state(habit, day)
+    return state
 
 @router.post("/habits/batch-completions")
 async def batch_update_completions(

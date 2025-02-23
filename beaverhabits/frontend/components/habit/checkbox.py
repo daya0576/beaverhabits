@@ -52,10 +52,15 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
         ui.notify("Note is too long", color="negative")
         return
 
+    # Toggle the habit check
     record = await toggle_habit_check(habit.id, habit.user_id, day, text, True)  # Always set to checked when using notes
     
-    # Highlight the updated habit
-    ui.run_javascript(f"highlightHabit('{habit.id}')")
+    # Get updated state from API
+    from beaverhabits.frontend.components.index.habit.state import get_habit_state
+    state = await get_habit_state(habit, day)
+    
+    # Update UI with new state
+    ui.run_javascript(f"window.updateHabitState('{habit.id}', {state.model_dump_json()})")
     
     return record.done if record else None
 
@@ -71,29 +76,14 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
 
     # Toggle the habit check, preserving any existing note
     text = record.text if record and hasattr(record, 'text') else None
-    await toggle_habit_check(habit.id, habit.user_id, day, text, value)
+    record = await toggle_habit_check(habit.id, habit.user_id, day, text, value)
     
-    # Highlight the updated habit
-    ui.run_javascript(f"highlightHabit('{habit.id}')")
-
-async def get_week_ticks(habit: Habit, today: datetime.date) -> tuple[int, int]:
-    """Get the number of ticks for the current week."""
-    records = await get_habit_checks(habit.id, habit.user_id)
-    week_start = today - datetime.timedelta(days=today.weekday())
-    week_end = week_start + datetime.timedelta(days=6)
-    week_ticks = sum(1 for record in records 
-                    if week_start <= record.day <= week_end and record.done)
-    total_ticks = sum(1 for record in records if record.done)
-    return week_ticks, total_ticks
-
-async def get_last_week_completion(habit: Habit, today: datetime.date) -> bool:
-    """Check if the habit was completed last week."""
-    records = await get_habit_checks(habit.id, habit.user_id)
-    last_week_start = today - datetime.timedelta(days=today.weekday() + 7)
-    last_week_end = last_week_start + datetime.timedelta(days=6)
-    last_week_ticks = sum(1 for record in records 
-                         if last_week_start <= record.day <= last_week_end and record.done)
-    return last_week_ticks >= (habit.weekly_goal or 0)
+    # Get updated state from API
+    from beaverhabits.frontend.components.index.habit.state import get_habit_state
+    state = await get_habit_state(habit, day)
+    
+    # Update UI with new state
+    ui.run_javascript(f"window.updateHabitState('{habit.id}', {state.model_dump_json()})")
 
 class BaseHabitCheckBox(ui.checkbox):
     def __init__(self, habit: Habit, day: datetime.date, value: bool | None) -> None:
@@ -133,6 +123,11 @@ class BaseHabitCheckBox(ui.checkbox):
             self.props(f'checked-icon="{self.unchecked_icon}" unchecked-icon="{self.unchecked_icon}" keep-color')
 
     async def _update_style(self, value: bool | None):
+        """Update the visual state of the checkbox.
+        
+        This is only used for initial setup and note dialog.
+        For normal clicks, the state is updated through updateHabitState.
+        """
         # First update internal state
         if value is None:  # Not set state
             self.value = False  # Show empty icon
@@ -151,28 +146,6 @@ class BaseHabitCheckBox(ui.checkbox):
             self.props("color=currentColor" if self.value else "color=grey-8")
         
         self._update_icons()
-            
-        # Add a small delay to ensure habit state is updated
-        await asyncio.sleep(0.1)
-            
-        # Get fresh records after state update
-        records = await get_habit_checks(self.habit.id, self.habit.user_id)
-        ticked_days = {record.day for record in records if record.done}
-        if value:  # Add current day if it's being checked
-            ticked_days.add(self.day)
-        elif value is False:  # Remove current day if it's being unchecked
-            ticked_days.discard(self.day)
-            
-        # Get ticks for current week and last week's completion status
-        week_ticks, _ = await get_week_ticks(self.habit, self.day)
-        last_week_complete = await get_last_week_completion(self.habit, self.day)
-        
-        # Check if this habit is skipped today
-        today_record = next((r for r in records if r.day == datetime.date.today()), None)
-        is_skipped_today = today_record and today_record.done is None
-        
-        # Update state directly without refreshing
-        ui.run_javascript(f"updateHabitAttributes('{self.habit.id}', {self.habit.weekly_goal or 0}, {week_ticks}, {str(is_skipped_today).lower() if is_skipped_today is not None else 'null'}, {str(last_week_complete).lower()})")
 
     async def _mouse_down_event(self, e):
         self.hold.clear()
@@ -183,13 +156,13 @@ class BaseHabitCheckBox(ui.checkbox):
         except asyncio.TimeoutError:
             if settings.ENABLE_HABIT_NOTES:
                 value = await note_tick(self.habit, self.day)
+                # Note dialog handles its own state updates
                 if value is not None:
                     await self._update_style(value)
             else:
                 # Skip note dialog, just toggle to checked state
                 value = True
                 await habit_tick(self.habit, self.day, value)
-                await self._update_style(value)
         else:
             if self.moving:
                 return
@@ -208,8 +181,6 @@ class BaseHabitCheckBox(ui.checkbox):
             
             # Do update completion status
             await habit_tick(self.habit, self.day, value)
-            # Update local state with latest data
-            await self._update_style(value)
 
     async def _mouse_up_event(self, e):
         self.hold.set()
@@ -244,8 +215,12 @@ class HabitStarCheckbox(ui.checkbox):
         
         self.refresh()
         
-        # Highlight the updated habit
-        ui.run_javascript(f"highlightHabit('{self.habit.id}')")
+        # Get updated state from API
+        from beaverhabits.frontend.components.index.habit.state import get_habit_state
+        state = await get_habit_state(self.habit, datetime.date.today())
+        
+        # Update UI with new state
+        ui.run_javascript(f"window.updateHabitState('{self.habit.id}', {state.model_dump_json()})")
 
 class CalendarCheckBox(BaseHabitCheckBox):
     def __init__(

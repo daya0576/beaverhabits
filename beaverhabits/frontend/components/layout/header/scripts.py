@@ -20,11 +20,18 @@ def add_settings_script() -> None:
 
 def add_javascript_files() -> None:
     """Add JavaScript files to the page."""
-    from beaverhabits.frontend.javascript import js_paths
-    for js_file in js_paths.values():
-        ui.add_head_html(f'<script src="{js_file}"></script>')
+    # Add utils first as other scripts may depend on it
+    ui.add_head_html('<script src="/statics/js/utils.js"></script>')
     
-    # Add habit filter script
+    # Add settings before other scripts that use it
+    ui.add_head_html('<script src="/statics/js/settings.js"></script>')
+    
+    # Add core habit scripts in dependency order
+    ui.add_head_html('<script src="/statics/js/habit-color.js"></script>')
+    ui.add_head_html('<script src="/statics/js/habit-sort.js"></script>')
+    ui.add_head_html('<script src="/statics/js/habit-ui.js"></script>')
+    
+    # Add filter script last as it depends on other scripts
     ui.add_head_html('<script src="/statics/js/habit-filter.js"></script>')
 
 def add_css_styles() -> None:
