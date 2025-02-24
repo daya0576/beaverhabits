@@ -13,29 +13,15 @@ from beaverhabits.app.crud import get_habit_checks
 from beaverhabits.logging import logger
 from .utils import get_habit_priority, get_week_ticks, get_last_week_completion, should_check_last_week
 
-async def update_habit_priority(habit: Habit) -> None:
-    """Update priority for a habit and its UI elements."""
-    # Calculate priority based on today's state
-    today = datetime.date.today()
-    records = await get_habit_checks(habit.id, habit.user_id)
-    today_record = next((r for r in records if r.day == today), None)
+async def update_habit_card(habit: Habit, priority_label: HabitPriority | None = None) -> None:
+    """Update a habit card's priority and trigger sort."""
+    priority = await calculate_habit_priority(habit)
     
-    # Calculate priority
-    if today_record:
-        today_state = today_record.done
-        if today_state is True:
-            priority = 3  # Completed (last)
-        elif today_state is False:
-            priority = 2  # Skipped (third)
-    else:
-        priority = 0  # Not set (first)
+    # Update priority label if provided
+    if priority_label:
+        await priority_label._update_priority(priority)
     
-    # Update UI elements
-    for element in ui.query(f'[data-habit-id="{habit.id}"]'):
-        if isinstance(element, HabitPriority):
-            await element._update_priority(priority)
-    
-    # Update card data attribute and resort
+    # Update card data attribute and sort
     ui.run_javascript(f'''
         const card = document.querySelector('.habit-card[data-habit-id="{habit.id}"]');
         if (card) {{
@@ -76,7 +62,6 @@ async def calculate_habit_priority(habit: Habit) -> int:
     
     if today_record:
         today_state = today_record.done
-        logger.debug(f"Today's state for habit {habit.name}: {today_state}")
         if today_state is True:
             return 3  # Completed (last)
         elif today_state is False:

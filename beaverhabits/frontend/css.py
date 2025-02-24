@@ -126,9 +126,21 @@ habit_animations = """
     animation: progress 2s linear;
 }
 @keyframes progress {
-    0% { width: 100%; }
-    100% { width: 0%; }
+    0% { width: 0%; }
+    100% { width: 100%; }
 }
+
+/* Progress bar animation */
+.progress-bar-animation {
+    position: absolute;
+    bottom: 0;
+    width: 0%;
+    height: 2px;
+    background: #4CAF50;
+    animation: progress 3s linear;
+    animation-fill-mode: forwards;
+}
+
 .highlight-card {
     animation: highlight 1s ease-out;
 }

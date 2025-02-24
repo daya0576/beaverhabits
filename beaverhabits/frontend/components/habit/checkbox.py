@@ -164,21 +164,8 @@ class BaseHabitCheckBox(ui.checkbox):
         target_habit_id = int(e.args.get('habitId'))
         if target_habit_id == self.habit.id:
             logger.debug(f"Progress bar complete for habit {self.habit.id}")
-            from beaverhabits.frontend.components.index.habit.list import calculate_habit_priority
-            priority = await calculate_habit_priority(self.habit)
-            
-            # Update priority label
-            if self.priority_label:
-                await self.priority_label._update_priority(priority)
-            
-            # Update card data attribute and resort
-            ui.run_javascript(f'''
-                const card = document.querySelector('.habit-card[data-habit-id="{self.habit.id}"]');
-                if (card) {{
-                    card.setAttribute('data-priority', '{priority}');
-                    window.sortHabits();
-                }}
-            ''')
+            from beaverhabits.frontend.components.index.habit.list import update_habit_card
+            await update_habit_card(self.habit, self.priority_label)
 
 
     async def _mouse_down_event(self, e):
