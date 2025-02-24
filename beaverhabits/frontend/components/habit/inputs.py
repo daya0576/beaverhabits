@@ -1,7 +1,6 @@
 import datetime
 from typing import Callable, Optional
 from nicegui import ui, events
-from datetime import datetime as strptime
 
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
@@ -81,7 +80,15 @@ class HabitDateInput(ui.date):
         # Get current completed days
         records = await get_habit_checks(self.habit.id, self.habit.user_id)
         old_values = {r.day for r in records if r.done}
-        new_values = {strptime(x, DAY_MASK).date() for x in e.value if x != TODAY}
+        value = await e.value
+        new_values = set()
+        for x in value:
+            if x and x != TODAY:
+                try:
+                    date = datetime.datetime.strptime(x, DAY_MASK).date()
+                    new_values.add(date)
+                except ValueError:
+                    logger.warning(f"Invalid date format: {x}")
 
         if diff := new_values - old_values:
             day, value = diff.pop(), True
@@ -89,6 +96,7 @@ class HabitDateInput(ui.date):
             day, value = diff.pop(), False
         else:
             return
+
 
         self.props(f"default-year-month={day.strftime(MONTH_MASK)}")
         await habit_tick(self.habit, day, bool(value))

@@ -107,7 +107,7 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
                     # Get the actual state from checked_records
                     record = next((r for r in records if r.day == day), None)
                     state = record.done if record else None  # None means not set
-                    checkbox = HabitCheckBox(habit, day, state, habit_list_ui.refresh)
+                    checkbox = HabitCheckBox(habit, day, state, name)
 
                 if settings.INDEX_SHOW_HABIT_COUNT:
                     IndexBadge(habit)

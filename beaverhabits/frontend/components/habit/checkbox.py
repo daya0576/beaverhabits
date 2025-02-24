@@ -10,6 +10,7 @@ from beaverhabits.logging import logger
 from beaverhabits.sql.models import Habit, CheckedRecord
 from beaverhabits.app.crud import toggle_habit_check, get_habit_checks
 from beaverhabits.frontend.components.utils import ratelimiter
+from beaverhabits.frontend.components.habit.link import HabitLink
 
 DAILY_NOTE_MAX_LENGTH = 300
 
@@ -72,13 +73,12 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
 
 @ratelimiter(limit=30, window=30)
 @ratelimiter(limit=10, window=1)
-async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
+async def habit_tick(habit: Habit, day: datetime.date, value: bool | None, name_link: HabitLink | None = None):
     # Get current record
     records = await get_habit_checks(habit.id, habit.user_id)
     record = next((r for r in records if r.day == day), None)
     
     if record and record.done == value:  # Use == to handle None case correctly
-        ui.run_javascript("alert('habit_tick early return - no change needed')")
         return
 
     # Toggle the habit check, preserving any existing note
@@ -89,16 +89,9 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
     from beaverhabits.frontend.components.index.habit.state import get_habit_state
     state = await get_habit_state(habit, day)
     
-    # Find checkbox and update its state directly
-    """
-    for element in ui.query(f'[data-habit-id="{habit.id}"]'):
-        if isinstance(element, BaseHabitCheckBox):
-            value = True if state.state == 'checked' else False if state.state == 'skipped' else None
-            ui.run_javascript("alert('Updating a checkbox')")
-            element._update_state(value)
-    """
-    # Only use JavaScript for card sorting
-    ui.run_javascript(f"window.updateHabitState('{habit.id}', {state.model_dump_json()})")
+    # Update the name link color if provided
+    if name_link:
+        await name_link._update_style(state.color)
 
 class BaseHabitCheckBox(ui.checkbox):
     def __init__(self, habit: Habit, day: datetime.date, value: bool | None) -> None:
@@ -158,10 +151,6 @@ class BaseHabitCheckBox(ui.checkbox):
             self.props("color=grey-8")
         else:
             self.props("color=currentColor" if self.value else "color=grey-8")
-        
-        # Update icons and refresh
-        self._update_icons()
-        self.update()  # Force NiceGUI to refresh the UI
 
     async def _mouse_down_event(self, e):
         self.hold.clear()
@@ -179,7 +168,7 @@ class BaseHabitCheckBox(ui.checkbox):
             else:
                 # Skip note dialog, just toggle to checked state
                 value = True                
-                await habit_tick(self.habit, self.day, value)
+                await habit_tick(self.habit, self.day, value, getattr(self, 'name_link', None))
         else:
             if self.moving:
                 return
@@ -197,7 +186,7 @@ class BaseHabitCheckBox(ui.checkbox):
                 value = None  # Move to not set
             
             try:
-               await habit_tick(self.habit, self.day, value)    
+               await habit_tick(self.habit, self.day, value, getattr(self, 'name_link', None))    
             except Exception as e:
                 pass
         
@@ -211,9 +200,9 @@ class BaseHabitCheckBox(ui.checkbox):
         self.hold.set()
 
 class HabitCheckBox(BaseHabitCheckBox):
-    def __init__(self, habit: Habit, day: datetime.date, value: bool | None, refresh: Callable | None = None) -> None:
+    def __init__(self, habit: Habit, day: datetime.date, value: bool | None, name_link: HabitLink | None = None) -> None:
         super().__init__(habit, day, value)
-        self.refresh = refresh
+        self.name_link = name_link
 
         # Event handlers
         self.on("mousedown", self._mouse_down_event)
