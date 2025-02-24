@@ -59,7 +59,13 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     from beaverhabits.frontend.components.index.habit.state import get_habit_state
     state = await get_habit_state(habit, day)
     
-    # Update UI with new state
+    # Find checkbox and update its state directly
+    for element in ui.query(f'[data-habit-id="{habit.id}"]'):
+        if isinstance(element, BaseHabitCheckBox):
+            value = True if state.state == 'checked' else False if state.state == 'skipped' else None
+            element._update_state(value)
+    
+    # Only use JavaScript for card sorting
     ui.run_javascript(f"window.updateHabitState('{habit.id}', {state.model_dump_json()})")
     
     return record.done if record else None
@@ -72,6 +78,7 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
     record = next((r for r in records if r.day == day), None)
     
     if record and record.done == value:  # Use == to handle None case correctly
+        ui.run_javascript("alert('habit_tick early return - no change needed')")
         return
 
     # Toggle the habit check, preserving any existing note
@@ -82,7 +89,14 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
     from beaverhabits.frontend.components.index.habit.state import get_habit_state
     state = await get_habit_state(habit, day)
     
-    # Update UI with new state
+    # Find checkbox and update its state directly
+    for element in ui.query(f'[data-habit-id="{habit.id}"]'):
+        if isinstance(element, BaseHabitCheckBox):
+            value = True if state.state == 'checked' else False if state.state == 'skipped' else None
+            ui.run_javascript("alert('Updating a checkbox')")
+            element._update_state(value)
+    
+    # Only use JavaScript for card sorting
     ui.run_javascript(f"window.updateHabitState('{habit.id}', {state.model_dump_json()})")
 
 class BaseHabitCheckBox(ui.checkbox):
@@ -92,6 +106,9 @@ class BaseHabitCheckBox(ui.checkbox):
         self.habit = habit
         self.day = day
         self.skipped = value is False  # Track skipped state (False means skipped, None means not set)
+        
+        # Add data attributes for JavaScript
+        self.props(f'data-habit-id="{habit.id}" data-day="{day}"')
         text_color = "chartreuse" if self.day == datetime.date.today() else settings.HABIT_COLOR_DAY_NUMBER
         self.unchecked_icon = icons.SQUARE.format(color="rgb(54,54,54)", text=self.day.day, text_color=text_color)
         self.checked_icon = icons.DONE
@@ -122,21 +139,17 @@ class BaseHabitCheckBox(ui.checkbox):
         else:
             self.props(f'checked-icon="{self.unchecked_icon}" unchecked-icon="{self.unchecked_icon}" keep-color')
 
-    async def _update_style(self, value: bool | None):
-        """Update the visual state of the checkbox.
+    def _update_state(self, value: bool | None):
+        """Update the visual state of the checkbox."""
+        # Update value first
+        self.value = value if value is not None else False  # Update checkbox value
         
-        This is only used for initial setup and note dialog.
-        For normal clicks, the state is updated through updateHabitState.
-        """
-        # First update internal state
+        # Then update internal state
         if value is None:  # Not set state
-            self.value = False  # Show empty icon
             self.skipped = False
         elif value is False:  # Skipped state
-            self.value = True  # Show skipped icon
             self.skipped = True
         else:  # Checked state
-            self.value = True
             self.skipped = False
         
         # Then update visual state
@@ -145,11 +158,14 @@ class BaseHabitCheckBox(ui.checkbox):
         else:
             self.props("color=currentColor" if self.value else "color=grey-8")
         
+        # Update icons and refresh
         self._update_icons()
+        self.update()  # Force NiceGUI to refresh the UI
 
     async def _mouse_down_event(self, e):
         self.hold.clear()
         self.moving = False
+
         try:
             async with asyncio.timeout(0.2):
                 await self.hold.wait()
@@ -158,10 +174,10 @@ class BaseHabitCheckBox(ui.checkbox):
                 value = await note_tick(self.habit, self.day)
                 # Note dialog handles its own state updates
                 if value is not None:
-                    await self._update_style(value)
+                    self._update_state(value)
             else:
                 # Skip note dialog, just toggle to checked state
-                value = True
+                value = True                
                 await habit_tick(self.habit, self.day, value)
         else:
             if self.moving:
@@ -179,8 +195,12 @@ class BaseHabitCheckBox(ui.checkbox):
             else:  # Currently skipped
                 value = None  # Move to not set
             
-            # Do update completion status
-            await habit_tick(self.habit, self.day, value)
+            try:
+               await habit_tick(self.habit, self.day, value)    
+            except Exception as e:
+                pass
+        
+            self._update_state(value)    
 
     async def _mouse_up_event(self, e):
         self.hold.set()
@@ -219,7 +239,7 @@ class HabitStarCheckbox(ui.checkbox):
         from beaverhabits.frontend.components.index.habit.state import get_habit_state
         state = await get_habit_state(self.habit, datetime.date.today())
         
-        # Update UI with new state
+        # Only use JavaScript for card sorting
         ui.run_javascript(f"window.updateHabitState('{self.habit.id}', {state.model_dump_json()})")
 
 class CalendarCheckBox(BaseHabitCheckBox):

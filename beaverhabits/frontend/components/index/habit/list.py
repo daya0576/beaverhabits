@@ -4,7 +4,9 @@ from typing import List
 from nicegui import ui
 
 from beaverhabits.configs import settings
-from beaverhabits.frontend.components import HabitCheckBox, IndexBadge, link
+from beaverhabits.frontend.components import HabitCheckBox, IndexBadge
+from beaverhabits.frontend.components.habit.link import HabitLink
+from beaverhabits.frontend.components.habit.goal import HabitGoalLabel
 from beaverhabits.sql.models import Habit
 from beaverhabits.app.crud import get_habit_checks
 from beaverhabits.logging import logger
@@ -75,14 +77,14 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
                 with ui.element("div").classes("relative w-full"):
                     # Title container with space for goal
                     with ui.element("div").classes("pr-16"):
-                        name = link(habit.name, target=redirect_page)
+                        name = HabitLink(habit.name, target=redirect_page, initial_color=initial_color)
                         name.classes("block break-words whitespace-normal w-full px-4 py-2")
                     
                     # Goal count fixed to top right
                     if habit.weekly_goal:
                         with ui.element("div").classes("absolute top-2 right-4"):
-                            goal_label = ui.label(f"{int(habit.weekly_goal)}x").classes("text-sm")
-                            goal_label.style(f"color: {initial_color};")
+                            goal_label = HabitGoalLabel(habit.weekly_goal, initial_color)
+                            goal_label.props(f'data-habit-id="{habit.id}"')
                     
                     # Priority label if enabled
                     if settings.INDEX_SHOW_PRIORITY:
@@ -95,7 +97,7 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
                     f'data-week-ticks="{week_ticks}" '
                     f'data-last-week-complete="{str(last_week_complete).lower()}"'
                 )
-                name.style(f"min-height: 1.5em; height: auto; color: {initial_color};")
+                name.style("min-height: 1.5em; height: auto;")
 
             # Checkbox row with fixed width
             with ui.row().classes("w-full gap-2 justify-center items-center flex-nowrap"):
