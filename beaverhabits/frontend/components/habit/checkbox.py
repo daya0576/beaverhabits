@@ -11,6 +11,7 @@ from beaverhabits.sql.models import Habit, CheckedRecord
 from beaverhabits.app.crud import toggle_habit_check, get_habit_checks
 from beaverhabits.frontend.components.utils import ratelimiter
 from beaverhabits.frontend.components.habit.link import HabitLink
+from beaverhabits.frontend.components.habit.priority import HabitPriority
 
 DAILY_NOTE_MAX_LENGTH = 300
 
@@ -93,16 +94,16 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None, name_
     if name_link:
         await name_link._update_style(state.color)
 
-    ui.run_javascript(f"window.updateHabitState('{habit.id}', {state.model_dump_json()})")        
-
 class BaseHabitCheckBox(ui.checkbox):
-    def __init__(self, habit: Habit, day: datetime.date, value: bool | None) -> None:
+    def __init__(self, habit: Habit, day: datetime.date, value: bool | None, name_link: HabitLink | None = None, priority_label: HabitPriority | None = None) -> None:
         # Initialize with the actual state
         super().__init__("", value=value if value is not None else False)
         self.habit = habit
         self.day = day
+        self.name_link = name_link
+        self.priority_label = priority_label
         self.skipped = value is False  # Track skipped state (False means skipped, None means not set)
-        
+        ui.on('progress_complete_' + str(self.habit.id), self._handle_progress_complete)
         # Add data attributes for JavaScript
         self.props(f'data-habit-id="{habit.id}" data-day="{day}"')
         text_color = "chartreuse" if self.day == datetime.date.today() else settings.HABIT_COLOR_DAY_NUMBER
@@ -153,7 +154,32 @@ class BaseHabitCheckBox(ui.checkbox):
             self.props("color=grey-8")
         else:
             self.props("color=currentColor" if self.value else "color=grey-8")
+        
+        self._update_icons()
+        self.update()          
+        ui.run_javascript(f"window.showProgressbar('{self.habit.id}')")
+
+    async def _handle_progress_complete(self, e):
+        """Handle completion of progress bar animation."""     
+        target_habit_id = int(e.args.get('habitId'))
+        if target_habit_id == self.habit.id:
+            logger.debug(f"Progress bar complete for habit {self.habit.id}")
+            from beaverhabits.frontend.components.index.habit.list import calculate_habit_priority
+            priority = await calculate_habit_priority(self.habit)
             
+            # Update priority label
+            if self.priority_label:
+                await self.priority_label._update_priority(priority)
+            
+            # Update card data attribute and resort
+            ui.run_javascript(f'''
+                const card = document.querySelector('.habit-card[data-habit-id="{self.habit.id}"]');
+                if (card) {{
+                    card.setAttribute('data-priority', '{priority}');
+                    window.sortHabits();
+                }}
+            ''')
+
 
     async def _mouse_down_event(self, e):
         self.hold.clear()
@@ -203,9 +229,8 @@ class BaseHabitCheckBox(ui.checkbox):
         self.hold.set()
 
 class HabitCheckBox(BaseHabitCheckBox):
-    def __init__(self, habit: Habit, day: datetime.date, value: bool | None, name_link: HabitLink | None = None) -> None:
-        super().__init__(habit, day, value)
-        self.name_link = name_link
+    def __init__(self, habit: Habit, day: datetime.date, value: bool | None, name_link: HabitLink | None = None, priority_label: HabitPriority | None = None) -> None:
+        super().__init__(habit, day, value, name_link, priority_label)
 
         # Event handlers
         self.on("mousedown", self._mouse_down_event)

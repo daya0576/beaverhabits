@@ -7,10 +7,42 @@ from beaverhabits.configs import settings
 from beaverhabits.frontend.components import HabitCheckBox, IndexBadge
 from beaverhabits.frontend.components.habit.link import HabitLink
 from beaverhabits.frontend.components.habit.goal import HabitGoalLabel
+from beaverhabits.frontend.components.habit.priority import HabitPriority
 from beaverhabits.sql.models import Habit
 from beaverhabits.app.crud import get_habit_checks
 from beaverhabits.logging import logger
 from .utils import get_habit_priority, get_week_ticks, get_last_week_completion, should_check_last_week
+
+async def update_habit_priority(habit: Habit) -> None:
+    """Update priority for a habit and its UI elements."""
+    # Calculate priority based on today's state
+    today = datetime.date.today()
+    records = await get_habit_checks(habit.id, habit.user_id)
+    today_record = next((r for r in records if r.day == today), None)
+    
+    # Calculate priority
+    if today_record:
+        today_state = today_record.done
+        if today_state is True:
+            priority = 3  # Completed (last)
+        elif today_state is False:
+            priority = 2  # Skipped (third)
+    else:
+        priority = 0  # Not set (first)
+    
+    # Update UI elements
+    for element in ui.query(f'[data-habit-id="{habit.id}"]'):
+        if isinstance(element, HabitPriority):
+            await element._update_priority(priority)
+    
+    # Update card data attribute and resort
+    ui.run_javascript(f'''
+        const card = document.querySelector('.habit-card[data-habit-id="{habit.id}"]');
+        if (card) {{
+            card.setAttribute('data-priority', '{priority}');
+            window.sortHabits();
+        }}
+    ''')
 
 @ui.refreshable
 async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
@@ -22,21 +54,40 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 
     row_compat_classes = "px-0 py-1"
 
+    # Sort habits by priority
+    sorted_habits = []
+    for habit in active_habits:
+        priority = await calculate_habit_priority(habit)
+        sorted_habits.append((priority, habit))
+    sorted_habits.sort(key=lambda x: x[0])  # Sort by priority
+    sorted_habits = [habit for _, habit in sorted_habits]  # Extract just the habits
+
     container = ui.column().classes("w-full habit-card-container pb-32 px-4")  # Add padding
     with container:
         # Habit List
-        for habit in active_habits:
+        for habit in sorted_habits:
             await render_habit_card(habit, days, row_compat_classes)
 
-async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes: str):
-    """Render a single habit card."""
-    # Calculate priority using shared function
-    priority = await get_habit_priority(habit, days)
-    
-    # Calculate state for color and data attributes
+async def calculate_habit_priority(habit: Habit) -> int:
+    """Calculate priority based on today's state."""
     today = datetime.date.today()
     records = await get_habit_checks(habit.id, habit.user_id)
     today_record = next((r for r in records if r.day == today), None)
+    
+    if today_record:
+        today_state = today_record.done
+        logger.debug(f"Today's state for habit {habit.name}: {today_state}")
+        if today_state is True:
+            return 3  # Completed (last)
+        elif today_state is False:
+            return 2  # Skipped (third)
+    return 0  # Not set (first)
+
+async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes: str):
+    """Render a single habit card."""
+    today = datetime.date.today()
+    records = await get_habit_checks(habit.id, habit.user_id)
+    priority = await calculate_habit_priority(habit)
     week_ticks, _ = await get_week_ticks(habit, today)
     is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
     last_week_complete = await get_last_week_completion(habit, today)
@@ -91,7 +142,8 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
                         show_hide_class = "visible"
 
                     with ui.element("div").classes("absolute top-2 right-16"):
-                        ui.label(f"Priority: {priority}").classes("text-xs text-gray-500 priority-label " + show_hide_class)
+                        priority_label = HabitPriority(priority, show_hide_class)
+                        priority_label.props(f'data-habit-id="{habit.id}"')
 
                 name.props(
                     f'data-habit-id="{habit.id}" '
@@ -107,7 +159,7 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
                     # Get the actual state from checked_records
                     record = next((r for r in records if r.day == day), None)
                     state = record.done if record else None  # None means not set
-                    checkbox = HabitCheckBox(habit, day, state, name)
+                    checkbox = HabitCheckBox(habit, day, state, name, priority_label)
 
                 if settings.INDEX_SHOW_HABIT_COUNT:
                     IndexBadge(habit)

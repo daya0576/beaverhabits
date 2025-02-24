@@ -1,6 +1,7 @@
 window.updateHabitState = function(habitId, state) {
     // Only handle card sorting
     console.log("yes! " + habitId)
+    console.log(state)
     const card = document.querySelector(`.habit-card[data-habit-id="${habitId}"]`);
     if (card && state.sorting) {
         // Update sorting attributes

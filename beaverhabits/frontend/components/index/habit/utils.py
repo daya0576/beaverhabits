@@ -5,6 +5,7 @@ from beaverhabits.sql.models import Habit
 from beaverhabits.app.crud import get_habit_checks
 from beaverhabits.logging import logger
 
+# not used
 async def get_habit_priority(habit: Habit, days: List[datetime.date]) -> int:
     """Calculate habit priority based on completion status."""
     records = await get_habit_checks(habit.id, habit.user_id)

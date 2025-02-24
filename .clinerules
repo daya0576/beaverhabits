@@ -182,3 +182,58 @@ For newly created habits:
 
 - Start as yellow (incomplete) or green (complete)
 - Cannot be red until they have existed for a full week
+
+Here are the base rules for working with NiceGUI which is used in this project.
+
+1. **UI Component Management**
+
+Create components with clear variable names to identify elements easily.
+checkbox_enable_feature = ui.checkbox('Enable feature')
+   
+Always update components after value changes to ensure UI synchronization.
+checkbox_enable_feature.value = True
+checkbox_enable_feature.update()
+
+Use `bind` for dynamic updates between UI elements and state variables.
+from nicegui import ui, state
+
+enabled = state.value(False)
+ui.checkbox('Enable feature').bind_value(enabled)
+ui.label().bind_text(enabled)
+
+
+
+**Event Handling**
+
+Define callback functions for user interactions to keep logic clean.
+def on_button_click():
+    ui.notify('Button clicked!')
+
+ui.button('Click me', on_click=on_button_click)
+
+Use `on_change` for input elements to handle real-time updates.
+ui.input('Enter text', on_change=lambda e: ui.notify(f'Input changed: {e.value}'))
+
+
+**Real-Time Updates**
+
+Always call `update()` after changing a component's value to reflect changes in the browser.
+slider = ui.slider(min=0, max=100)
+def update_slider():
+    slider.value = 50
+    slider.update()
+
+ui.button('Set Slider to 50', on_click=update_slider)
+
+
+Use `@ui.refreshable` for dynamic sections that need periodic content updates.
+@ui.refreshable
+def my_label():
+    ui.label(f'Current Time: {time.strftime("%H:%M:%S")}')
+
+ui.button('Refresh Time', on_click=my_label.refresh)
+
+
+
+
+

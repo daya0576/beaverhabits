@@ -30,6 +30,7 @@ def add_javascript_files() -> None:
     ui.add_head_html('<script src="/statics/js/habit-color.js"></script>')
     ui.add_head_html('<script src="/statics/js/habit-sort.js"></script>')
     ui.add_head_html('<script src="/statics/js/habit-ui.js"></script>')
+    ui.add_head_html('<script src="/statics/js/habit-progress.js"></script>')
     
     # Add filter script last as it depends on other scripts
     ui.add_head_html('<script src="/statics/js/habit-filter.js"></script>')
@@ -44,10 +45,28 @@ def add_css_styles() -> None:
         <style>
         .habit-card {
             transition: transform 0.3s ease-out;
+            position: relative;
+            overflow: hidden;
         }
         .resort-pending {
             position: relative;
         }
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            width: 100%;
+            background: #4CAF50;
+            transform-origin: right;
+            animation: progress-right-to-left 3s linear forwards;
+        }
+        
+        @keyframes progress-right-to-left {
+            from { transform: scaleX(1); }
+            to { transform: scaleX(0); }
+        }
+        
         .resort-pending::after {
             content: '';
             position: absolute;
