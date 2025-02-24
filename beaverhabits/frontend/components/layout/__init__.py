@@ -27,7 +27,7 @@ async def layout(title: str | None = None, with_menu: bool = True, user=None):
         path = context.client.page.path
         logger.info(f"Rendering page: {path}")
         
-        with ui.row().classes("w-full items-center justify-between p-4"):
+        with ui.row().classes("w-full items-center justify-between p-0 md:p-0"):
             # Show title on all pages except main /gui page
             if path != settings.GUI_MOUNT_PATH:
                 page_title = get_page_title(path, title)

@@ -37,6 +37,9 @@ def add_javascript_files() -> None:
 
 def add_css_styles() -> None:
     """Add CSS styles to the page."""
+    # Add root CSS to override NiceGUI defaults
+    ui.add_head_html(f'<style>{css.ROOT_CSS}</style>')
+    
     # Add CSS for animations
     ui.add_head_html(f'<style>{css.habit_animations}</style>')
     

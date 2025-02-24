@@ -48,7 +48,7 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     sorted_habits.sort(key=lambda x: x[0])  # Sort by priority
     sorted_habits = [habit for _, habit in sorted_habits]  # Extract just the habits
 
-    container = ui.column().classes("w-full habit-card-container pb-32 px-4")  # Add padding
+    container = ui.column().classes("w-full habit-card-container pb-32 px-2 md:px-4")  # Responsive padding
     with container:
         # Habit List
         for habit in sorted_habits:
@@ -113,7 +113,7 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
                     # Title container with space for goal
                     with ui.element("div").classes("pr-16"):
                         name = HabitLink(habit.name, target=redirect_page, initial_color=initial_color)
-                        name.classes("block break-words whitespace-normal w-full px-4 py-2")
+                        name.classes("block break-words whitespace-normal w-full px-6 py-2")
                     
                     # Goal count fixed to top right
                     if habit.weekly_goal:
@@ -138,7 +138,7 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
                 name.style("min-height: 1.5em; height: auto;")
 
             # Checkbox row with fixed width
-            with ui.row().classes("w-full gap-2 justify-center items-center flex-nowrap"):
+            with ui.row().classes("w-full gap-1 justify-center items-center flex-nowrap"):
                 for day in days:
                     # Get the actual state from checked_records
                     record = next((r for r in records if r.day == day), None)

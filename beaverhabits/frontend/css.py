@@ -1,3 +1,10 @@
+# Override NiceGUI default padding
+ROOT_CSS = """
+:root {
+  --nicegui-default-padding: 0px !important;
+}
+"""
+
 ##  Checkbox styles
 CHECK_BOX_CSS = """
 .q-checkbox {
