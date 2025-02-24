@@ -5,10 +5,10 @@ class HabitLink(ui.link):
         super().__init__(text, target=target)
         self.classes("dark:text-white no-underline hover:no-underline")
         
-        # Set initial color if provided
+        # Set initial color using CSS style instead of Quasar prop
         if initial_color:
-            self.props(f"text-color={initial_color}")
+            self.style(f"color: {initial_color}")
     
     async def _update_style(self, color: str) -> None:
         """Update the visual state of the link."""
-        self.props(f"text-color={color}")
+        self.style(f"color: {color}")
