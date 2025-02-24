@@ -1,4 +1,4 @@
-# Checkbox styles
+##  Checkbox styles
 CHECK_BOX_CSS = """
 .q-checkbox {
     margin: 0;
@@ -93,6 +93,17 @@ CALENDAR_CSS = """
 .calendar-heatmap .graph-rect:hover {
     stroke: #000;
     stroke-width: 1px;
+}
+"""
+
+# Visibility styles
+VISIBILITY_CSS = """
+.visible {
+    display: block;
+}
+
+.hidden {
+    display: none;
 }
 """
 

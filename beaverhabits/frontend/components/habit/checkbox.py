@@ -90,12 +90,13 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None):
     state = await get_habit_state(habit, day)
     
     # Find checkbox and update its state directly
+    """
     for element in ui.query(f'[data-habit-id="{habit.id}"]'):
         if isinstance(element, BaseHabitCheckBox):
             value = True if state.state == 'checked' else False if state.state == 'skipped' else None
             ui.run_javascript("alert('Updating a checkbox')")
             element._update_state(value)
-    
+    """
     # Only use JavaScript for card sorting
     ui.run_javascript(f"window.updateHabitState('{habit.id}', {state.model_dump_json()})")
 

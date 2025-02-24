@@ -53,7 +53,7 @@ init_gui_routes(app)
 
 
 # sentry
-if settings.SENTRY_DSN:
+if settings.SENTRY_DSN and len(settings.SENTRY_DSN) > 0:
     logger.info("Setting up Sentry...")
     sentry_sdk.init(settings.SENTRY_DSN)
 

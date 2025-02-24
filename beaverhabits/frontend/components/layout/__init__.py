@@ -21,7 +21,7 @@ async def layout(title: str | None = None, with_menu: bool = True, user=None):
     with ui.column().classes("w-full") as c:
         # Standard headers and scripts
         add_meta_tags()
-        add_analytics()
+        #add_analytics()
         add_all_scripts()
 
         path = context.client.page.path

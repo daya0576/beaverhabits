@@ -86,10 +86,12 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
                             goal_label = HabitGoalLabel(habit.weekly_goal, initial_color)
                             goal_label.props(f'data-habit-id="{habit.id}"')
                     
-                    # Priority label if enabled
+                    show_hide_class = "hidden"
                     if settings.INDEX_SHOW_PRIORITY:
-                        with ui.element("div").classes("absolute top-2 right-16"):
-                            ui.label(f"Priority: {priority}").classes("text-xs text-gray-500 priority-label")
+                        show_hide_class = "visible"
+
+                    with ui.element("div").classes("absolute top-2 right-16"):
+                        ui.label(f"Priority: {priority}").classes("text-xs text-gray-500 priority-label " + show_hide_class)
 
                 name.props(
                     f'data-habit-id="{habit.id}" '
