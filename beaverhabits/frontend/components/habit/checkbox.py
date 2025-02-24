@@ -104,8 +104,9 @@ class BaseHabitCheckBox(ui.checkbox):
         self.priority_label = priority_label
         self.skipped = value is False  # Track skipped state (False means skipped, None means not set)
         ui.on('progress_complete_' + str(self.habit.id), self._handle_progress_complete)
-        # Add data attributes for JavaScript
+        # Add data attributes for JavaScript and make checkbox fill space
         self.props(f'data-habit-id="{habit.id}" data-day="{day}"')
+        self.classes('flex-1 flex justify-center')
         text_color = "chartreuse" if self.day == datetime.date.today() else settings.HABIT_COLOR_DAY_NUMBER
         self.unchecked_icon = icons.SQUARE.format(color="rgb(54,54,54)", text=self.day.day, text_color=text_color)
         self.checked_icon = icons.DONE

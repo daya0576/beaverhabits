@@ -113,7 +113,7 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
                     # Title container with space for goal
                     with ui.element("div").classes("pr-16"):
                         name = HabitLink(habit.name, target=redirect_page, initial_color=initial_color)
-                        name.classes("block break-words whitespace-normal w-full px-6 py-2")
+                        name.classes("block break-words whitespace-normal w-full px-3 py-2")
                     
                     # Goal count fixed to top right
                     if habit.weekly_goal:
@@ -124,9 +124,10 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
                     show_hide_class = "hidden"
                     if settings.INDEX_SHOW_PRIORITY:
                         show_hide_class = "visible"
+                        pass
 
-                    with ui.element("div").classes("absolute top-2 right-16"):
-                        priority_label = HabitPriority(priority, show_hide_class)
+                    with ui.element("div").classes("absolute top-2 right-16 " + show_hide_class):
+                        priority_label = HabitPriority(priority)
                         priority_label.props(f'data-habit-id="{habit.id}"')
 
                 name.props(
@@ -138,7 +139,7 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
                 name.style("min-height: 1.5em; height: auto;")
 
             # Checkbox row with fixed width
-            with ui.row().classes("w-full gap-1 justify-center items-center flex-nowrap"):
+            with ui.row().classes("w-full gap-1 justify-start items-center flex-nowrap"):
                 for day in days:
                     # Get the actual state from checked_records
                     record = next((r for r in records if r.day == day), None)

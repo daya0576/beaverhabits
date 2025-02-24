@@ -27,7 +27,7 @@ def handle_list_change(e, name_to_id: Dict[str, Optional[int]], path: str) -> No
 @ui.refreshable
 async def list_selector(lists: TypeList[HabitList], current_list_id: int | None = None, path: str = "") -> None:
     """Dropdown for selecting current list."""
-    with ui.row().classes("items-center gap-2"):
+    with ui.row().classes("items-center gap-2 pt-2 pl-2"):
         # Create name-to-id mapping
         name_to_id = {"No List": None}
         name_to_id.update({list.name: list.id for list in lists if not list.deleted})
@@ -53,11 +53,6 @@ async def list_selector(lists: TypeList[HabitList], current_list_id: int | None 
         except (AttributeError, ValueError) as e:
             logger.error(f"List selector - error parsing list ID: {e}")
             current_name = "No List"
-        
-        # Log debug info
-        logger.debug(f"List options: {options}")
-        logger.debug(f"Current list ID: {current_list_id}")
-        logger.debug(f"Current name: {current_name}")
         
         ui.select(
             options=options,

@@ -216,5 +216,4 @@ async def get_user_count() -> int:
         stmt = select(User)
         result = await session.execute(stmt)
         user_count = len(result.all())
-        logger.info(f"[CRUD] User count query: {user_count}")
         return user_count
