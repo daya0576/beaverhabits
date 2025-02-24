@@ -93,6 +93,8 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool | None, name_
     if name_link:
         await name_link._update_style(state.color)
 
+    ui.run_javascript(f"window.updateHabitState('{habit.id}', {state.model_dump_json()})")        
+
 class BaseHabitCheckBox(ui.checkbox):
     def __init__(self, habit: Habit, day: datetime.date, value: bool | None) -> None:
         # Initialize with the actual state
@@ -151,6 +153,7 @@ class BaseHabitCheckBox(ui.checkbox):
             self.props("color=grey-8")
         else:
             self.props("color=currentColor" if self.value else "color=grey-8")
+            
 
     async def _mouse_down_event(self, e):
         self.hold.clear()
