@@ -14,7 +14,7 @@ if "%1"=="dev" (
     set LOGURU_LEVEL=DEBUG
     set UVICORN_LOG_LEVEL=debug
     rem reload implies workers = 1
-    uvicorn beaverhabits.main:app --reload --log-level debug --port 9001 --host 0.0.0.0
+    uvicorn beaverhabits.main:app --reload --log-level warning --port 9015 --host 0.0.0.0
 	
 ) else (
     echo Starting Uvicorn server in production mode...
