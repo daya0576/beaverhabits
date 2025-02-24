@@ -33,7 +33,6 @@ class HabitNameInput(ui.input):
         self.habit = habit
         self.validation = self._validate
         self.props("dense hide-bottom-space")
-        self.on('change', self._async_task)
 
     def _validate(self, value: str) -> Optional[str]:
         if not value:
@@ -41,8 +40,8 @@ class HabitNameInput(ui.input):
         if len(value) > 130:
             return "Too long"
 
-    async def _async_task(self, e):
-        await update_habit(self.habit.id, self.habit.user_id, name=e.value)
+    def get_value(self) -> str:
+        return self.value
 
 class HabitDateInput(ui.date):
     def __init__(

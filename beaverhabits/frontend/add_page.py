@@ -29,8 +29,8 @@ async def add_ui(habits: list[Habit], lists: list[HabitList], user: User):
             with ui.column().classes("w-full gap-4"):
                 # First line: Name (full width)
                 with ui.row().classes("w-full"):
-                    name = HabitNameInput(item, None)
-                    name.classes("w-full")
+                    name_input = HabitNameInput(item, None)
+                    name_input.classes("w-full")
 
                 # Second line: Weekly Goal
                 with ui.row().classes("items-center gap-2"):
@@ -61,7 +61,7 @@ async def add_ui(habits: list[Habit], lists: list[HabitList], user: User):
                 # Fourth line: Save button on left, Star and Delete on right
                 with ui.row().classes("w-full justify-between items-center"):
                     # Left side - Save button
-                    save = HabitSaveButton(item, weekly_goal, add_ui.refresh)
+                    save = HabitSaveButton(item, weekly_goal, name_input, add_ui.refresh)
                     
                     # Right side - Star and Delete buttons
                     with ui.row().classes("gap-2 items-center"):

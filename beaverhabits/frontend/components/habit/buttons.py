@@ -1,12 +1,14 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, TYPE_CHECKING
 
 from nicegui import ui
 
 from beaverhabits.sql.models import Habit, HabitList
-from beaverhabits.frontend.components.habit.inputs import WeeklyGoalInput
 from beaverhabits.app.crud import update_habit, create_habit, get_user_habits, get_user_lists
 from beaverhabits.frontend import icons
 from beaverhabits.app.db import User
+
+if TYPE_CHECKING:
+    from beaverhabits.frontend.components.habit.inputs import WeeklyGoalInput, HabitNameInput
 
 class HabitEditButton(ui.button):
     def __init__(self, habit: Habit, refresh: Callable) -> None:
@@ -96,10 +98,11 @@ class HabitAddButton(ui.button):
             ui.navigate.reload()  # Reload the page to show the new habit
 
 class HabitSaveButton(ui.button):
-    def __init__(self, habit: Habit, weekly_goal_input: WeeklyGoalInput, refresh: Callable) -> None:
+    def __init__(self, habit: Habit, weekly_goal_input: 'WeeklyGoalInput', name_input: 'HabitNameInput', refresh: Callable) -> None:
         super().__init__("Save")
         self.habit = habit
         self.weekly_goal_input = weekly_goal_input
+        self.name_input = name_input
         self.refresh = refresh
         self.props("flat")
 
@@ -108,15 +111,18 @@ class HabitSaveButton(ui.button):
     async def _async_task(self, e):
         # Save all changes to the habit
         weekly_goal = self.weekly_goal_input.get_value()
+        name = self.name_input.get_value()
         await update_habit(
             self.habit.id,
             self.habit.user_id,
-            name=self.habit.name,
+            name=name,
             weekly_goal=weekly_goal,
             list_id=self.habit.list_id
         )
         # Update the habit object with new values
         self.habit.weekly_goal = weekly_goal
+        self.habit.name = name
         # Update the UI
         self.weekly_goal_input.value = weekly_goal
+        self.name_input.value = name
         self.refresh()
