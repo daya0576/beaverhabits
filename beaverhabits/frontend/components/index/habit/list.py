@@ -93,21 +93,20 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
                 # Name row
                 redirect_page = f"{settings.GUI_MOUNT_PATH}/habits/{habit.id}"
                 # Calculate color based on completion and creation date
-                if not should_check_last_week(habit, today):
-                    # New habit - only check current week
+                if not should_check_last_week(habit, today):                    
                     initial_color = (
                         settings.HABIT_COLOR_COMPLETED if is_completed
                         else settings.HABIT_COLOR_INCOMPLETE
                     )
-                    logger.debug(f"Habit {habit.name} is new, color: {initial_color}")
+                    
+                    #logger.debug(f"Habit {habit.name} is new, color: {initial_color}")
                 else:
-                    # Existing habit - check both weeks
                     initial_color = (
                         settings.HABIT_COLOR_COMPLETED if is_completed
                         else settings.HABIT_COLOR_LAST_WEEK_INCOMPLETE if not last_week_complete and habit.weekly_goal > 0
                         else settings.HABIT_COLOR_INCOMPLETE
                     )
-                    logger.debug(f"Habit {habit.name} is existing, color: {initial_color}")
+                    ##logger.debug(f"Habit {habit.name} is existing, color: {initial_color}")
                 
                 # Container with relative positioning
                 with ui.element("div").classes("relative w-full"):
