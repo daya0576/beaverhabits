@@ -48,30 +48,40 @@ async def get_last_week_completion(habit: Habit, today: datetime.date) -> bool:
 
 def filter_habits_by_list(habits: List[Habit], current_list_id: str | int | None) -> List[Habit]:
     """Filter habits based on list selection."""
+    # Log the filtering criteria
+    logger.info(f"Filtering habits with list_id={current_list_id!r} (type: {type(current_list_id)})")
+    
     active_habits = []
+    no_list_count = 0
+    with_list_count = 0
+    
     for h in habits:
         if h.deleted:
-            logger.debug(f"Skipping deleted habit: {h.name}")
             continue
         
         # Show habit if:
-        # - "No List" is selected and habit has no list
+        # - "None" is selected and habit has no list
         if current_list_id == "None":
             if h.list_id is None:
                 active_habits.append(h)
-            else:
-                pass
+                no_list_count += 1
         # - A specific list is selected and habit belongs to that list
         elif isinstance(current_list_id, int):
             if h.list_id == current_list_id:
                 active_habits.append(h)
-            else:
-                pass
+                with_list_count += 1
         # - No specific list is selected (show all habits)
         else:
-            logger.info(f"Adding habit {h.name} (showing all habits)")
             active_habits.append(h)
     
     active_habits.sort(key=lambda h: h.order)
-    logger.info(f"Filtered habits: {[h.name for h in active_habits]}")
+    
+    # Log summary instead of individual habits
+    if current_list_id == "None":
+        logger.info(f"Showing {no_list_count} habits with no list")
+    elif isinstance(current_list_id, int):
+        logger.info(f"Showing {with_list_count} habits from list {current_list_id}")
+    else:
+        logger.info(f"Showing all {len(active_habits)} habits")
+    
     return active_habits

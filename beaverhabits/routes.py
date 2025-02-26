@@ -28,34 +28,53 @@ from .utils import get_display_days, get_user_today_date, reset_week_offset, is_
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register")
 
 
-def get_current_list_id() -> int | None:
+def get_current_list_id() -> int | str | None:
     """Get current list ID from query parameters or storage."""
     try:
-        # First try to get from URL
-        list_id = context.client.page.query.get("list", "")
-        logger.debug(f"Raw list ID from query: {list_id}")
-        
-        if list_id == "None" or not list_id:
-            # If not in URL, try storage
+        # Check if context.client.page exists and has query attribute
+        if not hasattr(context, 'client') or not hasattr(context.client, 'page') or not hasattr(context.client.page, 'query'):
+            logger.warning("Cannot access page query parameters - context.client.page.query not available")
+            # Fall back to storage
             stored_id = app.storage.user.get("current_list")
-            logger.debug(f"List ID from storage: {stored_id}")
+            logger.info(f"Using list ID from storage (no query available): {stored_id!r}")
+            return stored_id
+            
+        # Get raw list parameter from URL
+        list_param = context.client.page.query.get("list")
+        logger.info(f"URL parameter 'list': {list_param!r} (type: {type(list_param)})")
+        
+        # Explicitly handle "None" case
+        if list_param == "None":
+            logger.info("'None' list selected (showing only habits with no list)")
+            return "None"
+        
+        # If parameter exists but is empty, or parameter doesn't exist
+        if list_param == "" or list_param is None:
+            stored_id = app.storage.user.get("current_list")
+            logger.info(f"No list parameter in URL, using from storage: {stored_id!r}")
             if stored_id:
                 return stored_id
             
-            logger.debug("No list selected")
+            logger.info("No list selected (showing all habits)")
             return None
         
-        # Clean up list ID
-        list_id = int(list_id.strip())
-        logger.debug(f"Using list ID from URL: {list_id}")
-        
-        # Store for persistence
-        app.storage.user.update({"current_list": list_id})
-        return list_id
-    except (AttributeError, ValueError):
-        # Try storage as fallback
+        # Clean up list ID for integer values
+        try:
+            list_id = int(list_param.strip())
+            logger.info(f"Using list ID from URL: {list_id}")
+            
+            # Store for persistence
+            app.storage.user.update({"current_list": list_id})
+            return list_id
+        except ValueError:
+            logger.warning(f"Invalid list ID format: {list_param!r}")
+            return None
+            
+    except Exception as e:
+        # Try storage as fallback for any errors
+        logger.error(f"Error getting list ID: {str(e)}")
         stored_id = app.storage.user.get("current_list")
-        logger.debug(f"List ID from storage (fallback): {stored_id}")
+        logger.info(f"Using list ID from storage (fallback): {stored_id!r}")
         return stored_id
 
 
@@ -68,6 +87,7 @@ async def lists_page(user: User = Depends(current_active_user)) -> None:
 @ui.page("/gui")
 @ui.page("/")
 async def index_page(
+    request: Request,
     user: User = Depends(current_active_user),
 ) -> None:
     # Reset to current week only if not navigating
@@ -77,9 +97,30 @@ async def index_page(
         set_navigating(False)  # Clear navigation flag
     days = await get_display_days()
     
-    # Get habits and filter by list if specified
-    list_id = get_current_list_id()
-    habits = await get_user_habits(user, list_id)
+    # Extract list parameter directly from request
+    list_param = request.query_params.get("list")
+    logger.info(f"Index page - List parameter from request: {list_param!r}")
+    
+    # Store list ID for persistence if it's a valid integer
+    if list_param and list_param.isdigit():
+        list_id = int(list_param)
+        app.storage.user.update({"current_list": list_id})
+    
+    # Handle different list parameter types
+    if list_param == "None":
+        # For "None" (no list), get all habits and filter to show only those with no list
+        habits = await get_user_habits(user)
+        habits = [h for h in habits if h.list_id is None]
+        logger.info(f"Index page - Showing {len(habits)} habits with no list")
+    elif list_param and list_param.isdigit():
+        # For specific list ID, filter at database level
+        list_id = int(list_param)
+        habits = await get_user_habits(user, list_id)
+        logger.info(f"Index page - Showing {len(habits)} habits from list {list_id}")
+    else:
+        # Default case (no filter) or invalid list parameter
+        habits = await get_user_habits(user)
+        logger.info(f"Index page - Showing all {len(habits)} habits")
     
     await index_page_ui(days, habits, user)
 
@@ -92,10 +133,35 @@ async def add_page(user: User = Depends(current_active_user)) -> None:
 
 
 @ui.page("/gui/order")
-async def order_page(user: User = Depends(current_active_user)) -> None:
-    # Get habits and filter by list if specified
-    list_id = get_current_list_id()
-    habits = await get_user_habits(user, list_id)
+async def order_page(
+    request: Request,
+    user: User = Depends(current_active_user)
+) -> None:
+    # Extract list parameter directly from request
+    list_param = request.query_params.get("list")
+    logger.info(f"Order page - List parameter from request: {list_param!r}")
+    
+    # Store list ID for persistence if it's a valid integer
+    if list_param and list_param.isdigit():
+        list_id = int(list_param)
+        app.storage.user.update({"current_list": list_id})
+    
+    # Handle different list parameter types
+    if list_param == "None":
+        # For "None" (no list), get all habits and filter to show only those with no list
+        habits = await get_user_habits(user)
+        habits = [h for h in habits if h.list_id is None]
+        logger.info(f"Order page - Showing {len(habits)} habits with no list")
+    elif list_param and list_param.isdigit():
+        # For specific list ID, filter at database level
+        list_id = int(list_param)
+        habits = await get_user_habits(user, list_id)
+        logger.info(f"Order page - Showing {len(habits)} habits from list {list_id}")
+    else:
+        # Default case (no filter) or invalid list parameter
+        habits = await get_user_habits(user)
+        logger.info(f"Order page - Showing all {len(habits)} habits")
+    
     await order_page_ui(habits, user)
 
 
