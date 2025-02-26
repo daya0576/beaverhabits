@@ -1,6 +1,7 @@
 import calendar
 import logging
 import configparser
+import os
 from pathlib import Path
 
 import dotenv
@@ -67,7 +68,7 @@ class Settings(BaseSettings):
     ENABLE_LETTER_FILTER: bool = True  # Set to False to disable letter filter bar
 
     # Logging
-    LOG_LEVEL: str = config.get('logging', 'level', fallback="WARNING")  # Can be DEBUG, INFO, WARNING, ERROR, CRITICAL
+    LOG_LEVEL: str = config.get('logging', 'level', fallback=os.environ.get("LOGURU_LEVEL", "WARNING"))  # Can be DEBUG, INFO, WARNING, ERROR, CRITICAL
 
     def is_dev(self):
         return self.ENV == "dev"
