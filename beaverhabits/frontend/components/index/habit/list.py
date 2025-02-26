@@ -15,7 +15,10 @@ from .utils import get_habit_priority, get_week_ticks, get_last_week_completion,
 
 async def update_habit_card(habit: Habit, priority_label: HabitPriority | None = None) -> None:
     """Update a habit card's priority and trigger sort."""
-    priority = await calculate_habit_priority(habit)
+    today = datetime.date.today()
+    week_ticks, _ = await get_week_ticks(habit, today)
+    is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
+    priority = await calculate_habit_priority(habit, is_completed)
     
     # Update priority label if provided
     if priority_label:
@@ -42,8 +45,11 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 
     # Sort habits by priority
     sorted_habits = []
+    today = datetime.date.today()
     for habit in active_habits:
-        priority = await calculate_habit_priority(habit)
+        week_ticks, _ = await get_week_ticks(habit, today)
+        is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
+        priority = await calculate_habit_priority(habit, is_completed)
         sorted_habits.append((priority, habit))
     sorted_habits.sort(key=lambda x: x[0])  # Sort by priority
     sorted_habits = [habit for _, habit in sorted_habits]  # Extract just the habits
@@ -54,11 +60,15 @@ async def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
         for habit in sorted_habits:
             await render_habit_card(habit, days, row_compat_classes)
 
-async def calculate_habit_priority(habit: Habit) -> int:
-    """Calculate priority based on today's state."""
+async def calculate_habit_priority(habit: Habit, is_completed: bool = None) -> int:
+    """Calculate priority based on today's state and weekly completion."""
     today = datetime.date.today()
     records = await get_habit_checks(habit.id, habit.user_id)
     today_record = next((r for r in records if r.day == today), None)
+    
+    # If is_completed is provided and True, return highest priority (4)
+    if is_completed:
+        return 4  # Weekly goal completed (very last)
     
     if today_record:
         today_state = today_record.done
@@ -72,9 +82,9 @@ async def render_habit_card(habit: Habit, days: list[datetime.date], row_classes
     """Render a single habit card."""
     today = datetime.date.today()
     records = await get_habit_checks(habit.id, habit.user_id)
-    priority = await calculate_habit_priority(habit)
     week_ticks, _ = await get_week_ticks(habit, today)
     is_completed = habit.weekly_goal and week_ticks >= habit.weekly_goal
+    priority = await calculate_habit_priority(habit, is_completed)
     last_week_complete = await get_last_week_completion(habit, today)
     
     card = ui.card().classes(row_classes + " w-full habit-card").classes("shadow-none")
