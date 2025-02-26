@@ -25,7 +25,7 @@ def handle_list_change(e, name_to_id: Dict[str, Optional[int]], path: str) -> No
     ui.navigate.to(target_url)
 
 @ui.refreshable
-async def list_selector(lists: TypeList[HabitList], current_list_id: int | None = None, path: str = "") -> None:
+async def list_selector(lists: TypeList[HabitList], current_list_id: int | str | None = None, path: str = "") -> None:
     """Dropdown for selecting current list."""
     with ui.row().classes("items-center gap-2 pt-2 pl-2"):
         # Create name-to-id mapping
@@ -37,19 +37,19 @@ async def list_selector(lists: TypeList[HabitList], current_list_id: int | None 
         
         # Get current name based on list ID
         try:
-            if current_list_id == "None":
+            if isinstance(current_list_id, str) and current_list_id.lower() == "none":
                 current_name = "No List"
-                logger.debug("List selector - using 'No List'")
+                logger.info("List selector - using 'No List' for 'None' string value")
             elif isinstance(current_list_id, int):
                 # Direct integer value
                 current_name = next(
                     (name for name, id in name_to_id.items() if id == current_list_id),
                     "No List"
                 )
-                logger.debug(f"List selector - found name: {current_name} for ID: {current_list_id}")
+                logger.info(f"List selector - found name: {current_name} for ID: {current_list_id}")
             else:
                 current_name = "No List"
-                logger.debug(f"List selector - defaulting to 'No List' for value: {current_list_id!r}")
+                logger.info(f"List selector - defaulting to 'No List' for value: {current_list_id!r}")
         except (AttributeError, ValueError) as e:
             logger.error(f"List selector - error parsing list ID: {e}")
             current_name = "No List"

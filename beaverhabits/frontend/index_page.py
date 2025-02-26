@@ -18,16 +18,20 @@ from beaverhabits.frontend.components.index import (
     get_list_details
 )
 
-async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: User | None = None):
+async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: User | None = None, current_list_id: str | int | None = None):
     """Main index page UI."""
-    # Get current list ID from URL parameters for UI components
     # Note: Habits are already filtered at the route level
-    current_list_id, _ = get_list_from_url()
-    
-    # If no list ID in URL, try to get from centralized function
+    # If no list ID provided, try to get from URL or centralized function
     if current_list_id is None:
-        from beaverhabits.routes import get_current_list_id
-        current_list_id = get_current_list_id()
+        # Try to get from URL
+        current_list_id, _ = get_list_from_url()
+        
+        # If still None, try to get from centralized function
+        if current_list_id is None:
+            from beaverhabits.routes import get_current_list_id
+            current_list_id = get_current_list_id()
+            
+    logger.info(f"Index page UI - Using list ID: {current_list_id!r}")
     
     # Get list details if needed
     current_list = None
@@ -39,7 +43,7 @@ async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: Us
     # Use the pre-filtered habits from the route
     active_habits = habits
 
-    async with layout(user=user):
+    async with layout(user=user, current_list_id=current_list_id):
         with ui.column().classes("w-full"):
             # Determine if letter filter should be enabled
             show_filter = should_show_filter(

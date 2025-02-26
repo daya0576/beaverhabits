@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from nicegui import ui, context
+from fastapi import Request
+from nicegui import ui, context, app
 
 from beaverhabits.app.crud import get_user_lists
 from beaverhabits.configs import settings
@@ -14,7 +15,7 @@ from .menu import list_selector, menu_component
 from .utils import get_page_title
 
 @asynccontextmanager
-async def layout(title: str | None = None, with_menu: bool = True, user=None):
+async def layout(title: str | None = None, with_menu: bool = True, user=None, current_list_id: str | int | None = None):
     """Base layout for all pages."""
     title = title or "Beaver Habits"
 
@@ -36,15 +37,46 @@ async def layout(title: str | None = None, with_menu: bool = True, user=None):
             # Add list selector if not on lists, add, or order pages
             if not any(x in path for x in ["/lists", "/add", "/order"]) and user:
                 lists = await get_user_lists(user)
-                # Get current list ID using the centralized function
-                from beaverhabits.routes import get_current_list_id
-                current_list = get_current_list_id()
+                
+                # If no list ID provided, try to get from query string or storage
+                if current_list_id is None:
+                    try:
+                        # Try to get list parameter from page query
+                        if hasattr(context.client.page, 'query'):
+                            list_param = context.client.page.query.get("list")
+                            logger.info(f"Layout - List parameter from page query: {list_param!r}")
+                            
+                            # Convert to appropriate type (case-insensitive)
+                            if list_param and list_param.lower() == "none":
+                                current_list_id = "None"
+                                logger.info("Layout - Using 'None' string value from URL")
+                            elif list_param and list_param.isdigit():
+                                current_list_id = int(list_param)
+                                logger.info(f"Layout - Using list ID {current_list_id} from URL")
+                                # Store for persistence
+                                app.storage.user.update({"current_list": current_list_id})
+                            else:
+                                # Fall back to storage if no valid parameter
+                                current_list_id = app.storage.user.get("current_list")
+                                logger.info(f"Layout - Using list from storage: {current_list_id!r}")
+                        else:
+                            # Fall back to storage if query not available
+                            current_list_id = app.storage.user.get("current_list")
+                            logger.info(f"Layout - Using list from storage (no query available): {current_list_id!r}")
+                    except Exception as e:
+                        logger.error(f"Layout - Error getting list parameter: {e}")
+                        # Fall back to centralized function
+                        from beaverhabits.routes import get_current_list_id
+                        current_list_id = get_current_list_id()
+                        logger.info(f"Layout - Using list from centralized function: {current_list_id!r}")
+                else:
+                    logger.info(f"Layout - Using provided list ID: {current_list_id!r}")
                 
                 # Debug list data
                 logger.debug(f"Layout - Available lists: {[(l.id, l.name) for l in lists]}")
-                logger.debug(f"Layout - Current list value: {current_list!r} (type: {type(current_list)})")
+                logger.debug(f"Layout - Current list value: {current_list_id!r} (type: {type(current_list_id)})")
                 
-                await list_selector(lists, current_list, path)
+                await list_selector(lists, current_list_id, path)
             else:
                 ui.space()  # Empty space on the left when no list selector
                 

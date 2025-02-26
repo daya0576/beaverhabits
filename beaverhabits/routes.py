@@ -43,8 +43,8 @@ def get_current_list_id() -> int | str | None:
         list_param = context.client.page.query.get("list")
         logger.info(f"URL parameter 'list': {list_param!r} (type: {type(list_param)})")
         
-        # Explicitly handle "None" case
-        if list_param == "None":
+        # Explicitly handle "None" case (case-insensitive)
+        if list_param and list_param.lower() == "none":
             logger.info("'None' list selected (showing only habits with no list)")
             return "None"
         
@@ -106,23 +106,27 @@ async def index_page(
         list_id = int(list_param)
         app.storage.user.update({"current_list": list_id})
     
-    # Handle different list parameter types
-    if list_param == "None":
+    # Handle different list parameter types (case-insensitive)
+    current_list_id = None
+    if list_param and list_param.lower() == "none":
         # For "None" (no list), get all habits and filter to show only those with no list
         habits = await get_user_habits(user)
         habits = [h for h in habits if h.list_id is None]
+        current_list_id = "None"
         logger.info(f"Index page - Showing {len(habits)} habits with no list")
     elif list_param and list_param.isdigit():
         # For specific list ID, filter at database level
         list_id = int(list_param)
         habits = await get_user_habits(user, list_id)
+        current_list_id = list_id
         logger.info(f"Index page - Showing {len(habits)} habits from list {list_id}")
     else:
         # Default case (no filter) or invalid list parameter
         habits = await get_user_habits(user)
         logger.info(f"Index page - Showing all {len(habits)} habits")
     
-    await index_page_ui(days, habits, user)
+    # Pass the current list ID to the UI
+    await index_page_ui(days, habits, user, current_list_id)
 
 
 @ui.page("/gui/add")
@@ -146,23 +150,27 @@ async def order_page(
         list_id = int(list_param)
         app.storage.user.update({"current_list": list_id})
     
-    # Handle different list parameter types
-    if list_param == "None":
+    # Handle different list parameter types (case-insensitive)
+    current_list_id = None
+    if list_param and list_param.lower() == "none":
         # For "None" (no list), get all habits and filter to show only those with no list
         habits = await get_user_habits(user)
         habits = [h for h in habits if h.list_id is None]
+        current_list_id = "None"
         logger.info(f"Order page - Showing {len(habits)} habits with no list")
     elif list_param and list_param.isdigit():
         # For specific list ID, filter at database level
         list_id = int(list_param)
         habits = await get_user_habits(user, list_id)
+        current_list_id = list_id
         logger.info(f"Order page - Showing {len(habits)} habits from list {list_id}")
     else:
         # Default case (no filter) or invalid list parameter
         habits = await get_user_habits(user)
         logger.info(f"Order page - Showing all {len(habits)} habits")
     
-    await order_page_ui(habits, user)
+    # Pass the current list ID to the UI
+    await order_page_ui(habits, user, current_list_id)
 
 
 @ui.page("/gui/habits/{habit_id}")

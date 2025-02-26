@@ -88,8 +88,8 @@ async def add_ui(habits: list[Habit]):
     ui.space()
 
 
-async def order_page_ui(habits: list[Habit], user: User | None = None):
-    async with layout(user=user):
+async def order_page_ui(habits: list[Habit], user: User | None = None, current_list_id: str | int | None = None):
+    async with layout(user=user, current_list_id=current_list_id):
         with ui.column().classes("items-center sortable gap-2 w-full"):
             await add_ui(habits)
 

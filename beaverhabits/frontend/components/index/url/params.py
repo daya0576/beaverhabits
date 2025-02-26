@@ -17,8 +17,8 @@ def get_list_from_url() -> Tuple[Optional[str | int], Optional[HabitList]]:
         current_list_param = context.client.page.query.get("list", "")
         logger.info(f"Raw list parameter from URL: {current_list_param}")
         
-        # Handle different list parameter cases
-        if current_list_param == "None":
+        # Handle different list parameter cases (case-insensitive)
+        if current_list_param and current_list_param.lower() == "none":
             logger.info("List parameter is 'None' - showing only habits with no list")
             return "None", None
         elif current_list_param.isdigit():

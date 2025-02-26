@@ -87,7 +87,7 @@ async def create_habit(user: User, name: str, list_id: Optional[int] = None, ord
             habit_list = result.scalar_one_or_none()
             
             if not habit_list:
-                logger.warning(f"[CRUD] List {list_id} not found for user {user.id}")
+                #l ogger.warning(f"[CRUD] List {list_id} not found for user {user.id}")
                 return None
             
         habit = Habit(name=name, order=order, list_id=list_id, user_id=user.id)
@@ -204,7 +204,7 @@ async def get_habit_checks(habit_id: int, user_id: UUID) -> List[CheckedRecord]:
         )
         habit_result = await session.execute(habit_stmt)
         if not habit_result.scalar_one_or_none():
-            logger.warning(f"[CRUD] Habit {habit_id} not found for user {user_id}")
+            #l ogger.warning(f"[CRUD] Habit {habit_id} not found for user {user_id}")
             return []
             
         stmt = select(CheckedRecord).where(CheckedRecord.habit_id == habit_id)
