@@ -101,10 +101,7 @@ uv venv && uv sync
 2. Pages & UI
     - [x] Reorder habits
     - [ ] Category or tag
-    - [ ] Light mode
-    - [ ] Standalone mode for iOS
-    - [ ] **Responsive layout** (wider display for desktop)
-    - [ ] **Native mobile app**
+    - [ ] Native mobile app (WIP)
 3. Storage
     - [x] Session-based disk storage (Demo only)
     - [x] User-based disk storage
@@ -119,10 +116,8 @@ uv venv && uv sync
 6. Extensibility
     - [x] Export & Import
     - [x] RESTful API
-7. Others
-    - [ ] Habit calendar template, e.g. vacations
+    - [ ] Backup (WIP)
    
-
 ## Streaks
 Here are my table tennis training sessions in the past year :)
 
