@@ -1,8 +1,9 @@
 import asyncio
 from contextlib import asynccontextmanager
 
+from pydantic import BaseModel
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from nicegui import ui
 
 from beaverhabits.api import init_api_routes
@@ -36,9 +37,22 @@ if settings.is_dev():
         loop.slow_callback_duration = 0.01
 
 
-@app.get("/health")
+class HealthCheck(BaseModel):
+    """Response model to validate and return when performing a health check."""
+
+    status: str = "OK"
+
+
+@app.get(
+    "/health",
+    tags=["healthcheck"],
+    summary="Perform a Health Check",
+    response_description="Return HTTP Status Code 200 (OK)",
+    status_code=status.HTTP_200_OK,
+    response_model=HealthCheck,
+)
 def read_root():
-    return {"Hello": "World"}
+    return HealthCheck(status="OK")
 
 
 @app.get("/users/count", include_in_schema=False)

@@ -7,9 +7,14 @@ ENV PATH="$VENV_PATH/bin:$PATH"
 
 
 FROM python-base AS builder-base
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-        build-essential libffi-dev libssl-dev curl ca-certificates
+RUN apt-get update && apt-get install --no-install-recommends -y \
+        build-essential \
+        libffi-dev \
+        libssl-dev \
+        curl \
+        ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Installing a cryptography dependency which requires Rust.
 # TODO: Enable only for arm/v7
@@ -44,4 +49,8 @@ COPY statics ./statics
 RUN chmod -R g+w /app && \
     chown -R nobody /app
 USER nobody
+
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+    CMD python healthcheck.py
+
 CMD ["sh", "start.sh", "prd"]

@@ -7,11 +7,14 @@ ENV PATH="$VENV_PATH/bin:$PATH"
 
 
 FROM python-base AS builder-base
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
+RUN apt-get update && apt-get install --no-install-recommends -y \
         build-essential \
+        libffi-dev \
+        libssl-dev \
         curl \
-        ca-certificates 
+        ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR $PYSETUP_PATH
 ADD https://astral.sh/uv/0.5.26/install.sh /uv-installer.sh
 RUN sh /uv-installer.sh && rm /uv-installer.sh
@@ -34,7 +37,12 @@ WORKDIR /app
 COPY start.sh .
 COPY beaverhabits ./beaverhabits
 COPY statics ./statics
+COPY healthcheck.py .
 RUN chmod -R g+w /app && \
     chown -R nobody /app
 USER nobody
+
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+    CMD python healthcheck.py
+
 CMD ["sh", "start.sh", "prd"]
