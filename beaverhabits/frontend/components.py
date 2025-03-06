@@ -35,8 +35,8 @@ def menu_header(title: str, target: str):
     return link
 
 
-def compat_menu(name: str, callback: Callable):
-    return ui.menu_item(name, callback).props("dense").classes("items-center")
+def compat_menu(*args, **kwargs):
+    return ui.menu_item(*args, **kwargs).props("dense").classes("items-center")
 
 
 def menu_icon_button(
@@ -132,6 +132,7 @@ class HabitCheckBox(ui.checkbox):
         self.on("mouseup.prevent", self._mouse_up_event)
         self.on("touchend.prevent", self._mouse_up_event)
         self.on("touchmove", self._mouse_move_event)
+        # self.on("mousemove", self._mouse_move_event)
 
     def _update_style(self, value: bool):
         self.value = value
@@ -150,6 +151,7 @@ class HabitCheckBox(ui.checkbox):
             async with asyncio.timeout(0.2):
                 await self.hold.wait()
         except asyncio.TimeoutError:
+            await self._blur()
             value = await note_tick(self.habit, self.day)
             if value is not None:
                 self._update_style(value)
@@ -169,6 +171,17 @@ class HabitCheckBox(ui.checkbox):
     async def _mouse_move_event(self):
         self.moving = True
         self.hold.set()
+
+    async def _blur(self):
+        # Resolve ripple issue
+        # https://github.com/quasarframework/quasar/blob/dev/ui/src/components/checkbox/QCheckbox.sass
+        await ui.run_javascript(
+            """
+           const checkboxes = document.querySelectorAll('.q-checkbox');
+           checkboxes.forEach(checkbox => {checkbox.blur()});
+           """
+        )
+        # self.run_method("blur")
 
 
 class HabitOrderCard(ui.card):
