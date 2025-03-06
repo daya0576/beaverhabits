@@ -34,7 +34,10 @@ def custom_header():
         '<link rel="apple-touch-icon" href="/statics/images/apple-touch-icon-v4.png">'
     )
 
-    # Experimental PWA support
+    # PWA support
+    ui.add_head_html('<link rel="manifest" href="/statics/pwa/manifest.json">')
+
+    # Experimental iOS standalone mode
     if settings.ENABLE_IOS_STANDALONE:
         ui.add_head_html('<meta name="apple-mobile-web-app-capable" content="yes">')
 

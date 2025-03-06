@@ -8,5 +8,17 @@
   "scope": "/",
   "start_url": "/",
   "id": "beaverhabits",
-  "display_override": []
+  "display_override": [],
+  "icons": [
+    {
+      "src": "/statics/images/apple-touch-icon-v4.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/statics/images/apple-touch-icon-v4.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }

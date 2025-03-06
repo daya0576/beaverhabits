@@ -40,7 +40,7 @@ class Settings(BaseSettings):
 
     # Customization
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
-    ENABLE_IOS_STANDALONE: bool = False
+    ENABLE_IOS_STANDALONE: bool = True
     ENABLE_DESKTOP_ALGIN_CENTER: bool = True
 
     INDEX_SHOW_HABIT_COUNT: bool = False
