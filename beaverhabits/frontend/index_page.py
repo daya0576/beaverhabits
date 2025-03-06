@@ -40,6 +40,8 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     columns = name_columns + len(days) * date_columns + count_columns
 
     row_compat_classes = "pl-4 pr-0 py-0"
+    # Sticky date row for long habit list
+    sticky_styles = "position: sticky; top: 0; z-index: 1; background-color: #121212;"
     left_classes, right_classes = (
         # grid 5
         f"col-span-{name_columns} truncate",
@@ -50,7 +52,7 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 
     with ui.column().classes("gap-1.5"):
         # Date Headers
-        with grid(columns, 2).classes(row_compat_classes):
+        with grid(columns, 2).classes(row_compat_classes).style(sticky_styles):
             for it in (week_headers(days), day_headers(days)):
                 ui.label("").classes(left_classes)
                 for label in it:
