@@ -151,10 +151,10 @@ class HabitCheckBox(ui.checkbox):
             async with asyncio.timeout(0.2):
                 await self.hold.wait()
         except asyncio.TimeoutError:
-            await self._blur()
             value = await note_tick(self.habit, self.day)
             if value is not None:
                 self._update_style(value)
+            await self._blur()
         else:
             if self.moving:
                 logger.info("Mouse moving, skip...")
