@@ -578,7 +578,11 @@ def habit_notes(records: List[CheckedRecord], limit: int = 10):
 class TagManager:
     @staticmethod
     def get_all() -> set[str]:
-        return set(app.storage.client.get("index_tags_filter", []))
+        try:
+            return set(app.storage.client.get("index_tags_filter", []))
+        except Exception as e:
+            logger.error(f"Failed to get tags: {e}")
+            return set()
 
     @staticmethod
     def add(tag: str) -> None:
