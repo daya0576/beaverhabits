@@ -17,6 +17,11 @@ class StorageType(Enum):
     USER_DISK = "USER_DISK"
 
 
+class TagSelectionMode(Enum):
+    SINGLE = "SINGLE"
+    MULTI = "MULTI"
+
+
 class Settings(BaseSettings):
     ENV: str = "dev"
     DEBUG: bool = False
@@ -42,6 +47,7 @@ class Settings(BaseSettings):
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
     ENABLE_IOS_STANDALONE: bool = True
     ENABLE_DESKTOP_ALGIN_CENTER: bool = True
+    TAG_SELECTION_MODE: TagSelectionMode = TagSelectionMode.SINGLE
 
     INDEX_SHOW_HABIT_COUNT: bool = False
     INDEX_HABIT_NAME_COLUMNS: int = 5

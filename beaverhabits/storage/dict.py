@@ -90,6 +90,14 @@ class DictHabit(Habit[DictRecord], DictStorage):
         self.data["name"] = value
 
     @property
+    def tags(self) -> list[str]:
+        return self.data.get("tags", [])
+
+    @tags.setter
+    def tags(self, value: list[str]) -> None:
+        self.data["tags"] = list(value)
+
+    @property
     def star(self) -> bool:
         return self.data.get("star", False)
 

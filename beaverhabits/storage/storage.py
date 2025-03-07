@@ -1,6 +1,6 @@
 import datetime
 from enum import Enum
-from typing import List, Optional, Protocol, Self
+from typing import List, Optional, Protocol, Self, Set
 
 from beaverhabits.app.db import User
 
@@ -48,13 +48,19 @@ class Habit[R: CheckedRecord](Protocol):
     def name(self, value: str) -> None: ...
 
     @property
+    def tags(self) -> list[str]: ...
+
+    @tags.setter
+    def tags(self, value: list[str]) -> None: ...
+
+    @property
     def star(self) -> bool: ...
 
     @star.setter
     def star(self, value: int) -> None: ...
 
     @property
-    def records(self) -> List[R]: ...
+    def records(self) -> list[R]: ...
 
     @property
     def status(self) -> HabitStatus: ...

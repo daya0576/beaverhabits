@@ -16,9 +16,9 @@ def add_ui(habit_list: HabitList):
     habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
 
     for item in habits:
-        with components.grid(columns=8):
+        with components.grid(columns=10):
             name = HabitNameInput(item)
-            name.classes("col-span-6 break-all")
+            name.classes("col-span-8 break-all")
 
             star = HabitStarCheckbox(item, add_ui.refresh)
             star.classes("col-span-1")

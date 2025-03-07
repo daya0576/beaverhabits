@@ -2,11 +2,17 @@ import datetime
 import os
 from typing import List
 
-from nicegui import ui
+from nicegui import app, ui
 
 from beaverhabits.configs import settings
 from beaverhabits.frontend import javascript
-from beaverhabits.frontend.components import HabitCheckBox, IndexBadge, link
+from beaverhabits.frontend.components import (
+    HabitCheckBox,
+    IndexBadge,
+    TagManager,
+    link,
+    tag_filters,
+)
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, HabitStatus
@@ -50,11 +56,19 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     )
     header_styles = "font-size: 85%; font-weight: 500; color: #9e9e9e"
 
+    # Category filters (align center)
+    tag_filters(active_habits, refresh=habit_list_ui.refresh)
+    if selected_tags := TagManager.get_all():
+        active_habits = [
+            habit for habit in active_habits if set(habit.tags) & selected_tags
+        ]
+
     with ui.column().classes("gap-1.5"):
         # Date Headers
         with grid(columns, 2).classes(row_compat_classes).style(sticky_styles):
             for it in (week_headers(days), day_headers(days)):
                 ui.label("").classes(left_classes)
+
                 for label in it:
                     ui.label(label).classes(right_classes).style(header_styles)
 
