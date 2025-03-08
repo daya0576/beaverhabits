@@ -20,8 +20,8 @@ if "%1"=="dev" (
     echo Starting Uvicorn server in production mode...
     rem Set nicegui storage path to avoid permission issues if not already set
     if "%NICEGUI_STORAGE_PATH%"=="" set NICEGUI_STORAGE_PATH=.user\.nicegui
-    rem we also use a single worker in production mode so socket.io connections are always handled by the same worker
+    rem we use a single worker in production mode so socket.io connections are always handled by the same worker
 	set LOGURU_LEVEL=WARNING
 	set UVICORN_LOG_LEVEL=warning
-    uvicorn beaverhabits.main:app --workers 6 --log-level warning --port 9015 --host 0.0.0.0
+    uvicorn beaverhabits.main:app --workers 1 --log-level warning --port 9015 --host 0.0.0.0
 )
