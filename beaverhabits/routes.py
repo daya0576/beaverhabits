@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
-from nicegui import app, ui, context
+from nicegui import app, ui, context, Client
 
 from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.layout import custom_header, redirect
@@ -269,6 +269,7 @@ async def register_page():
         with ui.row():
             ui.label("Already have an account?")
             ui.link("Log in", target="/login")
+
 
 
 def init_gui_routes(fastapi_app: FastAPI):
