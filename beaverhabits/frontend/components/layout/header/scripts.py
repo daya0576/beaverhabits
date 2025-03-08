@@ -49,7 +49,12 @@ def add_javascript_files() -> None:
         
         // Variables to track connection state
         let isConnected = true;
+        let lastReconnectTime = 0;
+        let disconnectCount = 0;
+        let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const connectionBanner = document.getElementById('connection-status-banner');
+        const RECONNECT_DEBOUNCE_TIME = 10000; // 10 seconds between allowed reloads
+        const MAX_DISCONNECT_COUNT = 3; // Number of disconnects before we stop auto-reloading
         
         // Function to show the connection lost banner
         function showConnectionLost() {
@@ -62,6 +67,34 @@ def add_javascript_files() -> None:
         function hideConnectionLost() {
             if (connectionBanner) {
                 connectionBanner.style.display = 'none';
+            }
+        }
+        
+        // Debounced reload function to prevent multiple rapid reloads
+        function debouncedReload() {
+            const now = Date.now();
+            
+            // Check if we should reload based on debounce time, disconnect count, and device type
+            if (now - lastReconnectTime > RECONNECT_DEBOUNCE_TIME && 
+                disconnectCount < MAX_DISCONNECT_COUNT && 
+                !isMobileDevice) {
+                
+                console.log('Reloading page after reconnection');
+                lastReconnectTime = now;
+                disconnectCount++;
+                
+                // Reload with a delay to allow the connection to stabilize
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                console.log('Skipping reload: ' + 
+                    (now - lastReconnectTime <= RECONNECT_DEBOUNCE_TIME ? 'Too soon since last reload' : '') +
+                    (disconnectCount >= MAX_DISCONNECT_COUNT ? 'Too many disconnects' : '') +
+                    (isMobileDevice ? 'Mobile device detected' : ''));
+                
+                // Just hide the banner without reloading on mobile
+                hideConnectionLost();
             }
         }
         
@@ -84,21 +117,22 @@ def add_javascript_files() -> None:
                 socket.on('connect', function() {
                     console.log('Socket connected');
                     isConnected = true;
-                    hideConnectionLost();
                     
-                    // Reload the page to ensure all data is fresh
-                    // Only reload if we were previously disconnected to avoid unnecessary reloads
+                    // Only reload if we were previously disconnected
                     if (connectionBanner && connectionBanner.style.display === 'block') {
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 1000);
+                        debouncedReload();
+                    } else {
+                        hideConnectionLost();
                     }
                 });
             }
         }, 100);
         
-        // Add a fallback detection method using fetch API
+        // Add a fallback detection method using fetch API with more tolerance for mobile
         // This helps detect network issues even if socket.io doesn't report them
+        let failedFetchAttempts = 0;
+        const MAX_FAILED_FETCHES = isMobileDevice ? 3 : 1; // More tolerance on mobile
+        
         setInterval(function() {
             if (!isConnected) {
                 return; // Already know we're disconnected
@@ -110,25 +144,37 @@ def add_javascript_files() -> None:
                 cache: 'no-store',
                 headers: {
                     'Cache-Control': 'no-cache'
-                }
+                },
+                // Add a timeout to the fetch request
+                signal: AbortSignal.timeout(5000) // 5 second timeout
             })
             .then(response => {
                 if (response.ok) {
-                    // Connection is working
+                    // Connection is working, reset failed attempts
+                    failedFetchAttempts = 0;
+                    
                     if (!isConnected) {
                         console.log('Network connection restored');
                         // Don't set isConnected=true here, let socket.io handle that
                     }
                 } else {
                     console.log('Network check failed with status:', response.status);
-                    showConnectionLost();
+                    failedFetchAttempts++;
+                    
+                    if (failedFetchAttempts >= MAX_FAILED_FETCHES) {
+                        showConnectionLost();
+                    }
                 }
             })
             .catch(error => {
                 console.log('Network check failed:', error);
-                showConnectionLost();
+                failedFetchAttempts++;
+                
+                if (failedFetchAttempts >= MAX_FAILED_FETCHES) {
+                    showConnectionLost();
+                }
             });
-        }, 15000); // Check every 15 seconds
+        }, isMobileDevice ? 30000 : 15000); // Check less frequently on mobile (30s vs 15s)
     });
     </script>
     ''')

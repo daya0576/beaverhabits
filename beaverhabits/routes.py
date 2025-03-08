@@ -33,7 +33,7 @@ def get_current_list_id() -> int | str | None:
     try:
         # Check if context.client.page exists and has query attribute
         if not hasattr(context, 'client') or not hasattr(context.client, 'page') or not hasattr(context.client.page, 'query'):
-            logger.warning("Cannot access page query parameters - context.client.page.query not available")
+            logger.debug("Cannot access page query parameters - context.client.page.query not available")
             # Fall back to storage
             stored_id = app.storage.user.get("current_list")
             logger.info(f"Using list ID from storage (no query available): {stored_id!r}")
