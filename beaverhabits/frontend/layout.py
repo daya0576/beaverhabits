@@ -10,6 +10,8 @@ from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon
 from beaverhabits.logging import logger
 from beaverhabits.storage.meta import get_page_title, get_root_path, is_demo
 
+from .intersection_observer import IntersectionObserver as intersection_observer
+
 
 def redirect(x):
     ui.navigate.to(os.path.join(get_root_path(), x))
@@ -71,6 +73,25 @@ def menu_component() -> None:
         compat_menu("Logout", lambda: user_logout() and ui.navigate.to("/login"))
 
 
+def pre_cache():
+    # lazy load echart: https://github.com/zauberzeug/nicegui/discussions/1452
+    async def handle_intersection():
+        elements = [
+            ui.input(""),
+            ui.echart(
+                {
+                    "xAxis": {"type": "category"},
+                    "yAxis": {"type": "value"},
+                    "series": [{"type": "line", "data": [0]}],
+                }
+            ),
+        ]
+        for element in elements:
+            element.classes("disabled hidden")
+
+    intersection_observer(on_intersection=handle_intersection)
+
+
 @contextmanager
 def layout(title: str | None = None, with_menu: bool = True):
     """Base layout for all pages."""
@@ -79,14 +100,15 @@ def layout(title: str | None = None, with_menu: bool = True):
     title = title or get_page_title(root_path)
 
     with ui.column() as c:
+        # Standard headers
+        custom_header()
+        add_umami_headers()
+        pre_cache()
+
         # Center the content on small screens
         c.classes("mx-auto")
         if not settings.ENABLE_DESKTOP_ALGIN_CENTER:
             c.classes("sm:mx-0")
-
-        # Standard headers
-        custom_header()
-        add_umami_headers()
 
         path = context.client.page.path
         logger.info(f"Rendering page: {path}")
