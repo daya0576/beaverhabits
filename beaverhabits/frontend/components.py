@@ -625,7 +625,9 @@ class TagChip(ui.chip):
 
         # https://tailwindcss.com/docs/colors
         self.props("dense")
-        self.style("font-size: 0.8em; font-weight: 450; padding: 0.5rem 0.6rem;")
+        self.style("font-size: 80%; font-weight: 500")
+        self.style("padding: 8px 9px")
+        self.style("margin: 0px 2px")
 
         self.on_click(self._async_task)
         self.refresh = refresh

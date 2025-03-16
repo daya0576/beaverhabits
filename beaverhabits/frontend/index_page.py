@@ -9,6 +9,7 @@ from beaverhabits.frontend import javascript
 from beaverhabits.frontend.components import (
     HabitCheckBox,
     IndexBadge,
+    TagChip,
     TagManager,
     link,
     tag_filters,
@@ -79,8 +80,9 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                     # truncate name
                     root_path = get_root_path()
                     redirect_page = os.path.join(root_path, "habits", str(habit.id))
-                    name = link(habit.name, target=redirect_page).classes(left_classes)
-                    name.style(f"max-width: {24 * name_columns}px;")
+                    with link(habit.name, target=redirect_page) as name:
+                        name.classes(left_classes)
+                        name.style(f"max-width: {24 * name_columns}px;")
 
                     ticked_days = set(habit.ticked_days)
                     for day in days:

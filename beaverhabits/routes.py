@@ -4,9 +4,11 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from nicegui import app, ui
 
+from beaverhabits.frontend import paddle_page
 from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.layout import custom_header, redirect
 from beaverhabits.frontend.order_page import order_page_ui
+from beaverhabits.frontend.paddle_page import PRICING, PRIVACY, TERMS
 
 from . import const, views
 from .app.auth import (
@@ -196,6 +198,21 @@ async def register_page():
         with ui.row():
             ui.label("Already have an account?")
             ui.link("Log in", target="/login")
+
+
+@ui.page("/pricing")
+def pricing_page():
+    paddle_page.markdown(PRICING)
+
+
+@ui.page("/terms")
+def terms_page():
+    paddle_page.markdown(TERMS)
+
+
+@ui.page("/privacy")
+def privacy_page():
+    paddle_page.markdown(PRIVACY)
 
 
 def init_gui_routes(fastapi_app: FastAPI):
