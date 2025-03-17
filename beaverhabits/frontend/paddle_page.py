@@ -7,25 +7,23 @@ To ensure sustainable development, we are pleased to introduce the following pri
 ### SaaS
 Choose the Plan That Works for You.
 
-#### Basic Plan: $0
-- Basic feature access, perfect for casual users.
-- Community support included.
+#### Free: $0
+Free Forever - no credit card required! 
+- Unlimited devices
+- All the core functions, perfect for casual users
+- Community support included
 
-#### Pro: $9.9
-- Ideal for users who need more functionality, including backup options and support for additional habits.
-- Unlock all advanced features and receive priority support.
+#### Premium: $9.9
+Enjoy premium features
+- Unlimited habits, backup to cloud, and more
+- Ideal for users who need more functionality
+- Priority support
 
 #### Believer: $49
-- Tailored for power users and teams.
-- Includes personalized one-on-one online support to ensure you maximize your experience.
-
-### Self-hosted
-#### Free
-- Fully-featured self-hosted solution for individual developers and small teams.
-- Unlimited user access.
+- Tailored for power users and teams
+- Includes personalized one-on-one online support to ensure you maximize your experience
 
 ### FAQs
-
 **Is there a free trial?** Yes! Start with a 14-day free trial on any plan. We offer a money-back guarantee for your peace of mind.
 """
 
