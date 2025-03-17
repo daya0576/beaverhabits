@@ -9,12 +9,14 @@ Choose the Plan That Works for You.
 
 #### Free: $0
 Free Forever - no credit card required! 
+
 - Unlimited devices
 - All the core functions, perfect for casual users
 - Community support included
 
 #### Premium: $9.9
 Enjoy premium features
+
 - Unlimited habits, backup to cloud, and more
 - Ideal for users who need more functionality
 - Priority support
