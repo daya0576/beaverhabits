@@ -1,5 +1,6 @@
 import os
 from contextlib import contextmanager
+from operator import is_
 
 from nicegui import context, ui
 
@@ -8,7 +9,11 @@ from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.logging import logger
-from beaverhabits.storage.meta import get_page_title, get_root_path, is_demo
+from beaverhabits.storage.meta import (
+    get_page_title,
+    get_root_path,
+    is_page_demo,
+)
 
 from .intersection_observer import IntersectionObserver as intersection_observer
 
@@ -53,9 +58,6 @@ def add_umami_headers():
 def menu_component() -> None:
     """Dropdown menu for the top-right corner of the page."""
     with ui.menu():
-        show_import = not is_demo()
-        show_export = True
-
         path = context.client.page.path
         if "add" in path:
             compat_menu("Reorder", lambda: redirect("order"))
@@ -63,14 +65,17 @@ def menu_component() -> None:
             compat_menu("Add", lambda: redirect("add"))
         ui.separator()
 
-        if show_export:
-            compat_menu("Export", lambda: open_tab("export"))
-            ui.separator()
-        if show_import:
-            compat_menu("Import", lambda: redirect("import"))
-            ui.separator()
+        compat_menu("Export", lambda: open_tab("export"))
+        ui.separator()
+        imp = compat_menu("Import", lambda: redirect("import"))
+        ui.separator()
+        if is_page_demo():
+            imp.classes("disabled")
 
-        compat_menu("Logout", lambda: user_logout() and ui.navigate.to("/login"))
+        if is_page_demo():
+            compat_menu("Login", lambda: ui.navigate.to("/login"))
+        else:
+            compat_menu("Logout", lambda: user_logout() and ui.navigate.to("/login"))
 
 
 def pre_cache():
@@ -96,8 +101,7 @@ def pre_cache():
 def layout(title: str | None = None, with_menu: bool = True):
     """Base layout for all pages."""
 
-    root_path = get_root_path()
-    title = title or get_page_title(root_path)
+    title = title or get_page_title()
 
     with ui.column() as c:
         # Standard headers
@@ -113,7 +117,7 @@ def layout(title: str | None = None, with_menu: bool = True):
         path = context.client.page.path
         logger.info(f"Rendering page: {path}")
         with ui.row().classes("min-w-full gap-x-0"):
-            menu_header(title, target=root_path)
+            menu_header(title, target=get_root_path())
             if with_menu:
                 ui.space()
                 with menu_icon_button(icons.MENU):

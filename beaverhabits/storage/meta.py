@@ -1,5 +1,3 @@
-from typing import Optional
-
 from nicegui import context
 
 from beaverhabits.storage.storage import Habit
@@ -12,12 +10,12 @@ GUI_ROOT_PATH = "/gui"
 
 
 def is_page_demo() -> bool:
-    return context.client.page.path.startswith(DEMO_ROOT_PATH)
+    path = context.client.page.path
+    return path.startswith(DEMO_ROOT_PATH) or "pricing" in path
 
 
 def get_root_path() -> str:
-    path = context.client.page.path
-    return DEMO_ROOT_PATH if path.startswith(DEMO_ROOT_PATH) else GUI_ROOT_PATH
+    return DEMO_ROOT_PATH if is_page_demo() else GUI_ROOT_PATH
 
 
 def get_habit_page_path(habit: Habit) -> str:
@@ -28,10 +26,5 @@ def get_habit_heatmap_path(habit: Habit) -> str:
     return f"{get_root_path()}/habits/{habit.id}/streak"
 
 
-def get_page_title(path: Optional[str] = None) -> str:
-    path = path or context.client.page.path
-    return "Demo" if path.startswith(DEMO_ROOT_PATH) else "Habits"
-
-
-def is_demo() -> bool:
-    return context.client.page.path.startswith(DEMO_ROOT_PATH)
+def get_page_title() -> str:
+    return "Demo" if is_page_demo() else "Habits"

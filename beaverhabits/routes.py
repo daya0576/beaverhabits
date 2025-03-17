@@ -201,8 +201,20 @@ async def register_page():
 
 
 @ui.page("/pricing")
-def pricing_page():
-    paddle_page.markdown(PRICING)
+async def pricing_page():
+    with ui.row().classes("mx-auto"):
+        days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
+        habit_list = views.get_or_create_session_habit_list(days)
+        index_page_ui(days, habit_list)
+
+        ui.space()
+
+        with ui.card().classes("max-w-md").props("flat bordered"):
+            with ui.row().classes("gap-1"):
+                ui.label(
+                    "To support an independent developer and a full-time parent ❤️👶"
+                )
+                ui.markdown(PRICING).classes("text-wrap pt-0")
 
 
 @ui.page("/terms")

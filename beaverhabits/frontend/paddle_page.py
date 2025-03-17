@@ -1,31 +1,25 @@
 from nicegui import ui
 
 PRICING = """\
-## Pricing
-To ensure sustainable development, we are pleased to introduce the following pricing options:
 
-### SaaS
-Choose the Plan That Works for You.
+#### Pricing
 
-#### Free: $0
+Choose the Plan That Works for You
+
+##### <u>Basic: $0</u>
 Free Forever - no credit card required! 
 
-- Unlimited devices
-- All the core functions, perfect for casual users
-- Community support included
-
-#### Premium: $9.9
+##### <u>Pro: $9.9</u>
 Enjoy premium features
 
-- Unlimited habits, backup to cloud, and more
-- Ideal for users who need more functionality
+- Unlimited habits
+- Daily backups (WIP)
 - Priority support
 
-#### Believer: $49
-- Tailored for power users and teams
-- Includes personalized one-on-one online support to ensure you maximize your experience
+##### <u>Believer: $49</u>
+- Includes personalized online support to ensure you maximize your experience
 
-### FAQs
+#### FAQs
 **Is there a free trial?** Yes! Start with a 14-day free trial on any plan. We offer a money-back guarantee for your peace of mind.
 """
 
@@ -128,5 +122,5 @@ If you have any questions or concerns about this Privacy Policy, please contact 
 
 
 def markdown(text: str):
-    with ui.card().classes("max-w-lg mx-auto pt-0"):
+    with ui.card().classes("max-w-md mx-auto").props("flat bordered"):
         ui.markdown(text).classes("text-wrap")
