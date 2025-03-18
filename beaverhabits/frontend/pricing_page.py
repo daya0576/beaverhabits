@@ -59,7 +59,7 @@ def demo():
     ui.label("How To Keep Your Habits on Track?").classes("text-3xl font-bold")
     with ui.row().classes("w-full gap-2"):
         reasons = [
-            "Make it **obvious**: visual cues like the streak reminds to act again.",
+            "Make it **obvious**: visual cues like the streak remind to act again.",
             "Make it **attractive**: the most effective form of motivation is progress.",
             "Make it **satisfying**: tracking can become its own form of reward.",
         ]
