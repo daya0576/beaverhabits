@@ -27,9 +27,9 @@ PLANS = {
 }
 ACTIONS = {
     "Free $0": lambda: ui.button(
-        "Sign up", on_click=lambda: ui.navigate.to("/register", new_tab=True)
-    ).props("flat"),
-    "Plus $9.9": lambda: ui.button("Get started"),
+        "Login", on_click=lambda: ui.navigate.to("/login", new_tab=True)
+    ),
+    "Plus $9.9": lambda: ui.button("Upgrade"),
 }
 
 
@@ -38,23 +38,10 @@ def description():
     ui.label("A minimalistic habit tracking app without 'Goals'").classes(
         "text-lg text-center"
     )
-    with ui.grid(columns=3).classes("w-full gap-1"):
-        for image in IMAGES:
-            ui.image(source=image)
-
-    ui.button("Try Demo").props("flat").on_click(lambda: ui.navigate.to("/demo"))
-
-
-def pricing():
-    ui.label("Pricing Plans").classes("text-3xl font-bold")
-    ui.space()
-    # ui.label("To support an indie and full-time parent ❤️👶").classes(
-    #     "text-lg text-center"
-    # )
     with ui.grid(columns=2).classes("w-full"):
         for plan, features in PLANS.items():
-            with ui.card().props("flat bordered") as card:
-                card.style("border-radius: 8px")
+            with ui.card().props("bordered gap-1") as card:
+                card.style("border-radius: 10px")
                 card.classes("gap-2")
                 ui.label(plan).classes("text-2xl font-bold")
                 for feature, description in features.items():
@@ -64,8 +51,31 @@ def pricing():
                             with ui.row().classes("gap-1"):
                                 ui.icon(icons.DONE).classes("place-self-center")
                                 ui.label(desc)
-                ui.space()
+                ui.space().classes("h-0")
                 ACTIONS[plan]()
+
+
+def demo():
+    ui.label("How To Keep Your Habits on Track?").classes("text-3xl font-bold")
+    with ui.row().classes("w-full gap-2"):
+        reasons = [
+            "Make it **obvious**: visual cues like the streak reminds to act again.",
+            "Make it **attractive**: the most effective form of motivation is progress.",
+            "Make it **satisfying**: tracking can become its own form of reward.",
+        ]
+
+        with ui.row().classes("w-full gap-0"):
+            for reason in reasons:
+                ui.markdown(reason).style("font-size: 1.1rem; margin: 0px !important;")
+
+    with ui.row().classes("mx-auto"):
+        ui.button("Try Demo").props("flat").on_click(
+            lambda: ui.navigate.to("/demo", new_tab=True)
+        )
+
+    with ui.grid(columns=3).classes("w-full gap-1"):
+        for image in IMAGES:
+            ui.image(source=image)
 
 
 def footer():
@@ -82,8 +92,9 @@ def footer():
 
 async def landing_page() -> None:
     with ui.row().classes("max-w-xl mx-auto w-full"):
-        with ui.card().classes("w-full gap-2").props("flat"):
-            pricing()
-        with ui.card().classes("w-full gap-2").props("flat"):
+        with ui.card().classes("w-full").props("flat"):
             description()
-    footer()
+        with ui.card().classes("w-full").props("flat"):
+            demo()
+
+        footer()
