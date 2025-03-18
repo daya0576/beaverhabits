@@ -181,7 +181,6 @@ class HabitCheckBox(ui.checkbox):
            checkboxes.forEach(checkbox => {checkbox.blur()});
            """
         )
-        # self.run_method("blur")
 
 
 class HabitOrderCard(ui.card):

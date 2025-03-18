@@ -20,7 +20,7 @@ A self-hosted habit tracking app without "Goals"
 
 # Getting Started
 
-## Cloud Service
+## SaaS
 
 - Demo: https://beaverhabits.com/demo
 - Login: https://beaverhabits.com

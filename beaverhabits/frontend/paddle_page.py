@@ -1,28 +1,5 @@
 from nicegui import ui
 
-PRICING = """\
-
-#### Pricing
-
-Choose the Plan That Works for You
-
-##### <u>Basic: $0</u>
-Free Forever - no credit card required! 
-
-##### <u>Pro: $9.9</u>
-Enjoy premium features
-
-- Unlimited habits
-- Daily backups (WIP)
-- Priority support
-
-##### <u>Believer: $49</u>
-- Includes personalized online support to ensure you maximize your experience
-
-#### FAQs
-**Is there a free trial?** Yes! Start with a 14-day free trial on any plan. We offer a money-back guarantee for your peace of mind.
-"""
-
 TERMS = """\
 ## Terms of Service
 Terms of Service for Beaver Habit Tracker
@@ -122,5 +99,5 @@ If you have any questions or concerns about this Privacy Policy, please contact 
 
 
 def markdown(text: str):
-    with ui.card().classes("max-w-md mx-auto").props("flat bordered"):
-        ui.markdown(text).classes("text-wrap")
+    with ui.card().classes("max-w-2xl mx-auto").props("flat bordered"):
+        ui.markdown(text).classes("text-wrap pt-0")

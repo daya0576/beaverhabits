@@ -2,14 +2,13 @@ import datetime
 import os
 from typing import List
 
-from nicegui import app, ui
+from nicegui import ui
 
 from beaverhabits.configs import settings
 from beaverhabits.frontend import javascript
 from beaverhabits.frontend.components import (
     HabitCheckBox,
     IndexBadge,
-    TagChip,
     TagManager,
     link,
     tag_filters,

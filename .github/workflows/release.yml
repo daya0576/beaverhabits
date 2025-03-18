@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'debug_docker_image'
-      - 'main'
+      - 'release'
     tags:
       - 'v*'
 

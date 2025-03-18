@@ -8,7 +8,8 @@ from beaverhabits.frontend import paddle_page
 from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.layout import custom_header, redirect
 from beaverhabits.frontend.order_page import order_page_ui
-from beaverhabits.frontend.paddle_page import PRICING, PRIVACY, TERMS
+from beaverhabits.frontend.paddle_page import PRIVACY, TERMS
+from beaverhabits.frontend.pricing_page import landing_page
 
 from . import const, views
 from .app.auth import (
@@ -202,19 +203,7 @@ async def register_page():
 
 @ui.page("/pricing")
 async def pricing_page():
-    with ui.row().classes("mx-auto"):
-        days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
-        habit_list = views.get_or_create_session_habit_list(days)
-        index_page_ui(days, habit_list)
-
-        ui.space()
-
-        with ui.card().classes("max-w-md").props("flat bordered"):
-            with ui.row().classes("gap-1"):
-                ui.label(
-                    "To support an independent developer and a full-time parent ❤️👶"
-                )
-                ui.markdown(PRICING).classes("text-wrap pt-0")
+    await landing_page()
 
 
 @ui.page("/terms")
