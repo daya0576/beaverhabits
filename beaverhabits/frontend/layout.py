@@ -1,8 +1,8 @@
+import asyncio
 import os
 from contextlib import contextmanager
-from operator import is_
 
-from nicegui import context, ui
+from nicegui import app, context, ui
 
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
@@ -81,6 +81,7 @@ def menu_component() -> None:
 def pre_cache():
     # lazy load echart: https://github.com/zauberzeug/nicegui/discussions/1452
     async def handle_intersection():
+        await asyncio.sleep(1)
         elements = [
             ui.input(""),
             ui.echart(
@@ -94,7 +95,7 @@ def pre_cache():
         for element in elements:
             element.classes("disabled hidden")
 
-    intersection_observer(on_intersection=handle_intersection)
+    app.on_connect(handle_intersection)
 
 
 @contextmanager
