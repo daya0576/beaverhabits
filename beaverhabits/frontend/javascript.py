@@ -31,15 +31,15 @@ const scriptUrls = [
   '/_nicegui/{__version__}/static/utils/dynamic_properties.js'
 ];
 
-window.addEventListener('load', (event) => {
+setTimeout(() => {
     for (let i = 0; i < scriptUrls.length; i++) {
       const script = document.createElement('script'); 
       script.src = scriptUrls[i];                     
       script.async = true;
       document.head.appendChild(script);             
-      // console.log(`Script loaded: ${scriptUrls[i]}`);
+      console.log(`Script loaded: ${scriptUrls[i]}`);
     }
-});
+}, 500);
 """.replace(
     "{__version__}", version
 )

@@ -78,7 +78,7 @@ def menu_component() -> None:
 def pre_cache():
     # lazy load echart: https://github.com/zauberzeug/nicegui/discussions/1452
     # hash: nicegui.dependencies.compute_key
-    javascript.load_cache()
+    ui.context.client.on_connect(javascript.load_cache)
 
 
 @contextmanager
