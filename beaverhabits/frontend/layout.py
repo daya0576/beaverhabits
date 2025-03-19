@@ -1,12 +1,11 @@
-import asyncio
 import os
 from contextlib import contextmanager
 
-from nicegui import app, context, ui
+from nicegui import context, ui
 
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
-from beaverhabits.frontend import icons
+from beaverhabits.frontend import icons, javascript
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.logging import logger
 from beaverhabits.storage.meta import (
@@ -14,8 +13,6 @@ from beaverhabits.storage.meta import (
     get_root_path,
     is_page_demo,
 )
-
-from .intersection_observer import IntersectionObserver as intersection_observer
 
 
 def redirect(x):
@@ -80,28 +77,13 @@ def menu_component() -> None:
 
 def pre_cache():
     # lazy load echart: https://github.com/zauberzeug/nicegui/discussions/1452
-    async def handle_intersection():
-        await asyncio.sleep(1)
-        elements = [
-            ui.input(""),
-            ui.echart(
-                {
-                    "xAxis": {"type": "category"},
-                    "yAxis": {"type": "value"},
-                    "series": [{"type": "line", "data": [0]}],
-                }
-            ),
-        ]
-        for element in elements:
-            element.classes("disabled hidden")
-
-    app.on_connect(handle_intersection)
+    # hash: nicegui.dependencies.compute_key
+    javascript.load_cache()
 
 
 @contextmanager
 def layout(title: str | None = None, with_menu: bool = True):
     """Base layout for all pages."""
-
     title = title or get_page_title()
 
     with ui.column() as c:
