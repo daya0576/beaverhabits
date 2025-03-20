@@ -1,5 +1,6 @@
 from nicegui import ui
 
+from beaverhabits import const
 from beaverhabits.frontend import icons
 
 IMAGES = [
@@ -28,14 +29,26 @@ PLANS = {
 }
 ACTIONS = {
     "Free $0": lambda: ui.button(
-        "Get Started", on_click=lambda: ui.navigate.to("/login", new_tab=True)
+        "Get Started", on_click=lambda: ui.navigate.to("/register", new_tab=True)
     ),
     "Plus $9.9": lambda: ui.button("Upgrade"),
 }
 
 
+def link(text: str, url: str):
+    return ui.link(target=url, new_tab=True).classes("max-sm:hidden").tooltip(text)
+
+
 def description():
-    ui.label("Beaver Habit Tracker").classes("text-3xl font-bold")
+    with ui.row().classes("w-full"):
+        ui.label("Beaver Habit Tracker").classes("text-3xl font-bold")
+        ui.space()
+
+        with link("Login", "/login"):
+            ui.html(icons.LOGIN).classes("fill-white scale-125 m-1")
+        with link("GitHub", const.HOME_PAGE):
+            ui.html(icons.GITHUB).classes("fill-white scale-125 m-1")
+
     ui.label("A minimalistic habit tracking app without 'Goals'").classes(
         "text-lg text-center"
     )
@@ -91,6 +104,8 @@ def footer():
 
 
 async def landing_page() -> None:
+    ui.add_css("body { background-color: #121212; color: white;  }")
+
     with ui.row().classes("max-w-xl mx-auto w-full"):
         with ui.card().classes("w-full").props("flat"):
             description()

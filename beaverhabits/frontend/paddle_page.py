@@ -16,7 +16,7 @@ Beaver Habit Tracker provides a habit tracking application that helps users trac
 
 #### Refunds Policy
 
-- We offer a money-back guarantee for your peace of mind. If you are not satisfied with our service, you can request a refund within 14 days of your purchase.
+We offer a money-back guarantee for your peace of mind. If you are not satisfied with our service, you can request a refund within 14 days of your purchase.
 
 #### User Responsibilities
 
