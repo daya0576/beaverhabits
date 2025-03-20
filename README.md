@@ -45,20 +45,20 @@ docker run -d --name beaverhabits \
 Or Docker Compose:
 ```yaml
 services:
-    beaverhabits:
-        container_name: beaverhabits
-        user: 1000:1000 # User permissions of your docker or default user.
-        environment:
-            # See the note below to find all the environment variables
-            - HABITS_STORAGE=USER_DISK # DATABASE stores in a single SQLite database named habits.db. USER_DISK option saves in a local json file.
-            # Skip authentication
-            - TRUSTED_LOCAL_EMAIL=<your@email.address>
-        volumes:
-            - /path/to/beaver/habits:/app/.user/ # Change directory to match your docker file scheme.
-        ports:
-            - 8080:8080
-        restart: unless-stopped
-        image: daya0576/beaverhabits:latest
+  beaverhabits:
+    container_name: beaverhabits
+    user: 1000:1000 # User permissions of your docker or default user.
+    environment:
+      # See the note below to find all the environment variables
+      - HABITS_STORAGE=USER_DISK # DATABASE stores in a single SQLite database named habits.db. USER_DISK option saves in a local json file.
+      # Skip authentication
+      - TRUSTED_LOCAL_EMAIL=your@email.com
+    volumes:
+      - /path/to/beaver/habits:/app/.user/ # Change directory to match your docker file scheme.
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    image: daya0576/beaverhabits:latest
 ```
 
 P.S. The container starts as nobody to increase the security and make it OpenShift compatible.
