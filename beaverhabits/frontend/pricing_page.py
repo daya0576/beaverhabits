@@ -21,13 +21,14 @@ PLANS = {
         "Buy lifetime license": [
             "Unlimited habits",
             "Daily backup",
+            "14-day policy return",
             "Priority support",
         ],
     },
 }
 ACTIONS = {
     "Free $0": lambda: ui.button(
-        "Login", on_click=lambda: ui.navigate.to("/login", new_tab=True)
+        "Get Started", on_click=lambda: ui.navigate.to("/login", new_tab=True)
     ),
     "Plus $9.9": lambda: ui.button("Upgrade"),
 }
@@ -57,16 +58,15 @@ def description():
 
 def demo():
     ui.label("How To Keep Your Habits on Track?").classes("text-3xl font-bold")
-    with ui.row().classes("w-full gap-2"):
+    with ui.column().classes("w-full gap-3"):
         reasons = [
-            "Make it **obvious**: visual cues like the streak remind to act again.",
-            "Make it **attractive**: the most effective form of motivation is progress.",
-            "Make it **satisfying**: tracking can become its own form of reward.",
+            "Make it <b>obvious</b>: visual cues like the streak remind to act again.",
+            "Make it <b>attractive</b>: the most effective form of motivation is progress.",
+            "Make it <b>satisfying</b>: tracking can become its own form of reward.",
         ]
 
-        with ui.row().classes("w-full gap-0"):
-            for reason in reasons:
-                ui.markdown(reason).style("font-size: 1.1rem; margin: 0px !important;")
+        for reason in reasons:
+            ui.html(reason).style("font-size: 1.1rem; margin: 0px !important;")
 
     with ui.row().classes("mx-auto"):
         ui.button("Try Demo").props("flat").on_click(
