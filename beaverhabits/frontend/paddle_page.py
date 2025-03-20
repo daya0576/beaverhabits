@@ -14,7 +14,7 @@ By accessing or using Beaver Habit Tracker, you agree to be bound by these Terms
 
 Beaver Habit Tracker provides a habit tracking application that helps users track their habits without traditional goal-setting.
 
-#### Pricing and Payments
+#### Refunds Policy
 
 - Users can start with a 14-day free trial on any plan.
 - We offer a money-back guarantee for your peace of mind. If you are not satisfied with our service, you can request a refund within [insert refund period here].
