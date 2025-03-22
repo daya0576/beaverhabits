@@ -243,7 +243,16 @@ def init_gui_routes(fastapi_app: FastAPI):
 
         return response
 
-    app.add_static_files("/statics", "statics")
+    @app.middleware("http")
+    async def StaticFilesCacheMiddleware(request: Request, call_next):
+        response = await call_next(request)
+
+        path = request.url.path
+        if path.startswith("/_nicegui/"):
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+    app.add_static_files("/statics", "statics", max_cache_age=2628000)
     app.on_exception(handle_exception)
     ui.run_with(
         fastapi_app,

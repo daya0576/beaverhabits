@@ -103,5 +103,3 @@ def index_page_ui(days: list[datetime.date], habits: HabitList):
 
     # Prevent long press context menu for svg image elements
     ui.context.client.on_connect(javascript.prevent_context_menu)
-    # placeholder to preload js cache
-    ui.input("").classes("disabled hidden")
