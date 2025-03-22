@@ -123,12 +123,12 @@ class HabitCheckBox(ui.checkbox):
         # 1. Mouse click: mousedown -> mouseup -> click
         # 2. Touch click: touchstart -> touchend -> mousemove -> mousedown -> mouseup -> click
         # 3. Touch move:  touchstart -> touchmove -> touchend
-        self.on("mousedown", self._mouse_down_event)
-        self.on("touchstart", self._mouse_down_event)
+        self.on("mousedown.prevent", self._mouse_down_event)
+        self.on("touchstart.prevent", self._mouse_down_event)
 
         # Event modifiers
-        # 1. Prevent checkbox default behavior
-        # 2. Prevent propagation of the event
+        # 1. *Prevent* checkbox default behavior
+        # 2. *Prevent* propagation of the event
         self.on("mouseup.prevent", self._mouse_up_event)
         self.on("touchend.prevent", self._mouse_up_event)
         self.on("touchmove", self._mouse_move_event)
@@ -168,7 +168,7 @@ class HabitCheckBox(ui.checkbox):
         logger.info(f"Up event: {self.day}, {e.args.get('type')}")
         self.hold.set()
 
-    async def _mouse_move_event(self):
+    async def _mouse_move_event(self, e):
         self.moving = True
         self.hold.set()
 

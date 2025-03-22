@@ -5,7 +5,7 @@ from nicegui import context, ui
 
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
-from beaverhabits.frontend import icons, javascript
+from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
 from beaverhabits.logging import logger
 from beaverhabits.storage.meta import (
@@ -24,6 +24,7 @@ def open_tab(x):
 
 
 def custom_header():
+    # Apple touch icon
     ui.add_head_html(
         '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">'
     )
@@ -32,7 +33,6 @@ def custom_header():
         '<meta name="apple-mobile-web-app-status-bar-style" content="black">'
     )
     ui.add_head_html('<meta name="theme-color" content="#121212">')
-
     # viewBox="90 90 220 220"
     ui.add_head_html(
         '<link rel="apple-touch-icon" href="/statics/images/apple-touch-icon-v4.png">'
@@ -43,7 +43,12 @@ def custom_header():
 
     # Experimental iOS standalone mode
     if settings.ENABLE_IOS_STANDALONE:
-        ui.add_head_html('<meta name="apple-mobile-web-app-capable" content="yes">')
+        ui.add_head_html('<meta name="mobile-web-app-capable" content="yes">')
+
+    # SEO meta tags
+    ui.add_head_html(
+        '<meta name="description" content="A self-hosted habit tracking app without "Goals"">'
+    )
 
 
 def add_umami_headers():
