@@ -64,6 +64,7 @@ def habit_tick_dialog(record: CheckedRecord | None):
                 },
             )
             t.classes("w-full")
+            # t.props("autofocus")
 
             with ui.row():
                 ui.button("Yes", on_click=lambda: dialog.submit((True, t.value))).props(
@@ -119,20 +120,29 @@ class HabitCheckBox(ui.checkbox):
         self.hold = asyncio.Event()
         self.moving = False
 
+        # Click Event
+        self.on_value_change(self._click_event)
+
+        # Touch and hold event
         # Sequence of events: https://ui.toast.com/posts/en_20220106
         # 1. Mouse click: mousedown -> mouseup -> click
         # 2. Touch click: touchstart -> touchend -> mousemove -> mousedown -> mouseup -> click
         # 3. Touch move:  touchstart -> touchmove -> touchend
-        self.on("mousedown.prevent", self._mouse_down_event)
-        self.on("touchstart.prevent", self._mouse_down_event)
+        self.on("mousedown", self._mouse_down_event)
+        self.on("touchstart", self._mouse_down_event)
 
         # Event modifiers
         # 1. *Prevent* checkbox default behavior
         # 2. *Prevent* propagation of the event
-        self.on("mouseup.prevent", self._mouse_up_event)
-        self.on("touchend.prevent", self._mouse_up_event)
+        self.on("mouseup", self._mouse_up_event)
+        self.on("touchend", self._mouse_up_event)
         self.on("touchmove", self._mouse_move_event)
         # self.on("mousemove", self._mouse_move_event)
+
+        # Checklist: value change, scrolling
+        # - Desktop browser
+        # - iOS browser / standalone mode
+        # - Android browser / PWA
 
     def _update_style(self, value: bool):
         self.value = value
@@ -159,16 +169,19 @@ class HabitCheckBox(ui.checkbox):
             if self.moving:
                 logger.info("Mouse moving, skip...")
                 return
-            value = not self.value
-            self._update_style(value)
-            # Do update completion status
-            await habit_tick(self.habit, self.day, value)
+
+    async def _click_event(self, e: events.ValueChangeEventArguments):
+        value = e.value
+        self._update_style(value)
+        # Do update completion status
+        await habit_tick(self.habit, self.day, value)
 
     async def _mouse_up_event(self, e):
         logger.info(f"Up event: {self.day}, {e.args.get('type')}")
         self.hold.set()
 
     async def _mouse_move_event(self, e):
+        # logger.info(f"Move event: {self.day}, {e}")
         self.moving = True
         self.hold.set()
 
