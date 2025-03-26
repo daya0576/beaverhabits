@@ -34,6 +34,10 @@ ACTIONS = {
     "Plus $9.9": lambda: ui.button("Upgrade"),
 }
 
+YOUTUBE = """
+<iframe width="544" height="306" src="https://www.youtube.com/embed/4a16FmkGV6Y?si=OD2nNtIOqWTdBSp-" title="YouTube video player" color="white" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen</iframe>
+"""
+
 
 def link(text: str, url: str):
     return ui.link(target=url, new_tab=True).classes("max-sm:hidden").tooltip(text)
@@ -70,25 +74,26 @@ def description():
 
 
 def demo():
-    ui.label("How To Keep Your Habits on Track?").classes("text-3xl font-bold")
+    ui.label("Why Habit Tracker Works?").classes("text-2xl font-bold")
     with ui.column().classes("w-full gap-3"):
         reasons = [
-            "Make it <b>obvious</b>: visual cues like the streak remind to act again.",
-            "Make it <b>attractive</b>: the most effective form of motivation is progress.",
-            "Make it <b>satisfying</b>: tracking can become its own form of reward.",
+            "Make it <b>obvious</b>: visual cues like the streak remind you to act again",
+            "Make it <b>attractive</b>: the most effective form of motivation is progress",
+            "Make it <b>satisfying</b>: tracking can become its own form of reward",
         ]
-
         for reason in reasons:
-            ui.html(reason).style("font-size: 1.1rem; margin: 0px !important;")
-
-    with ui.row().classes("mx-auto"):
-        ui.button("Try Demo").props("flat").on_click(
-            lambda: ui.navigate.to("/demo", new_tab=True)
-        )
-
+            ui.html(reason).style("font-size: 1rem; margin: 0px !important;")
     with ui.grid(columns=3).classes("w-full gap-1"):
         for image in IMAGES:
             ui.image(source=image)
+
+    with ui.row().classes("w-full"):
+        ui.label("How to Use").classes("text-2xl font-bold")
+        ui.space()
+        ui.button("Try Demo").props("flat").on_click(
+            lambda: ui.navigate.to("/demo", new_tab=True)
+        )
+    ui.html(YOUTUBE)
 
 
 def footer():
