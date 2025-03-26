@@ -53,35 +53,32 @@ def habit_page(today: datetime.date, habit: Habit):
     notes = [x for x in habit.records if x.text]
     notes.sort(key=lambda x: x.day, reverse=True)
     # https://tailwindcss.com/docs/responsive-design#container-size-reference
-    masony = "md:grid-cols-2" if notes else ""
 
-    with grid(masony):
-        habit_calendar = CalendarHeatmap.build(today, WEEKS_TO_DISPLAY, calendar.MONDAY)
-        target = get_habit_heatmap_path(habit)
+    habit_calendar = CalendarHeatmap.build(today, WEEKS_TO_DISPLAY, calendar.MONDAY)
+    target = get_habit_heatmap_path(habit)
 
-        with grid():
-            with card():
-                HabitDateInput(today, habit)
+    with ui.column().classes("gap-y-2"):
+        with card():
+            HabitDateInput(today, habit)
 
-            with card():
-                card_title("Last 3 Months", target)
-                ui.space().classes("h-1")
-                habit_heat_map(habit, habit_calendar)
+        with card():
+            card_title("Last 3 Months", target)
+            ui.space().classes("h-1")
+            habit_heat_map(habit, habit_calendar)
 
-            with card():
-                card_title("History", target)
-                habit_history(today, habit.ticked_days)
+        with card():
+            card_title("History", target)
+            habit_history(today, habit.ticked_days)
 
         if notes:
-            with grid():
-                with card(padding=2):
-                    card_title("Notes", "#").tooltip(
-                        "Press and hold to add notes/descriptions"
-                    )
-                    habit_notes(notes)
+            with card(padding=2):
+                card_title("Notes", "#").tooltip(
+                    "Press and hold to add notes/descriptions"
+                )
+                habit_notes(notes)
 
-        with card(target, padding=0.5):
-            ui.icon("more_horiz", size="1.5em")
+            with card(target, padding=0.5):
+                ui.icon("more_horiz", size="1.5em")
 
 
 def habit_page_ui(today: datetime.date, habit: Habit):
