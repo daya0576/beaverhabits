@@ -101,10 +101,16 @@ def footer():
         ui.space()
         ui.link(
             "Wiki", target="https://github.com/daya0576/beaverhabits/wiki", new_tab=True
+        ).classes("text-primary")
+        ui.link("Contact", target="mailto:daya0576@gmail.com", new_tab=True).classes(
+            "text-primary"
         )
-        ui.link("Contact", target="mailto:daya0576@gmail.com", new_tab=True)
-        ui.link("Privacy Policy", target="/privacy", new_tab=True)
-        ui.link("Terms of Service", target="/terms", new_tab=True)
+        ui.link("Privacy Policy", target="/privacy", new_tab=True).classes(
+            "text-primary"
+        )
+        ui.link("Terms of Service", target="/terms", new_tab=True).classes(
+            "text-primary"
+        )
         ui.space()
 
 
