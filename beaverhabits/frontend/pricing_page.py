@@ -35,7 +35,7 @@ ACTIONS = {
 }
 
 YOUTUBE = """
-<iframe width="544" height="306" src="https://www.youtube.com/embed/4a16FmkGV6Y?si=OD2nNtIOqWTdBSp-" title="YouTube video player" color="white" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen</iframe>
+<iframe width="640" height="360" src="https://www.youtube.com/embed/4a16FmkGV6Y?si=OD2nNtIOqWTdBSp-" title="YouTube video player" color="white" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen</iframe>
 """
 
 
@@ -111,7 +111,7 @@ def footer():
 async def landing_page() -> None:
     ui.add_css("body { background-color: #121212; color: white;  }")
 
-    with ui.row().classes("max-w-xl mx-auto w-full"):
+    with ui.row().classes("max-w-2xl mx-auto w-full"):
         with ui.card().classes("w-full").props("flat"):
             description()
         with ui.card().classes("w-full").props("flat"):
