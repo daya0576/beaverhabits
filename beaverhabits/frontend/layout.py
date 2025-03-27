@@ -6,7 +6,12 @@ from nicegui import app, context, ui
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
-from beaverhabits.frontend.components import compat_menu, menu_header, menu_icon_button
+from beaverhabits.frontend.components import (
+    compat_menu,
+    menu_header,
+    menu_icon_button,
+    nav_loading,
+)
 from beaverhabits.logging import logger
 from beaverhabits.storage.meta import (
     get_page_title,
@@ -108,18 +113,14 @@ def layout(title: str | None = None, with_menu: bool = True):
         if not settings.ENABLE_DESKTOP_ALGIN_CENTER:
             c.classes("sm:mx-0")
 
-        # overlay blur
-        if settings.ENABLE_LOADING_OVERLAY:
-            # with ui.element("div").classes("fixed inset-0 z-50 bg-[#121212]") as overlay:
-            overlay = ui.spinner(size="sm").classes("mx-auto")
-            app.on_connect(lambda: overlay.classes("hidden"))
-
         path = context.client.page.path
         logger.info(f"Rendering page: {path}")
         with ui.row().classes("min-w-full gap-x-0"):
             menu_header(title, target=get_root_path())
             if with_menu:
                 ui.space()
+                # overlay blur
+                nav_loading()
                 with menu_icon_button(icons.MENU):
                     menu_component()
 

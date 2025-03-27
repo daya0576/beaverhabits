@@ -689,3 +689,15 @@ class TagChip(ui.chip):
             TagManager.remove(self.text)
 
         self.refresh()
+
+
+def nav_loading():
+    # overlay blur
+    if settings.ENABLE_LOADING_OVERLAY:
+        # with ui.element("div").classes("fixed inset-0 z-50 bg-[#121212]") as overlay:
+        overlay = ui.spinner(size="xs", color="#404040", type="oval")
+        overlay.classes(
+            "mx-auto self-center opacity-100 transition-all transition-opacity duration-500"
+        )
+        overlay.style("margin-right:4px")
+        app.on_connect(lambda: overlay.classes("opacity-0", remove="opacity-100"))
