@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
 from nicegui.elements.button import Button
 
+from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
@@ -32,21 +33,25 @@ def menu_header(title: str, target: str):
     link.classes(
         "text-semibold text-2xl dark:text-white no-underline hover:no-underline"
     )
+    link.props('role="heading" aria-level="1" aria-label="Go to home page"')
     return link
-
-
-def compat_menu(*args, **kwargs):
-    return ui.menu_item(*args, **kwargs).props("dense").classes("items-center")
 
 
 def menu_icon_button(
     icon_name: str, click: Optional[Callable] = None, tooltip: str | None = None
 ) -> Button:
-    button_props = "flat=true unelevated=true padding=xs backgroup=none"
-    button = ui.button(icon=icon_name, color=None, on_click=click).props(button_props)
+    button = ui.button(icon=icon_name, color=None, on_click=click)
+    button.props("flat=true unelevated=true padding=xs backgroup=none")
     if tooltip:
         button = button.tooltip(tooltip)
-    return button
+    # Accessibility
+    return button.props('aria-haspopup="true" aria-label="menu"')
+
+
+def compat_menu(*args, **kwargs):
+    menu_item = ui.menu_item(*args, **kwargs).classes("items-center")
+    # Accessibility
+    return menu_item.props('dense role="menuitem"')
 
 
 def habit_tick_dialog(record: CheckedRecord | None):
@@ -107,10 +112,18 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool):
 
 
 class HabitCheckBox(ui.checkbox):
-    def __init__(self, habit: Habit, day: datetime.date, value: bool) -> None:
+    def __init__(
+        self,
+        habit: Habit,
+        today: datetime.date,
+        day: datetime.date,
+        ticked_days: list[datetime.date],
+    ) -> None:
+        value = day in ticked_days
         super().__init__("", value=value)
         self.habit = habit
         self.day = day
+        self.today = today
         self.props(
             f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
         )
@@ -152,6 +165,15 @@ class HabitCheckBox(ui.checkbox):
             self.props("color=grey-8")
         else:
             self.props("color=currentColor")
+
+        # Accessibility
+        days = (self.today - self.day).days
+        if days == 0:
+            self.props('aria-label="Today"')
+        elif days == 1:
+            self.props('aria-label="Yesterday"')
+        else:
+            self.props(f'aria-label="{days} days ago"')
 
     async def _mouse_down_event(self, e):
         logger.info(f"Down event: {self.day}, {e.args.get('type')}")
@@ -223,16 +245,27 @@ class HabitNameInput(ui.input):
         self.habit = habit
         self.validation = self._validate
         self.props("dense hide-bottom-space")
-        self.on("blur", self._async_task)
+        self.on("blur", self._on_blur)
+        self.on("keydown.enter", self._on_keydown_enter)
+        self.on_value_change(self._on_change)
 
-    async def _async_task(self):
-        name, tags = self.decode_name(self.value)
+    async def _save(self, value: str):
+        name, tags = self.decode_name(value)
         self.habit.name = name
-        logger.info(f"Habit Name changed to {name}")
         self.habit.tags = tags
+        logger.info(f"Habit Name changed to {name}")
         logger.info(f"Habit Tags changed to {tags}")
-
         self.value = self.encode_name(name, tags)
+
+    async def _on_keydown_enter(self):
+        await self._save(self.value)
+        ui.notify("Habit name saved")
+
+    async def _on_blur(self):
+        await self._save(self.value)
+
+    async def _on_change(self, e: events.ValueChangeEventArguments):
+        await self._save(e.value)
 
     def _validate(self, value: str) -> Optional[str]:
         if not value:
@@ -569,10 +602,18 @@ class HabitTotalBadge(ui.badge):
 
 
 class IndexBadge(HabitTotalBadge):
-    def __init__(self, habit: Habit) -> None:
+    def __init__(self, today: datetime.date, habit: Habit) -> None:
         super().__init__(habit)
         self.props("color=grey-9 rounded transparent")
         self.style("font-size: 80%; font-weight: 500")
+
+        # Accessibility
+        ticked_days = habit.ticked_days
+        self.props(
+            f' tabindex="0" '
+            f'aria-label="total completion: {len(ticked_days)};'
+            f'{index_badge_alternative_text(today, habit)}"'
+        )
 
 
 def habit_notes(records: List[CheckedRecord], limit: int = 10):

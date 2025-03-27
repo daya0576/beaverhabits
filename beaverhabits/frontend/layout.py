@@ -57,20 +57,25 @@ def add_umami_headers():
     )
 
 
+def separator():
+    ui.separator().props('aria-hidden="true"')
+
+
 def menu_component() -> None:
     """Dropdown menu for the top-right corner of the page."""
-    with ui.menu():
+    with ui.menu().props('role="menu"'):
         path = context.client.page.path
         if "add" in path:
             compat_menu("Reorder", lambda: redirect("order"))
         else:
-            compat_menu("Add", lambda: redirect("add"))
-        ui.separator()
+            add = compat_menu("Add", lambda: redirect("add"))
+            add.props('aria-label="Edit habit list"')
+        separator()
 
         compat_menu("Export", lambda: open_tab("export"))
-        ui.separator()
+        separator()
         imp = compat_menu("Import", lambda: redirect("import"))
-        ui.separator()
+        separator()
         if is_page_demo():
             imp.classes("disabled")
 
