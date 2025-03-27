@@ -42,8 +42,9 @@ def compat_menu(*args, **kwargs):
 def menu_icon_button(
     icon_name: str, click: Optional[Callable] = None, tooltip: str | None = None
 ) -> Button:
-    button_props = "flat=true unelevated=true padding=xs backgroup=none"
-    button = ui.button(icon=icon_name, color=None, on_click=click).props(button_props)
+    button = ui.button(icon=icon_name, color=None, on_click=click)
+    button.props("flat=true unelevated=true padding=xs backgroup=none")
+    button.props('aria-haspopup="true" aria-label="menu"')
     if tooltip:
         button = button.tooltip(tooltip)
     return button
