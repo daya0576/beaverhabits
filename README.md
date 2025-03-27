@@ -51,8 +51,8 @@ services:
     environment:
       # See the note below to find all the environment variables
       - HABITS_STORAGE=USER_DISK # DATABASE stores in a single SQLite database named habits.db. USER_DISK option saves in a local json file.
-      # Skip authentication
-      - TRUSTED_LOCAL_EMAIL=your@email.com
+      - TRUSTED_LOCAL_EMAIL=your@email.com # Skip authentication
+      - INDEX_HABIT_DATE_COLUMNS=5 # Customize the date columns for the index page.
     volumes:
       - /path/to/beaver/habits:/app/.user/ # Change directory to match your docker file scheme.
     ports:
@@ -77,6 +77,7 @@ To avoid [permission issues](https://github.com/daya0576/beaverhabits/discussion
 | **INDEX_HABIT_DATE_COLUMNS**(int) | Customize the date column count for the index page. The default value is `5`. |
 | **TRUSTED_EMAIL_HEADER**(str) | Delegate authentication to an authenticating reverse proxy that passes in the user's details in HTTP headers, e.g. `Cf-Access-Authenticated-User-Email`. An existing account is required. |
 | **TRUSTED_LOCAL_EMAIL**(str) | Disables authentication entirely. A new account with the specified email will be created if it does not exist. |
+| **INDEX_HABIT_DATE_REVERSE**(bool) | Reverse the order of dates to display (default value is false). |
 
 ## Development
 
