@@ -120,7 +120,7 @@ def layout(title: str | None = None, with_menu: bool = True):
             if with_menu:
                 ui.space()
                 # overlay blur
-                nav_loading()
+                # nav_loading()
                 with menu_icon_button(icons.MENU):
                     menu_component()
 

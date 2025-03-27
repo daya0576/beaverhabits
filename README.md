@@ -53,6 +53,7 @@ services:
       - HABITS_STORAGE=USER_DISK # DATABASE stores in a single SQLite database named habits.db. USER_DISK option saves in a local json file.
       - TRUSTED_LOCAL_EMAIL=your@email.com # Skip authentication
       - INDEX_HABIT_DATE_COLUMNS=5 # Customize the date columns for the index page.
+      - ENABLE_IOS_STANDALONE=true
     volumes:
       - /path/to/beaver/habits:/app/.user/ # Change directory to match your docker file scheme.
     ports:
@@ -71,7 +72,7 @@ To avoid [permission issues](https://github.com/daya0576/beaverhabits/discussion
 | **HABITS_STORAGE**(str) | The `DATABASE` option stores everything in a single SQLite database file named habits.db. On the other hand, the `USER_DISK` option saves habits and records in a local json file. |
 | **FIRST_DAY_OF_WEEK**(int) | By default, the first day of the week is set as Monday. To change it to Sunday, you can set it as `6`. |
 | **MAX_USER_COUNT**(int) | By setting it to `1`, you can prevent others from signing up in the future. |
-| **ENABLE_IOS_STANDALONE**(bool) | Experiential feature to  enable standalone mode on iOS. The default setting is `true`. |
+| **ENABLE_IOS_STANDALONE**(bool) | Experiential feature to  enable standalone mode on iOS. The default setting is `false`. |
 | **INDEX_SHOW_HABIT_COUNT**(bool) | To display total completed count along with the habit name on the index page. The default setting is `false`. |
 | **INDEX_HABIT_NAME_COLUMNS**(int) | Customize the habit name column count for the index page. The default value is `5`. |
 | **INDEX_HABIT_DATE_COLUMNS**(int) | Customize the date column count for the index page. The default value is `5`. |
