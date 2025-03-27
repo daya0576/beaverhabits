@@ -97,10 +97,6 @@ def layout(title: str | None = None, with_menu: bool = True):
     """Base layout for all pages."""
     title = title or get_page_title()
 
-    # overlay blur
-    overlay = ui.element("div").classes("fixed inset-0 z-50 bg-[#121212]")
-    app.on_connect(lambda: overlay.classes("hidden"))
-
     with ui.column() as c:
         # Standard headers
         custom_header()
@@ -111,6 +107,12 @@ def layout(title: str | None = None, with_menu: bool = True):
         c.classes("mx-auto")
         if not settings.ENABLE_DESKTOP_ALGIN_CENTER:
             c.classes("sm:mx-0")
+
+        # overlay blur
+        if settings.ENABLE_LOADING_OVERLAY:
+            # with ui.element("div").classes("fixed inset-0 z-50 bg-[#121212]") as overlay:
+            overlay = ui.spinner(size="sm").classes("mx-auto")
+            app.on_connect(lambda: overlay.classes("hidden"))
 
         path = context.client.page.path
         logger.info(f"Rendering page: {path}")

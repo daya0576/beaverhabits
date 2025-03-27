@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     SENTRY_DSN: str = ""
 
+    # SaaS
+    ENABLE_LOADING_OVERLAY: bool = False
+
     # NiceGUI
     NICEGUI_STORAGE_SECRET: str = "dev"
     GUI_MOUNT_PATH: str = "/gui"
