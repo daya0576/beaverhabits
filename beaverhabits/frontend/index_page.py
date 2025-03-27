@@ -84,7 +84,7 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         name.classes(left_classes)
                         name.style(f"max-width: {24 * name_columns}px;")
                         name.props(
-                            f'role="heading" aria-level="2" aria-label="open habit {habit.name}"'
+                            f'role="heading" aria-level="2" aria-label="{habit.name}"'
                         )
 
                     today = max(days)
@@ -93,7 +93,7 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                         checkbox.classes(right_classes)
 
                     if settings.INDEX_SHOW_HABIT_COUNT:
-                        IndexBadge(habit).classes(right_classes)
+                        IndexBadge(today, habit).classes(right_classes)
 
 
 def index_page_ui(days: list[datetime.date], habits: HabitList):

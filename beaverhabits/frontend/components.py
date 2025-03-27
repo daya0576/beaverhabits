@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
 from nicegui.elements.button import Button
 
+from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
@@ -248,8 +249,6 @@ class HabitNameInput(ui.input):
         self.on("keydown.enter", self._on_keydown_enter)
         self.on_value_change(self._on_change)
 
-        self.props('aria-label="Habit name" aria-description="press enter to save"')
-
     async def _save(self, value: str):
         name, tags = self.decode_name(value)
         self.habit.name = name
@@ -298,7 +297,6 @@ class HabitStarCheckbox(ui.checkbox):
         self.bind_value(habit, "star")
         self.props(f'checked-icon="{icons.STAR_FULL}" unchecked-icon="{icons.STAR}"')
         self.props("flat fab-mini keep-color color=grey-8")
-        self.props('aria-label="Star habit"')
 
         self.refresh = refresh
 
@@ -326,7 +324,6 @@ class HabitDeleteButton(ui.button):
         self.habit_list = habit_list
         self.refresh = refresh
         self.props("flat fab-mini color=grey-9")
-        self.props('aria-label="Delete habit"')
 
         # Double confirm dialog to delete habit
         with ui.dialog() as dialog, ui.card():
@@ -605,10 +602,18 @@ class HabitTotalBadge(ui.badge):
 
 
 class IndexBadge(HabitTotalBadge):
-    def __init__(self, habit: Habit) -> None:
+    def __init__(self, today: datetime.date, habit: Habit) -> None:
         super().__init__(habit)
         self.props("color=grey-9 rounded transparent")
         self.style("font-size: 80%; font-weight: 500")
+
+        # Accessibility
+        ticked_days = habit.ticked_days
+        self.props(
+            f' tabindex="0" '
+            f'aria-label="total completion: {len(ticked_days)};'
+            f'{index_badge_alternative_text(today, habit)}"'
+        )
 
 
 def habit_notes(records: List[CheckedRecord], limit: int = 10):

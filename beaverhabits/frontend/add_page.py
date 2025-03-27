@@ -19,12 +19,15 @@ def add_ui(habit_list: HabitList):
         with components.grid(columns=10).props("role=listitem"):
             name = HabitNameInput(item)
             name.classes("col-span-8 break-all")
+            name.props('aria-label="Habit name" aria-description="press enter to save"')
 
             star = HabitStarCheckbox(item, add_ui.refresh)
             star.classes("col-span-1")
+            star.props('aria-label="Star habit" aria-description="move to top of list"')
 
             delete = HabitDeleteButton(item, habit_list, add_ui.refresh)
             delete.classes("col-span-1")
+            delete.props('aria-label="Delete habit"')
 
 
 def add_page_ui(habit_list: HabitList):
