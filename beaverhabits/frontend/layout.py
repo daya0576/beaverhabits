@@ -1,7 +1,7 @@
 import os
 from contextlib import contextmanager
 
-from nicegui import context, ui
+from nicegui import app, context, ui
 
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
@@ -96,6 +96,10 @@ def pre_cache():
 def layout(title: str | None = None, with_menu: bool = True):
     """Base layout for all pages."""
     title = title or get_page_title()
+
+    # overlay blur
+    overlay = ui.element("div").classes("fixed inset-0 z-50 bg-[#121212]")
+    app.on_connect(lambda: overlay.classes("hidden"))
 
     with ui.column() as c:
         # Standard headers

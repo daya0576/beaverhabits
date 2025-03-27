@@ -134,7 +134,7 @@ class HabitCheckBox(ui.checkbox):
         self.moving = False
 
         # Click Event
-        self.on('click', self._click_event)
+        self.on("click", self._click_event)
 
         # Touch and hold event
         # Sequence of events: https://ui.toast.com/posts/en_20220106
@@ -180,17 +180,13 @@ class HabitCheckBox(ui.checkbox):
         self.hold.clear()
         self.moving = False
         try:
-            async with asyncio.timeout(0.25):
+            async with asyncio.timeout(0.2):
                 await self.hold.wait()
         except asyncio.TimeoutError:
             value = await note_tick(self.habit, self.day)
             if value is not None:
                 self._update_style(value)
             await self._blur()
-        else:
-            if self.moving:
-                logger.info("Mouse moving, skip...")
-                return
 
     async def _click_event(self, e):
         value = e.sender.value
