@@ -244,16 +244,29 @@ class HabitNameInput(ui.input):
         self.habit = habit
         self.validation = self._validate
         self.props("dense hide-bottom-space")
-        self.on("blur", self._async_task)
+        self.on("blur", self._on_blur)
+        self.on("keydown.enter", self._on_keydown_enter)
+        self.on_value_change(self._on_change)
 
-    async def _async_task(self):
-        name, tags = self.decode_name(self.value)
+        self.props('aria-label="Habit name" aria-description="press enter to save"')
+
+    async def _save(self, value: str):
+        name, tags = self.decode_name(value)
         self.habit.name = name
-        logger.info(f"Habit Name changed to {name}")
         self.habit.tags = tags
+        logger.info(f"Habit Name changed to {name}")
         logger.info(f"Habit Tags changed to {tags}")
-
         self.value = self.encode_name(name, tags)
+
+    async def _on_keydown_enter(self):
+        await self._save(self.value)
+        ui.notify("Habit name saved")
+
+    async def _on_blur(self):
+        await self._save(self.value)
+
+    async def _on_change(self, e: events.ValueChangeEventArguments):
+        await self._save(e.value)
 
     def _validate(self, value: str) -> Optional[str]:
         if not value:
@@ -285,6 +298,7 @@ class HabitStarCheckbox(ui.checkbox):
         self.bind_value(habit, "star")
         self.props(f'checked-icon="{icons.STAR_FULL}" unchecked-icon="{icons.STAR}"')
         self.props("flat fab-mini keep-color color=grey-8")
+        self.props('aria-label="Star habit"')
 
         self.refresh = refresh
 
@@ -312,6 +326,7 @@ class HabitDeleteButton(ui.button):
         self.habit_list = habit_list
         self.refresh = refresh
         self.props("flat fab-mini color=grey-9")
+        self.props('aria-label="Delete habit"')
 
         # Double confirm dialog to delete habit
         with ui.dialog() as dialog, ui.card():

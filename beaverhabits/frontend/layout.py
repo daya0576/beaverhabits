@@ -68,7 +68,8 @@ def menu_component() -> None:
         if "add" in path:
             compat_menu("Reorder", lambda: redirect("order"))
         else:
-            compat_menu("Add", lambda: redirect("add"))
+            add = compat_menu("Add", lambda: redirect("add"))
+            add.props('aria-label="Edit habit list"')
         separator()
 
         compat_menu("Export", lambda: open_tab("export"))

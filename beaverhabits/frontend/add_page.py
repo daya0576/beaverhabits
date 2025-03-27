@@ -16,7 +16,7 @@ def add_ui(habit_list: HabitList):
     habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
 
     for item in habits:
-        with components.grid(columns=10):
+        with components.grid(columns=10).props("role=listitem"):
             name = HabitNameInput(item)
             name.classes("col-span-8 break-all")
 
@@ -29,7 +29,7 @@ def add_ui(habit_list: HabitList):
 
 def add_page_ui(habit_list: HabitList):
     with layout():
-        with ui.column().classes("items-center w-full"):
+        with ui.column().classes("items-center w-full").props("role=list"):
             add_ui(habit_list)
 
         with ui.grid(columns=8, rows=1).classes("w-full gap-0 items-center"):
