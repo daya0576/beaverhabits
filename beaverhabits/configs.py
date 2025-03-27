@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     INDEX_SHOW_HABIT_COUNT: bool = False
     INDEX_HABIT_NAME_COLUMNS: int = 5
     INDEX_HABIT_DATE_COLUMNS: int = 5
+    INDEX_HABIT_DATE_REVERSE: bool = False
 
     def is_dev(self):
         return self.ENV == "dev"

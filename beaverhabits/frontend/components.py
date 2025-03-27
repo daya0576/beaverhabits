@@ -32,11 +32,8 @@ def menu_header(title: str, target: str):
     link.classes(
         "text-semibold text-2xl dark:text-white no-underline hover:no-underline"
     )
+    link.props('role="heading" aria-level="1" aria-label="Go to home page"')
     return link
-
-
-def compat_menu(*args, **kwargs):
-    return ui.menu_item(*args, **kwargs).props("dense").classes("items-center")
 
 
 def menu_icon_button(
@@ -44,10 +41,16 @@ def menu_icon_button(
 ) -> Button:
     button = ui.button(icon=icon_name, color=None, on_click=click)
     button.props("flat=true unelevated=true padding=xs backgroup=none")
-    button.props('aria-haspopup="true" aria-label="menu"')
     if tooltip:
         button = button.tooltip(tooltip)
-    return button
+    # Accessibility
+    return button.props('aria-haspopup="true" aria-label="menu"')
+
+
+def compat_menu(*args, **kwargs):
+    menu_item = ui.menu_item(*args, **kwargs).classes("items-center")
+    # Accessibility
+    return menu_item.props('dense role="menuitem"')
 
 
 def habit_tick_dialog(record: CheckedRecord | None):
@@ -108,10 +111,18 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool):
 
 
 class HabitCheckBox(ui.checkbox):
-    def __init__(self, habit: Habit, day: datetime.date, value: bool) -> None:
+    def __init__(
+        self,
+        habit: Habit,
+        today: datetime.date,
+        day: datetime.date,
+        ticked_days: list[datetime.date],
+    ) -> None:
+        value = day in ticked_days
         super().__init__("", value=value)
         self.habit = habit
         self.day = day
+        self.today = today
         self.props(
             f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
         )
@@ -153,6 +164,15 @@ class HabitCheckBox(ui.checkbox):
             self.props("color=grey-8")
         else:
             self.props("color=currentColor")
+
+        # Accessibility
+        days = (self.today - self.day).days
+        if days == 0:
+            self.props('aria-label="Today"')
+        elif days == 1:
+            self.props('aria-label="Yesterday"')
+        else:
+            self.props(f'aria-label="{days} days ago"')
 
     async def _mouse_down_event(self, e):
         logger.info(f"Down event: {self.day}, {e.args.get('type')}")

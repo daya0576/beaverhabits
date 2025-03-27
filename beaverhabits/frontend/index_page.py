@@ -2,7 +2,7 @@ import datetime
 import os
 from typing import List
 
-from nicegui import app, ui
+from nicegui import ui
 
 from beaverhabits.configs import settings
 from beaverhabits.frontend import javascript
@@ -45,7 +45,7 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     count_columns = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
     columns = name_columns + len(days) * date_columns + count_columns
 
-    row_compat_classes = "pl-4 pr-0 py-0"
+    row_compat_classes = "pl-4 pr-0 py-0 shadow-none"
     # Sticky date row for long habit list
     sticky_styles = "position: sticky; top: 0; z-index: 1; background-color: #121212;"
     left_classes, right_classes = (
@@ -65,7 +65,8 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 
     with ui.column().classes("gap-1.5"):
         # Date Headers
-        with grid(columns, 2).classes(row_compat_classes).style(sticky_styles):
+        with grid(columns, 2).classes(row_compat_classes).style(sticky_styles) as g:
+            g.props('aria-hidden="true"')
             for it in (week_headers(days), day_headers(days)):
                 ui.label("").classes(left_classes)
 
@@ -74,7 +75,7 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 
         # Habit List
         for habit in active_habits:
-            with ui.card().classes(row_compat_classes).classes("shadow-none"):
+            with ui.card().classes(row_compat_classes):
                 with grid(columns, 1):
                     # truncate name
                     root_path = get_root_path()
@@ -82,10 +83,13 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                     with link(habit.name, target=redirect_page) as name:
                         name.classes(left_classes)
                         name.style(f"max-width: {24 * name_columns}px;")
+                        name.props(
+                            f'role="heading" aria-level="2" aria-label="open habit {habit.name}"'
+                        )
 
-                    ticked_days = set(habit.ticked_days)
+                    today = max(days)
                     for day in days:
-                        checkbox = HabitCheckBox(habit, day, day in ticked_days)
+                        checkbox = HabitCheckBox(habit, today, day, habit.ticked_days)
                         checkbox.classes(right_classes)
 
                     if settings.INDEX_SHOW_HABIT_COUNT:
@@ -97,6 +101,9 @@ def index_page_ui(days: list[datetime.date], habits: HabitList):
     if not active_habits:
         ui.label("List is empty.").classes("mx-auto w-80")
         return
+
+    if settings.INDEX_HABIT_DATE_REVERSE:
+        days = list(reversed(days))
 
     with layout():
         habit_list_ui(days, active_habits)
