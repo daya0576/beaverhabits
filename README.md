@@ -24,7 +24,7 @@ A self-hosted habit tracking app without "Goals"
 
 # Getting Started
 
-To support a indie hacker and a full-time parent ❤️👶: [Buy me a Coffee](https://www.buymeacoffee.com/henryzhu) 
+To support a indie hacker and a full-time parent ❤️👶: [Buy Me a Coffee](https://www.buymeacoffee.com/henryzhu) 
 
 ## Cloud
 
