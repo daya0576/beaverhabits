@@ -11,16 +11,22 @@ A self-hosted habit tracking app without "Goals"
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/c0ce98cf-5a44-4bbc-8cd3-c7afb20af671' width='250'>
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/516c19ca-9f55-4c21-9e6d-c8f0361a5eb2' width='250'>
 
+
 # Derivatives
+
+[Beaver Habit Tracker API How‐to Guide](https://github.com/daya0576/beaverhabits/wiki/Beaver-Habit-Tracker-API-How%E2%80%90to-Guide)
 
 - [HabitDeck](https://github.com/nov1n/HabitDeck): Turn your Stream Deck into an interactive habit tracker
 - [Apple Shortcut](https://github.com/daya0576/beaverhabits/discussions/50#discussion-7746029): A shortcut for sharing the App on iPhone
 - [Home Assistant Switch](https://github.com/daya0576/beaverhabits/issues/55#issuecomment-2569685687): A switch for home assistant to mark a habit as done
 - ...
 
+
 # Getting Started
 
-## SaaS
+To support a indie hacker and a full-time parent ❤️👶: [Buy me a Coffee](https://www.buymeacoffee.com/henryzhu) 
+
+## Cloud
 
 - Demo: https://beaverhabits.com/demo
 - Login: https://beaverhabits.com
@@ -94,49 +100,15 @@ uv venv && uv sync
 
 # Features
 
-[Vote](https://github.com/daya0576/beaverhabits/discussions/78) for your most wanted features.
+Checkout the [wiki](https://github.com/daya0576/beaverhabits/wiki) page for a full list of features, and [vote](https://github.com/daya0576/beaverhabits/discussions/78) for your most wanted features.
 
-1. Habit Tracking
-    - [x] Daily notes/descriptions
-    - [ ] Measurable habits 
-    - [ ] Multiple states, e.g. failed, skipped
-2. Pages & UI
-    - [x] Reorder habits
-    - [ ] Category or tag
-    - [ ] Native mobile app (WIP)
-3. Storage
-    - [x] Session-based disk storage (Demo only)
-    - [x] User-based disk storage
-    - [x] User-based db storage
-4. CICD
-    - [x] Unit tests and deployment pipeline
-    - [x] Docker build and push pipeline
-5. Authentication
-    - [x] Email & password
-    - [x] SSO Trusted email header
-    - [x] Disable authentication entirely
-6. Extensibility
-    - [x] Export & Import
-    - [x] RESTful API
-    - [ ] Backup (WIP)
-   
-## Streaks
-Here are my table tennis training sessions in the past year :)
+- Daily notes/descriptions
+- Streaks
+- Export & Import
+- Reorder habits
+- SSO Trusted email header
+- ...
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/db795af7-ed32-4879-b629-9fd3a2700440" />
+Here are my table tennis training sessions over the past year ^^
 
-## Import
-To import from an existing setup, e.g. uhabit, please check this [wiki](https://github.com/daya0576/beaverhabits/wiki/Import-from-Existing-Setup) for more details.
-
-## Standalone mode for iOS (Web Application)
-Please follow this [wiki](https://github.com/daya0576/beaverhabits/wiki/To-Add-Standalone-Mode-for-iOS-(Web-Application)) to add it as an icon on the home screen and make it launch in a separate window
-
-## Reorder Habits
-Open page `/gui/order` to change the order of habits.
-
-## REST APIs
-[Beaver Habit Tracker API How‐to Guide](https://github.com/daya0576/beaverhabits/wiki/Beaver-Habit-Tracker-API-How%E2%80%90to-Guide)
-
-## Daily Notes
-Press and hold to add a note or description for the day.
-
+<img width="750" alt="image" src="https://github.com/user-attachments/assets/1b01435e-5327-4dc6-96d1-1738e2647e53" />
