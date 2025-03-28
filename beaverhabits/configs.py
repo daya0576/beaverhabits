@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     ENV: str = "dev"
     DEBUG: bool = False
     SENTRY_DSN: str = ""
+    CLOUD: bool = False
 
     # NiceGUI
     NICEGUI_STORAGE_SECRET: str = "dev"

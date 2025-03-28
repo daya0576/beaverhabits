@@ -79,6 +79,10 @@ def menu_component() -> None:
         if is_page_demo():
             imp.classes("disabled")
 
+        if settings.CLOUD:
+            compat_menu("Upgrade", lambda: redirect("/pricing"))
+            separator()
+
         if is_page_demo():
             compat_menu("Login", lambda: ui.navigate.to("/login"))
         else:

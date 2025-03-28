@@ -31,7 +31,9 @@ ACTIONS = {
     "Free $0": lambda: ui.button(
         "Get Started", on_click=lambda: ui.navigate.to("/register", new_tab=True)
     ),
-    "Plus $9.9": lambda: ui.button("Upgrade"),
+    "Plus $9.9": lambda: ui.button("Upgrade").on_click(
+        lambda: ui.notify("Coming soon", position="top")
+    ),
 }
 
 YOUTUBE = """
@@ -75,7 +77,7 @@ def description():
 
 def demo():
     ui.label("Why Habit Tracker Works?").classes("text-2xl font-bold")
-    with ui.column().classes("w-full gap-3"):
+    with ui.column().classes("w-full gap-1"):
         reasons = [
             "Make it <b>obvious</b>: visual cues like the streak remind you to act again",
             "Make it <b>attractive</b>: the most effective form of motivation is progress",
@@ -87,6 +89,8 @@ def demo():
         for image in IMAGES:
             ui.image(source=image)
 
+
+def how_to_use():
     with ui.row().classes("w-full"):
         ui.label("How to Use").classes("text-2xl font-bold")
         ui.space()
@@ -118,9 +122,8 @@ async def landing_page() -> None:
     ui.add_css("body { background-color: #121212; color: white;  }")
 
     with ui.row().classes("max-w-2xl mx-auto w-full"):
-        with ui.card().classes("w-full").props("flat"):
-            description()
-        with ui.card().classes("w-full").props("flat"):
-            demo()
+        for section in (description, demo, how_to_use):
+            with ui.card().classes("w-full").props("flat"):
+                section()
 
         footer()
