@@ -162,9 +162,12 @@ async def login_page() -> Optional[RedirectResponse]:
 
         if not await get_user_count() >= settings.MAX_USER_COUNT > 0:
             ui.separator()
-            with ui.row():
+            with ui.row().classes("gap-2"):
                 ui.label("New around here?").classes("text-sm")
                 ui.link("Create account", target="/register").classes("text-sm")
+                if settings.CLOUD:
+                    ui.label("|")
+                    ui.link("Pricing", target="/pricing").classes("text-sm")
 
 
 @ui.page("/register")
