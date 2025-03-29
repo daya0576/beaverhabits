@@ -24,8 +24,6 @@ A self-hosted habit tracking app without "Goals"
 
 # Getting Started
 
-To support a indie hacker and a full-time parent ❤️👶: [Buy Me a Coffee](https://www.buymeacoffee.com/henryzhu) 
-
 ## Cloud
 
 - Demo: https://beaverhabits.com/demo
@@ -112,3 +110,6 @@ Checkout the [wiki](https://github.com/daya0576/beaverhabits/wiki) page for a fu
 Here are my table tennis training sessions over the past year ^^
 
 <img width="750" alt="image" src="https://github.com/user-attachments/assets/1b01435e-5327-4dc6-96d1-1738e2647e53" />
+
+# Sponsor
+<a href="https://www.buymeacoffee.com/henryzhu" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" alt="Buy Me A Coffee" height="41" width="174"></a>
