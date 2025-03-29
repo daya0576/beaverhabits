@@ -1,7 +1,7 @@
 import os
 from contextlib import contextmanager
 
-from nicegui import app, context, ui
+from nicegui import context, ui
 
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
@@ -10,7 +10,6 @@ from beaverhabits.frontend.components import (
     compat_menu,
     menu_header,
     menu_icon_button,
-    nav_loading,
 )
 from beaverhabits.logging import logger
 from beaverhabits.storage.meta import (
@@ -84,10 +83,6 @@ def menu_component() -> None:
         if is_page_demo():
             imp.classes("disabled")
 
-        if settings.CLOUD:
-            compat_menu("Upgrade", lambda: redirect("/pricing"))
-            separator()
-
         if is_page_demo():
             compat_menu("Login", lambda: ui.navigate.to("/login"))
         else:
@@ -123,8 +118,6 @@ def layout(title: str | None = None, with_menu: bool = True):
             menu_header(title, target=get_root_path())
             if with_menu:
                 ui.space()
-                # overlay blur
-                # nav_loading()
                 with menu_icon_button(icons.MENU):
                     menu_component()
 
