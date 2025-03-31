@@ -158,6 +158,9 @@ async def login_page() -> Optional[RedirectResponse]:
         else:
             ui.notify("email or password wrong!", color="negative")
 
+    # Wait for the handshake before sending events to the server
+    await ui.context.client.connected(timeout=10)
+
     with ui.card().classes("absolute-center shadow-none w-96"):
         email = ui.input("email").on("keydown.enter", try_login)
         email.classes("w-56")
