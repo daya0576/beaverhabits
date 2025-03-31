@@ -24,6 +24,7 @@ from .frontend.add_page import add_page_ui
 from .frontend.cal_heatmap_page import heatmap_page
 from .frontend.habit_page import habit_page_ui
 from .frontend.index_page import index_page_ui
+from .logging import logger
 from .storage.meta import GUI_ROOT_PATH
 from .utils import dummy_days, get_user_today_date
 
@@ -141,6 +142,11 @@ async def login_page() -> Optional[RedirectResponse]:
         return RedirectResponse(GUI_ROOT_PATH)
 
     async def try_login():
+        if not email.value or not password:
+            ui.notify("email/password is required", color="negative")
+            return
+
+        logger.info(f"Trying to login with {email.value}")
         user = await user_authenticate(email=email.value, password=password.value)
         token = user and await user_create_token(user)
         if token is not None:
