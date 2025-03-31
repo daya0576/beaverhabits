@@ -1,13 +1,16 @@
 import asyncio
 import calendar
 import datetime
+import itertools
+from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Self
 
 from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
 from nicegui.elements.button import Button
 
+from beaverhabits import const
 from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.frontend import icons
@@ -24,7 +27,7 @@ CALENDAR_EVENT_MASK = "%Y/%m/%d"
 
 def link(text: str, target: str):
     return ui.link(text, target=target).classes(
-        "dark:text-white  no-underline hover:no-underline"
+        "dark:text-white no-underline hover:no-underline"
     )
 
 
@@ -244,7 +247,6 @@ class HabitNameInput(ui.input):
         self.props("dense hide-bottom-space")
         self.on("blur", self._on_blur)
         self.on("keydown.enter", self._on_keydown_enter)
-        self.on_value_change(self._on_change)
 
     async def _save(self, value: str):
         name, tags = self.decode_name(value)
@@ -267,7 +269,7 @@ class HabitNameInput(ui.input):
     def _validate(self, value: str) -> Optional[str]:
         if not value:
             return "Name is required"
-        if len(value) > 30:
+        if len(value) > 50:
             return "Too long"
 
     @staticmethod
@@ -613,6 +615,22 @@ class IndexBadge(HabitTotalBadge):
         )
 
 
+class HabitTag(ui.chip):
+    def __init__(self, tag_name: str) -> None:
+        super().__init__(
+            text=tag_name,
+            color="oklch(0.3 0 0)",
+            text_color="oklch(0.85 0 0)",
+            selected=tag_name in TagManager.get_all(),
+        )
+
+        # https://tailwindcss.com/docs/colors
+        self.props("dense")
+        self.style("font-size: 80%; font-weight: 500")
+        self.style("padding: 8px 9px")
+        self.style("margin: 0px 2px")
+
+
 def habit_notes(records: List[CheckedRecord], limit: int = 10):
     with ui.timeline(side="right").classes("w-full pt-5 px-3 whitespace-pre-line"):
         for record in records[:limit]:
@@ -629,7 +647,7 @@ class TagManager:
     @staticmethod
     def get_all() -> set[str]:
         try:
-            return set(app.storage.client.get("index_tags_filter", []))
+            return set(app.storage.user.get("index_tags_filter", []))
         except Exception as e:
             logger.error(f"Failed to get tags: {e}")
             return set()
@@ -637,11 +655,11 @@ class TagManager:
     @staticmethod
     def add(tag: str) -> None:
         if settings.TAG_SELECTION_MODE == TagSelectionMode.SINGLE:
-            app.storage.client["index_tags_filter"] = [tag]
+            app.storage.user["index_tags_filter"] = [tag]
         else:
             tags = set(TagManager.get_all())
             tags.add(tag)
-            app.storage.client["index_tags_filter"] = list(tags)
+            app.storage.user["index_tags_filter"] = list(tags)
 
     @staticmethod
     def remove(tag: str) -> None:
@@ -650,26 +668,63 @@ class TagManager:
             logger.warning(f"Tag {tag} not found")
 
         tags.remove(tag)
-        app.storage.client["index_tags_filter"] = list(tags)
+        app.storage.user["index_tags_filter"] = list(tags)
 
 
-def tag_filters(active_habits: List[Habit], refresh: Callable):
-    all_tags = set(tag for habit in active_habits for tag in habit.tags)
-    all_tags = sorted(all_tags)
+def get_all_tags(habits: list[Habit]) -> list[str]:
+    result = []
+    for habit in habits:
+        for tag in habit.tags:
+            if tag not in result:
+                result.append(tag)
+    return result
 
-    if all_tags:
-        with ui.row().classes("gap-0.5 justify-right w-80"):
-            for tag_name in all_tags:
-                TagChip(tag_name, refresh=refresh)
+
+def tag_filter_component(active_habits: list[Habit], refresh: Callable):
+    all_tags = get_all_tags(active_habits)
+    if not all_tags:
+        return
+
+    # display components
+    with ui.row().classes("gap-0.5 justify-right w-80"):
+        for tag_name in all_tags:
+            TagChip(tag_name, refresh=refresh)
+        TagChip("Others", refresh=refresh)
+
+
+def habits_by_tags(active_habits: list[Habit]) -> dict[str, list[Habit]]:
+    all_tags = get_all_tags(active_habits)
+    if not all_tags:
+        return {"": active_habits}
+
+    all_tags.append("Others")
+
+    habits = OrderedDict()
+    # with tags
+    for habit in active_habits:
+        for tag in habit.tags:
+            habits.setdefault(tag, []).append(habit)
+    # without tags
+    habits["Others"] = [h for h in active_habits if not h.tags]
+
+    selected_tags = TagManager.get_all() & set(all_tags)
+    if selected_tags:
+        habits = OrderedDict(
+            (key, value) for key, value in habits.items() if key in selected_tags
+        )
+
+    return habits
 
 
 class TagChip(ui.chip):
-    def __init__(self, tag_name: str, refresh: Callable) -> None:
+    def __init__(
+        self, tag_name: str, refresh: Callable | None = None, selectable=True
+    ) -> None:
         super().__init__(
             text=tag_name,
-            color="oklch(0.3 0 0)",
-            text_color="oklch(0.7 0 0)",
-            selectable=True,
+            color="oklch(0.27 0 0)",
+            text_color="oklch(0.9 0 0)",
+            selectable=selectable,
             selected=tag_name in TagManager.get_all(),
         )
 
@@ -682,10 +737,11 @@ class TagChip(ui.chip):
         self.on_click(self._async_task)
         self.refresh = refresh
 
-    async def _async_task(self):
+    async def _async_task(self: Self):
         if self.selected:
             TagManager.add(self.text)
         else:
             TagManager.remove(self.text)
 
-        self.refresh()
+        if self.refresh:
+            self.refresh()

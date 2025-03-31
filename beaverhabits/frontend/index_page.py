@@ -9,13 +9,31 @@ from beaverhabits.frontend import javascript
 from beaverhabits.frontend.components import (
     HabitCheckBox,
     IndexBadge,
-    TagManager,
+    habits_by_tags,
     link,
-    tag_filters,
+    tag_filter_component,
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, HabitStatus
+
+# fmt:off
+COLORS = ["#f44336","#e91e63","#9c27b0","#673ab7","#3f51b5","#2196f3","#03a9f4","#00bcd4","#009688","#4caf50","#8bc34a","#cddc39","#ffeb3b","#ffc107","#ff9800","#ff5722","#795548","#9e9e9e","#607d8b"]
+# fmt:on
+
+NAME_COLS, DATE_COLS = settings.INDEX_HABIT_NAME_COLUMNS, 2
+COUNT_BADGE_COLS = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
+LEFT_CLASSES, RIGHT_CLASSES = (
+    # grid 5
+    f"col-span-{NAME_COLS} truncate max-w-[{24 * NAME_COLS}px]",
+    # grid 2 2 2 2 2
+    f"col-span-{DATE_COLS} px-1 place-self-center",
+)
+COMPAT_CLASSES = "pl-4 pr-0 py-0 shadow-none"
+
+# Sticky date row for long habit list
+STICKY_STYLES = "position: sticky; top: 0; z-index: 1; background-color: #121212;"
+HEADER_STYLES = "font-size: 85%; font-weight: 500; color: #9e9e9e"
 
 
 def grid(columns, rows):
@@ -38,62 +56,52 @@ def day_headers(days: list[datetime.date]):
         yield "#"
 
 
+def habit_row(habit: Habit, tag: str, days: list[datetime.date]):
+    # truncate name
+    root_path = get_root_path()
+    redirect_page = os.path.join(root_path, "habits", str(habit.id))
+    name = link(habit.name, target=redirect_page)
+    name.classes(LEFT_CLASSES)
+    name.props(f'role="heading" aria-level="2" aria-label="{habit.name}"')
+
+    today = max(days)
+    for day in days:
+        checkbox = HabitCheckBox(habit, today, day, habit.ticked_days)
+        checkbox.classes(RIGHT_CLASSES)
+
+    if settings.INDEX_SHOW_HABIT_COUNT:
+        IndexBadge(today, habit).classes(RIGHT_CLASSES)
+
+
 @ui.refreshable
 def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
-    # Calculate column count
-    name_columns, date_columns = settings.INDEX_HABIT_NAME_COLUMNS, 2
-    count_columns = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
-    columns = name_columns + len(days) * date_columns + count_columns
+    # Total cloumn for each row
+    columns = NAME_COLS + len(days) * DATE_COLS + COUNT_BADGE_COLS
 
-    row_compat_classes = "pl-4 pr-0 py-0 shadow-none"
-    # Sticky date row for long habit list
-    sticky_styles = "position: sticky; top: 0; z-index: 1; background-color: #121212;"
-    left_classes, right_classes = (
-        # grid 5
-        f"col-span-{name_columns} truncate",
-        # grid 2 2 2 2 2
-        f"col-span-{date_columns} px-1 place-self-center",
-    )
-    header_styles = "font-size: 85%; font-weight: 500; color: #9e9e9e"
-
-    # Category filters (align center)
-    tag_filters(active_habits, refresh=habit_list_ui.refresh)
-    if selected_tags := TagManager.get_all():
-        active_habits = [
-            habit for habit in active_habits if set(habit.tags) & selected_tags
-        ]
+    # Category
+    tag_filter_component(active_habits, refresh=habit_list_ui.refresh)
 
     with ui.column().classes("gap-1.5"):
         # Date Headers
-        with grid(columns, 2).classes(row_compat_classes).style(sticky_styles) as g:
+        with grid(columns, 2).classes(COMPAT_CLASSES).style(STICKY_STYLES) as g:
             g.props('aria-hidden="true"')
             for it in (week_headers(days), day_headers(days)):
-                ui.label("").classes(left_classes)
-
+                ui.label("").classes(LEFT_CLASSES).style(HEADER_STYLES)
                 for label in it:
-                    ui.label(label).classes(right_classes).style(header_styles)
+                    ui.label(label).classes(RIGHT_CLASSES).style(HEADER_STYLES)
 
-        # Habit List
-        for habit in active_habits:
-            with ui.card().classes(row_compat_classes):
-                with grid(columns, 1):
-                    # truncate name
-                    root_path = get_root_path()
-                    redirect_page = os.path.join(root_path, "habits", str(habit.id))
-                    with link(habit.name, target=redirect_page) as name:
-                        name.classes(left_classes)
-                        name.style(f"max-width: {24 * name_columns}px;")
-                        name.props(
-                            f'role="heading" aria-level="2" aria-label="{habit.name}"'
-                        )
+        # Habit Rows
+        groups = habits_by_tags(active_habits)
+        for tag, habit_list in groups.items():
+            if not habit_list:
+                continue
 
-                    today = max(days)
-                    for day in days:
-                        checkbox = HabitCheckBox(habit, today, day, habit.ticked_days)
-                        checkbox.classes(right_classes)
+            for habit in habit_list:
+                with ui.card().classes(COMPAT_CLASSES):
+                    with grid(columns, 1):
+                        habit_row(habit, tag, days)
 
-                    if settings.INDEX_SHOW_HABIT_COUNT:
-                        IndexBadge(today, habit).classes(right_classes)
+            ui.space()
 
 
 def index_page_ui(days: list[datetime.date], habits: HabitList):

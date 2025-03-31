@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
     ENABLE_IOS_STANDALONE: bool = True
     ENABLE_DESKTOP_ALGIN_CENTER: bool = True
-    TAG_SELECTION_MODE: TagSelectionMode = TagSelectionMode.SINGLE
+    TAG_SELECTION_MODE: TagSelectionMode = TagSelectionMode.MULTI
 
     INDEX_SHOW_HABIT_COUNT: bool = False
     INDEX_HABIT_NAME_COLUMNS: int = 5
