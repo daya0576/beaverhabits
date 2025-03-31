@@ -142,8 +142,11 @@ async def login_page() -> Optional[RedirectResponse]:
         return RedirectResponse(GUI_ROOT_PATH)
 
     async def try_login():
-        if not email.value or not password:
-            ui.notify("email/password is required", color="negative")
+        if not email.value:
+            ui.notify("Email is required", color="negative")
+            return
+        if not password.value:
+            ui.notify("Password is required", color="negative")
             return
 
         logger.info(f"Trying to login with {email.value}")
