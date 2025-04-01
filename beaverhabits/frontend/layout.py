@@ -53,12 +53,10 @@ def custom_header():
     ui.add_head_html(
         '<meta name="description" content="A self-hosted habit tracking app without "Goals"">'
     )
-
-
-def add_umami_headers():
-    ui.add_head_html(
-        '<script defer src="https://cloud.umami.is/script.js" data-website-id="246fa4ac-0f4f-464a-8a32-14c9f75fed77"></script>'
-    )
+    if settings.UMAMI_ANALYTICS_ID:
+        ui.add_head_html(
+            f'<script defer src="https://cloud.umami.is/script.js" data-website-id="{settings.UMAMI_ANALYTICS_ID}"></script>'
+        )
 
 
 def separator():
@@ -104,7 +102,6 @@ def layout(title: str | None = None, with_menu: bool = True):
     with ui.column() as c:
         # Standard headers
         custom_header()
-        add_umami_headers()
         pre_cache()
 
         # Center the content on small screens
