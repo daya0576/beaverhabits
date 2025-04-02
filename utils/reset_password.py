@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 
 from beaverhabits.app.db import get_async_session, get_user_db
 from beaverhabits.app.users import get_user_manager
+from beaverhabits.app.schemas import UserUpdate  # Import UserUpdate schema
 from beaverhabits.logging import logger
 
 get_async_session_context = asynccontextmanager(get_async_session)
@@ -23,17 +24,13 @@ async def reset_password(email: str, new_password: str):
                     if not user:
                         print(f"User with email {email} not found")
                         return False
+                    # Create UserUpdate schema instance with the new password
+                    user_update_schema = UserUpdate(password=new_password)
                     
-                    # Update password
-                    # FastAPI Users UserManager expects a Pydantic model for updates
-                    # We need to hash the password before updating
-                    hashed_password = user_manager.password_helper.hash(new_password)
-                    user_update = {"hashed_password": hashed_password} 
+                    # The update method in UserManager takes the UserUpdate schema and the user object
+                    await user_manager.update(user_update_schema, user, safe=True) # Use safe=True to avoid updating other fields
                     
-                    # The update method in UserManager takes the update dict and the user object
-                    await user_manager.update(user_update, user, safe=True) # Use safe=True to avoid updating other fields
-                    
-                    # Commit the session to save changes
+                    # Commit the session to save changes (UserManager might handle this, but explicit commit is safer)
                     await session.commit()
                     
                     print(f"Password successfully reset for {email}")
