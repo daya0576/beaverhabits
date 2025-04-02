@@ -21,9 +21,9 @@ from .app.db import User
 from .app.dependencies import current_active_user
 from .configs import settings
 from .frontend.add_page import add_page_ui
-from .frontend.cal_heatmap_page import heatmap_page
 from .frontend.habit_page import habit_page_ui
 from .frontend.index_page import index_page_ui
+from .frontend.streaks import heatmap_page
 from .logging import logger
 from .storage.meta import GUI_ROOT_PATH
 from .utils import dummy_days, get_user_today_date

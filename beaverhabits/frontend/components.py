@@ -1,7 +1,6 @@
 import asyncio
 import calendar
 import datetime
-import itertools
 from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Self
@@ -10,7 +9,6 @@ from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
 from nicegui.elements.button import Button
 
-from beaverhabits import const
 from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.frontend import icons
@@ -477,6 +475,7 @@ class CalendarCheckBox(ui.checkbox):
         day: datetime.date,
         today: datetime.date,
         is_bind_data: bool = True,
+        readonly: bool = False,
     ) -> None:
         self.habit = habit
         self.day = day
@@ -491,6 +490,9 @@ class CalendarCheckBox(ui.checkbox):
 
         if is_bind_data:
             self.bind_value_from(self, "ticked")
+        if readonly:
+            self.on("mousedown.prevent", lambda: True)
+            self.on("touchstart.prevent", lambda: True)
 
     @property
     def ticked(self) -> bool:
@@ -520,35 +522,40 @@ def habit_heat_map(
     # Bind to external state data
     is_bind_data = not readonly
 
-    # Headers
-    with ui.row(wrap=False).classes("gap-0"):
-        for header in habit_calendar.headers:
-            header_lable = ui.label(header).classes("text-gray-300 text-center")
-            header_lable.style("width: 20px; line-height: 18px; font-size: 9px;")
-        ui.label().style("width: 22px;")
-
-    # Day matrix
-    for i, weekday_days in enumerate(habit_calendar.data):
+    with ui.column().classes("gap-0"):
+        # Headers
         with ui.row(wrap=False).classes("gap-0"):
-            for day in weekday_days:
-                if day <= habit_calendar.today:
-                    CalendarCheckBox(habit, day, today, is_bind_data)
-                else:
-                    ui.label().style("width: 20px; height: 20px;")
+            for header in habit_calendar.headers:
+                header_lable = ui.label(header).classes("text-gray-300 text-center")
+                header_lable.style("width: 20px; line-height: 18px; font-size: 9px;")
+            ui.label().style("width: 22px;")
 
-            week_day_abbr_label = ui.label(habit_calendar.week_days[i])
-            week_day_abbr_label.classes("indent-1.5 text-gray-300")
-            week_day_abbr_label.style("width: 22px; line-height: 20px; font-size: 9px;")
+        # Day matrix
+        for i, weekday_days in enumerate(habit_calendar.data):
+            with ui.row(wrap=False).classes("gap-0"):
+                for day in weekday_days:
+                    if day <= habit_calendar.today:
+                        CalendarCheckBox(habit, day, today, is_bind_data, readonly)
+                    else:
+                        ui.label().style("width: 20px; height: 20px;")
+
+                week_day_abbr_label = ui.label(habit_calendar.week_days[i])
+                week_day_abbr_label.classes("indent-1.5 text-gray-300")
+                week_day_abbr_label.style(
+                    "width: 22px; line-height: 20px; font-size: 9px;"
+                )
 
 
 def grid(columns: int, rows: int | None = 1) -> ui.grid:
     return ui.grid(columns=columns, rows=rows).classes("gap-0 items-center")
 
 
-def habit_history(today: datetime.date, ticked_days: list[datetime.date]):
+def habit_history(
+    today: datetime.date, ticked_days: list[datetime.date], total_months: int = 13
+):
     # get lastest 6 months, e.g. Feb
     months, data = [], []
-    for i in range(13, 0, -1):
+    for i in range(total_months, 0, -1):
         offset_date = today - relativedelta(months=i)
         months.append(offset_date.strftime("%b"))
 

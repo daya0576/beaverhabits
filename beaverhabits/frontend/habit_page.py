@@ -54,7 +54,6 @@ def habit_page(today: datetime.date, habit: Habit):
     notes.sort(key=lambda x: x.day, reverse=True)
     # https://tailwindcss.com/docs/responsive-design#container-size-reference
 
-    habit_calendar = CalendarHeatmap.build(today, WEEKS_TO_DISPLAY, calendar.MONDAY)
     target = get_habit_heatmap_path(habit)
 
     with ui.column().classes("gap-y-2"):
@@ -64,21 +63,21 @@ def habit_page(today: datetime.date, habit: Habit):
         with card():
             card_title("Last 3 Months", target)
             ui.space().classes("h-1")
+            habit_calendar = CalendarHeatmap.build(
+                today, WEEKS_TO_DISPLAY, calendar.MONDAY
+            )
             habit_heat_map(habit, habit_calendar)
 
         with card():
             card_title("History", target)
             habit_history(today, habit.ticked_days)
 
-        if notes:
-            with card(padding=2):
-                card_title("Notes", "#").tooltip(
-                    "Press and hold to add notes/descriptions"
-                )
-                habit_notes(notes)
+        with card(padding=2):
+            card_title("Notes", "#").tooltip("Press and hold to add notes/descriptions")
+            habit_notes(notes)
 
-            with card(target, padding=0.5):
-                ui.icon("more_horiz", size="1.5em")
+        with card(target, padding=0.5):
+            ui.icon("more_horiz", size="1.5em")
 
 
 def habit_page_ui(today: datetime.date, habit: Habit):
