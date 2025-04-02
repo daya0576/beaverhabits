@@ -2,11 +2,13 @@
 import asyncio
 import getpass
 import sys
+import asyncio # Import asyncio for running async main
 from contextlib import asynccontextmanager
 
 from beaverhabits.app.db import get_async_session, get_user_db
 from beaverhabits.app.users import get_user_manager
 from beaverhabits.app.schemas import UserUpdate  # Import UserUpdate schema
+from beaverhabits.sql.database import engine # Import the engine for disposal
 from beaverhabits.logging import logger
 
 get_async_session_context = asynccontextmanager(get_async_session)
@@ -39,8 +41,12 @@ async def reset_password(email: str, new_password: str):
         print(f"Error resetting password: {str(e)}")
         logger.exception(f"Password reset failed for {email}")
         return False
+    finally:
+        # Ensure the engine is disposed regardless of success/failure
+        # This might be needed if reset_password itself raises an unhandled exception
+        pass # Disposal will happen in main's finally block
 
-def main():
+async def main(): # Make main async
     print("BeaverHabits Password Reset Tool")
     print("===============================")
     
@@ -63,13 +69,20 @@ def main():
         print("Password must be at least 8 characters long")
         sys.exit(1)
     
-    # Run the password reset
-    success = asyncio.run(reset_password(email, new_password))
-    
+    success = False
+    try:
+        # Run the password reset
+        success = await reset_password(email, new_password) # await async function
+    finally:
+        # Dispose the engine after the operation completes or fails
+        print("Closing database connections...")
+        await engine.dispose()
+        print("Database connections closed.")
+
     if success:
         print("Password reset successful. You can now log in with your new password.")
     else:
         print("Password reset failed.")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main()) # Run the async main function
