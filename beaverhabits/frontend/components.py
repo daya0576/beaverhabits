@@ -45,11 +45,10 @@ def menu_icon_button(
     button.props("flat=true unelevated=true padding=xs backgroup=none")
     if tooltip:
         button = button.tooltip(tooltip)
-    # Accessibility
-    return button.props('aria-haspopup="true" aria-label="menu"')
+    return button
 
 
-def compat_menu(*args, **kwargs):
+def menu_icon_item(*args, **kwargs):
     menu_item = ui.menu_item(*args, **kwargs).classes("items-center")
     # Accessibility
     return menu_item.props('dense role="menuitem"')
@@ -752,3 +751,7 @@ class TagChip(ui.chip):
 
         if self.refresh:
             self.refresh()
+
+
+def habit_edit_popup(habit: Habit): 
+    pass
