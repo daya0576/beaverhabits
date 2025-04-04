@@ -1,5 +1,7 @@
+from dataclasses import dataclass
 import datetime
-from enum import Enum
+from enum import Enum, auto
+from dateutil import rrule
 from typing import List, Optional, Protocol, Self, Set
 
 from beaverhabits.app.db import User
@@ -37,6 +39,48 @@ class HabitStatus(Enum):
         return tuple(cls.__members__.values())
 
 
+class PeriodicUnit(Enum):
+    D = rrule.DAILY
+    W = rrule.WEEKLY
+    M = rrule.MONTHLY
+    Y = rrule.YEARLY
+
+
+@dataclass
+class HabitPeriod:
+    # Periodic habits
+    unit: str
+    interval: int
+
+    # Target
+    freq: int
+
+    @property
+    def interval_timedelta(self):
+        delta_args = {
+            "D": {"days": self.interval - 1},
+            "W": {"weeks": self.interval - 1},
+            "M": {"months": self.interval - 1},
+            "Y": {"years": self.interval - 1},
+        }
+        return datetime.timedelta(**delta_args[self.unit])
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Self:
+        return cls(
+            unit=data["unit"],
+            interval=data["interval"],
+            freq=data["freq"],
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "unit": self.unit,
+            "interval": self.interval,
+            "freq": self.freq,
+        }
+
+
 class Habit[R: CheckedRecord](Protocol):
     @property
     def id(self) -> str | int: ...
@@ -69,7 +113,17 @@ class Habit[R: CheckedRecord](Protocol):
     def status(self, value: HabitStatus) -> None: ...
 
     @property
+    def period(self) -> HabitPeriod | None: ...
+
+    @period.setter
+    def period(self, value: HabitPeriod) -> None: ...
+
+    @property
     def ticked_days(self) -> list[datetime.date]: ...
+
+    def ticked_count(
+        self, start: datetime.date | None = None, end: datetime.date | None = None
+    ) -> int: ...
 
     @property
     def ticked_data(self) -> dict[datetime.date, R]: ...

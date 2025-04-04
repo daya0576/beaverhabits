@@ -5,6 +5,7 @@ from typing import List
 from nicegui import ui
 
 from beaverhabits.configs import settings
+from beaverhabits.core.completions import get_habit_date_completion
 from beaverhabits.frontend import javascript
 from beaverhabits.frontend.components import (
     HabitCheckBox,
@@ -15,7 +16,13 @@ from beaverhabits.frontend.components import (
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
-from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, HabitStatus
+from beaverhabits.storage.storage import (
+    Habit,
+    HabitList,
+    HabitListBuilder,
+    HabitPeriod,
+    HabitStatus,
+)
 
 # fmt:off
 COLORS = ["#f44336","#e91e63","#9c27b0","#673ab7","#3f51b5","#2196f3","#03a9f4","#00bcd4","#009688","#4caf50","#8bc34a","#cddc39","#ffeb3b","#ffc107","#ff9800","#ff5722","#795548","#9e9e9e","#607d8b"]
@@ -56,6 +63,7 @@ def day_headers(days: list[datetime.date]):
         yield "#"
 
 
+@ui.refreshable
 def habit_row(habit: Habit, tag: str, days: list[datetime.date]):
     # truncate name
     root_path = get_root_path()
@@ -66,7 +74,10 @@ def habit_row(habit: Habit, tag: str, days: list[datetime.date]):
 
     today = max(days)
     for day in days:
-        checkbox = HabitCheckBox(habit, today, day, habit.ticked_days)
+        completion = get_habit_date_completion(habit, day)
+        checkbox = HabitCheckBox(
+            completion, habit, today, day, refresh=habit_row.refresh
+        )
         checkbox.classes(RIGHT_CLASSES)
 
     if settings.INDEX_SHOW_HABIT_COUNT:
@@ -97,6 +108,7 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                 continue
 
             for habit in habit_list:
+                habit.period = HabitPeriod("D", 3, 2)
                 with ui.card().classes(COMPAT_CLASSES):
                     with grid(columns, 1):
                         habit_row(habit, tag, days)

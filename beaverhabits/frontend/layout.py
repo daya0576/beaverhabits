@@ -63,20 +63,14 @@ def separator():
     ui.separator().props('aria-hidden="true"')
 
 
-def custom_icons(path: str):
-    if "habit_id" in path:
-        edit = menu_icon_button(
-            icons.EDIT, click=lambda: redirect(""), tooltip="Edit Habit"
-        )
-        edit.props('outline="false"')
-
-
 def menu_component() -> None:
     """Dropdown menu for the top-right corner of the page."""
     with ui.menu().props('role="menu"'):
         path = context.client.page.path
         if "add" in path:
-            menu_icon_item("Reorder", lambda: redirect("order"))
+            menu_icon_item("Sort", lambda: redirect("order"))
+        elif "/habits/{habit_id}" in path:
+            menu_icon_item("Edit", lambda: True)
         else:
             add = menu_icon_item("Add", lambda: redirect("add"))
             add.props('aria-label="Edit habit list"')
@@ -85,9 +79,9 @@ def menu_component() -> None:
         menu_icon_item("Export", lambda: open_tab("export"))
         separator()
         imp = menu_icon_item("Import", lambda: redirect("import"))
-        separator()
         if is_page_demo():
             imp.classes("disabled")
+        separator()
 
         if is_page_demo():
             menu_icon_item("Login", lambda: ui.navigate.to("/login"))
@@ -122,7 +116,6 @@ def layout(title: str | None = None):
         with ui.row().classes("min-w-full gap-x-1"):
             menu_header(title, target=get_root_path())
             ui.space()
-            custom_icons(path)
             with menu_icon_button(icons.MENU) as menu:
                 menu_component()
                 # Accessibility

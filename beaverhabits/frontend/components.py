@@ -11,6 +11,7 @@ from nicegui.elements.button import Button
 
 from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
+from beaverhabits.core.completions import Completion
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
@@ -114,19 +115,24 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool):
 class HabitCheckBox(ui.checkbox):
     def __init__(
         self,
+        completion: Completion,
         habit: Habit,
         today: datetime.date,
         day: datetime.date,
-        ticked_days: list[datetime.date],
+        refresh: Callable | None = None,
     ) -> None:
-        value = day in ticked_days
-        super().__init__("", value=value)
         self.habit = habit
         self.day = day
         self.today = today
+        self.completion = completion
+        value = completion.status == Completion.Status.DONE
+        self.refresh = refresh
+        super().__init__("", value=value)
         self.props(
             f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
         )
+        if self.completion.status == Completion.Status.PERIOD_DONE:
+            self.props(f'unchecked-icon="{icons.ADD}"')
         self._update_style(value)
 
         # Hold on event flag
@@ -194,6 +200,9 @@ class HabitCheckBox(ui.checkbox):
 
         # Do update completion status
         await habit_tick(self.habit, self.day, value)
+
+        if self.refresh:
+            self.refresh()
 
     async def _mouse_up_event(self, e):
         logger.info(f"Up event: {self.day}, {e.args.get('type')}")
@@ -753,5 +762,5 @@ class TagChip(ui.chip):
             self.refresh()
 
 
-def habit_edit_popup(habit: Habit): 
+def habit_edit_popup(habit: Habit):
     pass
