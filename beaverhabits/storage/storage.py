@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import datetime
 from enum import Enum, auto
 from dateutil import rrule
-from typing import List, Optional, Protocol, Self, Set
+from typing import List, Literal, Optional, Protocol, Self, Set
 
 from beaverhabits.app.db import User
 
@@ -39,45 +39,28 @@ class HabitStatus(Enum):
         return tuple(cls.__members__.values())
 
 
-class PeriodicUnit(Enum):
-    D = rrule.DAILY
-    W = rrule.WEEKLY
-    M = rrule.MONTHLY
-    Y = rrule.YEARLY
-
-
 @dataclass
-class HabitPeriod:
-    # Periodic habits
-    unit: str
-    interval: int
+class HabitFrequency:
+    # Moving window
+    period_type: Literal["D", "W", "M", "Y"]
+    period_count: int
 
-    # Target
-    freq: int
-
-    @property
-    def interval_timedelta(self):
-        delta_args = {
-            "D": {"days": self.interval - 1},
-            "W": {"weeks": self.interval - 1},
-            "M": {"months": self.interval - 1},
-            "Y": {"years": self.interval - 1},
-        }
-        return datetime.timedelta(**delta_args[self.unit])
+    # Target frequency
+    target_count: int
 
     @classmethod
     def from_dict(cls, data: dict) -> Self:
         return cls(
-            unit=data["unit"],
-            interval=data["interval"],
-            freq=data["freq"],
+            period_type=data["period_type"],
+            period_count=data["period_count"],
+            target_count=data["target_count"],
         )
 
     def to_dict(self) -> dict:
         return {
-            "unit": self.unit,
-            "interval": self.interval,
-            "freq": self.freq,
+            "period_type": self.period_type,
+            "period_count": self.period_count,
+            "target_count": self.target_count,
         }
 
 
@@ -113,10 +96,10 @@ class Habit[R: CheckedRecord](Protocol):
     def status(self, value: HabitStatus) -> None: ...
 
     @property
-    def period(self) -> HabitPeriod | None: ...
+    def period(self) -> HabitFrequency | None: ...
 
     @period.setter
-    def period(self, value: HabitPeriod) -> None: ...
+    def period(self, value: HabitFrequency) -> None: ...
 
     @property
     def ticked_days(self) -> list[datetime.date]: ...

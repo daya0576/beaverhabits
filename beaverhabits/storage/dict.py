@@ -7,8 +7,8 @@ from beaverhabits.logging import logger
 from beaverhabits.storage.storage import (
     CheckedRecord,
     Habit,
+    HabitFrequency,
     HabitList,
-    HabitPeriod,
     HabitStatus,
 )
 from beaverhabits.utils import generate_short_hash
@@ -135,20 +135,20 @@ class DictHabit(Habit[DictRecord], DictStorage):
         return [DictRecord(d) for d in self.data["records"]]
 
     @property
-    def period(self) -> HabitPeriod | None:
+    def period(self) -> HabitFrequency | None:
         period_value = self.data.get("period")
-        if period_value is None:
+        if not period_value:
             return None
 
         try:
-            return HabitPeriod.from_dict(period_value)
+            return HabitFrequency.from_dict(period_value)
         except ValueError:
             logger.error(f"Invalid period value: {period_value}")
             self.data["period"] = None
             return None
 
     @period.setter
-    def period(self, value: HabitPeriod) -> None:
+    def period(self, value: HabitFrequency) -> None:
         self.data["period"] = value.to_dict()
 
     @property

@@ -18,9 +18,9 @@ from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import (
     Habit,
+    HabitFrequency,
     HabitList,
     HabitListBuilder,
-    HabitPeriod,
     HabitStatus,
 )
 
@@ -73,10 +73,10 @@ def habit_row(habit: Habit, tag: str, days: list[datetime.date]):
     name.props(f'role="heading" aria-level="2" aria-label="{habit.name}"')
 
     today = max(days)
+    completions = get_habit_date_completion(habit, days)
     for day in days:
-        completion = get_habit_date_completion(habit, day)
         checkbox = HabitCheckBox(
-            completion, habit, today, day, refresh=habit_row.refresh
+            completions[day], habit, today, day, refresh=habit_row.refresh
         )
         checkbox.classes(RIGHT_CLASSES)
 
@@ -108,7 +108,8 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                 continue
 
             for habit in habit_list:
-                habit.period = HabitPeriod("D", 3, 2)
+                if "" in habit.name:
+                    habit.period = HabitFrequency("Y", 1, 2)
                 with ui.card().classes(COMPAT_CLASSES):
                     with grid(columns, 1):
                         habit_row(habit, tag, days)

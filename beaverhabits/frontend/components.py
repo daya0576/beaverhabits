@@ -186,7 +186,7 @@ class HabitCheckBox(ui.checkbox):
         self.hold.clear()
         self.moving = False
         try:
-            async with asyncio.timeout(0.2):
+            async with asyncio.timeout(0.25):
                 await self.hold.wait()
         except asyncio.TimeoutError:
             value = await note_tick(self.habit, self.day)
