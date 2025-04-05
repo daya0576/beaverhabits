@@ -128,11 +128,6 @@ class HabitCheckBox(ui.checkbox):
         value = completion.status == Completion.Status.DONE
         self.refresh = refresh
         super().__init__("", value=value)
-        self.props(
-            f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
-        )
-        if self.completion.status == Completion.Status.PERIOD_DONE:
-            self.props(f'unchecked-icon="{icons.ADD}"')
         self._update_style(value)
 
         # Hold on event flag
@@ -180,6 +175,13 @@ class HabitCheckBox(ui.checkbox):
             self.props('aria-label="Yesterday"')
         else:
             self.props(f'aria-label="{days} days ago"')
+
+        # icons
+        self.props(
+            f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
+        )
+        if self.completion.status == Completion.Status.PERIOD_DONE:
+            self.props(f'unchecked-icon="{icons.DONE_OUTLINE}"')
 
     async def _mouse_down_event(self, e):
         logger.info(f"Down event: {self.day}, {e.args.get('type')}")

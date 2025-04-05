@@ -109,7 +109,7 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 
             for habit in habit_list:
                 if "" in habit.name:
-                    habit.period = HabitFrequency("Y", 1, 2)
+                    habit.period = HabitFrequency("D", 3, 1)
                 with ui.card().classes(COMPAT_CLASSES):
                     with grid(columns, 1):
                         habit_row(habit, tag, days)
