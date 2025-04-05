@@ -25,9 +25,8 @@ class FilePersistentDict(observables.ObservableDict):
         self.indent = indent
         try:
             data = json.loads(filepath.read_text(encoding)) if filepath.exists() else {}
-        except Exception:
-            logger.warning(f"Could not load storage file {filepath}")
-            data = {}
+        except Exception as e:
+            raise ValueError(f"Could not load storage file {filepath}", e)
         super().__init__(data, on_change=self.backup)
 
     def backup(self) -> None:

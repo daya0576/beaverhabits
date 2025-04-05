@@ -1,6 +1,8 @@
+from dataclasses import dataclass
 import datetime
-from enum import Enum
-from typing import List, Optional, Protocol, Self, Set
+from enum import Enum, auto
+from dateutil import rrule
+from typing import List, Literal, Optional, Protocol, Self, Set
 
 from beaverhabits.app.db import User
 
@@ -37,6 +39,31 @@ class HabitStatus(Enum):
         return tuple(cls.__members__.values())
 
 
+@dataclass
+class HabitFrequency:
+    # Moving window
+    period_type: Literal["D", "W", "M", "Y"]
+    period_count: int
+
+    # Target frequency
+    target_count: int
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Self:
+        return cls(
+            period_type=data["period_type"],
+            period_count=data["period_count"],
+            target_count=data["target_count"],
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "period_type": self.period_type,
+            "period_count": self.period_count,
+            "target_count": self.target_count,
+        }
+
+
 class Habit[R: CheckedRecord](Protocol):
     @property
     def id(self) -> str | int: ...
@@ -69,7 +96,17 @@ class Habit[R: CheckedRecord](Protocol):
     def status(self, value: HabitStatus) -> None: ...
 
     @property
+    def period(self) -> HabitFrequency | None: ...
+
+    @period.setter
+    def period(self, value: HabitFrequency) -> None: ...
+
+    @property
     def ticked_days(self) -> list[datetime.date]: ...
+
+    def ticked_count(
+        self, start: datetime.date | None = None, end: datetime.date | None = None
+    ) -> int: ...
 
     @property
     def ticked_data(self) -> dict[datetime.date, R]: ...

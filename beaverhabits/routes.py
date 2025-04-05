@@ -4,7 +4,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from nicegui import app, ui
 
-from beaverhabits.frontend import javascript, paddle_page
+from beaverhabits.frontend import paddle_page
 from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.layout import custom_header, redirect
 from beaverhabits.frontend.order_page import order_page_ui

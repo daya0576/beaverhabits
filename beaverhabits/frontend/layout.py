@@ -7,9 +7,9 @@ from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import (
-    compat_menu,
     menu_header,
     menu_icon_button,
+    menu_icon_item,
 )
 from beaverhabits.logging import logger
 from beaverhabits.storage.meta import (
@@ -68,23 +68,25 @@ def menu_component() -> None:
     with ui.menu().props('role="menu"'):
         path = context.client.page.path
         if "add" in path:
-            compat_menu("Reorder", lambda: redirect("order"))
+            menu_icon_item("Sort", lambda: redirect("order"))
+        elif "/habits/{habit_id}" in path:
+            menu_icon_item("Edit", lambda: True)
         else:
-            add = compat_menu("Add", lambda: redirect("add"))
+            add = menu_icon_item("Add", lambda: redirect("add"))
             add.props('aria-label="Edit habit list"')
         separator()
 
-        compat_menu("Export", lambda: open_tab("export"))
+        menu_icon_item("Export", lambda: open_tab("export"))
         separator()
-        imp = compat_menu("Import", lambda: redirect("import"))
-        separator()
+        imp = menu_icon_item("Import", lambda: redirect("import"))
         if is_page_demo():
             imp.classes("disabled")
+        separator()
 
         if is_page_demo():
-            compat_menu("Login", lambda: ui.navigate.to("/login"))
+            menu_icon_item("Login", lambda: ui.navigate.to("/login"))
         else:
-            compat_menu("Logout", lambda: user_logout() and ui.navigate.to("/login"))
+            menu_icon_item("Logout", lambda: user_logout() and ui.navigate.to("/login"))
 
 
 def pre_cache():
@@ -95,7 +97,7 @@ def pre_cache():
 
 
 @contextmanager
-def layout(title: str | None = None, with_menu: bool = True):
+def layout(title: str | None = None):
     """Base layout for all pages."""
     title = title or get_page_title()
 
@@ -111,11 +113,12 @@ def layout(title: str | None = None, with_menu: bool = True):
 
         path = context.client.page.path
         logger.info(f"Rendering page: {path}")
-        with ui.row().classes("min-w-full gap-x-0"):
+        with ui.row().classes("min-w-full gap-x-1"):
             menu_header(title, target=get_root_path())
-            if with_menu:
-                ui.space()
-                with menu_icon_button(icons.MENU):
-                    menu_component()
+            ui.space()
+            with menu_icon_button(icons.MENU) as menu:
+                menu_component()
+                # Accessibility
+                menu.props('aria-haspopup="true" aria-label="menu"')
 
         yield
