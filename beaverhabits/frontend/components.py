@@ -8,7 +8,6 @@ from typing import Callable, List, Optional, Self
 from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
 from nicegui.elements.button import Button
-from sortedcontainers import SortedDict
 
 from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
@@ -713,7 +712,7 @@ def habit_streak(today: datetime.date, habit: Habit):
         return
 
     # find the streaks of the dates
-    result = SortedDict()
+    result = OrderedDict()
     streak_count = 1
     for i in range(1, len(dates)):
         if (dates[i] - dates[i - 1]).days == -1:
