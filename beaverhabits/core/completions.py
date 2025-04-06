@@ -4,7 +4,7 @@ from enum import Enum
 
 from beaverhabits.logging import logger
 from beaverhabits.storage.storage import EVERY_DAY, Habit, HabitFrequency
-from beaverhabits.utils import date_move, get_period_fist_day
+from beaverhabits.utils import date_move, get_period_fist_day, timeit
 
 
 @dataclass
@@ -26,15 +26,13 @@ class Completion:
         return cls(cls.Status.PERIOD_DONE)
 
 
+INIT, DONE, PERIOD_DONE = (Completion.init(), Completion.done(), Completion.period())
+
+
 def done(
-    habit: Habit, days: list[datetime.date]
+    habit: Habit, start: datetime.date, end: datetime.date
 ) -> dict[datetime.date, Completion] | None:
-    cache = set(habit.ticked_days)
-    result = {}
-    for day in days:
-        if day in cache:
-            result[day] = Completion.done()
-    return result
+    return {day: DONE for day in habit.ticked_days if start <= day <= end}
 
 
 class PeriodIterator:
@@ -57,13 +55,13 @@ class PeriodIterator:
 
 
 def period(
-    habit: Habit, days: list[datetime.date]
+    habit: Habit, start: datetime.date, end: datetime.date
 ) -> dict[datetime.date, Completion] | None:
     # Example:
     # - Ride mountain bike twice a week
     # - Visit my mother every second weekend
     p = habit.period
-    if not p or not days:
+    if not p:
         return
 
     # Ignore default (everyday)
@@ -71,33 +69,35 @@ def period(
         return
 
     # Cache
-    days_min = date_move(min(days), -p.period_count, p.period_type)
-    days_max = date_move(max(days), p.period_count, p.period_type)
+    days_min = date_move(start, -p.period_count, p.period_type)
+    days_max = date_move(end, p.period_count, p.period_type)
     cache = [x for x in habit.ticked_days if days_min <= x <= days_max]
     logger.debug(f"cache: {cache}, {days_min} <= day <= {days_max}")
 
     # Iterate over the completion days
     result: set[datetime.date] = set()
-    for start, end in PeriodIterator(cache, p):
+    for left, right in PeriodIterator(cache, p):
         # Identify current period start point
         logger.debug(f"Start: {start}, End: {end}")
         done_days = sum(1 for d in cache if start <= d < end)
         if done_days >= p.target_count:
             # Mark them as completed
-            result |= set(day for day in days if start <= day < end)
+            for i in range((right - left).days):
+                result.add(left + datetime.timedelta(days=i))
 
-    return {day: Completion.period() for day in result}
+    return {day: PERIOD_DONE for day in result}
 
 
 COMPLETION_HANDLERS = [period, done]
 
 
+@timeit
 def get_habit_date_completion(
-    habit: Habit, days: list[datetime.date]
+    habit: Habit, start: datetime.date, end: datetime.date
 ) -> dict[datetime.date, Completion]:
-    result = {day: Completion.init() for day in days}
+    result = {}
     for handler in COMPLETION_HANDLERS:
-        completion = handler(habit, days)
+        completion = handler(habit, start, end)
         if completion:
             result = {**result, **completion}
     return result

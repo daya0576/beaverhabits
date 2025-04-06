@@ -5,6 +5,7 @@ from typing import List
 from nicegui import ui
 
 from beaverhabits.configs import settings
+from beaverhabits.core import completions
 from beaverhabits.core.completions import get_habit_date_completion
 from beaverhabits.frontend import javascript
 from beaverhabits.frontend.components import (
@@ -18,12 +19,10 @@ from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import (
     Habit,
-    HabitFrequency,
     HabitList,
     HabitListBuilder,
     HabitStatus,
 )
-from beaverhabits.utils import D
 
 NAME_COLS, DATE_COLS = settings.INDEX_HABIT_NAME_COLUMNS, 2
 COUNT_BADGE_COLS = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
@@ -70,11 +69,10 @@ def habit_row(habit: Habit, tag: str, days: list[datetime.date]):
     name.props(f'role="heading" aria-level="2" aria-label="{habit.name}"')
 
     today = max(days)
-    completions = get_habit_date_completion(habit, days)
+    status_map = get_habit_date_completion(habit, min(days), today)
     for day in days:
-        checkbox = HabitCheckBox(
-            completions[day], habit, today, day, refresh=habit_row.refresh
-        )
+        status = status_map.get(day, completions.INIT)
+        checkbox = HabitCheckBox(status, habit, today, day, refresh=habit_row.refresh)
         checkbox.classes(RIGHT_CLASSES)
 
     if settings.INDEX_SHOW_HABIT_COUNT:

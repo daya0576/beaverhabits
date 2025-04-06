@@ -50,11 +50,12 @@ def card(link: str | None = None, padding: float = 3):
 
 @ui.refreshable
 def habit_page(today: datetime.date, habit: Habit):
+    target = get_habit_heatmap_path(habit)
+
+    # Habit notes
     notes = [x for x in habit.records if x.text]
     notes.sort(key=lambda x: x.day, reverse=True)
     # https://tailwindcss.com/docs/responsive-design#container-size-reference
-
-    target = get_habit_heatmap_path(habit)
 
     with ui.column().classes("gap-y-2"):
         with card():
@@ -66,7 +67,7 @@ def habit_page(today: datetime.date, habit: Habit):
             habit_calendar = CalendarHeatmap.build(
                 today, WEEKS_TO_DISPLAY, calendar.MONDAY
             )
-            habit_heat_map(habit, habit_calendar)
+            habit_heat_map(habit, habit_calendar, refresh=habit_page.refresh)
 
         with card():
             card_title("History", target)

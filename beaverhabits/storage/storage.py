@@ -1,11 +1,12 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import datetime
 from enum import Enum, auto
 from dateutil import rrule
+import re
 from typing import List, Literal, Optional, Protocol, Self, Set
 
 from beaverhabits.app.db import User
-from beaverhabits.utils import D
+from beaverhabits.utils import D, PERIOD_TYPES
 
 
 class CheckedRecord(Protocol):
@@ -42,6 +43,8 @@ class HabitStatus(Enum):
 
 @dataclass
 class HabitFrequency:
+    PATTERN = re.compile(r"(\d+)\/(\d+)([DWMY])")
+
     # Moving window
     period_type: Literal["D", "W", "M", "Y"]
     period_count: int
@@ -58,20 +61,29 @@ class HabitFrequency:
         )
 
     def to_dict(self) -> dict:
-        return {
-            "period_type": self.period_type,
-            "period_count": self.period_count,
-            "target_count": self.target_count,
-        }
+        return asdict(self)
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, HabitFrequency):
-            return False
-        return (
-            self.period_type == other.period_type
-            and self.period_count == other.period_count
-            and self.target_count == other.target_count
-        )
+    def to_str(self) -> str:
+        return f"{self.target_count}/{self.period_count}{self.period_type}"
+
+    @classmethod
+    def from_str(cls, value: str) -> Self:
+        # Parse from pattern
+        m = re.match(cls.PATTERN, value)
+
+        # Extract the values
+        if not m:
+            raise ValueError(f"Invalid pattern: {value}")
+
+        t_c, p_c, p_t = m.groups()[1:]
+        if p_t not in PERIOD_TYPES:
+            raise ValueError(f"Invalid period type: {p_t}")
+        if not p_c.isdigit() or not t_c.isdigit():
+            raise ValueError(f"Invalid period count: {p_c} or target count: {t_c}")
+        t_c, p_c = int(t_c), int(p_c)
+
+        # Create the object
+        return cls(p_t, p_c, t_c)
 
 
 EVERY_DAY = HabitFrequency(D, 1, 1)

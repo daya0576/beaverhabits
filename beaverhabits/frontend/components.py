@@ -11,7 +11,8 @@ from nicegui.elements.button import Button
 
 from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
-from beaverhabits.core.completions import Completion
+from beaverhabits.core import completions
+from beaverhabits.core.completions import Completion, get_habit_date_completion
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
@@ -273,7 +274,7 @@ class HabitOrderCard(ui.card):
 
 class HabitNameInput(ui.input):
     def __init__(self, habit: Habit, label: str = "") -> None:
-        super().__init__(value=self.encode_name(habit.name, habit.tags), label=label)
+        super().__init__(value=self.encode_name(habit), label=label)
         self.habit = habit
         self.validation = self._validate
         self.props("dense hide-bottom-space")
@@ -286,7 +287,7 @@ class HabitNameInput(ui.input):
         self.habit.tags = tags
         logger.info(f"Habit Name changed to {name}")
         logger.info(f"Habit Tags changed to {tags}")
-        self.value = self.encode_name(name, tags)
+        self.value = self.encode_name(self.habit)
 
     async def _on_keydown_enter(self):
         await self._save(self.value)
@@ -305,12 +306,13 @@ class HabitNameInput(ui.input):
             return "Too long"
 
     @staticmethod
-    def encode_name(name: str, tags: list[str]) -> str:
-        if not tags:
-            return name
+    def encode_name(habit: Habit) -> str:
+        name = habit.name
+        if habit.tags:
+            tags = [f"#{tag}" for tag in habit.tags]
+            name = f"{name} {' '.join(tags)}"
 
-        tags = [f"#{tag}" for tag in tags]
-        return f"{name} {' '.join(tags)}"
+        return name
 
     @staticmethod
     def decode_name(name: str) -> tuple[str, list[str]]:
@@ -401,9 +403,11 @@ class HabitDateInput(ui.date):
         self,
         today: datetime.date,
         habit: Habit,
+        refresh: Callable | None = None,
     ) -> None:
         self.today = today
         self.habit = habit
+        self.refresh = refresh
         super().__init__(self._tick_days, on_change=self._async_task)
 
         self.props("multiple minimal flat today-btn")
@@ -412,7 +416,7 @@ class HabitDateInput(ui.date):
 
         self.classes("shadow-none")
 
-        self.bind_value_from(self, "_tick_days")
+        # self.bind_value_from(self, "_tick_days")
         events = [
             d.strftime(CALENDAR_EVENT_MASK)
             for d, r in self.habit.ticked_data.items()
@@ -440,6 +444,10 @@ class HabitDateInput(ui.date):
         await habit_tick(self.habit, day, bool(value))
         self.value = self._tick_days
 
+        if self.refresh:
+            logger.debug("refresh page")
+            self.refresh()
+
 
 @dataclass
 class CalendarHeatmap:
@@ -450,6 +458,10 @@ class CalendarHeatmap:
     headers: list[str]
     data: list[list[datetime.date]]
     week_days: list[str]
+
+    @property
+    def first_day(self) -> datetime.date:
+        return self.data[0][0]
 
     @classmethod
     def build(
@@ -507,13 +519,14 @@ class CalendarCheckBox(ui.checkbox):
         self,
         habit: Habit,
         day: datetime.date,
-        today: datetime.date,
-        is_bind_data: bool = True,
+        status: Completion,
         readonly: bool = False,
+        refresh: Callable | None = None,
     ) -> None:
         self.habit = habit
         self.day = day
-        self.today = today
+        self.status = status
+        self.refresh = refresh
         super().__init__("", value=self.ticked, on_change=self._async_task)
 
         self.classes("inline-block")
@@ -522,8 +535,6 @@ class CalendarCheckBox(ui.checkbox):
         self.props(f'unchecked-icon="{unchecked_icon}"')
         self.props(f'checked-icon="{checked_icon}"')
 
-        if is_bind_data:
-            self.bind_value_from(self, "ticked")
         if readonly:
             self.on("mousedown.prevent", lambda: True)
             self.on("touchstart.prevent", lambda: True)
@@ -535,6 +546,9 @@ class CalendarCheckBox(ui.checkbox):
 
     def _icon_svg(self):
         unchecked_color, checked_color = "rgb(54,54,54)", "rgb(103,150,207)"
+        if self.status.status == Completion.Status.PERIOD_DONE:
+            # x 0.4
+            unchecked_color = "rgb(41, 60, 83)"
         return (
             icons.SQUARE.format(color=unchecked_color, text=self.day.day),
             icons.SQUARE.format(color=checked_color, text=self.day.day),
@@ -545,35 +559,41 @@ class CalendarCheckBox(ui.checkbox):
         await self.habit.tick(self.day, e.value)
         logger.info(f"Day {self.day} ticked: {e.value}")
 
+        if self.refresh:
+            logger.debug("refresh page")
+            self.refresh()
+
 
 def habit_heat_map(
     habit: Habit,
-    habit_calendar: CalendarHeatmap,
+    calendar: CalendarHeatmap,
     readonly: bool = False,
+    refresh: Callable | None = None,
 ):
-    today = habit_calendar.today
+    today = calendar.today
 
-    # Bind to external state data
-    is_bind_data = not readonly
+    # Habit completions
+    status_map = get_habit_date_completion(habit, calendar.first_day, today)
 
     with ui.column().classes("gap-0"):
         # Headers
         with ui.row(wrap=False).classes("gap-0"):
-            for header in habit_calendar.headers:
+            for header in calendar.headers:
                 header_lable = ui.label(header).classes("text-gray-300 text-center")
                 header_lable.style("width: 20px; line-height: 18px; font-size: 9px;")
             ui.label().style("width: 22px;")
 
         # Day matrix
-        for i, weekday_days in enumerate(habit_calendar.data):
+        for i, weekday_days in enumerate(calendar.data):
             with ui.row(wrap=False).classes("gap-0"):
                 for day in weekday_days:
-                    if day <= habit_calendar.today:
-                        CalendarCheckBox(habit, day, today, is_bind_data, readonly)
+                    if day <= calendar.today:
+                        status = status_map.get(day, completions.INIT)
+                        CalendarCheckBox(habit, day, status, readonly, refresh=refresh)
                     else:
                         ui.label().style("width: 20px; height: 20px;")
 
-                week_day_abbr_label = ui.label(habit_calendar.week_days[i])
+                week_day_abbr_label = ui.label(calendar.week_days[i])
                 week_day_abbr_label.classes("indent-1.5 text-gray-300")
                 week_day_abbr_label.style(
                     "width: 22px; line-height: 20px; font-size: 9px;"
@@ -823,6 +843,9 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
         logger.info(f"Habit period changed to {habit.period}")
         dialog.close()
 
+        # wildly reload the page
+        ui.navigate.reload()
+
         return True
 
     def reset():
@@ -832,10 +855,9 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
 
     with ui.dialog() as dialog, ui.card().props("flat") as card:
         dialog.props('backdrop-filter="blur(4px)"')
-        card.classes("w-5/6 max-w-80")
+        card.classes("w-5/6 max-w-64")
 
         with ui.column().classes("w-full"):
-            # Habit Name
             HabitNameInput(habit, label="Name").classes("w-full")
 
             # Habit Frequency
