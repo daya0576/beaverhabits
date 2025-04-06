@@ -78,8 +78,10 @@ def period(
     result: set[datetime.date] = set()
     for left, right in PeriodIterator(cache, p):
         # Identify current period start point
-        logger.debug(f"Start: {start}, End: {end}")
-        done_days = sum(1 for d in cache if start <= d < end)
+        done_days = sum(1 for d in cache if left <= d < right)
+        logger.debug(
+            f"Start: {left}, End: {right}, done: {done_days}, target: {p.target_count}"
+        )
         if done_days >= p.target_count:
             # Mark them as completed
             for i in range((right - left).days):
