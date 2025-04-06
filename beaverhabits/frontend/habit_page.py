@@ -10,6 +10,7 @@ from beaverhabits.frontend.components import (
     habit_heat_map,
     habit_history,
     habit_notes,
+    habit_streak,
     link,
 )
 from beaverhabits.frontend.css import (
@@ -59,7 +60,9 @@ def habit_page(today: datetime.date, habit: Habit):
 
     with ui.column().classes("gap-y-2"):
         with card():
-            HabitDateInput(today, habit)
+            HabitDateInput(
+                today, habit, refreshs=[habit_heat_map.refresh, habit_history.refresh]
+            )
 
         with card():
             card_title("Last 3 Months", target)
@@ -70,12 +73,16 @@ def habit_page(today: datetime.date, habit: Habit):
             habit_heat_map(habit, habit_calendar, refresh=habit_page.refresh)
 
         with card():
-            card_title("History", target)
-            habit_history(today, habit.ticked_days)
+            card_title("Last Year", target)
+            habit_history(today, habit)
 
         with card(padding=2):
             card_title("Notes", "#").tooltip("Press and hold to add notes/descriptions")
             habit_notes(notes)
+
+        with card():
+            card_title("Streaks", target)
+            habit_streak(today, habit)
 
         with card(target, padding=0.5):
             ui.icon("more_horiz", size="1.5em")

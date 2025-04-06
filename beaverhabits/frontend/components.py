@@ -8,6 +8,7 @@ from typing import Callable, List, Optional, Self
 from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
 from nicegui.elements.button import Button
+from sortedcontainers import SortedDict
 
 from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
@@ -403,11 +404,11 @@ class HabitDateInput(ui.date):
         self,
         today: datetime.date,
         habit: Habit,
-        refresh: Callable | None = None,
+        refreshs: list[Callable] | None = None,
     ) -> None:
         self.today = today
         self.habit = habit
-        self.refresh = refresh
+        self.refreshs = refreshs
         super().__init__(self._tick_days, on_change=self._async_task)
 
         self.props("multiple minimal flat today-btn")
@@ -444,9 +445,10 @@ class HabitDateInput(ui.date):
         await habit_tick(self.habit, day, bool(value))
         self.value = self._tick_days
 
-        if self.refresh:
+        if self.refreshs:
             logger.debug("refresh page")
-            self.refresh()
+            for refresh in self.refreshs:
+                refresh()
 
 
 @dataclass
@@ -564,6 +566,7 @@ class CalendarCheckBox(ui.checkbox):
             self.refresh()
 
 
+@ui.refreshable
 def habit_heat_map(
     habit: Habit,
     calendar: CalendarHeatmap,
@@ -604,9 +607,8 @@ def grid(columns: int, rows: int | None = 1) -> ui.grid:
     return ui.grid(columns=columns, rows=rows).classes("gap-0 items-center")
 
 
-def habit_history(
-    today: datetime.date, ticked_days: list[datetime.date], total_months: int = 13
-):
+@ui.refreshable
+def habit_history(today: datetime.date, habit: Habit, total_months: int = 13):
     # get lastest 6 months, e.g. Feb
     months, data = [], []
     for i in range(total_months, 0, -1):
@@ -615,7 +617,7 @@ def habit_history(
 
         count = sum(
             1
-            for x in ticked_days
+            for x in habit.ticked_days
             if x.month == offset_date.month and x.year == offset_date.year
         )
         data.append(count)
@@ -702,6 +704,62 @@ def habit_notes(records: List[CheckedRecord], limit: int = 10):
                 subtitle=record.day.strftime("%B %d, %Y"),
                 color=color,
             )
+
+
+def habit_streak(today: datetime.date, habit: Habit):
+    status = get_habit_date_completion(habit, today.replace(year=today.year - 1), today)
+    dates = sorted(status.keys())
+    if len(dates) <= 1:
+        return
+
+    # find the streaks of the dates
+    result = SortedDict()
+    streak_count = 1
+    for i in range(1, len(dates)):
+        if (dates[i] - dates[i - 1]).days == 1:
+            streak_count += 1
+        else:
+            result[dates[i - 1]] = streak_count
+            streak_count = 1
+
+    result[dates[-1]] = streak_count
+
+    # draw the graph
+    months, data = list(result.keys()), list(result.values())
+
+    echart = ui.echart(
+        {
+            "xAxis": {
+                "data": months,
+            },
+            "yAxis": {
+                "type": "value",
+                "position": "right",
+                "splitLine": {
+                    "show": True,
+                    "lineStyle": {
+                        "color": "#303030",
+                    },
+                },
+            },
+            "series": [
+                {
+                    "type": "line",
+                    "data": data,
+                    "itemStyle": {"color": icons.current_color},
+                    "animation": False,
+                }
+            ],
+            "grid": {
+                "top": 15,
+                "bottom": 25,
+                "left": 5,
+                "right": 30,
+                "show": False,
+            },
+        }
+    )
+    echart.classes("h-40")
 
 
 class TagManager:

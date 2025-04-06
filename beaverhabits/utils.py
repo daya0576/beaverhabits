@@ -104,6 +104,9 @@ def get_period_fist_day(date: datetime.date, period_type: str) -> datetime.date:
 def date_move(
     date: datetime.date, step: int, period_type: PERIOD_TYPE
 ) -> datetime.date:
+    if date in (datetime.date.min, datetime.date.max):
+        return date
+
     if period_type == D:
         date = date + datetime.timedelta(days=step)
     elif period_type == W:
