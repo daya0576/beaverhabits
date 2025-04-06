@@ -7,9 +7,10 @@ from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import (
-    compat_menu,
+    habit_edit_dialog,
     menu_header,
     menu_icon_button,
+    menu_icon_item,
 )
 from beaverhabits.logging import logger
 from beaverhabits.storage.meta import (
@@ -17,6 +18,7 @@ from beaverhabits.storage.meta import (
     get_root_path,
     is_page_demo,
 )
+from beaverhabits.storage.storage import Habit
 
 
 def redirect(x):
@@ -63,28 +65,36 @@ def separator():
     ui.separator().props('aria-hidden="true"')
 
 
-def menu_component() -> None:
+@ui.refreshable
+def menu_component(habit: Habit | None = None) -> None:
     """Dropdown menu for the top-right corner of the page."""
-    with ui.menu().props('role="menu"'):
-        path = context.client.page.path
-        if "add" in path:
-            compat_menu("Reorder", lambda: redirect("order"))
-        else:
-            add = compat_menu("Add", lambda: redirect("add"))
-            add.props('aria-label="Edit habit list"')
-        separator()
+    edit_dialog = habit_edit_dialog(habit) if habit else ui.dialog()
 
-        compat_menu("Export", lambda: open_tab("export"))
-        separator()
-        imp = compat_menu("Import", lambda: redirect("import"))
-        separator()
-        if is_page_demo():
-            imp.classes("disabled")
+    with ui.menu().props('role="menu" auto-close'):
+        # habit page
+        if habit:
+            menu_icon_item("Edit", on_click=edit_dialog.open)
+            separator()
+        else:
+            path = context.client.page.path
+            if "add" in path:
+                menu_icon_item("Sort", lambda: redirect("order"))
+            else:
+                add = menu_icon_item("Add", lambda: redirect("add"))
+                add.props('aria-label="Edit habit list"')
+            separator()
+
+            menu_icon_item("Export", lambda: open_tab("export"))
+            separator()
+            imp = menu_icon_item("Import", lambda: redirect("import"))
+            if is_page_demo():
+                imp.classes("disabled")
+            separator()
 
         if is_page_demo():
-            compat_menu("Login", lambda: ui.navigate.to("/login"))
+            menu_icon_item("Login", lambda: ui.navigate.to("/login"))
         else:
-            compat_menu("Logout", lambda: user_logout() and ui.navigate.to("/login"))
+            menu_icon_item("Logout", lambda: user_logout() and ui.navigate.to("/login"))
 
 
 def pre_cache():
@@ -95,7 +105,7 @@ def pre_cache():
 
 
 @contextmanager
-def layout(title: str | None = None, with_menu: bool = True):
+def layout(title: str | None = None, habit: Habit | None = None):
     """Base layout for all pages."""
     title = title or get_page_title()
 
@@ -111,11 +121,12 @@ def layout(title: str | None = None, with_menu: bool = True):
 
         path = context.client.page.path
         logger.info(f"Rendering page: {path}")
-        with ui.row().classes("min-w-full gap-x-0"):
+        with ui.row().classes("min-w-full gap-x-1"):
             menu_header(title, target=get_root_path())
-            if with_menu:
-                ui.space()
-                with menu_icon_button(icons.MENU):
-                    menu_component()
+            ui.space()
+            with menu_icon_button(icons.MENU) as menu:
+                menu_component(habit)
+                # Accessibility
+                menu.props('aria-haspopup="true" aria-label="menu"')
 
         yield

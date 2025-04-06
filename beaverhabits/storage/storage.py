@@ -1,8 +1,12 @@
+from dataclasses import asdict, dataclass
 import datetime
-from enum import Enum
-from typing import List, Optional, Protocol, Self, Set
+from enum import Enum, auto
+from dateutil import rrule
+import re
+from typing import List, Literal, Optional, Protocol, Self, Set
 
 from beaverhabits.app.db import User
+from beaverhabits.utils import D, PERIOD_TYPES
 
 
 class CheckedRecord(Protocol):
@@ -37,6 +41,54 @@ class HabitStatus(Enum):
         return tuple(cls.__members__.values())
 
 
+@dataclass
+class HabitFrequency:
+    PATTERN = re.compile(r"(\d+)\/(\d+)([DWMY])")
+
+    # Moving window
+    period_type: Literal["D", "W", "M", "Y"]
+    period_count: int
+
+    # Target frequency
+    target_count: int
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Self:
+        return cls(
+            period_type=data["period_type"],
+            period_count=data["period_count"],
+            target_count=data["target_count"],
+        )
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+    def to_str(self) -> str:
+        return f"{self.target_count}/{self.period_count}{self.period_type}"
+
+    @classmethod
+    def from_str(cls, value: str) -> Self:
+        # Parse from pattern
+        m = re.match(cls.PATTERN, value)
+
+        # Extract the values
+        if not m:
+            raise ValueError(f"Invalid pattern: {value}")
+
+        t_c, p_c, p_t = m.groups()[1:]
+        if p_t not in PERIOD_TYPES:
+            raise ValueError(f"Invalid period type: {p_t}")
+        if not p_c.isdigit() or not t_c.isdigit():
+            raise ValueError(f"Invalid period count: {p_c} or target count: {t_c}")
+        t_c, p_c = int(t_c), int(p_c)
+
+        # Create the object
+        return cls(p_t, p_c, t_c)
+
+
+EVERY_DAY = HabitFrequency(D, 1, 1)
+
+
 class Habit[R: CheckedRecord](Protocol):
     @property
     def id(self) -> str | int: ...
@@ -69,7 +121,17 @@ class Habit[R: CheckedRecord](Protocol):
     def status(self, value: HabitStatus) -> None: ...
 
     @property
+    def period(self) -> HabitFrequency | None: ...
+
+    @period.setter
+    def period(self, value: HabitFrequency | None) -> None: ...
+
+    @property
     def ticked_days(self) -> list[datetime.date]: ...
+
+    def ticked_count(
+        self, start: datetime.date | None = None, end: datetime.date | None = None
+    ) -> int: ...
 
     @property
     def ticked_data(self) -> dict[datetime.date, R]: ...

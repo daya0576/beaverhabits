@@ -25,9 +25,8 @@ class FilePersistentDict(observables.ObservableDict):
         self.indent = indent
         try:
             data = json.loads(filepath.read_text(encoding)) if filepath.exists() else {}
-        except Exception:
-            logger.warning(f"Could not load storage file {filepath}")
-            data = {}
+        except Exception as e:
+            raise ValueError(f"Could not load storage file {filepath}", e)
         super().__init__(data, on_change=self.backup)
 
     def backup(self) -> None:
@@ -39,6 +38,7 @@ class FilePersistentDict(observables.ObservableDict):
 
         async def backup() -> None:
             async with aiofiles.open(self.filepath, "w", encoding=self.encoding) as f:
+                logger.debug(f"Backing up {self.filepath}")
                 await f.write(json.dumps(self, indent=self.indent))
 
         if core.loop:

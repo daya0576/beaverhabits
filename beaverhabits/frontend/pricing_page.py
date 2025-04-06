@@ -76,7 +76,7 @@ def description():
 
 
 def demo():
-    ui.label("Why Habit Tracker Works?").classes("text-2xl font-bold")
+    ui.label("How to keep your habits on track?").classes("text-2xl font-bold")
     with ui.column().classes("w-full gap-1"):
         reasons = [
             "Make it <b>obvious</b>: visual cues like the streak remind you to act again",

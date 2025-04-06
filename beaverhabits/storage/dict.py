@@ -1,8 +1,16 @@
 import datetime
 from dataclasses import dataclass, field
 
+from sortedcontainers import SortedList
+
 from beaverhabits.logging import logger
-from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, HabitStatus
+from beaverhabits.storage.storage import (
+    CheckedRecord,
+    Habit,
+    HabitFrequency,
+    HabitList,
+    HabitStatus,
+)
 from beaverhabits.utils import generate_short_hash
 
 DAY_MASK = "%Y-%m-%d"
@@ -56,11 +64,10 @@ class DictRecord(CheckedRecord, DictStorage):
 class HabitDataCache:
     def __init__(self, habit: "DictHabit"):
         self.habit = habit
-        self.ticked_days = [r.day for r in self.habit.records if r.done]
-        self.ticked_data = {r.day: r for r in self.habit.records}
+        self.refresh()
 
     def refresh(self):
-        self.ticked_days = [r.day for r in self.habit.records if r.done]
+        self.ticked_days = SortedList([r.day for r in self.habit.records if r.done])
         self.ticked_data = {r.day: r for r in self.habit.records}
 
 
@@ -128,8 +135,39 @@ class DictHabit(Habit[DictRecord], DictStorage):
         return [DictRecord(d) for d in self.data["records"]]
 
     @property
+    def period(self) -> HabitFrequency | None:
+        period_value = self.data.get("period")
+        if not period_value:
+            return None
+
+        try:
+            return HabitFrequency.from_dict(period_value)
+        except ValueError:
+            logger.error(f"Invalid period value: {period_value}")
+            self.data["period"] = None
+            return None
+
+    @period.setter
+    def period(self, value: HabitFrequency | None) -> None:
+        if value is None:
+            self.data["period"] = None
+            return
+
+        self.data["period"] = value.to_dict()
+
+    @property
     def ticked_days(self) -> list[datetime.date]:
         return self.cache.ticked_days
+
+    def ticked_count(
+        self, start: datetime.date | None = None, end: datetime.date | None = None
+    ) -> int:
+        if start is None:
+            start = datetime.date.min
+        if end is None:
+            end = datetime.date.max
+
+        return sum(1 for day in self.ticked_days if start <= day <= end)
 
     @property
     def ticked_data(self) -> dict[datetime.date, DictRecord]:

@@ -1,9 +1,12 @@
 import datetime
 import hashlib
 import time
+from functools import wraps
+from typing import Literal, TypeAlias
 
 import pytz
 from cachetools import TTLCache
+from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 from nicegui import app, ui
 from starlette import status
@@ -12,6 +15,10 @@ from beaverhabits.logging import logger
 
 WEEK_DAYS = 7
 TIME_ZONE_KEY = "timezone"
+
+PERIOD_TYPES = D, W, M, Y = "D", "W", "M", "Y"
+PERIOD_TYPES_FOR_HUMAN = {D: "Day(s)", W: "Week(s)", M: "Month(s)", Y: "Year(s)"}
+PERIOD_TYPE: TypeAlias = Literal["D", "W", "M", "Y"]
 
 
 async def fetch_user_timezone() -> None:
@@ -82,3 +89,43 @@ def ratelimiter(limit: int, window: int):
         return wrapper
 
     return decorator
+
+
+def get_period_fist_day(date: datetime.date, period_type: str) -> datetime.date:
+    if period_type == W:
+        date = date - datetime.timedelta(days=date.weekday())
+    elif period_type == M:
+        date = date.replace(day=1)
+    elif period_type == Y:
+        date = date.replace(month=1, day=1)
+    return date
+
+
+def date_move(
+    date: datetime.date, step: int, period_type: PERIOD_TYPE
+) -> datetime.date:
+    if date in (datetime.date.min, datetime.date.max):
+        return date
+
+    if period_type == D:
+        date = date + datetime.timedelta(days=step)
+    elif period_type == W:
+        date = date + datetime.timedelta(weeks=step)
+    elif period_type == M:
+        date = date + relativedelta(months=step)
+    elif period_type == Y:
+        date = date.replace(year=date.year + step)
+    return date
+
+
+def timeit(func):
+    @wraps(func)
+    def timeit_wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        total_time = end_time - start_time
+        logger.info(f"Function {func.__name__} Took {total_time:.4f} seconds")
+        return result
+
+    return timeit_wrapper
