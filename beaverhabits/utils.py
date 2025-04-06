@@ -16,6 +16,7 @@ WEEK_DAYS = 7
 TIME_ZONE_KEY = "timezone"
 
 PERIOD_TYPES = D, W, M, Y = "D", "W", "M", "Y"
+PERIOD_TYPES_FOR_HUMAN = {D: "Day(s)", W: "Week(s)", M: "Month(s)", Y: "Year(s)"}
 PERIOD_TYPE: TypeAlias = Literal["D", "W", "M", "Y"]
 
 

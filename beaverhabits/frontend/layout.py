@@ -73,7 +73,6 @@ def menu_component(habit: Habit | None = None) -> None:
     with ui.menu().props('role="menu" auto-close'):
         # habit page
         if habit:
-            edit_dialog.open()
             menu_icon_item("Edit", on_click=edit_dialog.open)
             separator()
         else:

@@ -26,6 +26,7 @@ from beaverhabits.storage.storage import (
 from beaverhabits.utils import (
     PERIOD_TYPE,
     PERIOD_TYPES,
+    PERIOD_TYPES_FOR_HUMAN,
     WEEK_DAYS,
     D,
     M,
@@ -787,20 +788,57 @@ class TagChip(ui.chip):
             self.refresh()
 
 
-def habit_edit_dialog(habit: Habit, refresh_list: list[ui.refreshable] | None = None) -> ui.dialog:
+def number_input(value: int, label: str):
+    return ui.input(value=str(value), label=label).props("dense").classes("w-8")
+
+
+def habit_edit_dialog(habit: Habit) -> ui.dialog:
     p = habit.period or EVERY_DAY
+
+    def try_update_period() -> bool:
+        p_count = period_count.value
+        t_count = target_count.value
+
+        if period_type.value not in PERIOD_TYPES:
+            ui.notify("Invalid period type", color="negative")
+            return False
+        p_type: PERIOD_TYPE = period_type.value
+
+        # Check value is digit
+        if not p_count.isdigit() or not t_count.isdigit():
+            ui.notify("Invalid interval", color="negative")
+            return False
+        p_count, t_count = int(p_count), int(t_count)
+        if p_count <= 0 or t_count <= 0:
+            ui.notify("Invalid period count", color="negative")
+            return False
+
+        # Check value is in range
+        max_times = {D: 1, W: 7, M: 31, Y: 366}
+        if t_count > max_times.get(p_type, 1) * p_count:
+            ui.notify("Invalid interval", color="negative")
+            return False
+
+        habit.period = HabitFrequency(p_type, p_count, t_count)
+        logger.info(f"Habit period changed to {habit.period}")
+        dialog.close()
+
+        return True
+
+    def reset():
+        period_type.value = EVERY_DAY.period_type
+        period_count.value = str(EVERY_DAY.period_count)
+        target_count.value = str(EVERY_DAY.target_count)
 
     with ui.dialog() as dialog, ui.card().props("flat") as card:
         dialog.props('backdrop-filter="blur(4px)"')
         card.classes("w-5/6 max-w-80")
 
         with ui.column().classes("w-full"):
-            name_input = HabitNameInput(habit, label="Name")
-            name_input.classes("w-full")
+            # Habit Name
+            HabitNameInput(habit, label="Name").classes("w-full")
 
-            def number_input(value: int , label: str):
-                return ui.input(value=str(value), label=label).props("dense").classes("w-8")
-
+            # Habit Frequency
             with ui.row().classes("items-center"):
                 target_count = number_input(p.target_count, label="Times")
 
@@ -808,48 +846,8 @@ def habit_edit_dialog(habit: Habit, refresh_list: list[ui.refreshable] | None = 
 
                 period_count = number_input(value=p.period_count, label="Every")
                 period_type = ui.select(
-                    {D: "Days", W: "Weeks", M: "Months", Y: "Years"},
-                    value=p.period_type,
-                    label="  ",
+                    PERIOD_TYPES_FOR_HUMAN, value=p.period_type, label=" "
                 ).props("dense")
-
-            def try_update_period() -> bool:
-                p_count = period_count.value
-                t_count = target_count.value
-
-                if period_type.value not in PERIOD_TYPES:
-                    ui.notify("Invalid period type", color="negative")
-                    return False
-                p_type: PERIOD_TYPE = period_type.value
-
-                # Check value is digit
-                if not p_count.isdigit() or not t_count.isdigit():
-                    ui.notify("Invalid interval", color="negative")
-                    return False
-                p_count, t_count = int(p_count), int(t_count)
-                if p_count <= 0 or t_count <= 0:
-                    ui.notify("Invalid period count", color="negative")
-                    return False
-
-                # Check value is in range
-                max_times = {D: 1, W: 7, M: 31, Y: 366}
-                if t_count > max_times.get(p_type, 1) * p_count:
-                    ui.notify("Invalid interval", color="negative")
-                    return False
-
-                habit.period = HabitFrequency(p_type, p_count, t_count)
-                logger.info(f"Habit period changed to {habit.period}")
-                dialog.close()
-
-                for r in refresh_list or []:
-                    r.refresh()
-                
-                return True
-
-            def reset():
-                period_type.value = EVERY_DAY.period_type
-                period_count.value = str(EVERY_DAY.period_count)
-                target_count.value = str(EVERY_DAY.target_count)
 
             with ui.row():
                 ui.button("Save", on_click=try_update_period).props("flat")
