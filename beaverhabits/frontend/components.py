@@ -708,7 +708,7 @@ def habit_notes(records: List[CheckedRecord], limit: int = 10):
 
 def habit_streak(today: datetime.date, habit: Habit):
     status = get_habit_date_completion(habit, today.replace(year=today.year - 1), today)
-    dates = sorted(status.keys())
+    dates = sorted(status.keys(), reverse=True)
     if len(dates) <= 1:
         return
 
@@ -716,16 +716,19 @@ def habit_streak(today: datetime.date, habit: Habit):
     result = SortedDict()
     streak_count = 1
     for i in range(1, len(dates)):
-        if (dates[i] - dates[i - 1]).days == 1:
+        if (dates[i] - dates[i - 1]).days == -1:
             streak_count += 1
         else:
             result[dates[i - 1]] = streak_count
             streak_count = 1
-
-    result[dates[-1]] = streak_count
+            if len(result) >= 5:
+                break
+    else:
+        result[dates[-1]] = streak_count
 
     # draw the graph
     months, data = list(result.keys()), list(result.values())
+    months = [x.strftime("%d/%m") for x in months]
 
     echart = ui.echart(
         {
@@ -744,7 +747,7 @@ def habit_streak(today: datetime.date, habit: Habit):
             },
             "series": [
                 {
-                    "type": "line",
+                    "type": "bar",
                     "data": data,
                     "itemStyle": {"color": icons.current_color},
                     "animation": False,

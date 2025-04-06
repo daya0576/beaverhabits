@@ -21,7 +21,7 @@ from beaverhabits.frontend.css import (
 )
 from beaverhabits.frontend.layout import layout, redirect
 from beaverhabits.storage.meta import get_habit_heatmap_path
-from beaverhabits.storage.storage import Habit
+from beaverhabits.storage.storage import EVERY_DAY, Habit
 
 WEEKS_TO_DISPLAY = 15
 
@@ -80,9 +80,10 @@ def habit_page(today: datetime.date, habit: Habit):
             card_title("Notes", "#").tooltip("Press and hold to add notes/descriptions")
             habit_notes(notes)
 
-        with card():
-            card_title("Streaks", target)
-            habit_streak(today, habit)
+        if habit.period and habit.period != EVERY_DAY:
+            with card():
+                card_title("Streaks", target)
+                habit_streak(today, habit)
 
         with card(target, padding=0.5):
             ui.icon("more_horiz", size="1.5em")
