@@ -15,8 +15,24 @@ from beaverhabits.core.completions import Completion
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
-from beaverhabits.storage.storage import CheckedRecord, Habit, HabitList, HabitStatus
-from beaverhabits.utils import WEEK_DAYS, ratelimiter
+from beaverhabits.storage.storage import (
+    EVERY_DAY,
+    CheckedRecord,
+    Habit,
+    HabitFrequency,
+    HabitList,
+    HabitStatus,
+)
+from beaverhabits.utils import (
+    PERIOD_TYPE,
+    PERIOD_TYPES,
+    WEEK_DAYS,
+    D,
+    M,
+    W,
+    Y,
+    ratelimiter,
+)
 
 strptime = datetime.datetime.strptime
 
@@ -158,30 +174,15 @@ class HabitCheckBox(ui.checkbox):
         # - iOS browser / standalone mode
         # - Android browser / PWA
 
-    def _update_style(self, value: bool):
-        self.value = value
+    def _refresh(self):
+        logger.debug(f"Refresh: {self.day}, {self.value}")
+        if not self.refresh:
+            return
+        if not self.habit.period:
+            return
 
-        # update style for shadow color
-        if not value:
-            self.props("color=grey-8")
-        else:
-            self.props("color=currentColor")
-
-        # Accessibility
-        days = (self.today - self.day).days
-        if days == 0:
-            self.props('aria-label="Today"')
-        elif days == 1:
-            self.props('aria-label="Yesterday"')
-        else:
-            self.props(f'aria-label="{days} days ago"')
-
-        # icons
-        self.props(
-            f'checked-icon="{icons.DONE}" unchecked-icon="{icons.CLOSE}" keep-color'
-        )
-        if self.completion.status == Completion.Status.PERIOD_DONE:
-            self.props(f'unchecked-icon="{icons.DONE_OUTLINE}"')
+        # Do refresh the components
+        self.refresh()
 
     async def _mouse_down_event(self, e):
         logger.info(f"Down event: {self.day}, {e.args.get('type')}")
@@ -191,20 +192,22 @@ class HabitCheckBox(ui.checkbox):
             async with asyncio.timeout(0.25):
                 await self.hold.wait()
         except asyncio.TimeoutError:
+            # Long press diaglog
             value = await note_tick(self.habit, self.day)
+
             if value is not None:
-                self._update_style(value)
+                self.value = value
+                self._refresh()
+
             await self._blur()
 
     async def _click_event(self, e):
-        value = e.sender.value
-        self._update_style(value)
+        self.value = e.sender.value
 
         # Do update completion status
-        await habit_tick(self.habit, self.day, value)
+        await habit_tick(self.habit, self.day, self.value)
 
-        if self.refresh:
-            self.refresh()
+        self._refresh()
 
     async def _mouse_up_event(self, e):
         logger.info(f"Up event: {self.day}, {e.args.get('type')}")
@@ -224,6 +227,26 @@ class HabitCheckBox(ui.checkbox):
            checkboxes.forEach(checkbox => {checkbox.blur()});
            """
         )
+
+    def _update_style(self, value: bool):
+        self.value = value
+
+        # Accessibility
+        days = (self.today - self.day).days
+        if days == 0:
+            self.props('aria-label="Today"')
+        elif days == 1:
+            self.props('aria-label="Yesterday"')
+        else:
+            self.props(f'aria-label="{days} days ago"')
+
+        # icons, e.g. sym_o_notes
+        checked, unchecked = icons.DONE, icons.CLOSE
+        if self.habit.period:
+            if self.completion.status == Completion.Status.PERIOD_DONE:
+                unchecked = icons.DONE_OUTLINE
+
+        self.props(f'checked-icon="{checked}" unchecked-icon="{unchecked}" keep-color')
 
 
 class HabitOrderCard(ui.card):
@@ -248,8 +271,8 @@ class HabitOrderCard(ui.card):
 
 
 class HabitNameInput(ui.input):
-    def __init__(self, habit: Habit) -> None:
-        super().__init__(value=self.encode_name(habit.name, habit.tags))
+    def __init__(self, habit: Habit, label: str = "") -> None:
+        super().__init__(value=self.encode_name(habit.name, habit.tags), label=label)
         self.habit = habit
         self.validation = self._validate
         self.props("dense hide-bottom-space")
@@ -764,5 +787,72 @@ class TagChip(ui.chip):
             self.refresh()
 
 
-def habit_edit_popup(habit: Habit):
-    pass
+def habit_edit_dialog(habit: Habit, refresh_list: list[ui.refreshable] | None = None) -> ui.dialog:
+    p = habit.period or EVERY_DAY
+
+    with ui.dialog() as dialog, ui.card().props("flat") as card:
+        dialog.props('backdrop-filter="blur(4px)"')
+        card.classes("w-5/6 max-w-80")
+
+        with ui.column().classes("w-full"):
+            name_input = HabitNameInput(habit, label="Name")
+            name_input.classes("w-full")
+
+            def number_input(value: int , label: str):
+                return ui.input(value=str(value), label=label).props("dense").classes("w-8")
+
+            with ui.row().classes("items-center"):
+                target_count = number_input(p.target_count, label="Times")
+
+                ui.label("/").classes("text-gray-300")
+
+                period_count = number_input(value=p.period_count, label="Every")
+                period_type = ui.select(
+                    {D: "Days", W: "Weeks", M: "Months", Y: "Years"},
+                    value=p.period_type,
+                    label="  ",
+                ).props("dense")
+
+            def try_update_period() -> bool:
+                p_count = period_count.value
+                t_count = target_count.value
+
+                if period_type.value not in PERIOD_TYPES:
+                    ui.notify("Invalid period type", color="negative")
+                    return False
+                p_type: PERIOD_TYPE = period_type.value
+
+                # Check value is digit
+                if not p_count.isdigit() or not t_count.isdigit():
+                    ui.notify("Invalid interval", color="negative")
+                    return False
+                p_count, t_count = int(p_count), int(t_count)
+                if p_count <= 0 or t_count <= 0:
+                    ui.notify("Invalid period count", color="negative")
+                    return False
+
+                # Check value is in range
+                max_times = {D: 1, W: 7, M: 31, Y: 366}
+                if t_count > max_times.get(p_type, 1) * p_count:
+                    ui.notify("Invalid interval", color="negative")
+                    return False
+
+                habit.period = HabitFrequency(p_type, p_count, t_count)
+                logger.info(f"Habit period changed to {habit.period}")
+                dialog.close()
+
+                for r in refresh_list or []:
+                    r.refresh()
+                
+                return True
+
+            def reset():
+                period_type.value = EVERY_DAY.period_type
+                period_count.value = str(EVERY_DAY.period_count)
+                target_count.value = str(EVERY_DAY.target_count)
+
+            with ui.row():
+                ui.button("Save", on_click=try_update_period).props("flat")
+                ui.button("Reset", on_click=reset).props("flat")
+
+    return dialog

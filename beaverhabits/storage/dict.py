@@ -148,7 +148,11 @@ class DictHabit(Habit[DictRecord], DictStorage):
             return None
 
     @period.setter
-    def period(self, value: HabitFrequency) -> None:
+    def period(self, value: HabitFrequency | None) -> None:
+        if value is None:
+            self.data["period"] = None
+            return
+
         self.data["period"] = value.to_dict()
 
     @property

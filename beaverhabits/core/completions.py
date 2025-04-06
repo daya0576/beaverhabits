@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from beaverhabits.logging import logger
-from beaverhabits.storage.storage import Habit, HabitFrequency
+from beaverhabits.storage.storage import EVERY_DAY, Habit, HabitFrequency
 from beaverhabits.utils import date_move, get_period_fist_day
 
 
@@ -64,16 +64,17 @@ def period(
     # - Visit my mother every second weekend
     p = habit.period
     if not p or not days:
-        return None
+        return
+
+    # Ignore default (everyday)
+    if p == EVERY_DAY:
+        return
 
     # Cache
-    # days_min = date_move(min(days), -p.period_count, p.period_type)
-    # days_max = date_move(max(days), p.period_count, p.period_type)
-    # cache = [x for x in habit.ticked_days if days_min < x < days_max]
-    # logger.debug(f"min: {days_min}, max: {days_max}, cache: {cache}")
-    cache = habit.ticked_days
-    logger.debug(f"Period: {p}")
-    logger.debug(f"Cache: {cache}")
+    days_min = date_move(min(days), -p.period_count, p.period_type)
+    days_max = date_move(max(days), p.period_count, p.period_type)
+    cache = [x for x in habit.ticked_days if days_min <= x <= days_max]
+    logger.debug(f"cache: {cache}, {days_min} <= day <= {days_max}")
 
     # Iterate over the completion days
     result: set[datetime.date] = set()

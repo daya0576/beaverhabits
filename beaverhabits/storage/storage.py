@@ -5,6 +5,7 @@ from dateutil import rrule
 from typing import List, Literal, Optional, Protocol, Self, Set
 
 from beaverhabits.app.db import User
+from beaverhabits.utils import D
 
 
 class CheckedRecord(Protocol):
@@ -63,6 +64,18 @@ class HabitFrequency:
             "target_count": self.target_count,
         }
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, HabitFrequency):
+            return False
+        return (
+            self.period_type == other.period_type
+            and self.period_count == other.period_count
+            and self.target_count == other.target_count
+        )
+
+
+EVERY_DAY = HabitFrequency(D, 1, 1)
+
 
 class Habit[R: CheckedRecord](Protocol):
     @property
@@ -99,7 +112,7 @@ class Habit[R: CheckedRecord](Protocol):
     def period(self) -> HabitFrequency | None: ...
 
     @period.setter
-    def period(self, value: HabitFrequency) -> None: ...
+    def period(self, value: HabitFrequency | None) -> None: ...
 
     @property
     def ticked_days(self) -> list[datetime.date]: ...

@@ -15,7 +15,7 @@ from beaverhabits.logging import logger
 WEEK_DAYS = 7
 TIME_ZONE_KEY = "timezone"
 
-D, W, M, Y = "D", "W", "M", "Y"
+PERIOD_TYPES = D, W, M, Y = "D", "W", "M", "Y"
 PERIOD_TYPE: TypeAlias = Literal["D", "W", "M", "Y"]
 
 

@@ -23,10 +23,7 @@ from beaverhabits.storage.storage import (
     HabitListBuilder,
     HabitStatus,
 )
-
-# fmt:off
-COLORS = ["#f44336","#e91e63","#9c27b0","#673ab7","#3f51b5","#2196f3","#03a9f4","#00bcd4","#009688","#4caf50","#8bc34a","#cddc39","#ffeb3b","#ffc107","#ff9800","#ff5722","#795548","#9e9e9e","#607d8b"]
-# fmt:on
+from beaverhabits.utils import D
 
 NAME_COLS, DATE_COLS = settings.INDEX_HABIT_NAME_COLUMNS, 2
 COUNT_BADGE_COLS = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
@@ -108,8 +105,6 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                 continue
 
             for habit in habit_list:
-                if "" in habit.name:
-                    habit.period = HabitFrequency("D", 3, 1)
                 with ui.card().classes(COMPAT_CLASSES):
                     with grid(columns, 1):
                         habit_row(habit, tag, days)

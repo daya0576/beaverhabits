@@ -86,5 +86,5 @@ def habit_page_ui(today: datetime.date, habit: Habit):
     ui.add_css(EXPANSION_CSS)
     ui.add_css(HIDE_TIMELINE_TITLE)
 
-    with layout(title=habit.name):
+    with layout(title=habit.name, habit=habit):
         habit_page(today, habit)
