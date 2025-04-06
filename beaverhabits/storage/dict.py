@@ -1,8 +1,6 @@
 import datetime
 from dataclasses import dataclass, field
 
-from sortedcontainers import SortedList
-
 from beaverhabits.logging import logger
 from beaverhabits.storage.storage import (
     CheckedRecord,
@@ -67,7 +65,7 @@ class HabitDataCache:
         self.refresh()
 
     def refresh(self):
-        self.ticked_days = SortedList([r.day for r in self.habit.records if r.done])
+        self.ticked_days = [r.day for r in self.habit.records if r.done]
         self.ticked_data = {r.day: r for r in self.habit.records}
 
 
