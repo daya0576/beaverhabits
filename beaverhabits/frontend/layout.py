@@ -73,7 +73,11 @@ def menu_component(habit: Habit | None = None) -> None:
     with ui.menu().props('role="menu" auto-close'):
         # habit page
         if habit:
+            add = menu_icon_item("Add", lambda: redirect("add"))
+            add.props('aria-label="Add habit"')
+            separator()
             menu_icon_item("Edit", on_click=edit_dialog.open)
+            add.props('aria-label="Edit habit"')
             separator()
         else:
             path = context.client.page.path
@@ -81,7 +85,7 @@ def menu_component(habit: Habit | None = None) -> None:
                 menu_icon_item("Sort", lambda: redirect("order"))
             else:
                 add = menu_icon_item("Add", lambda: redirect("add"))
-                add.props('aria-label="Edit habit list"')
+                add.props('aria-label="Add habit"')
             separator()
 
             menu_icon_item("Export", lambda: open_tab("export"))

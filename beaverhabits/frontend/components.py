@@ -712,21 +712,22 @@ def habit_streak(today: datetime.date, habit: Habit):
         return
 
     # find the streaks of the dates
-    result = OrderedDict()
+    months, data = [], []
     streak_count = 1
     for i in range(1, len(dates)):
         if (dates[i] - dates[i - 1]).days == -1:
             streak_count += 1
         else:
-            result[dates[i - 1]] = streak_count
+            months.insert(0, dates[i - 1])
+            data.insert(0, streak_count)
             streak_count = 1
-            if len(result) >= 5:
+            if len(months) >= 5:
                 break
     else:
-        result[dates[-1]] = streak_count
+        months.insert(0, dates[-1])
+        data.insert(0, streak_count)
 
     # draw the graph
-    months, data = list(result.keys()), list(result.values())
     months = [x.strftime("%d/%m") for x in months]
 
     echart = ui.echart(

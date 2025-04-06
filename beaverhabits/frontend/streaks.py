@@ -40,7 +40,7 @@ def streaks(today: datetime.date, habit: Habit):
 def history(today: datetime.date, habit: Habit):
     with compat_card():
         ui.label("History").classes("text-lg")
-        habit_history(today, habit.ticked_days, total_months=48)
+        habit_history(today, habit, total_months=48)
 
 
 def heatmap_page(today: datetime.date, habit: Habit):
