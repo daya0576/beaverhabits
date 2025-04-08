@@ -29,6 +29,10 @@ def sort_menu(habit_list: HabitList):
             habit_list.order_by = order
             ui.navigate.reload()
 
+        def set_custom():
+            habit_list.order_by = HabitOrder.MANUALLY
+            redirect("order")
+
         with ui.menu().props('anchor="top end" self="top start" auto-close'):
             name = menu_icon_item("by Name", lambda: set_order(HabitOrder.NAME))
             if habit_list.order_by == HabitOrder.NAME:
@@ -38,6 +42,6 @@ def sort_menu(habit_list: HabitList):
             if habit_list.order_by == HabitOrder.CATEGORY:
                 cat.props("active")
 
-            manually = menu_icon_item("Manually", lambda: redirect("order"))
+            manually = menu_icon_item("Manually", set_custom)
             if habit_list.order_by == HabitOrder.MANUALLY:
                 manually.props("active")
