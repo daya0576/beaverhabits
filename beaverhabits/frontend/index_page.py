@@ -119,7 +119,7 @@ def index_page_ui(days: list[datetime.date], habits: HabitList):
     if settings.INDEX_HABIT_DATE_REVERSE:
         days = list(reversed(days))
 
-    with layout():
+    with layout(habit_list=habits):
         habit_list_ui(days, active_habits)
 
     # Prevent long press context menu for svg image elements

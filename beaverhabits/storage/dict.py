@@ -7,6 +7,7 @@ from beaverhabits.storage.storage import (
     Habit,
     HabitFrequency,
     HabitList,
+    HabitOrder,
     HabitStatus,
 )
 from beaverhabits.utils import generate_short_hash
@@ -237,6 +238,23 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
     @order.setter
     def order(self, value: list[str]) -> None:
         self.data["order"] = value
+
+    @property
+    def order_by(self) -> HabitOrder:
+        order_value = self.data.get("order_by")
+        if order_value is None:
+            return HabitOrder.MANUALLY
+
+        try:
+            return HabitOrder(order_value)
+        except ValueError:
+            logger.error(f"Invalid order value: {order_value}")
+            self.data["order_by"] = None
+            return HabitOrder.MANUALLY
+
+    @order_by.setter
+    def order_by(self, value: HabitOrder) -> None:
+        self.data["order_by"] = value.value
 
     async def get_habit_by(self, habit_id: str) -> DictHabit | None:
         for habit in self.habits:

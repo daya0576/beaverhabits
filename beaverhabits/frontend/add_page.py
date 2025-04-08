@@ -17,9 +17,11 @@ def add_ui(habit_list: HabitList):
 
     for item in habits:
         with components.grid(columns=10).props("role=listitem"):
-            name = HabitNameInput(item)
-            name.classes("col-span-8 break-all")
-            name.props('aria-label="Habit name" aria-description="press enter to save"')
+            with HabitNameInput(item) as name:
+                name.classes("col-span-8 break-all")
+                name.props(
+                    'aria-label="Habit name" aria-description="press enter to save"'
+                )
 
             star = HabitStarCheckbox(item, add_ui.refresh)
             star.classes("col-span-1")
@@ -31,7 +33,8 @@ def add_ui(habit_list: HabitList):
 
 
 def add_page_ui(habit_list: HabitList):
-    with layout():
+    with layout(habit_list=habit_list):
+
         with ui.column().classes("items-center w-full").props("role=list"):
             add_ui(habit_list)
 

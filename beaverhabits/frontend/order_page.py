@@ -77,7 +77,7 @@ def add_ui(habit_list: HabitList):
 
 
 def order_page_ui(habit_list: HabitList):
-    with layout():
+    with layout(habit_list=habit_list):
         with ui.column().classes("items-center sortable gap-2 w-full"):
             add_ui(habit_list)
 

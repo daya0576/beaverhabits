@@ -149,6 +149,12 @@ class Habit[R: CheckedRecord](Protocol):
     __repr__ = __str__
 
 
+class HabitOrder(Enum):
+    NAME = auto()
+    CATEGORY = auto()
+    MANUALLY = auto()
+
+
 class HabitList[H: Habit](Protocol):
 
     @property
@@ -159,6 +165,12 @@ class HabitList[H: Habit](Protocol):
 
     @order.setter
     def order(self, value: List[str]) -> None: ...
+
+    @property
+    def order_by(self) -> HabitOrder: ...
+
+    @order_by.setter
+    def order_by(self, value: HabitOrder) -> None: ...
 
     async def add(self, name: str) -> None: ...
 
@@ -188,6 +200,7 @@ class HabitListBuilder:
             HabitStatus.ACTIVE,
             HabitStatus.ARCHIVED,
         )
+        self.order_by = HabitOrder.MANUALLY
 
     def status(self, *status: HabitStatus) -> Self:
         self.status_list = status
@@ -198,7 +211,11 @@ class HabitListBuilder:
         habits = [x for x in self.habit_list.habits if x.status in self.status_list]
 
         # sort by order
-        if o := self.habit_list.order:
+        if self.habit_list.order_by == HabitOrder.NAME:
+            habits.sort(key=lambda x: x.name.lower())
+        elif self.habit_list.order_by == HabitOrder.CATEGORY:
+            habits.sort(key=lambda x: x.tags[0].lower() if x.tags else "")
+        elif o := self.habit_list.order:
             habits.sort(
                 key=lambda x: (o.index(str(x.id)) if str(x.id) in o else float("inf"))
             )

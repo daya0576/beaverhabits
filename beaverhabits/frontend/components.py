@@ -278,16 +278,9 @@ class HabitNameInput(ui.input):
         self.habit = habit
         self.validation = self._validate
         self.props("dense hide-bottom-space")
+        
         self.on("blur", self._on_blur)
         self.on("keydown.enter", self._on_keydown_enter)
-
-    async def _save(self, value: str):
-        name, tags = self.decode_name(value)
-        self.habit.name = name
-        self.habit.tags = tags
-        logger.info(f"Habit Name changed to {name}")
-        logger.info(f"Habit Tags changed to {tags}")
-        self.value = self.encode_name(self.habit)
 
     async def _on_keydown_enter(self):
         await self._save(self.value)
@@ -296,8 +289,13 @@ class HabitNameInput(ui.input):
     async def _on_blur(self):
         await self._save(self.value)
 
-    async def _on_change(self, e: events.ValueChangeEventArguments):
-        await self._save(e.value)
+    async def _save(self, value: str):
+        name, tags = self.decode_name(value)
+        self.habit.name = name
+        self.habit.tags = tags
+        logger.info(f"Habit Name changed to {name}")
+        logger.info(f"Habit Tags changed to {tags}")
+        self.value = self.encode_name(self.habit)
 
     def _validate(self, value: str) -> Optional[str]:
         if not value:
