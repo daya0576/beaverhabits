@@ -244,10 +244,9 @@ class HabitCheckBox(ui.checkbox):
         # icons, e.g. sym_o_notes
         checked, unchecked = icons.DONE, icons.CLOSE
         if self.habit.period:
-            # checked = icons.DONE_ALL
+            checked = icons.DONE_ALL
             if CStatus.PERIOD_DONE in self.status:
-                unchecked = icons.DONE_OUTLINE
-                print(icons.DONE_OUTLINE)
+                unchecked = icons.DONE
 
         self.props(f'checked-icon="{checked}" unchecked-icon="{unchecked}" keep-color')
 
