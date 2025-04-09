@@ -278,7 +278,7 @@ class HabitNameInput(ui.input):
         self.habit = habit
         self.validation = self._validate
         self.props("dense hide-bottom-space")
-        
+
         self.on("blur", self._on_blur)
         self.on("keydown.enter", self._on_keydown_enter)
 
@@ -547,7 +547,8 @@ class CalendarCheckBox(ui.checkbox):
         unchecked_color, checked_color = "rgb(54,54,54)", "rgb(103,150,207)"
         if self.status.status == Completion.Status.PERIOD_DONE:
             # x 0.4
-            unchecked_color = "rgb(41, 60, 83)"
+            # unchecked_color = "rgb(41, 60, 83)"
+            unchecked_color = icons.fade(checked_color, 0.4)
         return (
             icons.SQUARE.format(color=unchecked_color, text=self.day.day),
             icons.SQUARE.format(color=checked_color, text=self.day.day),
@@ -638,7 +639,7 @@ def habit_history(today: datetime.date, habit: Habit, total_months: int = 13):
                 {
                     "type": "line",
                     "data": data,
-                    "itemStyle": {"color": icons.current_color},
+                    "itemStyle": {"color": icons.PRIMARY_COLOR},
                     "animation": False,
                 }
             ],
@@ -747,7 +748,7 @@ def habit_streak(today: datetime.date, habit: Habit):
                 {
                     "type": "bar",
                     "data": data,
-                    "itemStyle": {"color": icons.current_color},
+                    "itemStyle": {"color": icons.PRIMARY_COLOR},
                     "animation": False,
                 }
             ],

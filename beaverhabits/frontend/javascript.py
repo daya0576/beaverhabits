@@ -1,5 +1,8 @@
+from jinja2 import Environment, meta
 from nicegui import __version__ as version
 from nicegui import ui
+
+from beaverhabits.configs import settings
 
 PREVENT_CONTEXT_MENU = """\
 document.body.style.webkitTouchCallout='none';
@@ -42,6 +45,50 @@ setTimeout(() => {
 }, 500);
 """.replace(
     "{__version__}", version
+)
+
+PADDLE_JS_TEMPLATE = """\
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+<script type="text/javascript">
+  Paddle.Initialize({ 
+    token: '{{paddle_token}}' 
+  });
+  {% if sandbox %}Paddle.Environment.set("sandbox");{% endif %}
+
+  function getPrices() {
+    console.log('start...');
+    var request = {
+        items: [{ quantity: 1, priceId: '{{price_id}}' }]
+    };
+    console.log(request);
+    Paddle.PricePreview(request)
+      .then((result) => {
+        console.log(result);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+
+  // open checkout
+  // https://developer.paddle.com/build/checkout/build-overlay-checkout
+  function openCheckout() {
+    Paddle.Checkout.open({
+      items: [{ priceId: "{{price_id}}", quantity: 1 }],
+      settings: {
+        theme: "dark",
+      }
+    });
+  }
+</script>
+"""
+
+env = Environment()
+PADDLE_JS = env.from_string(PADDLE_JS_TEMPLATE).render(
+    paddle_token=settings.PADDLE_CLIENT_SIDE_TOKEN,
+    sandbox=settings.PADDLE_SANDBOX,
+    product_id=settings.PADDLE_PRODUCT_ID,
+    price_id=settings.PADDLE_PRICE_ID,
 )
 
 

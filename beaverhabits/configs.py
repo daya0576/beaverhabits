@@ -57,7 +57,13 @@ class Settings(BaseSettings):
     INDEX_HABIT_DATE_COLUMNS: int = 5
     INDEX_HABIT_DATE_REVERSE: bool = False
 
-    UMAMI_ANALYTICS_ID: str = ''
+    UMAMI_ANALYTICS_ID: str = ""
+
+    PADDLE_SANDBOX: bool = True
+    PADDLE_CLIENT_SIDE_TOKEN: str = ""
+    PADDLE_API_TOKEN: str = ""
+    PADDLE_PRODUCT_ID: str = ""
+    PADDLE_PRICE_ID: str = ""
 
     def is_dev(self):
         return self.ENV == "dev"

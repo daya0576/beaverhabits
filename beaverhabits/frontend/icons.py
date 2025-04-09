@@ -1,17 +1,36 @@
+import re
+
 # https://editsvgcode.com/
 SVG_TEMPLATE = "img:data:image/svg+xml;charset=utf8,<svg xmlns='http://www.w3.org/2000/svg' height='{height}' viewBox='0 -960 960 960' width='{height}' fill='{color}'><path d='{data}'/></svg>"
+SVG_FLIP = "img:data:image/svg+xml;charset=utf8,<svg xmlns='http://www.w3.org/2000/svg' height='{height}' viewBox='0 -960 960 960' width='{height}' fill='{color}'><g transform='scale(-1, 1) translate(-960, 0)'><path d='{data}'/></g></svg>"
+SVG_OUTLINE = "img:data:image/svg+xml;charset=utf8,<svg xmlns='http://www.w3.org/2000/svg' height='{height}' viewBox='0 -960 960 960' width='{height}' fill='{color}'><path d='{data}' fill='none' stroke='{color}' stroke-width='{width}'/></svg>"
 
-current_color = "rgb(103,150,207)"
+PRIMARY_COLOR = "rgb(103,150,207)"
 card_bg_color = "rgb(29,29,29)"
 unchecked_square_color = "rgb(54,54,54)"
+
+PATTERN = re.compile(r"rgb\(\d+,\d+,\d+(?:,\d+)?\)")
+
+
+def fade(color: str, alpha: float):
+    m = PATTERN.match(color)
+    if not m:
+        raise ValueError(f"Invalid color format: {color}")
+
+    r, g, b = map(int, m.group(0)[4:-1].split(","))
+    return f"rgba({r*alpha}, {g*alpha}, {b*alpha})"
+
 
 # fmt: off
 DONE = SVG_TEMPLATE.format(height="24", color="rgb(103,150,207)", data="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z")
 DONE_FADE = SVG_TEMPLATE.format(height="24", color="rgb(103,150,207,0.5)", data="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z")
 DONE_OUTLINE = SVG_TEMPLATE.format(height="24", color="rgb(103,150,207,0.75)", data="m395-285 339-339-50-51-289 288-119-118-50 50 169 170Zm1 102L124-455l152-152 119 118 289-288 153 153-441 441Z")
+# DONE_OUTLINE = SVG_OUTLINE.format(height="24", color=PRIMARY_COLOR, data="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z", width="0")
 CLOSE = SVG_TEMPLATE.format(height="24", color="rgb(97,97,97)", data="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z")
+SKIP = SVG_TEMPLATE.format(height="24", color="rgb(97,97,97)", data="M240-440v-80h480v80H240Z")
 
-MENU = SVG_TEMPLATE.format(height="24", color="rgb(255,255,255)", data="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z")
+
+MENU = SVG_TEMPLATE.format(height="24", color="rgb(255,255,255)", data="M594.53 508.63L6.18 53.9c-6.97-5.42-8.23-15.47-2.81-22.45L23.01 6.18C28.43-.8 38.49-2.06 45.47 3.37L633.82 458.1c6.97 5.42 8.23 15.47 2.81 22.45l-19.64 25.27c-5.42 6.98-15.48 8.23-22.46 2.81z")
 ADD = SVG_TEMPLATE.format(height="24", color="rgb(255,255,255)", data="M440-440H240q-17 0-28.5-11.5T200-480q0-17 11.5-28.5T240-520h200v-200q0-17 11.5-28.5T480-760q17 0 28.5 11.5T520-720v200h200q17 0 28.5 11.5T760-480q0 17-11.5 28.5T720-440H520v200q0 17-11.5 28.5T480-200q-17 0-28.5-11.5T440-240v-200Z")
 
 DELETE = SVG_TEMPLATE.format(height="24", color="rgb(158,158,158)", data="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z")

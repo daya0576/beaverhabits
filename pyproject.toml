@@ -18,6 +18,8 @@ dependencies = [
     "python-dateutil<3.0.0.0,>=2.9.0.post0",
     "loguru>=0.7.3",
     "cachetools>=5.5.1",
+    "jinja2>=3.1.6",
+    "paddle-python-sdk>=1.6.0",
 ]
 description = ""
 readme = "README.md"
