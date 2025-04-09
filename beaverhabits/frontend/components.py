@@ -246,7 +246,7 @@ class HabitCheckBox(ui.checkbox):
         checked, unchecked = icons.DONE, icons.CLOSE
         if self.habit.period:
             if self.completion.status == Completion.Status.PERIOD_DONE:
-                unchecked = icons.DONE_OUTLINE
+                unchecked = icons.DONE_SHADOW
 
         self.props(f'checked-icon="{checked}" unchecked-icon="{unchecked}" keep-color')
 
