@@ -244,8 +244,10 @@ class HabitCheckBox(ui.checkbox):
         # icons, e.g. sym_o_notes
         checked, unchecked = icons.DONE, icons.CLOSE
         if self.habit.period:
+            # checked = icons.DONE_ALL
             if CStatus.PERIOD_DONE in self.status:
-                unchecked = icons.DONE_SHADOW
+                unchecked = icons.DONE_OUTLINE
+                print(icons.DONE_OUTLINE)
 
         self.props(f'checked-icon="{checked}" unchecked-icon="{unchecked}" keep-color')
 
@@ -543,9 +545,10 @@ class CalendarCheckBox(ui.checkbox):
         return bool(record and record.done)
 
     def _icon_svg(self):
-        unchecked_color, checked_color = "rgb(54,54,54)", "rgb(103,150,207)"
+        unchecked_color, checked_color = "rgb(54,54,54)", icons.PRIMARY_COLOR
         if CStatus.PERIOD_DONE in self.status:
-            unchecked_color = icons.fade(checked_color, 0.4)
+            # Normalization + Linear Interpolation
+            unchecked_color = "rgb(40,87,141)"
         return (
             icons.SQUARE.format(color=unchecked_color, text=self.day.day),
             icons.SQUARE.format(color=checked_color, text=self.day.day),

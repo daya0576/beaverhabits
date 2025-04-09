@@ -4,7 +4,7 @@ import re
 SVG_RAW = "img:data:image/svg+xml;charset=utf8,{content}"
 SVG_TEMPLATE = "img:data:image/svg+xml;charset=utf8,<svg xmlns='http://www.w3.org/2000/svg' height='{height}' viewBox='0 -960 960 960' width='{height}' fill='{color}'><path d='{data}'/></svg>"
 SVG_FLIP = "img:data:image/svg+xml;charset=utf8,<svg xmlns='http://www.w3.org/2000/svg' height='{height}' viewBox='0 -960 960 960' width='{height}' fill='{color}'><g transform='scale(-1, 1) translate(-960, 0)'><path d='{data}'/></g></svg>"
-SVG_OUTLINE = "img:data:image/svg+xml;charset=utf8,<svg xmlns='http://www.w3.org/2000/svg' height='{height}' viewBox='0 -960 960 960' width='{height}' fill='{color}'><path d='{data}' fill='none' stroke='{color}' stroke-width='{width}'/></svg>"
+SVG_OUTLINE = "img:data:image/svg+xml;charset=utf8,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 -960 960 960' width='24'><path d='{content}' fill='{o_color}' stroke='{o_color}' stroke-width='{o_width}'/><path d='{content}' fill='{i_color}' stroke='{i_color}' stroke-width='{i_width}'/></svg>"
 
 PRIMARY_COLOR = "rgb(103,150,207)"
 CLOSE_COLOR = "rgb(97,97,97)"
@@ -25,12 +25,7 @@ def fade(color: str, alpha: float):
 
 # fmt: off
 DONE = SVG_TEMPLATE.format(height="24", color=PRIMARY_COLOR, data="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z")
-DONE_FADE = SVG_TEMPLATE.format(height="24", color="rgb(103,150,207,0.5)", data="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z")
-DONE_SHADOW = SVG_TEMPLATE.format(height="24", color=CLOSE_COLOR, data="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z")
-DONE_OUTLINE = SVG_TEMPLATE.format(height="16", color="rgb(103,150,207,0.75)", data="M11.354 4.646a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708l6-6a.5.5 0 0 1 .708 0")
-# DONE_OUTLINE = SVG_OUTLINE.format(height="24", color=PRIMARY_COLOR, data="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z", width="0")
-
-DONE_SLASH = SVG_TEMPLATE.format(height="24", color=CLOSE_COLOR, data="m256-200-56-56 224-224 56-56  224-224 56 56 -224 224 -56 56")
+DONE_OUTLINE = DONE_OUTLINE = SVG_TEMPLATE.format(height="24", color="rgb(103,150,207,0.75)", data="m395-285 339-339-50-51-289 288-119-118-50 50 169 170Zm1 102L124-455l152-152 119 118 289-288 153 153-441 441Z")
 
 CLOSE = SVG_TEMPLATE.format(height="24", color="rgb(97,97,97)", data="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z")
 SKIP = SVG_TEMPLATE.format(height="24", color="rgb(97,97,97)", data="M240-440v-80h480v80H240Z")
