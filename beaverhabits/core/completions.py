@@ -1,38 +1,18 @@
 import datetime
-from dataclasses import dataclass
-from enum import Enum
+from collections import defaultdict
+from enum import Enum, auto
 
 from beaverhabits.logging import logger
 from beaverhabits.storage.storage import EVERY_DAY, Habit, HabitFrequency
 from beaverhabits.utils import date_move, get_period_fist_day, timeit
 
-
-@dataclass
-class Completion:
-    Status = Enum("CStatus", [("INIT", 1), ("DONE", 2), ("PERIOD_DONE", 3)])
-
-    status: "Status"
-
-    @classmethod
-    def init(cls):
-        return cls(cls.Status.INIT)
-
-    @classmethod
-    def done(cls):
-        return cls(cls.Status.DONE)
-
-    @classmethod
-    def period(cls):
-        return cls(cls.Status.PERIOD_DONE)
-
-
-INIT, DONE, PERIOD_DONE = (Completion.init(), Completion.done(), Completion.period())
+CStatus = Enum("CStatus", [("DONE", auto()), ("PERIOD_DONE", auto())])
 
 
 def done(
     habit: Habit, start: datetime.date, end: datetime.date
-) -> dict[datetime.date, Completion] | None:
-    return {day: DONE for day in habit.ticked_days if start <= day <= end}
+) -> dict[datetime.date, CStatus] | None:
+    return {day: CStatus.DONE for day in habit.ticked_days if start <= day <= end}
 
 
 class PeriodIterator:
@@ -56,7 +36,7 @@ class PeriodIterator:
 
 def period(
     habit: Habit, start: datetime.date, end: datetime.date
-) -> dict[datetime.date, Completion] | None:
+) -> dict[datetime.date, CStatus] | None:
     # Example:
     # - Ride mountain bike twice a week
     # - Visit my mother every second weekend
@@ -87,7 +67,7 @@ def period(
             for i in range((right - left).days):
                 result.add(left + datetime.timedelta(days=i))
 
-    return {day: PERIOD_DONE for day in result}
+    return {day: CStatus.PERIOD_DONE for day in result}
 
 
 COMPLETION_HANDLERS = [period, done]
@@ -96,10 +76,12 @@ COMPLETION_HANDLERS = [period, done]
 @timeit
 def get_habit_date_completion(
     habit: Habit, start: datetime.date, end: datetime.date
-) -> dict[datetime.date, Completion]:
-    result = {}
+) -> dict[datetime.date, list[CStatus]]:
+    result = defaultdict(list)
     for handler in COMPLETION_HANDLERS:
         completion = handler(habit, start, end)
-        if completion:
-            result = {**result, **completion}
+        if not completion:
+            continue
+        for day, status in completion.items():
+            result[day].append(status)
     return result

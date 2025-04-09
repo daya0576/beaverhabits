@@ -11,8 +11,7 @@ from nicegui.elements.button import Button
 
 from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
-from beaverhabits.core import completions
-from beaverhabits.core.completions import Completion, get_habit_date_completion
+from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
@@ -133,7 +132,7 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool):
 class HabitCheckBox(ui.checkbox):
     def __init__(
         self,
-        completion: Completion,
+        status: list[CStatus],
         habit: Habit,
         today: datetime.date,
         day: datetime.date,
@@ -142,8 +141,8 @@ class HabitCheckBox(ui.checkbox):
         self.habit = habit
         self.day = day
         self.today = today
-        self.completion = completion
-        value = completion.status == Completion.Status.DONE
+        self.status = status
+        value = CStatus.DONE in status
         self.refresh = refresh
         super().__init__("", value=value)
         self._update_style(value)
@@ -215,7 +214,7 @@ class HabitCheckBox(ui.checkbox):
         logger.info(f"Up event: {self.day}, {e.args.get('type')}")
         self.hold.set()
 
-    async def _mouse_move_event(self, e):
+    async def _mouse_move_event(self):
         # logger.info(f"Move event: {self.day}, {e}")
         self.moving = True
         self.hold.set()
@@ -245,7 +244,7 @@ class HabitCheckBox(ui.checkbox):
         # icons, e.g. sym_o_notes
         checked, unchecked = icons.DONE, icons.CLOSE
         if self.habit.period:
-            if self.completion.status == Completion.Status.PERIOD_DONE:
+            if CStatus.PERIOD_DONE in self.status:
                 unchecked = icons.DONE_SHADOW
 
         self.props(f'checked-icon="{checked}" unchecked-icon="{unchecked}" keep-color')
@@ -518,7 +517,7 @@ class CalendarCheckBox(ui.checkbox):
         self,
         habit: Habit,
         day: datetime.date,
-        status: Completion,
+        status: list[CStatus],
         readonly: bool = False,
         refresh: Callable | None = None,
     ) -> None:
@@ -545,9 +544,7 @@ class CalendarCheckBox(ui.checkbox):
 
     def _icon_svg(self):
         unchecked_color, checked_color = "rgb(54,54,54)", "rgb(103,150,207)"
-        if self.status.status == Completion.Status.PERIOD_DONE:
-            # x 0.4
-            # unchecked_color = "rgb(41, 60, 83)"
+        if CStatus.PERIOD_DONE in self.status:
             unchecked_color = icons.fade(checked_color, 0.4)
         return (
             icons.SQUARE.format(color=unchecked_color, text=self.day.day),
@@ -589,7 +586,7 @@ def habit_heat_map(
             with ui.row(wrap=False).classes("gap-0"):
                 for day in weekday_days:
                     if day <= calendar.today:
-                        status = status_map.get(day, completions.INIT)
+                        status = status_map.get(day, [])
                         CalendarCheckBox(habit, day, status, readonly, refresh=refresh)
                     else:
                         ui.label().style("width: 20px; height: 20px;")

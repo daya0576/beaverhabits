@@ -71,7 +71,7 @@ def habit_row(habit: Habit, tag: str, days: list[datetime.date]):
     today = max(days)
     status_map = get_habit_date_completion(habit, min(days), today)
     for day in days:
-        status = status_map.get(day, completions.INIT)
+        status = status_map.get(day, [])
         checkbox = HabitCheckBox(status, habit, today, day, refresh=habit_row.refresh)
         checkbox.classes(RIGHT_CLASSES)
 
