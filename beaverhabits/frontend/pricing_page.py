@@ -41,7 +41,7 @@ ACTIONS = {
 }
 
 YOUTUBE = """
-<iframe width="640" height="360" src="https://www.youtube.com/embed/4a16FmkGV6Y?si=OD2nNtIOqWTdBSp-" title="YouTube video player" color="white" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen</iframe>
+<iframe width="640" height="360" max-width="100%" src="https://www.youtube.com/embed/4a16FmkGV6Y?si=OD2nNtIOqWTdBSp-" title="YouTube video player" color="white" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen</iframe>
 """
 
 
@@ -61,10 +61,9 @@ def description(is_pro: bool):
         with link("GitHub", const.HOME_PAGE):
             ui.html(icons.GITHUB).classes("fill-white scale-125 m-1")
 
-    ui.label("A minimalistic habit tracking app without 'Goals'").classes(
-        "text-lg text-center"
-    )
-    with ui.grid(columns=2).classes("w-full"):
+    desc = ui.label("A habit tracking app without 'Goals'")
+    desc.classes("text-lg text-center")
+    with ui.row().classes("w-full grid grid-cols-1 sm:grid-cols-2"):
         for plan, features in PLANS.items():
             with ui.card().props("bordered gap-1") as card:
                 card.style("border-radius: 10px")
@@ -117,7 +116,9 @@ def how_to_use(*args):
         ui.button("Try Demo").props("flat").on_click(
             lambda: ui.navigate.to("/demo", new_tab=True)
         )
-    ui.html(YOUTUBE)
+
+    with ui.row().classes("max-w-full"):
+        ui.html(YOUTUBE)
 
 
 def footer():
@@ -153,5 +154,5 @@ async def landing_page(is_pro: bool) -> None:
 
         footer()
 
-    ui.add_css("body { background-color: #121212; color: white;  }")
+    ui.add_css("body { background-color: #121212; color: white; }")
     ui.add_head_html(PADDLE_JS)
