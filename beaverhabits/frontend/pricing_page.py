@@ -140,7 +140,7 @@ def footer():
 
 
 async def get_product_price():
-    sandbox = Environment.SANDBOX if settings.PADDLE_SANDBOX else Environment.LIVE
+    sandbox = Environment.SANDBOX if settings.PADDLE_SANDBOX else Environment.PRODUCTION
     paddle = Client(settings.PADDLE_API_TOKEN, options=Options(sandbox))
     price_entity = paddle.prices.get(settings.PADDLE_PRICE_ID)
     return int(price_entity.unit_price.amount) / 100
