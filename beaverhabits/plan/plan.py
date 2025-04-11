@@ -14,6 +14,12 @@ async def checkout():
     email = user.email if user else ""
     logger.info(f"Checkout email: {email}")
 
+    if not email:
+        ui.notify("Please log in to checkout", position="top", color="negative")
+        app.storage.user["referrer_path"] = "/pricing"
+        ui.timer(2, lambda: ui.navigate.to("/register"), once=True)
+        return
+
     ui.run_javascript(f"openCheckout('{email}')")
 
 

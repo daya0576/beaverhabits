@@ -155,7 +155,7 @@ async def login_page() -> Optional[RedirectResponse]:
         user = await user_authenticate(email=email.value, password=password.value)
         if user:
             await views.login_user(user)
-            ui.navigate.to(app.storage.user.get("referrer_path", "/"))
+            ui.navigate.to(app.storage.user.get("referrer_path", "/gui"))
         else:
             ui.notify("email or password wrong!", color="negative")
 

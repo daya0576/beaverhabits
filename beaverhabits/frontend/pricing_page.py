@@ -2,12 +2,9 @@ from nicegui import ui
 from paddle_billing import Client, Environment, Options
 
 from beaverhabits import const
-from beaverhabits.app import crud
-from beaverhabits.app.db import User
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.javascript import PADDLE_JS
-from beaverhabits.frontend.menu import redirect
 from beaverhabits.logging import logger
 from beaverhabits.plan import plan
 
@@ -54,7 +51,9 @@ def link(text: str, url: str):
 
 def description(is_pro: bool):
     with ui.row().classes("w-full"):
-        ui.label("Beaver Habit Tracker").classes("text-3xl font-bold")
+        ui.link("Beaver Habit Tracker", target=const.GUI).classes(
+            "text-3xl font-bold dark:text-white no-underline hover:no-underline"
+        )
         ui.space()
 
         with link("Login", "/login"):

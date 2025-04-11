@@ -6,3 +6,5 @@ IMPORT_WIKI_PAGE = (
 )
 
 TAGS_ALL = "ALL"
+
+GUI = "/gui"
