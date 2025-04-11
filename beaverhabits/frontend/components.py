@@ -1,6 +1,7 @@
 import asyncio
 import calendar
 import datetime
+import os
 from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Self
@@ -14,7 +15,9 @@ from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
+from beaverhabits.plan import plan
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
+from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import (
     EVERY_DAY,
     CheckedRecord,
@@ -39,6 +42,14 @@ strptime = datetime.datetime.strptime
 
 DAILY_NOTE_MAX_LENGTH = 300
 CALENDAR_EVENT_MASK = "%Y/%m/%d"
+
+
+def redirect(x):
+    ui.navigate.to(os.path.join(get_root_path(), x))
+
+
+def open_tab(x):
+    ui.navigate.to(os.path.join(get_root_path(), x), new_tab=True)
 
 
 def link(text: str, target: str):
@@ -387,6 +398,10 @@ class HabitAddButton(ui.input):
         self.props('dense color="white" label-color="white"')
 
     async def _async_task(self):
+        # Check premium plan
+        if await plan.check_habit_limit(self.habit_list):
+            return
+
         await self.habit_list.add(self.value)
         logger.info(f"Added new habit: {self.value}")
         self.refresh()

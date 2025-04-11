@@ -48,6 +48,20 @@ class HabitListModel(TimestampMixin, Base):
     user = relationship("User", back_populates="habit_list")
 
 
+class UserIdentityModel(TimestampMixin, Base):
+    __tablename__ = "customer"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    email: Mapped[str] = mapped_column(index=True, unique=True)
+    customer_id: Mapped[str] = mapped_column(index=True, unique=True)
+    provider: Mapped[str] = mapped_column(index=True)
+    activated: Mapped[bool] = mapped_column(default=False)
+    data: Mapped[dict] = mapped_column(JSON, nullable=False)
+
+    def __str__(self) -> str:
+        return f"{self.email}<{self.customer_id}> ({self.provider})"
+
+
 # SSL Mode: https://www.postgresql.org/docs/9.0/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS
 # p.s. asyncpg us ssl instead of sslmode: https://github.com/tortoise/aerich/issues/310
 connect_args = {}

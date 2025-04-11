@@ -1,18 +1,8 @@
-import os
-
 from nicegui import ui
 
 from beaverhabits.frontend.components import menu_icon_item
-from beaverhabits.storage.meta import get_root_path
+from beaverhabits.frontend.layout import redirect
 from beaverhabits.storage.storage import HabitList, HabitOrder
-
-
-def redirect(x):
-    ui.navigate.to(os.path.join(get_root_path(), x))
-
-
-def open_tab(x):
-    ui.navigate.to(os.path.join(get_root_path(), x), new_tab=True)
 
 
 def add_menu():

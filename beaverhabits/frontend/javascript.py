@@ -72,9 +72,15 @@ PADDLE_JS_TEMPLATE = """\
 
   // open checkout
   // https://developer.paddle.com/build/checkout/build-overlay-checkout
-  function openCheckout() {
+  function openCheckout(email) {
+    customer = {}
+    if (email) {
+      customer.email = email;
+    }
+    console.log(customer);
     Paddle.Checkout.open({
       items: [{ priceId: "{{price_id}}", quantity: 1 }],
+      customer: customer,
       settings: {
         theme: "dark",
       }

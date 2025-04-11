@@ -2,10 +2,14 @@ from nicegui import ui
 from paddle_billing import Client, Environment, Options
 
 from beaverhabits import const
+from beaverhabits.app import crud
+from beaverhabits.app.db import User
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.javascript import PADDLE_JS
+from beaverhabits.frontend.menu import redirect
 from beaverhabits.logging import logger
+from beaverhabits.plan import plan
 
 IMAGES = [
     "/statics/images/pricing/331492565-0418fa41-8985-46ef-b623-333b62b2f92e.jpg",
@@ -36,9 +40,7 @@ ACTIONS = {
     FREE: lambda: ui.button(
         "Get Started", on_click=lambda: ui.navigate.to("/register", new_tab=True)
     ),
-    PRO: lambda: ui.button("Upgrade").on_click(
-        lambda: ui.run_javascript("openCheckout()")
-    ),
+    PRO: lambda: ui.button("Upgrade").on_click(lambda: plan.checkout()),
 }
 
 YOUTUBE = """
@@ -50,7 +52,7 @@ def link(text: str, url: str):
     return ui.link(target=url, new_tab=True).classes("max-sm:hidden").tooltip(text)
 
 
-def description():
+def description(is_pro: bool):
     with ui.row().classes("w-full"):
         ui.label("Beaver Habit Tracker").classes("text-3xl font-bold")
         ui.space()
@@ -77,20 +79,24 @@ def description():
                                 ui.icon(icons.DONE).classes("place-self-center")
                                 ui.label(desc)
                 ui.space().classes("h-0")
-                ACTIONS[plan]()
+                btn = ACTIONS[plan]()
 
             async def set_latest_price():
-                logger.debug("Starting to set latest price")
-                price = await get_product_price()
-                logger.debug(f"Latest price: {price_label.text}")
-
-                price_label.set_text(f"Pro ${price:.2f}")
+                if is_pro:
+                    btn.set_text("Already Pro")
+                    btn.disable()
+                else:
+                    logger.debug("Starting to set latest price")
+                    price = await get_product_price()
+                    logger.debug(f"Latest price: {price_label.text}")
+                    text = f"Pro ${price:.2f}"
+                    price_label.set_text(text)
 
             if plan == PRO:
-                ui.context.client.on_connect(set_latest_price)
+                ui.timer(1, lambda: set_latest_price(), once=True)
 
 
-def demo():
+def demo(*args):
     ui.label("How to keep your habits on track?").classes("text-2xl font-bold")
     with ui.column().classes("w-full gap-2"):
         reasons = [
@@ -105,7 +111,7 @@ def demo():
             ui.image(source=image)
 
 
-def how_to_use():
+def how_to_use(*args):
     with ui.row().classes("w-full"):
         ui.label("How to Use").classes("text-2xl font-bold")
         ui.space()
@@ -140,13 +146,13 @@ async def get_product_price():
     return int(price_entity.unit_price.amount) / 100
 
 
-async def landing_page() -> None:
-    ui.add_css("body { background-color: #121212; color: white;  }")
-    ui.add_head_html(PADDLE_JS)
-
+async def landing_page(is_pro: bool) -> None:
     with ui.row().classes("max-w-2xl mx-auto w-full"):
         for section in (description, demo, how_to_use):
             with ui.card().classes("w-full").props("flat"):
-                section()
+                section(is_pro)
 
         footer()
+
+    ui.add_css("body { background-color: #121212; color: white;  }")
+    ui.add_head_html(PADDLE_JS)

@@ -4,12 +4,14 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from nicegui import app, ui
 
+from beaverhabits.app import crud
 from beaverhabits.frontend import paddle_page
 from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.layout import custom_header, redirect
 from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.frontend.paddle_page import PRIVACY, TERMS
 from beaverhabits.frontend.pricing_page import landing_page
+from beaverhabits.plan import plan
 
 from . import const, views
 from .app.auth import (
@@ -151,9 +153,8 @@ async def login_page() -> Optional[RedirectResponse]:
 
         logger.info(f"Trying to login with {email.value}")
         user = await user_authenticate(email=email.value, password=password.value)
-        token = user and await user_create_token(user)
-        if token is not None:
-            app.storage.user.update({"auth_token": token})
+        if user:
+            await views.login_user(user)
             ui.navigate.to(app.storage.user.get("referrer_path", "/"))
         else:
             ui.notify("email or password wrong!", color="negative")
@@ -196,7 +197,7 @@ async def register_page():
         except Exception as e:
             ui.notify(str(e), color="negative")
         else:
-            ui.navigate.to(app.storage.user.get("referrer_path", "/"))
+            ui.navigate.to(app.storage.user.get("referrer_path", "/gui"))
 
     await views.validate_max_user_count()
     with ui.card().classes("absolute-center shadow-none w-96"):
@@ -216,19 +217,19 @@ async def register_page():
             ui.link("Log in", target="/login")
 
 
-@ui.page("/pricing")
-async def pricing_page():
-    await landing_page()
+if settings.CLOUD:
 
+    @ui.page("/pricing")
+    async def pricing_page():
+        await landing_page(await plan.check_pro())
 
-@ui.page("/terms")
-def terms_page():
-    paddle_page.markdown(TERMS)
+    @ui.page("/terms")
+    def terms_page():
+        paddle_page.markdown(TERMS)
 
-
-@ui.page("/privacy")
-def privacy_page():
-    paddle_page.markdown(PRIVACY)
+    @ui.page("/privacy")
+    def privacy_page():
+        paddle_page.markdown(PRIVACY)
 
 
 def init_gui_routes(fastapi_app: FastAPI):
@@ -239,15 +240,14 @@ def init_gui_routes(fastapi_app: FastAPI):
 
     @app.middleware("http")
     async def AuthMiddleware(request: Request, call_next):
-        auth_token = app.storage.user.get("auth_token")
-        if auth_token:
+        if token := app.storage.user.get("auth_token"):
             # Remove original authorization header
             request.scope["headers"] = [
                 e for e in request.scope["headers"] if e[0] != b"authorization"
             ]
             # add new authorization header
             request.scope["headers"].append(
-                (b"authorization", f"Bearer {auth_token}".encode())
+                (b"authorization", f"Bearer {token}".encode())
             )
 
         response = await call_next(request)
@@ -267,7 +267,8 @@ def init_gui_routes(fastapi_app: FastAPI):
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
         return response
 
-    app.add_static_files("/statics", "statics", max_cache_age=2628000)
+    oneyear = 365 * 24 * 60 * 60
+    app.add_static_files("/statics", "statics", max_cache_age=oneyear)
     app.on_exception(handle_exception)
     ui.run_with(
         fastapi_app,

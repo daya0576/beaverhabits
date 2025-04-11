@@ -1,13 +1,14 @@
 import asyncio
 from contextlib import asynccontextmanager
 
-from pydantic import BaseModel
 import sentry_sdk
 from fastapi import FastAPI, status
 from nicegui import ui
+from pydantic import BaseModel
 
 from beaverhabits.api import init_api_routes
 from beaverhabits.app import crud
+from beaverhabits.plan.paddle import init_paddle_routes
 
 from .app.app import init_auth_routes
 from .app.db import create_db_and_tables
@@ -63,6 +64,7 @@ async def user_count():
 # auth
 init_auth_routes(app)
 init_api_routes(app)
+init_paddle_routes(app)
 init_gui_routes(app)
 
 

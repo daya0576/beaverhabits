@@ -59,11 +59,14 @@ class Settings(BaseSettings):
 
     UMAMI_ANALYTICS_ID: str = ""
 
+    ENABLE_PLAN: bool = False
+    MAX_HABIT_COUNT: int = 5
     PADDLE_SANDBOX: bool = True
     PADDLE_CLIENT_SIDE_TOKEN: str = ""
     PADDLE_API_TOKEN: str = ""
     PADDLE_PRODUCT_ID: str = ""
     PADDLE_PRICE_ID: str = ""
+    PADDLE_CALLBACK_KEY: str = ""
 
     def is_dev(self):
         return self.ENV == "dev"

@@ -1,4 +1,3 @@
-import os
 from contextlib import contextmanager
 
 from nicegui import context, ui
@@ -11,6 +10,8 @@ from beaverhabits.frontend.components import (
     menu_header,
     menu_icon_button,
     menu_icon_item,
+    open_tab,
+    redirect,
 )
 from beaverhabits.frontend.menu import add_menu, sort_menu
 from beaverhabits.logging import logger
@@ -20,14 +21,6 @@ from beaverhabits.storage.meta import (
     is_page_demo,
 )
 from beaverhabits.storage.storage import Habit, HabitList
-
-
-def redirect(x):
-    ui.navigate.to(os.path.join(get_root_path(), x))
-
-
-def open_tab(x):
-    ui.navigate.to(os.path.join(get_root_path(), x), new_tab=True)
 
 
 def custom_header():
