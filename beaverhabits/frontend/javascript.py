@@ -1,4 +1,4 @@
-from jinja2 import Environment, meta
+from jinja2 import Environment
 from nicegui import __version__ as version
 from nicegui import ui
 

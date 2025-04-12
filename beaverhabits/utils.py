@@ -118,14 +118,24 @@ def date_move(
     return date
 
 
-def timeit(func):
-    @wraps(func)
-    def timeit_wrapper(*args, **kwargs):
-        start_time = time.perf_counter()
-        result = func(*args, **kwargs)
-        end_time = time.perf_counter()
-        total_time = end_time - start_time
-        logger.debug(f"Function {func.__name__} Took {total_time:.4f} seconds")
-        return result
+def timeit(threshold: float):
+    """
+    Decorator to measure the execution time of a function and log it if it exceeds a threshold.
+    """
 
-    return timeit_wrapper
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time.perf_counter()
+            result = func(*args, **kwargs)
+            end_time = time.perf_counter()
+            total_time = (end_time - start_time) * 1000  # Convert to milliseconds
+            if total_time > threshold:
+                logger.warning(
+                    f"Function {func.__name__} took {total_time:.4f} milliseconds"
+                )
+            return result
+
+        return wrapper
+
+    return decorator

@@ -67,7 +67,12 @@ init_gui_routes(app)
 # sentry
 if settings.SENTRY_DSN:
     logger.info("Setting up Sentry...")
-    sentry_sdk.init(settings.SENTRY_DSN)
+    sentry_sdk.init(
+        settings.SENTRY_DSN,
+        traces_sample_rate=1.0,
+        profile_session_sample_rate=1.0,
+        profile_lifecycle="trace",
+    )
 
 
 if settings.DEBUG:

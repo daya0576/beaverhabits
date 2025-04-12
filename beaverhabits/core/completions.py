@@ -34,6 +34,7 @@ class PeriodIterator:
         return start, end
 
 
+@timeit(3)
 def period(
     habit: Habit, start: datetime.date, end: datetime.date
 ) -> dict[datetime.date, CStatus] | None:
@@ -73,7 +74,6 @@ def period(
 COMPLETION_HANDLERS = [period, done]
 
 
-@timeit
 def get_habit_date_completion(
     habit: Habit, start: datetime.date, end: datetime.date
 ) -> dict[datetime.date, list[CStatus]]:
