@@ -2,16 +2,17 @@ import asyncio
 from contextlib import asynccontextmanager
 
 import sentry_sdk
-from fastapi import FastAPI, status
+from fastapi import Depends, FastAPI, HTTPException, status
 from nicegui import ui
 from pydantic import BaseModel
 
 from beaverhabits.api import init_api_routes
 from beaverhabits.app import crud
+from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.plan.paddle import init_paddle_routes
 
 from .app.app import init_auth_routes
-from .app.db import create_db_and_tables
+from .app.db import User, create_db_and_tables
 from .configs import settings
 from .logging import logger
 from .routes import init_gui_routes
@@ -54,11 +55,6 @@ class HealthCheck(BaseModel):
 )
 def read_root():
     return HealthCheck(status="OK")
-
-
-@app.get("/users/count", include_in_schema=False)
-async def user_count():
-    return {"count": await crud.get_user_count()}
 
 
 # auth

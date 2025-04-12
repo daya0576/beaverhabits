@@ -4,8 +4,8 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from nicegui import app, ui
 
-from beaverhabits.app import crud
 from beaverhabits.frontend import paddle_page
+from beaverhabits.frontend.admin import admin_page
 from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.layout import custom_header, redirect
 from beaverhabits.frontend.order_page import order_page_ui
@@ -16,7 +16,6 @@ from beaverhabits.plan import plan
 from . import const, views
 from .app.auth import (
     user_authenticate,
-    user_create_token,
 )
 from .app.crud import get_user_count
 from .app.db import User
@@ -217,6 +216,16 @@ async def register_page():
             ui.link("Log in", target="/login")
 
 
+@ui.page("/admin", include_in_schema=False)
+async def admin(user: User = Depends(current_active_user)):
+    if user.email != settings.ADMIN_EMAIL:
+        logger.debug(f"User {user.email} is not admin")
+        logger.debug("admin email: %s", settings.ADMIN_EMAIL)
+        raise HTTPException(401)
+
+    await admin_page(user)
+
+
 if settings.CLOUD:
 
     @ui.page("/pricing")
@@ -240,6 +249,7 @@ def init_gui_routes(fastapi_app: FastAPI):
 
     @app.middleware("http")
     async def AuthMiddleware(request: Request, call_next):
+        logger.debug(f"AuthMiddleware: {request.url.path}")
         if token := app.storage.user.get("auth_token"):
             # Remove original authorization header
             request.scope["headers"] = [

@@ -8,7 +8,7 @@ mkdir -p .user
 
 if [ "$1" = "prd" ]; then
     echo "Starting Uvicorn server in production mode..."
-    export NICEGUI_ENV=production
+    export ENV=production
     # Set nicegui storage path to avoid permission issues
     if [ -z "$NICEGUI_STORAGE_PATH" ]; then
         export NICEGUI_STORAGE_PATH=".user/.nicegui"
@@ -17,7 +17,6 @@ if [ "$1" = "prd" ]; then
     uvicorn beaverhabits.main:app --workers 1 --log-level info --port 8080 --host 0.0.0.0
 elif [ "$1" = "dev" ]; then
     echo "Starting Uvicorn server in development mode..."
-    export NICEGUI_ENV=dev
     # reload implies workers = 1
     uvicorn beaverhabits.main:app --workers 1 --reload --port 9001 --host 0.0.0.0
 else

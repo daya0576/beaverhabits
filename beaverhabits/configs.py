@@ -29,6 +29,7 @@ class Settings(BaseSettings):
 
     # SaaS
     CLOUD: bool = False
+    ADMIN_EMAIL: str = ""
 
     # NiceGUI
     NICEGUI_STORAGE_SECRET: str = "dev"

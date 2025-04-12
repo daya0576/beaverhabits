@@ -51,6 +51,15 @@ async def get_user_count() -> int:
         return user_count
 
 
+async def get_customer_list() -> Sequence[UserIdentityModel]:
+    async with get_async_session_context() as session:
+        stmt = select(UserIdentityModel)
+        result = await session.execute(stmt)
+        customer_list = result.scalars().all()
+        logger.info(f"[CRUD] Customer list query: {customer_list}")
+        return customer_list
+
+
 async def get_user_identity(email: str) -> UserIdentityModel | None:
     async with get_async_session_context() as session:
         stmt = select(UserIdentityModel).where(UserIdentityModel.email == email)
@@ -113,7 +122,4 @@ async def update_user_identity(customer_id: str, data: dict, activate: bool) -> 
         user_identity.data = data
         user_identity.activated = activate
         await session.commit()
-        logger.info(f"[CRUD] User identity {customer_id} updated")
-
-        # update user
-        stmt = select(User).where(User.email == user_identity.email)
+        logger.info(f"[CRUD] User identity updated: {user_identity}")
