@@ -54,11 +54,6 @@ def card(link: str | None = None, padding: float = 3):
 def habit_page(today: datetime.date, habit: Habit):
     target = get_habit_heatmap_path(habit)
 
-    # Habit notes
-    notes = [x for x in habit.records if x.text]
-    notes.sort(key=lambda x: x.day, reverse=True)
-    # https://tailwindcss.com/docs/responsive-design#container-size-reference
-
     with ui.column().classes("gap-y-2"):
         with card():
             HabitDateInput(
@@ -79,7 +74,7 @@ def habit_page(today: datetime.date, habit: Habit):
 
         with card(padding=2):
             card_title("Notes", "#").tooltip("Press and hold to add notes/descriptions")
-            habit_notes(notes)
+            habit_notes(habit)
 
         # if habit.period and habit.period != EVERY_DAY:
         #     with card():

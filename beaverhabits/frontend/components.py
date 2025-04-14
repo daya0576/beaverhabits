@@ -2,7 +2,9 @@ import asyncio
 import calendar
 import datetime
 import os
+import uuid
 from collections import OrderedDict
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Self
 
@@ -87,7 +89,7 @@ def habit_tick_dialog(record: CheckedRecord | None):
     text = record.text if record else ""
     with ui.dialog() as dialog, ui.card().props("flat") as card:
         dialog.props('backdrop-filter="blur(4px)"')
-        card.classes("w-5/6 max-w-80")
+        card.classes("w-5/6 max-w-120")
 
         with ui.column().classes("gap-0 w-full"):
             t = ui.textarea(
@@ -98,7 +100,7 @@ def habit_tick_dialog(record: CheckedRecord | None):
                 },
             )
             t.classes("w-full")
-            # t.props("autofocus")
+            # t.props("autogrow")
 
             with ui.row():
                 ui.button("Yes", on_click=lambda: dialog.submit((True, t.value))).props(
@@ -541,7 +543,7 @@ class CalendarCheckBox(ui.checkbox):
         self.day = day
         self.status = status
         self.refresh = refresh
-        super().__init__("", value=self.ticked, on_change=self._async_task)
+        super().__init__("", value=self.ticked)
 
         self.classes("inline-block")
         self.props("dense")
@@ -549,6 +551,7 @@ class CalendarCheckBox(ui.checkbox):
         self.props(f'unchecked-icon="{unchecked_icon}"')
         self.props(f'checked-icon="{checked_icon}"')
 
+        self.on_value_change(self._async_task)
         if readonly:
             self.on("mousedown.prevent", lambda: True)
             self.on("touchstart.prevent", lambda: True)
@@ -706,17 +709,22 @@ class HabitTag(ui.chip):
         self.style("margin: 0px 2px")
 
 
-def habit_notes(records: List[CheckedRecord], limit: int = 10):
+def habit_notes(habit: Habit, limit: int = 10):
+    notes = [x for x in habit.records if x.text]
+    notes.sort(key=lambda x: x.day, reverse=True)
+
     with ui.timeline(side="right").classes("w-full pt-5 px-3 whitespace-pre-line"):
-        for record in records[:limit]:
+        for i, record in enumerate(notes[:limit]):
             color = "primary" if record.done else "grey-8"
-            text = record.text.replace(" ", "&nbsp;")
             with ui.timeline_entry(
-                title="title",
                 subtitle=record.day.strftime("%B %d, %Y"),
                 color=color,
-            ):
-                ui.markdown(text)
+            ) as entry:
+                text = record.text.replace(" ", "&nbsp;")
+                ui.markdown(text).on("click", lambda: ui.notify(i))
+
+                # https://github.com/zauberzeug/nicegui/wiki/FAQs#why-do-all-my-elements-have-the-same-value
+                entry.on("dblclick", lambda _, d=record.day: note_tick(habit, d))
 
 
 def habit_streak(today: datetime.date, habit: Habit):
