@@ -29,12 +29,21 @@ CALENDAR_CSS = """
 """
 EXPANSION_CSS = """
 .q-item__section--side {
-  min-width: 0 !important;
+    min-width: 0 !important;
 }
 """
 
 HIDE_TIMELINE_TITLE = """\
 .q-timeline__title {
-  display: none;
+    display: none;
+}
+"""
+
+MARKDOWN_CSS = """
+.nicegui-editor .q-editor__content p, .nicegui-markdown p {
+    margin: 0;
+}
+.nicegui-timeline-entry .q-timeline__content {
+    padding: 0;
 }
 """

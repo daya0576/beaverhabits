@@ -18,6 +18,7 @@ from beaverhabits.frontend.css import (
     CHECK_BOX_CSS,
     EXPANSION_CSS,
     HIDE_TIMELINE_TITLE,
+    MARKDOWN_CSS,
 )
 from beaverhabits.frontend.layout import layout, redirect
 from beaverhabits.storage.meta import get_habit_heatmap_path
@@ -90,10 +91,14 @@ def habit_page(today: datetime.date, habit: Habit):
 
 
 def habit_page_ui(today: datetime.date, habit: Habit):
-    ui.add_css(CHECK_BOX_CSS)
-    ui.add_css(CALENDAR_CSS)
-    ui.add_css(EXPANSION_CSS)
-    ui.add_css(HIDE_TIMELINE_TITLE)
+    CUSTOM_CSS = [
+        CHECK_BOX_CSS,
+        CALENDAR_CSS,
+        EXPANSION_CSS,
+        HIDE_TIMELINE_TITLE,
+        MARKDOWN_CSS,
+    ]
+    ui.add_css("\n".join(CUSTOM_CSS))
 
     with layout(title=habit.name, habit=habit):
         habit_page(today, habit)
