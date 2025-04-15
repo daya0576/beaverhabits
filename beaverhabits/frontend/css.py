@@ -40,7 +40,7 @@ HIDE_TIMELINE_TITLE = """\
 """
 
 MARKDOWN_CSS = """
-.q-timeline .nicegui-markdown {
-    white-space: normal;
+.q-timeline .q-timeline__content {
+    white-space: break-spaces;
 }
 """
