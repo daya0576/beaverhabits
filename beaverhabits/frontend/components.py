@@ -714,14 +714,16 @@ def habit_notes(habit: Habit, limit: int = 10):
     notes.sort(key=lambda x: x.day, reverse=True)
 
     with ui.timeline(side="right").classes("w-full pt-5 px-3 whitespace-pre-line"):
-        for i, record in enumerate(notes[:limit]):
+        for record in notes[:limit]:
+            text = record.text
+            text = record.text.replace(" ", "&nbsp;")
+            text = record.text.replace("\n", "<br>")
             color = "primary" if record.done else "grey-8"
             with ui.timeline_entry(
                 subtitle=record.day.strftime("%B %d, %Y"),
                 color=color,
             ) as entry:
-                text = record.text.replace(" ", "&nbsp;")
-                ui.markdown(text).on("click", lambda: ui.notify(i))
+                ui.markdown(text)
 
                 # https://github.com/zauberzeug/nicegui/wiki/FAQs#why-do-all-my-elements-have-the-same-value
                 entry.on("dblclick", lambda _, d=record.day: note_tick(habit, d))
