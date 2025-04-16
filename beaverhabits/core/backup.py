@@ -27,15 +27,8 @@ def send_json_file(file: BytesIO, chat_id: str, token: str):
     resp.raise_for_status()
 
 
-def backup_to_telegram(habit_list: HabitList):
+def backup_to_telegram(token: str, chat_id: str, habit_list: HabitList):
     logger.info("Backing up habit list to Telegram")
-
-    token = habit_list.backup.telegram_bot_token
-    if not token:
-        raise ValueError("Telegram bot token not found")
-    chat_id = habit_list.backup.telegram_chat_id
-    if not chat_id:
-        raise ValueError("Telegram chat_id not found")
 
     if not isinstance(habit_list, DictHabitList):
         raise TypeError("Habit list must be of type DictHabitList")

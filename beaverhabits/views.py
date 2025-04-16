@@ -174,6 +174,8 @@ async def backup_all_users():
             continue
 
         try:
-            backup_to_telegram(habit_list)
+            backup_to_telegram(
+                backup.telegram_bot_token, backup.telegram_chat_id, habit_list
+            )
         except Exception as e:
             logger.error(f"Failed to backup habit list for user {user.email}: {e}")
