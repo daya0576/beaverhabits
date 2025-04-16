@@ -43,7 +43,8 @@ async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: Us
     # Use the pre-filtered habits from the route
     active_habits = habits
 
-    async with layout(user=user, current_list_id=current_list_id):
+    # Pass days to layout
+    async with layout(user=user, current_list_id=current_list_id, days=days): 
         with ui.column().classes("w-full"):
             # Determine if letter filter should be enabled
             show_filter = should_show_filter(
@@ -56,7 +57,7 @@ async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: Us
             # Initialize letter filter state in JavaScript
             ui.run_javascript(f'window.HabitFilter.setEnabled({str(show_filter).lower()});')
             
-            await week_navigation(days)
+            # Removed week_navigation(days) call from here
             if show_filter:
                 await letter_filter_ui(active_habits)
             await habit_list_ui(days, active_habits)

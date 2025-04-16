@@ -10,7 +10,8 @@ async def week_navigation(days: list[datetime.date]):
     offset = get_week_offset()
     state = ui.state(dict(can_go_forward=offset < 0))
     
-    with ui.row().classes("w-full items-center justify-center gap-4 mb-2"):
+    # Removed w-full, justify-center, mb-2
+    with ui.row().classes("items-center gap-4"): 
         ui.button(
             "←",
             on_click=lambda: change_week(offset - 1)
