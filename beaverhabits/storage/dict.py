@@ -8,6 +8,7 @@ from beaverhabits.storage.storage import (
     Habit,
     HabitFrequency,
     HabitList,
+    HabitListBuilder,
     HabitOrder,
     HabitStatus,
 )
@@ -201,18 +202,18 @@ class DictHabit(Habit[DictRecord], DictStorage):
 
         return self.ticked_data[day]
 
-    async def merge(self, other: "DictHabit") -> "DictHabit":
+    async def merge(self, other: "DictHabit") -> None:
         self_ticks = {r.day for r in self.records if r.done}
         other_ticks = {r.day for r in other.records if r.done}
         result = sorted(list(self_ticks | other_ticks))
 
-        d = {
-            "name": self.name,
-            "records": [
-                {"day": day.strftime(DAY_MASK), "done": True} for day in result
-            ],
-        }
-        return DictHabit(d)
+        self.data["name"] = f"{self.name} (merged)"
+        self.data["records"] = [
+            {"day": day.strftime(DAY_MASK), "done": True} for day in result
+        ]
+
+    def to_dict(self) -> dict:
+        return self.data
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, DictHabit) and self.id == other.id
@@ -286,14 +287,16 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
     async def remove(self, item: DictHabit) -> None:
         self.data["habits"].remove(item.data)
 
-    async def merge(self, other: "DictHabitList") -> "DictHabitList":
-        result = set(self.habits).symmetric_difference(set(other.habits))
+    async def merge(self, other: "DictHabitList") -> None:
+        # Add new habits
+        active_habits = [h for h in self.habits if h.status == HabitStatus.ACTIVE]
+        added = set(other.habits) - set(active_habits)
+        for habit in added:
+            habit.name = f"{habit.name} (imported)"
+            self.data["habits"].append(habit.data)
 
         # Merge the habit if it exists
         for self_habit in self.habits:
             for other_habit in other.habits:
                 if self_habit == other_habit:
-                    new_habit = await self_habit.merge(other_habit)
-                    result.add(new_habit)
-
-        return DictHabitList({"habits": [h.data for h in result]})
+                    await self_habit.merge(other_habit)

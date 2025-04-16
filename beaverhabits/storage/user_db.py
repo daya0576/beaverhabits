@@ -27,27 +27,19 @@ class DatabasePersistentDict(observables.ObservableDict):
 
 
 class UserDatabaseStorage(UserStorage[DictHabitList]):
-    async def get_user_habit_list(self, user: User) -> Optional[DictHabitList]:
+    async def get_user_habit_list(self, user: User) -> DictHabitList:
         user_habit_list = await crud.get_user_habit_list(user)
         if user_habit_list is None:
-            return None
+            raise Exception(f"User habit list not found for user {user.email}")
 
         d = DatabasePersistentDict(user, user_habit_list.data)
         return DictHabitList(d)
 
-    async def save_user_habit_list(self, user: User, habit_list: DictHabitList) -> None:
+    async def init_user_habit_list(self, user: User, habit_list: DictHabitList) -> None:
         user_habit_list = await crud.get_user_habit_list(user)
         if user_habit_list and user_habit_list.data:
-            logger.warning("User already has a habit list, not overwriting it")
-            return
+            raise Exception(
+                f"User habit list already exists for user {user.email}, cannot overwrite"
+            )
 
         await crud.update_user_habit_list(user, habit_list.data)
-
-    async def merge_user_habit_list(
-        self, user: User, other: DictHabitList
-    ) -> DictHabitList:
-        current = await self.get_user_habit_list(user)
-        if current is None:
-            return other
-
-        return await current.merge(other)
