@@ -401,7 +401,7 @@ class HabitAddButton(ui.input):
 
     async def _async_task(self):
         # Check premium plan
-        if await plan.check_habit_limit(self.habit_list):
+        if await plan.habit_limit_reached(self.habit_list):
             return
 
         await self.habit_list.add(self.value)
@@ -895,6 +895,7 @@ def backup_input(label:str, value:str):
     return backup_input
 
 def habit_backup_dialog(habit_list: HabitList) -> ui.dialog:
+    @plan.pro_required("Pro plan required to use backup feature")
     def set_backup():
         habit_list.backup = Backup(
             telegram_chat_id=chat_id_input.value,

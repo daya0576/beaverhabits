@@ -181,7 +181,7 @@ async def login_page() -> Optional[RedirectResponse]:
             with ui.row().classes("gap-2"):
                 ui.label("New around here?").classes("text-sm")
                 ui.link("Create account", target="/register").classes("text-sm")
-                if settings.CLOUD:
+                if settings.ENABLE_PLAN:
                     ui.label("|")
                     ui.link("Pricing", target="/pricing").classes("text-sm")
 
@@ -220,17 +220,7 @@ async def register_page():
             ui.link("Log in", target="/login")
 
 
-@ui.page("/admin", include_in_schema=False)
-async def admin(user: User = Depends(current_active_user)):
-    if user.email != settings.ADMIN_EMAIL:
-        logger.debug(f"User {user.email} is not admin")
-        logger.debug("admin email: %s", settings.ADMIN_EMAIL)
-        raise HTTPException(401)
-
-    await admin_page(user)
-
-
-if settings.CLOUD:
+if settings.ENABLE_PLAN:
 
     @ui.page("/pricing")
     async def pricing_page():
@@ -243,6 +233,15 @@ if settings.CLOUD:
     @ui.page("/privacy")
     def privacy_page():
         paddle_page.markdown(PRIVACY)
+
+    @ui.page("/admin", include_in_schema=False)
+    async def admin(user: User = Depends(current_active_user)):
+        if user.email != settings.ADMIN_EMAIL:
+            logger.debug(f"User {user.email} is not admin")
+            logger.debug("admin email: %s", settings.ADMIN_EMAIL)
+            raise HTTPException(401)
+
+        await admin_page(user)
 
 
 def init_gui_routes(fastapi_app: FastAPI):

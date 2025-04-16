@@ -153,7 +153,7 @@ async def is_gui_authenticated() -> bool:
 
 async def get_activated_users() -> Sequence[User]:
     users = await get_user_list()
-    if not settings.CLOUD:
+    if not settings.ENABLE_PLAN:
         return users
 
     customers = await get_customer_list()

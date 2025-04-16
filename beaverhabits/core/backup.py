@@ -41,4 +41,4 @@ def backup_to_telegram(habit_list: HabitList):
         raise TypeError("Habit list must be of type DictHabitList")
 
     binary_data = io.BytesIO(json.dumps(habit_list.data).encode())
-    telegram.send_json_file(file=binary_data, token=token, chat_id=chat_id)
+    send_json_file(file=binary_data, token=token, chat_id=chat_id)
