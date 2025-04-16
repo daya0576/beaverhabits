@@ -165,3 +165,11 @@ habit_animations = """
     background-color: rgba(255, 255, 255, 0.2) !important;
 }
 """
+
+# Custom dropdown option styling
+DROPDOWN_OPTION_CSS = """
+.q-select__dialog .q-item__label {
+    font-size: 1.125rem !important; /* text-lg */
+    line-height: 1.75rem; /* text-lg */
+}
+"""

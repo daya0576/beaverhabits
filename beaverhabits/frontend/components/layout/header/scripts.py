@@ -186,6 +186,9 @@ def add_css_styles() -> None:
     
     # Add CSS for animations
     ui.add_head_html(f'<style>{css.habit_animations}</style>')
+
+    # Add CSS for dropdown options
+    ui.add_head_html(f'<style>{css.DROPDOWN_OPTION_CSS}</style>')
     
     # Add CSS for connection status indicator
     ui.add_head_html('''

@@ -54,8 +54,9 @@ async def list_selector(lists: TypeList[HabitList], current_list_id: int | str |
             logger.error(f"List selector - error parsing list ID: {e}")
             current_name = "No List"
         
+        # Revert slot implementation, try specific menu-class
         ui.select(
             options=options,
             value=current_name,
             on_change=lambda e: handle_list_change(e, name_to_id, path)
-        ).props('outlined dense options-dense')
+        ).props('outlined').classes('large-dropdown-options') # Add custom class
