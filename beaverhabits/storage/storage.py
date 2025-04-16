@@ -2,9 +2,8 @@ import datetime
 import re
 from dataclasses import asdict, dataclass
 from enum import Enum, auto
-from typing import List, Literal, Optional, Protocol, Self, Set
-
-from dateutil import rrule
+from typing import List, Literal, Optional, Protocol, Self
+from dataclasses_json import dataclass_json
 
 from beaverhabits.app.db import User
 from beaverhabits.utils import PERIOD_TYPES, D
@@ -156,20 +155,11 @@ class HabitOrder(Enum):
     MANUALLY = auto()
 
 
+@dataclass_json
 @dataclass
 class Backup:
     telegram_bot_token: str | None = None
     telegram_chat_id: str | None = None
-
-    @classmethod
-    def from_dict(cls, data: dict) -> Self:
-        return cls(
-            telegram_bot_token=data.get("telegram_bot_token"),
-            telegram_chat_id=data.get("telegram_chat_id"),
-        )
-
-    def to_dict(self) -> dict:
-        return asdict(self)
 
 
 class HabitList[H: Habit](Protocol):
