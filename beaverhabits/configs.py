@@ -25,11 +25,19 @@ class TagSelectionMode(Enum):
 class Settings(BaseSettings):
     ENV: str = "dev"
     DEBUG: bool = False
-    SENTRY_DSN: str = ""
 
     # SaaS
-    CLOUD: bool = False
+    SENTRY_DSN: str = ""
     ADMIN_EMAIL: str = ""
+    UMAMI_ANALYTICS_ID: str = ""
+    ENABLE_PLAN: bool = False
+    MAX_HABIT_COUNT: int = 5
+    PADDLE_SANDBOX: bool = True
+    PADDLE_CLIENT_SIDE_TOKEN: str = ""
+    PADDLE_API_TOKEN: str = ""
+    PADDLE_PRODUCT_ID: str = ""
+    PADDLE_PRICE_ID: str = ""
+    PADDLE_CALLBACK_KEY: str = ""
 
     # NiceGUI
     NICEGUI_STORAGE_SECRET: str = "dev"
@@ -58,16 +66,8 @@ class Settings(BaseSettings):
     INDEX_HABIT_DATE_COLUMNS: int = 5
     INDEX_HABIT_DATE_REVERSE: bool = False
 
-    UMAMI_ANALYTICS_ID: str = ""
-
-    ENABLE_PLAN: bool = False
-    MAX_HABIT_COUNT: int = 5
-    PADDLE_SANDBOX: bool = True
-    PADDLE_CLIENT_SIDE_TOKEN: str = ""
-    PADDLE_API_TOKEN: str = ""
-    PADDLE_PRODUCT_ID: str = ""
-    PADDLE_PRICE_ID: str = ""
-    PADDLE_CALLBACK_KEY: str = ""
+    # Daily backup cron job
+    ENABLE_DAILY_BACKUP: bool = False
 
     def is_dev(self):
         return self.ENV == "dev"

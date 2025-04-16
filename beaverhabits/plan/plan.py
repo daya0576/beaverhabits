@@ -23,9 +23,9 @@ async def checkout():
     ui.run_javascript(f"openCheckout('{email}')")
 
 
-def redirect_pricing():
-    ui.notify("Max habit count reached!", color="negative")
-    ui.timer(2.0, lambda: ui.navigate.to("/pricing"), once=True)
+def redirect_pricing(msg: str):
+    ui.notify(msg, color="negative")
+    ui.timer(1.5, lambda: ui.navigate.to("/pricing"), once=True)
 
 
 async def check_pro() -> bool:
@@ -45,14 +45,27 @@ async def check_pro() -> bool:
     return False
 
 
-async def check_habit_limit(habit_list: HabitList) -> bool:
+# decorator to check if user is pro, e.g. @pro_required("Max user reached")
+def pro_required(msg: str):
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            if await check_pro():
+                return await func(*args, **kwargs)
+            else:
+                redirect_pricing(msg)
+
+        return wrapper
+
+    return decorator
+
+
+async def habit_limit_reached(habit_list: HabitList) -> bool:
     if await check_pro():
         return False
 
     habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
     if len(habits) >= settings.MAX_HABIT_COUNT:
-        logger.info(f"Max habit count reached: {len(habits)}")
-        redirect_pricing()
+        redirect_pricing("Max habit count reached!")
         return True
 
     return False

@@ -39,7 +39,10 @@ class FilePersistentDict(observables.ObservableDict):
         async def backup() -> None:
             async with aiofiles.open(self.filepath, "w", encoding=self.encoding) as f:
                 logger.debug(f"Backing up {self.filepath}")
-                await f.write(json.dumps(self, indent=self.indent))
+                content = json.dumps(self, indent=self.indent)
+                if not content:
+                    raise ValueError("Empty content to write!!!")
+                await f.write(content)
 
         if core.loop:
             background_tasks.create_lazy(backup(), name=self.filepath.stem)

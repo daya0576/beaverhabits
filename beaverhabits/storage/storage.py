@@ -1,12 +1,12 @@
-from dataclasses import asdict, dataclass
 import datetime
-from enum import Enum, auto
-from dateutil import rrule
 import re
-from typing import List, Literal, Optional, Protocol, Self, Set
+from dataclasses import asdict, dataclass
+from enum import Enum, auto
+from typing import List, Literal, Optional, Protocol, Self
+from dataclasses_json import dataclass_json
 
 from beaverhabits.app.db import User
-from beaverhabits.utils import D, PERIOD_TYPES
+from beaverhabits.utils import PERIOD_TYPES, D
 
 
 class CheckedRecord(Protocol):
@@ -155,6 +155,13 @@ class HabitOrder(Enum):
     MANUALLY = auto()
 
 
+@dataclass_json
+@dataclass
+class Backup:
+    telegram_bot_token: str | None = None
+    telegram_chat_id: str | None = None
+
+
 class HabitList[H: Habit](Protocol):
 
     @property
@@ -171,6 +178,12 @@ class HabitList[H: Habit](Protocol):
 
     @order_by.setter
     def order_by(self, value: HabitOrder) -> None: ...
+
+    @property
+    def backup(self) -> Backup: ...
+
+    @backup.setter
+    def backup(self, value: Backup) -> None: ...
 
     async def add(self, name: str) -> None: ...
 

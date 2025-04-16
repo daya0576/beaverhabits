@@ -2,17 +2,16 @@ import asyncio
 from contextlib import asynccontextmanager
 
 import sentry_sdk
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import FastAPI, status
 from nicegui import ui
 from pydantic import BaseModel
 
+from beaverhabits import views
 from beaverhabits.api import init_api_routes
-from beaverhabits.app import crud
-from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.plan.paddle import init_paddle_routes
 
 from .app.app import init_auth_routes
-from .app.db import User, create_db_and_tables
+from .app.db import create_db_and_tables
 from .configs import settings
 from .logging import logger
 from .routes import init_gui_routes
@@ -114,6 +113,21 @@ if settings.DEBUG:
 
     monitor = MemoryMonitor()
     ui.timer(5.0, monitor.print_stats)
+
+
+if settings.ENABLE_DAILY_BACKUP:
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
+    from pytz import utc
+
+    scheduler = AsyncIOScheduler(timezone=utc)
+    scheduler.start()
+
+    @scheduler.scheduled_job("cron", hour=0, minute=0)
+    async def backup():
+        logger.info("Starting daily backup...")
+        await views.backup_all_users()
+        logger.info("Daily backup completed")
+
 
 if __name__ == "__main__":
     print(

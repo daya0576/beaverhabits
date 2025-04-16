@@ -14,6 +14,7 @@ from nicegui.elements.button import Button
 
 from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
+from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.frontend import icons
 from beaverhabits.logging import logger
@@ -22,6 +23,7 @@ from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import (
     EVERY_DAY,
+    Backup,
     CheckedRecord,
     Habit,
     HabitFrequency,
@@ -401,7 +403,7 @@ class HabitAddButton(ui.input):
 
     async def _async_task(self):
         # Check premium plan
-        if await plan.check_habit_limit(self.habit_list):
+        if await plan.habit_limit_reached(self.habit_list):
             return
 
         await self.habit_list.add(self.value)
@@ -893,6 +895,57 @@ class TagChip(ui.chip):
 
 def number_input(value: int, label: str):
     return ui.input(value=str(value), label=label).props("dense").classes("w-8")
+
+def backup_input(label:str, value:str):
+    backup_input = ui.input(label=label)
+    backup_input.classes("w-full")
+    if value:
+        backup_input.value = value
+    return backup_input
+
+def habit_backup_dialog(habit_list: HabitList) -> ui.dialog:
+    @plan.pro_required("Pro plan required to use backup feature")
+    def set_backup():
+        habit_list.backup = Backup(
+            telegram_chat_id=chat_id_input.value,
+            telegram_bot_token=bot_token_input.value,
+        )
+        ui.notify("Backup saved", color="positive")
+
+    async def test_backup():
+        bot_token = bot_token_input.value
+        if not bot_token:
+            ui.notify("Telegram Bot Token is empty", color="negative")
+            return
+        telegram_id = chat_id_input.value
+        if not telegram_id:
+            ui.notify("Telegram ID is empty", color="negative")
+            return
+
+        try:
+            backup_to_telegram(habit_list)
+            ui.notify("Backup test success", color="positive")
+        except Exception:
+            logger.exception("Failed to send backup")
+            ui.notify(f"Invalid Telegram ID: {telegram_id}", color="negative")
+
+    with ui.dialog() as dialog, ui.card().props("flat") as card:
+        dialog.props('backdrop-filter="blur(4px)"')
+        card.classes("w-5/6 max-w-64")
+
+        with ui.column().classes("w-full"):
+            token, chat_id = (
+                habit_list.backup.telegram_bot_token or "",
+                habit_list.backup.telegram_chat_id or "",
+            )
+            bot_token_input = backup_input("Telegram Bot Token", token)
+            chat_id_input = backup_input("Telegram Chat ID", chat_id)
+
+            with ui.row():
+                ui.button("Save").on_click(set_backup)
+                ui.button("Test").on_click(test_backup)
+
+    return dialog
 
 
 def habit_edit_dialog(habit: Habit) -> ui.dialog:
