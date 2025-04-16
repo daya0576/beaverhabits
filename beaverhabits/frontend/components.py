@@ -923,7 +923,7 @@ def habit_backup_dialog(habit_list: HabitList) -> ui.dialog:
             return
 
         try:
-            backup_to_telegram(habit_list)
+            backup_to_telegram(bot_token, telegram_id, habit_list)
             ui.notify("Backup test success", color="positive")
         except Exception:
             logger.exception("Failed to send backup")
