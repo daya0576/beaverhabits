@@ -9,6 +9,7 @@ from beaverhabits.storage.storage import HabitList
 
 def backup_to_telegram(habit_list: HabitList):
     logger.info("Backing up habit list to Telegram")
+
     token = habit_list.backup.telegram_bot_token
     if not token:
         raise ValueError("Telegram bot token not found")

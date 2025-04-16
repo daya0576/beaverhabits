@@ -1,6 +1,7 @@
 import datetime
 import json
 import random
+from typing import Generator, Iterator, Sequence
 
 from fastapi import HTTPException
 from nicegui import app, ui
@@ -11,9 +12,10 @@ from beaverhabits.app.auth import (
     user_create_token,
     user_get_by_email,
 )
-from beaverhabits.app.crud import get_user_count
+from beaverhabits.app.crud import get_customer_list, get_user_count, get_user_list
 from beaverhabits.app.db import User
 from beaverhabits.configs import settings
+from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.logging import logger
 from beaverhabits.storage import get_user_dict_storage, session_storage
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
@@ -147,3 +149,31 @@ async def is_gui_authenticated() -> bool:
         return True
 
     return False
+
+
+async def get_activated_users() -> Sequence[User]:
+    users = await get_user_list()
+    if not settings.CLOUD:
+        return users
+
+    customers = await get_customer_list()
+    emails = [customer.email for customer in customers if customer.activated]
+    return [user for user in users if user.email in emails]
+
+
+async def backup_all_users():
+    for user in await get_activated_users():
+        logger.info(f"Backing up habit list for user {user.email}...")
+        habit_list = await get_user_habit_list(user)
+        if habit_list is None:
+            logger.warning(f"Failed to load habit list for user {user.email}")
+            continue
+
+        backup = habit_list.backup
+        if not backup.telegram_bot_token or not backup.telegram_chat_id:
+            continue
+
+        try:
+            backup_to_telegram(habit_list)
+        except Exception as e:
+            logger.error(f"Failed to backup habit list for user {user.email}: {e}")

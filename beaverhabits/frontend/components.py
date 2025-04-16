@@ -902,7 +902,7 @@ def habit_backup_dialog(habit_list: HabitList) -> ui.dialog:
         )
         ui.notify("Backup saved", color="positive")
 
-    def test_backup():
+    async def test_backup():
         bot_token = bot_token_input.value
         if not bot_token:
             ui.notify("Telegram Bot Token is empty", color="negative")

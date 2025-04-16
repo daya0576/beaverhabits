@@ -69,6 +69,8 @@ class Settings(BaseSettings):
     PADDLE_PRICE_ID: str = ""
     PADDLE_CALLBACK_KEY: str = ""
 
+    ENABLE_DAILY_BACKUP: bool = False
+
     def is_dev(self):
         return self.ENV == "dev"
 

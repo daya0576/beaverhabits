@@ -51,6 +51,15 @@ async def get_user_count() -> int:
         return user_count
 
 
+async def get_user_list() -> Sequence[User]:
+    async with get_async_session_context() as session:
+        stmt = select(User).order_by(User.updated_at.desc())
+        result = await session.execute(stmt)
+        user_list = result.scalars().all()
+        logger.info(f"[CRUD] User list query: {len(user_list)}")
+        return user_list
+
+
 async def get_customer_list() -> Sequence[UserIdentityModel]:
     async with get_async_session_context() as session:
         # Sorted by updated desc
