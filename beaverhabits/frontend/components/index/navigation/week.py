@@ -10,13 +10,14 @@ async def week_navigation(days: list[datetime.date]):
     offset = get_week_offset()
     state = ui.state(dict(can_go_forward=offset < 0))
     
-    # Removed w-full, justify-center, mb-2
-    with ui.row().classes("items-center gap-4"): 
+    # Make gap responsive: smaller on small screens, larger on medium+
+    with ui.row().classes("items-center gap-2 md:gap-4"): 
         ui.button(
             "←",
             on_click=lambda: change_week(offset - 1)
         ).props('flat')
-        ui.label(format_week_range(days)).classes("text-lg")
+        # Make label font size responsive: smaller on small screens, larger on medium+
+        ui.label(format_week_range(days)).classes("text-sm md:text-lg") 
         ui.button(
             "→",
             on_click=lambda: change_week(offset + 1)
