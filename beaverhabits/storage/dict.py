@@ -206,8 +206,6 @@ class DictHabit(Habit[DictRecord], DictStorage):
         self_ticks = {r.day for r in self.records if r.done}
         other_ticks = {r.day for r in other.records if r.done}
         result = sorted(list(self_ticks | other_ticks))
-
-        self.data["name"] = f"{self.name} (merged)"
         self.data["records"] = [
             {"day": day.strftime(DAY_MASK), "done": True} for day in result
         ]
