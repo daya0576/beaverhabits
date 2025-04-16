@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 from beaverhabits.logging import logger
 from beaverhabits.storage.storage import (
+    Backup,
     CheckedRecord,
     Habit,
     HabitFrequency,
@@ -255,6 +256,23 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
     @order_by.setter
     def order_by(self, value: HabitOrder) -> None:
         self.data["order_by"] = value.value
+
+    @property
+    def backup(self) -> Backup:
+        backup_value = self.data.get("backup")
+        if backup_value is None:
+            return Backup()
+
+        try:
+            return Backup.from_dict(backup_value)
+        except ValueError:
+            logger.error(f"Invalid backup value: {backup_value}")
+            self.data["backup"] = None
+            return Backup()
+
+    @backup.setter
+    def backup(self, value: Backup) -> None:
+        self.data["backup"] = value.to_dict()
 
     async def get_habit_by(self, habit_id: str) -> DictHabit | None:
         for habit in self.habits:

@@ -5,6 +5,7 @@ from beaverhabits import const
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.javascript import PADDLE_JS
+from beaverhabits.frontend.layout import custom_header, pre_cache
 from beaverhabits.logging import logger
 from beaverhabits.plan import plan
 
@@ -49,26 +50,28 @@ def link(text: str, url: str):
     return ui.link(target=url, new_tab=True).classes("max-sm:hidden").tooltip(text)
 
 
-def description(is_pro: bool):
+def icon(text: str, url: str, icon_str: str):
+    with link(text, url):
+        ui.html(icon_str).classes("fill-white scale-125 m-1")
+
+
+def description():
     with ui.row().classes("w-full"):
         ui.link("Beaver Habit Tracker", target=const.GUI).classes(
             "text-3xl font-bold dark:text-white no-underline hover:no-underline"
         )
         ui.space()
-
-        with link("Login", "/login"):
-            ui.html(icons.LOGIN).classes("fill-white scale-125 m-1")
-        with link("GitHub", const.HOME_PAGE):
-            ui.html(icons.GITHUB).classes("fill-white scale-125 m-1")
+        icon("Login", "/login", icons.LOGIN)
+        icon("GitHub", const.HOME_PAGE, icons.GITHUB)
 
     desc = ui.label("A habit tracking app without 'Goals'")
     desc.classes("text-lg text-center")
+
     with ui.row().classes("w-full grid grid-cols-1 sm:grid-cols-2"):
-        for plan, features in PLANS.items():
+        for plan_name, features in PLANS.items():
             with ui.card().props("bordered gap-1") as card:
-                card.style("border-radius: 10px")
-                card.classes("gap-2")
-                price_label = ui.label(plan).classes("text-2xl font-bold")
+                card.style("border-radius: 10px").classes("gap-2")
+                price_label = ui.label(plan_name).classes("text-2xl font-bold")
                 for feature, description in features.items():
                     ui.label(feature).classes("text-lg")
                     with ui.column().classes("gap-1"):
@@ -77,24 +80,29 @@ def description(is_pro: bool):
                                 ui.icon(icons.DONE).classes("place-self-center")
                                 ui.label(desc)
                 ui.space().classes("h-0")
-                btn = ACTIONS[plan]()
+                btn = ACTIONS[plan_name]()
 
             async def set_latest_price():
+                is_pro = await plan.check_pro()
                 if is_pro:
                     btn.set_text("Already Pro")
                     btn.disable()
-                else:
-                    logger.debug("Starting to set latest price")
-                    price = await get_product_price()
-                    logger.debug(f"Latest price: {price_label.text}")
-                    text = f"Pro ${price:.2f}"
-                    price_label.set_text(text)
 
-            if plan == PRO:
-                ui.timer(1, lambda: set_latest_price(), once=True)
+                logger.debug("Starting to set latest price")
+                price = get_product_price()
+                logger.debug(f"Latest price: {price_label.text}")
+                text = f"Pro ${price:.2f}"
+                price_label.set_text(text)
+
+            if plan_name == PRO:
+                try:
+                    ui.timer(0.3, lambda: set_latest_price(), once=True)
+                except TimeoutError:
+                    logger.error(f"Timer cancelled because client is not connected")
+                    return False
 
 
-def demo(*args):
+def demo():
     ui.label("How to keep your habits on track?").classes("text-2xl font-bold")
     with ui.column().classes("w-full gap-2"):
         reasons = [
@@ -109,7 +117,7 @@ def demo(*args):
             ui.image(source=image)
 
 
-def how_to_use(*args):
+def how_to_use():
     with ui.row().classes("w-full"):
         ui.label("How to Use").classes("text-2xl font-bold")
         ui.space()
@@ -124,33 +132,29 @@ def how_to_use(*args):
 def footer():
     with ui.row().classes("w-full"):
         ui.space()
-        ui.link(
-            "Wiki", target="https://github.com/daya0576/beaverhabits/wiki", new_tab=True
-        ).classes("text-primary")
-        ui.link("Contact", target="mailto:daya0576@gmail.com", new_tab=True).classes(
-            "text-primary"
-        )
-        ui.link("Privacy Policy", target="/privacy", new_tab=True).classes(
-            "text-primary"
-        )
-        ui.link("Terms of Service", target="/terms", new_tab=True).classes(
-            "text-primary"
-        )
+        link = lambda text, url: ui.link(text, url, True).classes("text-primary")
+        link("Wiki", "https://github.com/daya0576/beaverhabits/wiki")
+        link("Contact", "mailto:daya0576@gmail.com")
+        link("Privacy Policy", "/privacy")
+        link("Terms of Service", "/terms")
         ui.space()
 
 
-async def get_product_price():
+def get_product_price():
     sandbox = Environment.SANDBOX if settings.PADDLE_SANDBOX else Environment.PRODUCTION
     paddle = Client(settings.PADDLE_API_TOKEN, options=Options(sandbox))
     price_entity = paddle.prices.get(settings.PADDLE_PRICE_ID)
     return int(price_entity.unit_price.amount) / 100
 
 
-async def landing_page(is_pro: bool) -> None:
+async def landing_page() -> None:
+    custom_header()
+    pre_cache()
+
     with ui.row().classes("max-w-2xl mx-auto w-full"):
         for section in (description, demo, how_to_use):
             with ui.card().classes("w-full").props("flat"):
-                section(is_pro)
+                section()
 
         footer()
 

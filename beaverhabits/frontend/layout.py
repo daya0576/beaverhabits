@@ -79,7 +79,7 @@ def menu_component(habit: Habit | None = None, habit_list: HabitList | None = No
 
         # Export & import
         if habit_list:
-            menu_icon_item("Export", lambda: open_tab("export"))
+            menu_icon_item("Export", lambda: redirect("export"))
             separator()
             imp = menu_icon_item("Import", lambda: redirect("import"))
             if is_page_demo():

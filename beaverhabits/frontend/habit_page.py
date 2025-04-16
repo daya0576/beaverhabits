@@ -80,10 +80,10 @@ def habit_page(today: datetime.date, habit: Habit):
             card_title("Notes", "#").tooltip("Press and hold to add notes/descriptions")
             habit_notes(notes)
 
-        # if habit.period and habit.period != EVERY_DAY:
-        #     with card():
-        #         card_title("Streaks", target)
-        #         habit_streak(today, habit)
+        if habit.period and habit.period != EVERY_DAY:
+            with card():
+                card_title("Best Streaks", target)
+                habit_streak(today, habit)
 
         with card(target, padding=0.5):
             ui.icon("more_horiz", size="1.5em")

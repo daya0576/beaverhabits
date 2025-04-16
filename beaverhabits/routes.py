@@ -11,7 +11,6 @@ from beaverhabits.frontend.layout import custom_header, redirect
 from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.frontend.paddle_page import PRIVACY, TERMS
 from beaverhabits.frontend.pricing_page import landing_page
-from beaverhabits.plan import plan
 
 from . import const, views
 from .app.auth import (
@@ -22,6 +21,7 @@ from .app.db import User
 from .app.dependencies import current_active_user
 from .configs import settings
 from .frontend.add_page import add_page_ui
+from .frontend.export_page import export_page
 from .frontend.habit_page import habit_page_ui
 from .frontend.index_page import index_page_ui
 from .frontend.streaks import heatmap_page
@@ -128,7 +128,7 @@ async def gui_export(user: User = Depends(current_active_user)) -> None:
     if not habit_list:
         ui.notify("No habits to export", color="negative")
         return
-    await views.export_user_habit_list(habit_list, user.email)
+    await export_page(habit_list, user)
 
 
 @ui.page("/gui/import")
@@ -234,7 +234,7 @@ if settings.CLOUD:
 
     @ui.page("/pricing")
     async def pricing_page():
-        await landing_page(await plan.check_pro())
+        await landing_page()
 
     @ui.page("/terms")
     def terms_page():
