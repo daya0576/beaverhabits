@@ -6,36 +6,39 @@ from fastapi import FastAPI, status
 from nicegui import ui
 from pydantic import BaseModel
 
-from beaverhabits import views
 from beaverhabits.api import init_api_routes
+from beaverhabits.app.app import init_auth_routes
+from beaverhabits.app.db import create_db_and_tables
+from beaverhabits.configs import settings
+from beaverhabits.logging import logger
 from beaverhabits.plan.paddle import init_paddle_routes
-
-from .app.app import init_auth_routes
-from .app.db import create_db_and_tables
-from .configs import settings
-from .logging import logger
-from .routes import init_gui_routes
+from beaverhabits.routes import init_gui_routes
+from beaverhabits.scheduler import schedule_daily_task
 
 logger.info("Starting BeaverHabits...")
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    logger.info("Creating database and tables")
+    # Enable warning msg
+    if settings.DEBUG:
+        logger.info("Debug mode enabled")
+        loop = asyncio.get_running_loop()
+        loop.set_debug(True)
+        loop.slow_callback_duration = 0.01
+
+    # Create new database and tables if they don't exist
     await create_db_and_tables()
-    logger.info("Database and tables created")
+
+    # Start scheduler
+    if settings.ENABLE_DAILY_BACKUP:
+        loop = asyncio.get_event_loop()
+        loop.create_task(schedule_daily_task())
+
     yield
 
 
 app = FastAPI(lifespan=lifespan)
-
-if settings.is_dev():
-
-    @app.on_event("startup")
-    def startup():
-        loop = asyncio.get_running_loop()
-        loop.set_debug(True)
-        loop.slow_callback_duration = 0.01
 
 
 class HealthCheck(BaseModel):
@@ -113,20 +116,6 @@ if settings.DEBUG:
 
     monitor = MemoryMonitor()
     ui.timer(5.0, monitor.print_stats)
-
-
-if settings.ENABLE_DAILY_BACKUP:
-    from apscheduler.schedulers.asyncio import AsyncIOScheduler
-    from pytz import utc
-
-    scheduler = AsyncIOScheduler(timezone=utc)
-    scheduler.start()
-
-    @scheduler.scheduled_job("cron", hour=0, minute=0)
-    async def backup():
-        logger.info("Starting daily backup...")
-        await views.backup_all_users()
-        logger.info("Daily backup completed")
 
 
 if __name__ == "__main__":

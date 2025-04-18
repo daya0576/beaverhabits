@@ -24,6 +24,7 @@ def send_json_file(file: BytesIO, chat_id: str, token: str):
 
 
 def backup_to_telegram(token: str, chat_id: str, habit_list: HabitList):
+    logger.info(f"Sending backup to Telegram chat {chat_id}")
     if not isinstance(habit_list, DictHabitList):
         raise TypeError("Habit list must be of type DictHabitList")
 

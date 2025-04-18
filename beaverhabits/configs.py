@@ -66,8 +66,9 @@ class Settings(BaseSettings):
     INDEX_HABIT_DATE_COLUMNS: int = 5
     INDEX_HABIT_DATE_REVERSE: bool = False
 
-    # Daily backup cron job
+    # Backup inverval(in seconds), default is oneday
     ENABLE_DAILY_BACKUP: bool = False
+    DAILY_BACKUP_INTERVAL: int = 60 * 60 * 24
 
     def is_dev(self):
         return self.ENV == "dev"
