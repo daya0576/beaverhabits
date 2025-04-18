@@ -241,9 +241,6 @@ if settings.ENABLE_PLAN:
 
     @ui.page("/admin/backup", include_in_schema=False)
     async def manual_backup(user: User = Depends(current_admin_user)):
-        await crud.get_or_create_user_identity(
-            user.email, "", provider="paddle", data={}
-        )
         logger.info(f"Starting backup, triggered by {user.email}")
         await views.backup_all_users()
 
