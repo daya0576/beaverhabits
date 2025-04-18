@@ -5,7 +5,7 @@ from fastapi.security.utils import get_authorization_scheme_param
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from beaverhabits import views
-from beaverhabits.app.auth import user_create, user_from_token, user_get_by_email
+from beaverhabits.app.auth import user_from_token, user_get_by_email
 from beaverhabits.app.db import User
 from beaverhabits.configs import settings
 from beaverhabits.logging import logger
@@ -65,3 +65,18 @@ async def current_active_user(
         detail="Not authenticated",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+
+async def current_admin_user(
+    user: Annotated[User, Depends(current_active_user)],
+) -> User:
+    if user.email != settings.ADMIN_EMAIL:
+        logger.warning(
+            f"User {user.email} tried to access admin endpoint without admin privileges."
+        )
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user

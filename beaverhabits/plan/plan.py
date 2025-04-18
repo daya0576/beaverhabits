@@ -50,7 +50,7 @@ def pro_required(msg: str):
     def decorator(func):
         async def wrapper(*args, **kwargs):
             if await check_pro():
-                return await func(*args, **kwargs)
+                return func(*args, **kwargs)
             else:
                 redirect_pricing(msg)
 

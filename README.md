@@ -1,6 +1,7 @@
 # Beaver Habit Tracker
 
 ![GitHub Release](https://img.shields.io/github/v/release/daya0576/beaverhabits)
+![GitHub issue custom search](https://img.shields.io/github/issues-search?query=state%3Aclosed%20is%3Aissue%20repo%3Adaya0576%2Fbeaverhabits&label=issues%20closed)
 ![Docker Pulls](https://img.shields.io/docker/pulls/daya0576/beaverhabits)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/daya0576/beaverhabits/fly.yml)
 ![Uptime Robot ratio (30 days)](https://img.shields.io/uptimerobot/ratio/m787647728-b1a273391c2ad5c526b1c605)

@@ -18,7 +18,7 @@ from .app.auth import (
 )
 from .app.crud import get_user_count
 from .app.db import User
-from .app.dependencies import current_active_user
+from .app.dependencies import current_active_user, current_admin_user
 from .configs import settings
 from .frontend.add_page import add_page_ui
 from .frontend.export_page import export_page
@@ -235,13 +235,13 @@ if settings.ENABLE_PLAN:
         paddle_page.markdown(PRIVACY)
 
     @ui.page("/admin", include_in_schema=False)
-    async def admin(user: User = Depends(current_active_user)):
-        if user.email != settings.ADMIN_EMAIL:
-            logger.debug(f"User {user.email} is not admin")
-            logger.debug("admin email: %s", settings.ADMIN_EMAIL)
-            raise HTTPException(401)
-
+    async def admin(user: User = Depends(current_admin_user)):
         await admin_page(user)
+
+    @ui.page("/admin/backup", include_in_schema=False)
+    async def manual_backup(user: User = Depends(current_admin_user)):
+        logger.info(f"Starting backup, triggered by {user.email}")
+        await views.backup_all_users()
 
 
 def init_gui_routes(fastapi_app: FastAPI):
