@@ -1,7 +1,7 @@
 import datetime
 import json
 import random
-from typing import Generator, Iterator, Sequence
+from typing import Sequence
 
 from fastapi import HTTPException
 from nicegui import app, ui
@@ -17,7 +17,7 @@ from beaverhabits.configs import settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.logging import logger
 from beaverhabits.storage import get_user_dict_storage, session_storage
-from beaverhabits.storage.dict import DAY_MASK, DictHabit, DictHabitList
+from beaverhabits.storage.dict import DAY_MASK, DictHabitList
 from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, HabitStatus
 from beaverhabits.utils import generate_short_hash
 
@@ -158,6 +158,8 @@ async def get_activated_users() -> Sequence[User]:
 
     customers = await get_customer_list()
     emails = [customer.email for customer in customers if customer.activated]
+    logger.debug(f"Activated users: {emails}")
+
     return [user for user in users if user.email in emails]
 
 
@@ -171,6 +173,7 @@ async def backup_all_users():
 
         backup = habit_list.backup
         if not backup.telegram_bot_token or not backup.telegram_chat_id:
+            logger.warning(f"User {user.email} has no backup settings")
             continue
 
         try:
@@ -179,3 +182,5 @@ async def backup_all_users():
             )
         except Exception as e:
             logger.error(f"Failed to backup habit list for user {user.email}: {e}")
+        else:
+            logger.info(f"Successfully backed up habit list for user {user.email}")

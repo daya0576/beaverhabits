@@ -4,6 +4,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from nicegui import app, ui
 
+from beaverhabits.app import crud
 from beaverhabits.frontend import paddle_page
 from beaverhabits.frontend.admin import admin_page
 from beaverhabits.frontend.import_page import import_ui_page
@@ -240,6 +241,9 @@ if settings.ENABLE_PLAN:
 
     @ui.page("/admin/backup", include_in_schema=False)
     async def manual_backup(user: User = Depends(current_admin_user)):
+        await crud.get_or_create_user_identity(
+            user.email, "", provider="paddle", data={}
+        )
         logger.info(f"Starting backup, triggered by {user.email}")
         await views.backup_all_users()
 

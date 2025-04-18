@@ -10,10 +10,6 @@ from beaverhabits.storage.storage import HabitList
 
 
 def send_json_file(file: BytesIO, chat_id: str, token: str):
-    url = f"https://api.telegram.org/bot{token}/getUpdates"
-    resp = requests.get(url, timeout=5)
-    logger.debug(resp.json())
-
     url = f"https://api.telegram.org/bot{token}/sendDocument"
     files = {"document": file}
     data = {"chat_id": chat_id}
