@@ -10,7 +10,7 @@ from beaverhabits.frontend import icons
 from beaverhabits.frontend.layout import layout
 from beaverhabits.logging import logger
 from beaverhabits.storage.dict import DictHabitList
-from beaverhabits.storage.storage import HabitList
+from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
 from beaverhabits.views import user_storage
 
 
@@ -76,16 +76,12 @@ def import_ui_page(user: User):
             else:
                 raise ValueError("Unsupported format")
 
-            from_habit_list = await user_storage.get_user_habit_list(user)
-            if not from_habit_list:
-                added = other.habits
-                merged = set()
-                unchanged = set()
-            else:
-                added = set(other.habits) - set(from_habit_list.habits)
-                merged = set(other.habits) & set(from_habit_list.habits)
-                unchanged = set(from_habit_list.habits) - set(other.habits)
+            habit_list = await user_storage.get_user_habit_list(user)
+            habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
 
+            added = set(other.habits) - set(habits)
+            merged = set(other.habits) & set(habits)
+            unchanged = set(habits) - set(other.habits)
             logger.info(f"added: {added}")
             logger.info(f"merged: {merged}")
             logger.info(f"unchanged: {unchanged}")
@@ -99,13 +95,14 @@ def import_ui_page(user: User):
                 with ui.row():
                     ui.button("Yes", on_click=lambda: dialog.submit("Yes"))
                     ui.button("No", on_click=lambda: dialog.submit("No"))
-
             result = await dialog
             if result != "Yes":
                 return
 
-            to_habit_list = await user_storage.merge_user_habit_list(user, other)
-            await user_storage.save_user_habit_list(user, to_habit_list)
+            # 1. Merge habtis with same habit id
+            # 2. Add new habits
+            await habit_list.merge(other)
+
             ui.notify(
                 f"Imported {len(added) + len(merged)} habits",
                 position="top",

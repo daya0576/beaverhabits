@@ -44,6 +44,9 @@ async def test_user_db(screen: Screen):
         habit_list = await views.get_or_create_user_habit_list(user, days)
         assert habit_list is not None
 
+        habit_list = await views.get_user_habit_list(user)
+        assert habit_list is not None
+
     screen.open("/", timeout=60)
 
 
@@ -56,6 +59,9 @@ async def test_user_disk(screen: Screen):
     async def page():
         days = await dummy_days(5)
         habit_list = await views.get_or_create_user_habit_list(user, days)
+        assert habit_list is not None
+
+        habit_list = await views.get_user_habit_list(user)
         assert habit_list is not None
 
     screen.open("/", timeout=60)

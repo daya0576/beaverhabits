@@ -3,7 +3,8 @@ import re
 from dataclasses import asdict, dataclass
 from enum import Enum, auto
 from typing import List, Literal, Optional, Protocol, Self
-from dataclasses_json import dataclass_json
+
+from dataclasses_json import DataClassJsonMixin, dataclass_json
 
 from beaverhabits.app.db import User
 from beaverhabits.utils import PERIOD_TYPES, D
@@ -143,6 +144,8 @@ class Habit[R: CheckedRecord](Protocol):
         self, day: datetime.date, done: bool, text: str | None = None
     ) -> CheckedRecord: ...
 
+    def to_dict(self) -> dict: ...
+
     def __str__(self):
         return self.name
 
@@ -155,9 +158,8 @@ class HabitOrder(Enum):
     MANUALLY = auto()
 
 
-@dataclass_json
 @dataclass
-class Backup:
+class Backup(DataClassJsonMixin):
     telegram_bot_token: str | None = None
     telegram_chat_id: str | None = None
 
@@ -199,11 +201,9 @@ class SessionStorage[L: HabitList](Protocol):
 
 
 class UserStorage[L: HabitList](Protocol):
-    async def get_user_habit_list(self, user: User) -> Optional[L]: ...
+    async def get_user_habit_list(self, user: User) -> L: ...
 
-    async def save_user_habit_list(self, user: User, habit_list: L) -> None: ...
-
-    async def merge_user_habit_list(self, user: User, other: L) -> L: ...
+    async def init_user_habit_list(self, user: User, habit_list: L) -> None: ...
 
 
 class HabitListBuilder:
