@@ -9,8 +9,6 @@ from beaverhabits.frontend.admin import admin_page
 from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.layout import custom_header, redirect
 from beaverhabits.frontend.order_page import order_page_ui
-from beaverhabits.frontend.paddle_page import PRIVACY, TERMS
-from beaverhabits.frontend.pricing_page import landing_page
 
 from . import const, views
 from .app.auth import (
@@ -221,6 +219,8 @@ async def register_page():
 
 
 if settings.ENABLE_PLAN:
+    from beaverhabits.frontend.paddle_page import PRIVACY, TERMS
+    from beaverhabits.frontend.pricing_page import landing_page
 
     @ui.page("/pricing")
     async def pricing_page():

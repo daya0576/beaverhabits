@@ -267,7 +267,7 @@ wheels = [
 
 [[package]]
 name = "beaverhabits"
-version = "0.4.6"
+version = "0.5.1"
 source = { virtual = "." }
 dependencies = [
     { name = "aiosqlite" },
