@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = f"sqlite+aiosqlite:///./{USER_DATA_FOLDER}/habits.db"
     MAX_USER_COUNT: int = -1
     JWT_SECRET: str = "SECRET"
-    JWT_LIFETIME_SECONDS: int = 60 * 60 * 24 * 30
+    JWT_LIFETIME_SECONDS: int = 0
 
     # Auth
     TRUSTED_EMAIL_HEADER: str = ""
