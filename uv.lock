@@ -1,5 +1,4 @@
 version = 1
-revision = 1
 requires-python = ">=3.12, <4.0"
 
 [[package]]
@@ -268,9 +267,10 @@ wheels = [
 
 [[package]]
 name = "beaverhabits"
-version = "0.4.6"
+version = "0.5.1"
 source = { virtual = "." }
 dependencies = [
+    { name = "aiosqlite" },
     { name = "asyncpg" },
     { name = "cachetools" },
     { name = "dataclasses-json" },
@@ -289,7 +289,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "aiosqlite" },
     { name = "autopep8" },
     { name = "beautifulsoup4" },
     { name = "black" },
@@ -305,6 +304,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiosqlite", specifier = ">=0.20.0,<1.0.0" },
     { name = "asyncpg", specifier = ">=0.29.0,<1.0.0" },
     { name = "cachetools", specifier = ">=5.5.1" },
     { name = "dataclasses-json", specifier = ">=0.6.7" },
@@ -323,7 +323,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "aiosqlite", specifier = ">=0.20.0,<1.0.0" },
     { name = "autopep8", specifier = ">=2.0.4,<3.0.0" },
     { name = "beautifulsoup4", specifier = ">=4.12.3,<5.0.0" },
     { name = "black", specifier = ">=25.1.0" },
@@ -461,7 +460,7 @@ name = "click"
 version = "8.1.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "platform_system == 'Windows'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b9/2e/0090cbf739cee7d23781ad4b89a9894a41538e4fcf4c31dcdd705b78eb8b/click-8.1.8.tar.gz", hash = "sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a", size = 226593 }
 wheels = [

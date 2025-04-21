@@ -1,7 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
 
-import sentry_sdk
 from fastapi import FastAPI, status
 from nicegui import ui
 from pydantic import BaseModel
@@ -11,7 +10,6 @@ from beaverhabits.app.app import init_auth_routes
 from beaverhabits.app.db import create_db_and_tables
 from beaverhabits.configs import settings
 from beaverhabits.logging import logger
-from beaverhabits.plan.paddle import init_paddle_routes
 from beaverhabits.routes import init_gui_routes
 from beaverhabits.scheduler import daily_backup_task
 
@@ -62,12 +60,17 @@ def read_root():
 # auth
 init_auth_routes(app)
 init_api_routes(app)
-init_paddle_routes(app)
+if settings.ENABLE_PLAN:
+    from beaverhabits.plan.paddle import init_paddle_routes
+
+    init_paddle_routes(app)
 init_gui_routes(app)
 
 
 # sentry
 if settings.SENTRY_DSN:
+    import sentry_sdk
+
     logger.info("Setting up Sentry...")
     sentry_sdk.init(
         settings.SENTRY_DSN,

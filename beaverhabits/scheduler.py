@@ -1,7 +1,6 @@
 import asyncio
 import datetime
 
-import sentry_sdk
 from loguru import logger
 
 from beaverhabits import views
@@ -28,5 +27,7 @@ async def daily_backup_task():
         try:
             await views.backup_all_users()
         except Exception as e:
+            import sentry_sdk
+
             sentry_sdk.capture_exception(e)
             logger.exception("Error during daily backup task")
