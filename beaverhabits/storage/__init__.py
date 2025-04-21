@@ -1,6 +1,6 @@
 from beaverhabits.configs import StorageType, settings
-from beaverhabits.storage.session_file import SessionDictStorage, SessionStorage
-from beaverhabits.storage.storage import UserStorage
+from beaverhabits.storage.session_memory import SessionDictStorage
+from beaverhabits.storage.storage import SessionStorage, UserStorage
 from beaverhabits.storage.user_db import UserDatabaseStorage
 from beaverhabits.storage.user_file import UserDiskStorage
 

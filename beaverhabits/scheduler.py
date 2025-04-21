@@ -8,7 +8,7 @@ from beaverhabits import views
 from beaverhabits.configs import settings
 
 
-async def schedule_daily_task():
+async def daily_backup_task():
     while True:
         now = datetime.datetime.now()
 

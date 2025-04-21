@@ -25,7 +25,7 @@ user_storage = get_user_dict_storage()
 
 
 def dummy_habit_list(days: list[datetime.date]):
-    pick = lambda: random.randint(0, 5) == 0
+    pick = lambda: random.randint(0, 4) == 0
     items = [
         {
             "id": generate_short_hash(name),

@@ -13,7 +13,7 @@ from beaverhabits.configs import settings
 from beaverhabits.logging import logger
 from beaverhabits.plan.paddle import init_paddle_routes
 from beaverhabits.routes import init_gui_routes
-from beaverhabits.scheduler import schedule_daily_task
+from beaverhabits.scheduler import daily_backup_task
 
 logger.info("Starting BeaverHabits...")
 
@@ -33,7 +33,7 @@ async def lifespan(_: FastAPI):
     # Start scheduler
     if settings.ENABLE_DAILY_BACKUP:
         loop = asyncio.get_event_loop()
-        loop.create_task(schedule_daily_task())
+        loop.create_task(daily_backup_task())
 
     yield
 

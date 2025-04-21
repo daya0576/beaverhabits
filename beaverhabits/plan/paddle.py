@@ -105,7 +105,3 @@ async def webhook(data: dict, request: FastAPIRequest) -> dict:
 
 def init_paddle_routes(app: FastAPI) -> None:
     app.include_router(router, prefix="/paddle")
-
-
-# collect all callbacks functions in this module
-logger.debug(f"Callbacks: {CALLBACKS}")
