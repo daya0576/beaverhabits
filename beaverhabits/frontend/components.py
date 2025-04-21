@@ -44,7 +44,7 @@ from beaverhabits.utils import (
 
 strptime = datetime.datetime.strptime
 
-DAILY_NOTE_MAX_LENGTH = 300
+DAILY_NOTE_MAX_LENGTH = 1000
 CALENDAR_EVENT_MASK = "%Y/%m/%d"
 
 
@@ -896,12 +896,14 @@ class TagChip(ui.chip):
 def number_input(value: int, label: str):
     return ui.input(value=str(value), label=label).props("dense").classes("w-8")
 
-def backup_input(label:str, value:str):
+
+def backup_input(label: str, value: str):
     backup_input = ui.input(label=label)
     backup_input.classes("w-full")
     if value:
         backup_input.value = value
     return backup_input
+
 
 def habit_backup_dialog(habit_list: HabitList) -> ui.dialog:
     @plan.pro_required("Pro plan required to use backup feature")

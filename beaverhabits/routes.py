@@ -160,7 +160,7 @@ async def login_page() -> Optional[RedirectResponse]:
 
     try:
         # Wait for the handshake before sending events to the server
-        await ui.context.client.connected(timeout=5)
+        await ui.context.client.connected()
     except TimeoutError:
         # Ignore weak dependency
         logger.warning("Client not connected, skipping login page")
