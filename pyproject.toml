@@ -20,7 +20,7 @@ dependencies = [
     "sentry-sdk[fastapi]<3.0.0,>=2.15.0",
     "paddle-python-sdk>=1.6.0",
     "dataclasses-json>=0.6.7",
-    "aiosqlite<1.0.0,>=0.20.0",
+    "aiosqlite>=0.20.0,<1.0.0",
 ]
 description = ""
 readme = "README.md"

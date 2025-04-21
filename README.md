@@ -41,7 +41,7 @@ Simply search for "Beaver Habit Tracker" in the Community Apps store!
 docker run -d --name beaverhabits \
   -u $(id -u):$(id -g) \
   -e HABITS_STORAGE=USER_DISK \
-  -v /path/to/host/directory:/app/.user/ \
+  -v ./beaver/:/app/.user/ \
   -p 8080:8080 \
   daya0576/beaverhabits:latest
 ```
@@ -59,7 +59,7 @@ services:
       - INDEX_HABIT_DATE_COLUMNS=5 # Customize the date columns for the index page.
       - ENABLE_IOS_STANDALONE=true
     volumes:
-      - /path/to/beaver/habits:/app/.user/ # Change directory to match your docker file scheme.
+      - ./beaver/:/app/.user/ # Change directory to match your docker file scheme.
     ports:
       - 8080:8080
     restart: unless-stopped
