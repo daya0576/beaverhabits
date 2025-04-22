@@ -23,6 +23,7 @@ from beaverhabits.frontend.components import redirect
 from beaverhabits.logging import logger
 from beaverhabits.storage import get_user_dict_storage, session_storage
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
+from beaverhabits.storage.meta import GUI_ROOT_PATH
 from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, HabitStatus
 from beaverhabits.utils import generate_short_hash, ratelimiter, send_email
 
@@ -222,8 +223,9 @@ async def forgot_password(email: str) -> None:
 
 
 async def reset_password(user: User, password: str) -> None:
-    await user_reset_password(user, password)
+    new_user = await user_reset_password(user, password)
 
     ui.notify("Password reset successfully", color="positive")
-    await asyncio.sleep(1)
-    redirect("/login")
+
+    await login_user(new_user)
+    redirect(GUI_ROOT_PATH)
