@@ -9,7 +9,9 @@ from nicegui import app, ui
 from beaverhabits.app.auth import (
     user_check_token,
     user_create,
+    user_create_reset_token,
     user_create_token,
+    user_get_by_email,
 )
 from beaverhabits.app.crud import get_customer_list, get_user_count, get_user_list
 from beaverhabits.app.db import User
@@ -19,7 +21,7 @@ from beaverhabits.logging import logger
 from beaverhabits.storage import get_user_dict_storage, session_storage
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
 from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, HabitStatus
-from beaverhabits.utils import generate_short_hash
+from beaverhabits.utils import generate_short_hash, ratelimiter
 
 user_storage = get_user_dict_storage()
 
@@ -184,3 +186,23 @@ async def backup_all_users():
             logger.error(f"Failed to backup habit list for user {user.email}: {e}")
         else:
             logger.info(f"Successfully backed up habit list for user {user.email}")
+
+
+async def forgot_password(email: str) -> None:
+    user = await user_get_by_email(email)
+    if user is None:
+        ui.notify(
+            "Email address not found, please check your email address and try again.",
+            color="negative",
+        )
+        return
+
+    token = user_create_reset_token(user)
+    if token is None:
+        ui.notify(
+            "Failed to create reset password token, please try again later.",
+            color="negative",
+        )
+        return
+
+    logger.info(f"Reset password token for user {user.email}: {token}")

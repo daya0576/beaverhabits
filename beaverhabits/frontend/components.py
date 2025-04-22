@@ -56,9 +56,9 @@ def open_tab(x):
     ui.navigate.to(os.path.join(get_root_path(), x), new_tab=True)
 
 
-def link(text: str, target: str):
+def link(text: str, target: str, color: str="text-white") -> ui.link:
     return ui.link(text, target=target).classes(
-        "dark:text-white no-underline hover:no-underline"
+        f"dark:{color} no-underline hover:no-underline"
     )
 
 

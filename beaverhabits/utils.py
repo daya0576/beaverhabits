@@ -1,16 +1,20 @@
 import datetime
 import hashlib
+import smtplib
 import time
+from email.mime.text import MIMEText
 from functools import wraps
 from typing import Literal, TypeAlias
 
 import pytz
+import sentry_sdk
 from cachetools import TTLCache
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 from nicegui import app, ui
 from starlette import status
 
+from beaverhabits.configs import settings
 from beaverhabits.logging import logger
 
 WEEK_DAYS = 7
@@ -76,6 +80,7 @@ def ratelimiter(limit: int, window: int):
 
             # Check with threshold
             if len(cache[key]) > limit:
+                sentry_sdk.capture_message("Rate limit exceeded")
                 logger.warning(
                     f"Rate limit exceeded for {func.__name__} with key {key}"
                 )
@@ -139,3 +144,20 @@ def timeit(threshold: float):
         return wrapper
 
     return decorator
+
+
+@ratelimiter(limit=3, window=1)
+def send_email(subject: str, body: str, recipients: list[str]):
+    sender = settings.SMTP_EMAIL_USERNAME
+    password = settings.SMTP_EMAIL_PASSWORD
+
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = sender
+    msg["To"] = ", ".join(recipients)
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp_server:
+        smtp_server.login(sender, password)
+        smtp_server.sendmail(sender, recipients, msg.as_string())
+
+    logger.info(f"Email sent to {recipients}")

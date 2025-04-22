@@ -1,14 +1,19 @@
 import contextlib
 from typing import Optional
 
+import jwt
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi_users import exceptions
 from fastapi_users.exceptions import UserAlreadyExists
+from fastapi_users.jwt import generate_jwt
 from nicegui import app
 
 from beaverhabits.app.db import User, get_async_session, get_user_db
 from beaverhabits.app.schemas import UserCreate
 from beaverhabits.app.users import get_jwt_strategy, get_user_manager
+from beaverhabits.configs import settings
 from beaverhabits.logging import logger
+from beaverhabits.utils import ratelimiter
 
 get_async_session_context = contextlib.asynccontextmanager(get_async_session)
 get_user_db_context = contextlib.asynccontextmanager(get_user_db)
@@ -107,3 +112,23 @@ async def user_get_by_email(email: str) -> Optional[User]:
 def user_logout() -> bool:
     app.storage.user.update({"auth_token": ""})
     return True
+
+
+def user_create_reset_token(user: User) -> str:
+    # Ref: https://github.com/fastapi-users/fastapi-users/blob/9d78b2a35dc7f35c2ffca67232c11f4d27a5db00/fastapi_users/manager.py#L358
+    if not user.is_active:
+        raise exceptions.UserInactive()
+
+    token_data = {
+        "sub": str(user.id),
+        # "password_fgpt": self.password_helper.hash(user.hashed_password),
+        # "aud": self.reset_password_token_audience,
+    }
+    assert settings.RESET_PASSWORD_TOKEN_SECRET, "Missing JWT secret"
+    token = generate_jwt(
+        token_data,
+        settings.RESET_PASSWORD_TOKEN_SECRET,
+        settings.RESET_PASSWORD_TOKEN_LIFETIME_SECONDS,
+    )
+
+    return token

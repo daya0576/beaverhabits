@@ -4,6 +4,7 @@ from paddle_billing import Client, Environment, Options
 from beaverhabits import const
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
+from beaverhabits.frontend.components import redirect
 from beaverhabits.frontend.javascript import PADDLE_JS
 from beaverhabits.frontend.layout import custom_header, pre_cache
 from beaverhabits.logging import logger
@@ -36,8 +37,8 @@ PLANS = {
 }
 ACTIONS = {
     FREE: lambda: ui.button(
-        "Get Started", on_click=lambda: ui.navigate.to("/register", new_tab=True)
-    ),
+        "Get Started", on_click=lambda: redirect("/register")
+    ).tooltip("Create a free account"),
     PRO: lambda: ui.button("Upgrade").on_click(lambda: plan.checkout()),
 }
 
@@ -46,8 +47,15 @@ YOUTUBE = """
 """
 
 
+def get_product_price():
+    sandbox = Environment.SANDBOX if settings.PADDLE_SANDBOX else Environment.PRODUCTION
+    paddle = Client(settings.PADDLE_API_TOKEN, options=Options(sandbox))
+    price_entity = paddle.prices.get(settings.PADDLE_PRICE_ID)
+    return int(price_entity.unit_price.amount) / 100
+
+
 def link(text: str, url: str):
-    return ui.link(target=url, new_tab=True).classes("max-sm:hidden").tooltip(text)
+    return ui.link(target=url).classes("max-sm:hidden").tooltip(text)
 
 
 def icon(text: str, url: str, icon_str: str):
@@ -64,7 +72,7 @@ def description():
         icon("Login", "/login", icons.LOGIN)
         icon("GitHub", const.HOME_PAGE, icons.GITHUB)
 
-    desc = ui.label("A habit tracking app without 'Goals'")
+    desc = ui.label("A minimal habit tracking app without 'Goals'")
     desc.classes("text-lg text-center")
 
     with ui.row().classes("w-full grid grid-cols-1 sm:grid-cols-2"):
@@ -83,16 +91,12 @@ def description():
                 btn = ACTIONS[plan_name]()
 
             async def set_latest_price():
-                is_pro = await plan.check_pro()
-                if is_pro:
+                if await plan.check_pro():
                     btn.set_text("Already Pro")
+                    btn.props("flat")
                     btn.disable()
 
-                logger.debug("Starting to set latest price")
-                price = get_product_price()
-                logger.debug(f"Latest price: {price_label.text}")
-                text = f"Pro ${price:.2f}"
-                price_label.set_text(text)
+                price_label.set_text(f"Pro ${get_product_price():.2f}")
 
             if plan_name == PRO:
                 try:
@@ -112,6 +116,7 @@ def demo():
         ]
         for reason in reasons:
             ui.html(reason).style("font-size: 1rem; margin: 0px !important;")
+
     with ui.grid(columns=3).classes("w-full gap-1"):
         for image in IMAGES:
             ui.image(source=image)
@@ -138,13 +143,6 @@ def footer():
         link("Privacy Policy", "/privacy")
         link("Terms of Service", "/terms")
         ui.space()
-
-
-def get_product_price():
-    sandbox = Environment.SANDBOX if settings.PADDLE_SANDBOX else Environment.PRODUCTION
-    paddle = Client(settings.PADDLE_API_TOKEN, options=Options(sandbox))
-    price_entity = paddle.prices.get(settings.PADDLE_PRICE_ID)
-    return int(price_entity.unit_price.amount) / 100
 
 
 async def landing_page() -> None:
