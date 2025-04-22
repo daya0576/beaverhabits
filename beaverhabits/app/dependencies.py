@@ -2,10 +2,15 @@ from typing import Annotated, Optional
 
 from fastapi import Depends, HTTPException, Request
 from fastapi.security.utils import get_authorization_scheme_param
+from fastapi_users.jwt import decode_jwt
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from beaverhabits import views
-from beaverhabits.app.auth import user_from_token, user_get_by_email
+from beaverhabits.app.auth import (
+    user_from_reset_token,
+    user_from_token,
+    user_get_by_email,
+)
 from beaverhabits.app.db import User
 from beaverhabits.configs import settings
 from beaverhabits.logging import logger
@@ -80,3 +85,14 @@ async def current_admin_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
+
+
+async def get_reset_user(request: Request) -> User:
+    token = request.query_params.get("token")
+    if not token:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Token not found",
+        )
+
+    return await user_from_reset_token(token)

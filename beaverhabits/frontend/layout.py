@@ -23,7 +23,7 @@ from beaverhabits.storage.meta import (
 from beaverhabits.storage.storage import Habit, HabitList
 
 
-def custom_header():
+def custom_headers():
     # Apple touch icon
     ui.add_head_html(
         '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">'
@@ -92,11 +92,7 @@ def menu_component(habit: Habit | None = None, habit_list: HabitList | None = No
         else:
             menu_icon_item("Logout", lambda: user_logout() and ui.navigate.to("/login"))
 
-
-def pre_cache():
-    # lazy load echart: https://github.com/zauberzeug/nicegui/discussions/1452
-    # hash: nicegui.dependencies.compute_key
-    # ui.context.client.on_connect(javascript.load_cache)
+    # Prevent white flash on page load
     ui.add_css("body { background-color: #121212; color: white;  }")
 
 
@@ -107,26 +103,17 @@ def layout(
     habit_list: HabitList | None = None,
 ):
     """Base layout for all pages."""
-    title = title or get_page_title()
-
-    with ui.column() as c:
+    # Center the content on small screens
+    with ui.column().classes("mx-auto mx-0"):
         # Standard headers
-        custom_header()
-        pre_cache()
+        custom_headers()
 
-        # Center the content on small screens
-        c.classes("mx-auto")
-        if not settings.ENABLE_DESKTOP_ALGIN_CENTER:
-            c.classes("sm:mx-0")
-
-        path = context.client.page.path
-        logger.info(f"Rendering page: {path}")
+        # Layout wrapper
         with ui.row().classes("min-w-full gap-x-1"):
-            menu_header(title, target=get_root_path())
+            title, target = title or get_page_title(), get_root_path()
+            menu_header(title, target=target)
             ui.space()
-            with menu_icon_button(icons.MENU) as menu:
+            with menu_icon_button(icons.MENU):
                 menu_component(habit, habit_list)
-                # Accessibility
-                menu.props('aria-haspopup="true" aria-label="menu"')
 
         yield

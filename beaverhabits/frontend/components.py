@@ -2,9 +2,8 @@ import asyncio
 import calendar
 import datetime
 import os
-import uuid
 from collections import OrderedDict
-from copy import deepcopy
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Self
 
@@ -56,9 +55,9 @@ def open_tab(x):
     ui.navigate.to(os.path.join(get_root_path(), x), new_tab=True)
 
 
-def link(text: str, target: str):
+def link(text: str, target: str, color: str = "text-white") -> ui.link:
     return ui.link(text, target=target).classes(
-        "dark:text-white no-underline hover:no-underline"
+        f"dark:{color} no-underline hover:no-underline"
     )
 
 
@@ -78,6 +77,10 @@ def menu_icon_button(
     button.props("flat=true unelevated=true padding=xs backgroup=none")
     if tooltip:
         button = button.tooltip(tooltip)
+
+    # Accessibility
+    button.props('aria-haspopup="true" aria-label="menu"')
+
     return button
 
 
@@ -1014,3 +1017,49 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
                 ui.button("Reset", on_click=reset).props("flat")
 
     return dialog
+
+
+def auth_header(text: str):
+    with ui.row():
+        ui.label(text).classes("text-3xl font-bold")
+
+
+def auth_forgot_password(email_input: ui.input, reset: Callable):
+    async def try_forgot_password():
+        email = email_input.value
+        if not email:
+            ui.notify("Email is required", color="negative")
+            return
+
+        spinner.classes(remove="hidden")
+        await reset(email)
+        spinner.classes("hidden")
+
+    forgot_entry = link("Forgot password?", "#")
+    forgot_entry.on("click", try_forgot_password)
+    spinner = ui.spinner().classes("hidden")
+
+
+def auth_email(value: str | None = None):
+    email = ui.input("email").classes("w-full")
+    if value:
+        email.value = value
+    return email
+
+
+def auth_password(title: str = "Password", value: str | None = None):
+    password = ui.input("password", password=True, password_toggle_button=True)
+    password.classes("w-full")
+    # password.props("stack-label")
+    if value:
+        password.value = value
+    if title:
+        password.label = title
+    return password
+
+
+@contextmanager
+def auth_card():
+    with ui.card().classes("absolute-center shadow-none w-80 sm:w-96 p-6"):
+        with ui.column().classes("w-full gap-5"):
+            yield

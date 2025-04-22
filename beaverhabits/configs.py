@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # SaaS
+    APP_URL: str = ""
     SENTRY_DSN: str = ""
     ADMIN_EMAIL: str = ""
     UMAMI_ANALYTICS_ID: str = ""
@@ -38,6 +39,10 @@ class Settings(BaseSettings):
     PADDLE_PRODUCT_ID: str = ""
     PADDLE_PRICE_ID: str = ""
     PADDLE_CALLBACK_KEY: str = ""
+
+    # Email
+    SMTP_EMAIL_USERNAME: str = ""
+    SMTP_EMAIL_PASSWORD: str = ""
 
     # NiceGUI
     NICEGUI_STORAGE_SECRET: str = "dev"
@@ -54,11 +59,12 @@ class Settings(BaseSettings):
     # Auth
     TRUSTED_EMAIL_HEADER: str = ""
     TRUSTED_LOCAL_EMAIL: str = ""
+    RESET_PASSWORD_TOKEN_SECRET: str = ""
+    RESET_PASSWORD_TOKEN_LIFETIME_SECONDS: int = 60 * 60  # 1 hour
 
     # Customization
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
     ENABLE_IOS_STANDALONE: bool = True
-    ENABLE_DESKTOP_ALGIN_CENTER: bool = True
     TAG_SELECTION_MODE: TagSelectionMode = TagSelectionMode.MULTI
 
     INDEX_SHOW_HABIT_COUNT: bool = False

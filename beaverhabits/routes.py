@@ -6,8 +6,16 @@ from nicegui import app, ui
 
 from beaverhabits.frontend import paddle_page
 from beaverhabits.frontend.admin import admin_page
+from beaverhabits.frontend.components import (
+    auth_card,
+    auth_email,
+    auth_forgot_password,
+    auth_header,
+    auth_password,
+    link,
+)
 from beaverhabits.frontend.import_page import import_ui_page
-from beaverhabits.frontend.layout import custom_header, redirect
+from beaverhabits.frontend.layout import custom_headers, redirect
 from beaverhabits.frontend.order_page import order_page_ui
 
 from . import const, views
@@ -16,7 +24,7 @@ from .app.auth import (
 )
 from .app.crud import get_user_count
 from .app.db import User
-from .app.dependencies import current_active_user, current_admin_user
+from .app.dependencies import current_active_user, current_admin_user, get_reset_user
 from .configs import settings
 from .frontend.add_page import add_page_ui
 from .frontend.export_page import export_page
@@ -136,7 +144,7 @@ async def gui_import(user: User = Depends(current_active_user)) -> None:
 
 @ui.page("/login")
 async def login_page() -> Optional[RedirectResponse]:
-    custom_header()
+    custom_headers()
     if await views.is_gui_authenticated():
         return RedirectResponse(GUI_ROOT_PATH)
 
@@ -152,41 +160,34 @@ async def login_page() -> Optional[RedirectResponse]:
         user = await user_authenticate(email=email.value, password=password.value)
         if user:
             await views.login_user(user)
-            ui.navigate.to(app.storage.user.get("referrer_path", "/gui"))
+            ui.navigate.to(app.storage.user.get("referrer_path", GUI_ROOT_PATH))
         else:
             ui.notify("email or password wrong!", color="negative")
 
     try:
         # Wait for the handshake before sending events to the server
-        await ui.context.client.connected()
+        await ui.context.client.connected(timeout=2)
     except TimeoutError:
         # Ignore weak dependency
-        logger.warning("Client not connected, skipping login page")
+        logger.warning("Client not connected, skipping...")
 
-    with ui.card().classes("absolute-center shadow-none w-96"):
-        email = ui.input("email").on("keydown.enter", try_login)
-        email.classes("w-56")
+    with auth_card():
+        auth_header("Sign in")
+        email = auth_email()
+        password = auth_password().on("keydown.enter", try_login)
 
-        password = ui.input("password", password=True, password_toggle_button=True)
-        password.on("keydown.enter", try_login)
-        password.classes("w-56")
+        with ui.row().classes("gap-2 w-full items-center"):
+            auth_forgot_password(email, views.forgot_password)
+            ui.space()
+            if not await get_user_count() >= settings.MAX_USER_COUNT > 0:
+                link("Create account", "/register")
 
-        with ui.element("div").classes("flex mt-4 justify-between items-center"):
-            ui.button("Continue", on_click=try_login).props('padding="xs lg"')
-
-        if not await get_user_count() >= settings.MAX_USER_COUNT > 0:
-            ui.separator()
-            with ui.row().classes("gap-2"):
-                ui.label("New around here?").classes("text-sm")
-                ui.link("Create account", target="/register").classes("text-sm")
-                if settings.ENABLE_PLAN:
-                    ui.label("|")
-                    ui.link("Pricing", target="/pricing").classes("text-sm")
+        ui.button("Continue", on_click=try_login).props("dense").classes("w-full")
 
 
 @ui.page("/register")
 async def register_page():
-    custom_header()
+    custom_headers()
     if await views.is_gui_authenticated():
         return RedirectResponse(GUI_ROOT_PATH)
 
@@ -198,30 +199,52 @@ async def register_page():
         except Exception as e:
             ui.notify(str(e), color="negative")
         else:
-            ui.navigate.to(app.storage.user.get("referrer_path", "/gui"))
+            ui.navigate.to(app.storage.user.get("referrer_path", GUI_ROOT_PATH))
 
     await views.validate_max_user_count()
-    with ui.card().classes("absolute-center shadow-none w-96"):
-        email = ui.input("email").on("keydown.enter", try_register).classes("w-56")
-        password = (
-            ui.input("password", password=True, password_toggle_button=True)
-            .on("keydown.enter", try_register)
-            .classes("w-56")
-        )
 
-        with ui.element("div").classes("flex mt-4 justify-between items-center"):
-            ui.button("Register", on_click=try_register).props('padding="xs lg"')
+    with auth_card():
+        auth_header("Create account")
+        email = auth_email()
+        password = auth_password().on("keydown.enter", try_register)
 
-        ui.separator()
-        with ui.row():
-            ui.label("Already have an account?")
-            ui.link("Log in", target="/login")
+        with ui.row().classes("gap-2 w-full items-center"):
+            auth_forgot_password(email, views.forgot_password)
+            ui.space()
+            link("Sign in", "/login")
+
+        ui.button("Continue", on_click=try_register).props("dense").classes("w-full")
+
+
+@ui.page("/reset-password")
+async def forgot_password_page(user: User = Depends(get_reset_user)):
+    custom_headers()
+
+    async def try_reset():
+        if not password1.value or not password2.value:
+            ui.notify("Password is required", color="negative")
+            return
+        if password1.value != password2.value:
+            ui.notify("Passwords do not match", color="negative")
+            return
+
+        logger.info(f"Trying to reset password for {user.email}")
+        await views.reset_password(user, password1.value)
+        ui.notify("Password reset successfully", color="positive")
+        ui.navigate.to("/login")
+
+    with auth_card():
+        auth_email(user.email).disable()
+        password1 = auth_password("New password")
+        password2 = auth_password("Confirm password")
+        ui.button("Continue", on_click=try_reset).props("dense").classes("w-full")
 
 
 if settings.ENABLE_PLAN:
     from beaverhabits.frontend.paddle_page import PRIVACY, TERMS
     from beaverhabits.frontend.pricing_page import landing_page
 
+    @ui.page("/")
     @ui.page("/pricing")
     async def pricing_page():
         await landing_page()
@@ -265,8 +288,8 @@ def init_gui_routes(fastapi_app: FastAPI):
 
         response = await call_next(request)
         if response.status_code == 401:
-            root_path = request.scope["root_path"]
-            app.storage.user["referrer_path"] = request.url.path.removeprefix(root_path)
+            # root_path = request.scope["root_path"]
+            # app.storage.user["referrer_path"] = request.url.path.removeprefix(root_path)
             return RedirectResponse(request.url_for(login_page.__name__))
 
         return response
