@@ -6,7 +6,7 @@ from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import redirect
 from beaverhabits.frontend.javascript import PADDLE_JS
-from beaverhabits.frontend.layout import custom_header, pre_cache
+from beaverhabits.frontend.layout import custom_headers
 from beaverhabits.logging import logger
 from beaverhabits.plan import plan
 
@@ -146,8 +146,7 @@ def footer():
 
 
 async def landing_page() -> None:
-    custom_header()
-    pre_cache()
+    custom_headers()
 
     with ui.row().classes("max-w-2xl mx-auto w-full"):
         for section in (description, demo, how_to_use):

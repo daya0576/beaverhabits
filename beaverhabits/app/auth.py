@@ -1,11 +1,12 @@
 import contextlib
 from typing import Optional
+from uuid import UUID
 
 import jwt
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi_users import exceptions
+from fastapi_users import exceptions, models
 from fastapi_users.exceptions import UserAlreadyExists
-from fastapi_users.jwt import generate_jwt
+from fastapi_users.jwt import decode_jwt, generate_jwt
 from fastapi_users.manager import RESET_PASSWORD_TOKEN_AUDIENCE
 from nicegui import app
 
@@ -14,7 +15,6 @@ from beaverhabits.app.schemas import UserCreate
 from beaverhabits.app.users import get_jwt_strategy, get_user_manager
 from beaverhabits.configs import settings
 from beaverhabits.logging import logger
-from beaverhabits.utils import ratelimiter
 
 get_async_session_context = contextlib.asynccontextmanager(get_async_session)
 get_user_db_context = contextlib.asynccontextmanager(get_user_db)
@@ -110,6 +110,13 @@ async def user_get_by_email(email: str) -> Optional[User]:
         return None
 
 
+async def user_get_by_id(user_id: UUID) -> User:
+    async with get_async_session_context() as session:
+        async with get_user_db_context(session) as user_db:
+            async with get_user_manager_context(user_db) as user_manager:
+                return await user_manager.get(user_id)
+
+
 def user_logout() -> bool:
     app.storage.user.update({"auth_token": ""})
     return True
@@ -132,3 +139,36 @@ def user_create_reset_token(user: User) -> str:
     )
 
     return token
+
+
+async def user_from_reset_token(token: str) -> User:
+    # ref: https://github.com/fastapi-users/fastapi-users/blob/9d78b2a35dc7f35c2ffca67232c11f4d27a5db00/fastapi_users/manager.py#L386
+    try:
+        data = decode_jwt(
+            token,
+            settings.RESET_PASSWORD_TOKEN_SECRET,
+            [RESET_PASSWORD_TOKEN_AUDIENCE],
+        )
+    except jwt.PyJWTError:
+        raise exceptions.InvalidResetPasswordToken()
+
+    try:
+        user_id = data["sub"]
+    except KeyError:
+        raise exceptions.InvalidResetPasswordToken()
+
+    user = await user_get_by_id(UUID(user_id))
+    if not user.is_active:
+        raise exceptions.UserInactive()
+
+    return user
+
+
+async def user_reset_password(user: User, new_password: str) -> User:
+    async with get_async_session_context() as session:
+        async with get_user_db_context(session) as user_db:
+            async with get_user_manager_context(user_db) as user_manager:
+                updated_user = await user_manager._update(
+                    user, {"password": new_password}
+                )
+                return updated_user

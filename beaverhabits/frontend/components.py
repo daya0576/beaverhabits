@@ -78,6 +78,10 @@ def menu_icon_button(
     button.props("flat=true unelevated=true padding=xs backgroup=none")
     if tooltip:
         button = button.tooltip(tooltip)
+
+    # Accessibility
+    button.props('aria-haspopup="true" aria-label="menu"')
+
     return button
 
 
@@ -1037,14 +1041,22 @@ def auth_forgot_password(email_input: ui.input):
     spinner = ui.spinner().classes("hidden")
 
 
-def auth_email():
-    return ui.input("email").classes("w-full")
+def auth_email(value: str | None = None):
+    email = ui.input("email").classes("w-full")
+    if value:
+        email.value = value
+    return email
 
 
-def auth_password():
-    return ui.input("password", password=True, password_toggle_button=True).classes(
-        "w-full"
-    )
+def auth_password(title: str = "Password", value: str | None = None):
+    password = ui.input("password", password=True, password_toggle_button=True)
+    password.classes("w-full")
+    # password.props("stack-label")
+    if value:
+        password.value = value
+    if title:
+        password.label = title
+    return password
 
 
 @contextmanager

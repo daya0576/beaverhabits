@@ -15,7 +15,7 @@ from beaverhabits.frontend.components import (
     link,
 )
 from beaverhabits.frontend.import_page import import_ui_page
-from beaverhabits.frontend.layout import custom_header, redirect
+from beaverhabits.frontend.layout import custom_headers, redirect
 from beaverhabits.frontend.order_page import order_page_ui
 
 from . import const, views
@@ -24,7 +24,7 @@ from .app.auth import (
 )
 from .app.crud import get_user_count
 from .app.db import User
-from .app.dependencies import current_active_user, current_admin_user
+from .app.dependencies import current_active_user, current_admin_user, get_reset_user
 from .configs import settings
 from .frontend.add_page import add_page_ui
 from .frontend.export_page import export_page
@@ -144,7 +144,7 @@ async def gui_import(user: User = Depends(current_active_user)) -> None:
 
 @ui.page("/login")
 async def login_page() -> Optional[RedirectResponse]:
-    custom_header()
+    custom_headers()
     if await views.is_gui_authenticated():
         return RedirectResponse(GUI_ROOT_PATH)
 
@@ -166,7 +166,7 @@ async def login_page() -> Optional[RedirectResponse]:
 
     try:
         # Wait for the handshake before sending events to the server
-        await ui.context.client.connected(timeout=5)
+        await ui.context.client.connected(timeout=2)
     except TimeoutError:
         # Ignore weak dependency
         logger.warning("Client not connected, skipping...")
@@ -187,7 +187,7 @@ async def login_page() -> Optional[RedirectResponse]:
 
 @ui.page("/register")
 async def register_page():
-    custom_header()
+    custom_headers()
     if await views.is_gui_authenticated():
         return RedirectResponse(GUI_ROOT_PATH)
 
@@ -214,6 +214,30 @@ async def register_page():
             link("Sign in", "/login")
 
         ui.button("Continue", on_click=try_register).props("dense").classes("w-full")
+
+
+@ui.page("/reset-password")
+async def forgot_password_page(user: User = Depends(get_reset_user)):
+    custom_headers()
+
+    async def try_reset():
+        if not password1.value or not password2.value:
+            ui.notify("Password is required", color="negative")
+            return
+        if password1.value != password2.value:
+            ui.notify("Passwords do not match", color="negative")
+            return
+
+        logger.info(f"Trying to reset password for {user.email}")
+        await views.reset_password(user, password1.value)
+        ui.notify("Password reset successfully", color="positive")
+        ui.navigate.to("/login")
+
+    with auth_card():
+        auth_email(user.email).disable()
+        password1 = auth_password("New password")
+        password2 = auth_password("Confirm password")
+        ui.button("Continue", on_click=try_reset).props("dense").classes("w-full")
 
 
 if settings.ENABLE_PLAN:

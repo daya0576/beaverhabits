@@ -13,11 +13,13 @@ from beaverhabits.app.auth import (
     user_create_reset_token,
     user_create_token,
     user_get_by_email,
+    user_reset_password,
 )
 from beaverhabits.app.crud import get_customer_list, get_user_count, get_user_list
 from beaverhabits.app.db import User
 from beaverhabits.configs import settings
 from beaverhabits.core.backup import backup_to_telegram
+from beaverhabits.frontend.components import redirect
 from beaverhabits.logging import logger
 from beaverhabits.storage import get_user_dict_storage, session_storage
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
@@ -217,3 +219,10 @@ async def forgot_password(email: str) -> None:
         )
         ui.notify(f"Reset password email sent to {user.email}", color="positive")
         logger.debug(f"Reset password email sent to {user.email}")
+
+
+async def reset_password(user: User, password: str) -> None:
+    await user_reset_password(user, password)
+
+    ui.notify("Password reset successfully", color="positive")
+    ui.timer(2, lambda: redirect("/login"), once=True)
