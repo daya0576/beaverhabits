@@ -177,7 +177,7 @@ async def login_page() -> Optional[RedirectResponse]:
         password = auth_password().on("keydown.enter", try_login)
 
         with ui.row().classes("gap-2 w-full items-center"):
-            auth_forgot_password(email)
+            auth_forgot_password(email, views.forgot_password)
             ui.space()
             if not await get_user_count() >= settings.MAX_USER_COUNT > 0:
                 link("Create account", "/register")
@@ -209,7 +209,7 @@ async def register_page():
         password = auth_password().on("keydown.enter", try_register)
 
         with ui.row().classes("gap-2 w-full items-center"):
-            auth_forgot_password(email)
+            auth_forgot_password(email, views.forgot_password)
             ui.space()
             link("Sign in", "/login")
 

@@ -11,7 +11,6 @@ from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
 from nicegui.elements.button import Button
 
-from beaverhabits import views
 from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
@@ -1025,7 +1024,7 @@ def auth_header(text: str):
         ui.label(text).classes("text-3xl font-bold")
 
 
-def auth_forgot_password(email_input: ui.input):
+def auth_forgot_password(email_input: ui.input, reset: Callable):
     async def try_forgot_password():
         email = email_input.value
         if not email:
@@ -1033,7 +1032,7 @@ def auth_forgot_password(email_input: ui.input):
             return
 
         spinner.classes(remove="hidden")
-        await views.forgot_password(email)
+        await reset(email)
         spinner.classes("hidden")
 
     forgot_entry = link("Forgot password?", "#")

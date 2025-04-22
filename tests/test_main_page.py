@@ -3,6 +3,7 @@ import datetime
 from nicegui import app
 from nicegui.testing import Screen
 
+from beaverhabits.configs import settings
 from beaverhabits.frontend.add_page import add_page_ui
 from beaverhabits.frontend.habit_page import habit_page_ui
 from beaverhabits.frontend.index_page import index_page_ui

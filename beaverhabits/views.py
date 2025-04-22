@@ -225,4 +225,5 @@ async def reset_password(user: User, password: str) -> None:
     await user_reset_password(user, password)
 
     ui.notify("Password reset successfully", color="positive")
-    ui.timer(2, lambda: redirect("/login"), once=True)
+    await asyncio.sleep(1)
+    redirect("/login")
