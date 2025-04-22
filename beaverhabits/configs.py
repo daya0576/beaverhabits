@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # SaaS
+    APP_URL: str = ""
     SENTRY_DSN: str = ""
     ADMIN_EMAIL: str = ""
     UMAMI_ANALYTICS_ID: str = ""

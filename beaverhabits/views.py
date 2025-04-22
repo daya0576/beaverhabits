@@ -1,10 +1,11 @@
+import asyncio
 import datetime
 import json
 import random
 from typing import Sequence
 
 from fastapi import HTTPException
-from nicegui import app, ui
+from nicegui import app, run, ui
 
 from beaverhabits.app.auth import (
     user_check_token,
@@ -21,7 +22,7 @@ from beaverhabits.logging import logger
 from beaverhabits.storage import get_user_dict_storage, session_storage
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
 from beaverhabits.storage.storage import Habit, HabitList, HabitListBuilder, HabitStatus
-from beaverhabits.utils import generate_short_hash, ratelimiter
+from beaverhabits.utils import generate_short_hash, ratelimiter, send_email
 
 user_storage = get_user_dict_storage()
 
@@ -188,6 +189,7 @@ async def backup_all_users():
             logger.info(f"Successfully backed up habit list for user {user.email}")
 
 
+@ratelimiter(limit=3, window=1)
 async def forgot_password(email: str) -> None:
     user = await user_get_by_email(email)
     if user is None:
@@ -205,4 +207,13 @@ async def forgot_password(email: str) -> None:
         )
         return
 
-    logger.info(f"Reset password token for user {user.email}: {token}")
+    logger.debug(f"Reset password token for {user.email}: {token}")
+    async with asyncio.timeout(1):
+        await run.io_bound(
+            send_email,
+            "Reset your password",
+            f"Click the link to reset your password: {settings.APP_URL}/reset-password?token={token}",
+            [user.email],
+        )
+        ui.notify(f"Reset password email sent to {user.email}", color="positive")
+        logger.debug(f"Reset password email sent to {user.email}")

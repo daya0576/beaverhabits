@@ -146,7 +146,6 @@ def timeit(threshold: float):
     return decorator
 
 
-@ratelimiter(limit=3, window=1)
 def send_email(subject: str, body: str, recipients: list[str]):
     sender = settings.SMTP_EMAIL_USERNAME
     password = settings.SMTP_EMAIL_PASSWORD
@@ -159,5 +158,3 @@ def send_email(subject: str, body: str, recipients: list[str]):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp_server:
         smtp_server.login(sender, password)
         smtp_server.sendmail(sender, recipients, msg.as_string())
-
-    logger.info(f"Email sent to {recipients}")

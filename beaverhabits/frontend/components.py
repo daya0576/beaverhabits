@@ -2,9 +2,8 @@ import asyncio
 import calendar
 import datetime
 import os
-import uuid
 from collections import OrderedDict
-from copy import deepcopy
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Self
 
@@ -12,6 +11,7 @@ from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
 from nicegui.elements.button import Button
 
+from beaverhabits import views
 from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
@@ -56,7 +56,7 @@ def open_tab(x):
     ui.navigate.to(os.path.join(get_root_path(), x), new_tab=True)
 
 
-def link(text: str, target: str, color: str="text-white") -> ui.link:
+def link(text: str, target: str, color: str = "text-white") -> ui.link:
     return ui.link(text, target=target).classes(
         f"dark:{color} no-underline hover:no-underline"
     )
@@ -896,12 +896,14 @@ class TagChip(ui.chip):
 def number_input(value: int, label: str):
     return ui.input(value=str(value), label=label).props("dense").classes("w-8")
 
-def backup_input(label:str, value:str):
+
+def backup_input(label: str, value: str):
     backup_input = ui.input(label=label)
     backup_input.classes("w-full")
     if value:
         backup_input.value = value
     return backup_input
+
 
 def habit_backup_dialog(habit_list: HabitList) -> ui.dialog:
     @plan.pro_required("Pro plan required to use backup feature")
@@ -1012,3 +1014,41 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
                 ui.button("Reset", on_click=reset).props("flat")
 
     return dialog
+
+
+def auth_header(text: str):
+    with ui.row():
+        ui.label(text).classes("text-3xl font-bold")
+
+
+def auth_forgot_password(email_input: ui.input):
+    async def try_forgot_password():
+        email = email_input.value
+        if not email:
+            ui.notify("Email is required", color="negative")
+            return
+
+        spinner.classes(remove="hidden")
+        await views.forgot_password(email)
+        spinner.classes("hidden")
+
+    forgot_entry = link("Forgot password?", "#")
+    forgot_entry.on("click", try_forgot_password)
+    spinner = ui.spinner().classes("hidden")
+
+
+def auth_email():
+    return ui.input("email").classes("w-full")
+
+
+def auth_password():
+    return ui.input("password", password=True, password_toggle_button=True).classes(
+        "w-full"
+    )
+
+
+@contextmanager
+def auth_card():
+    with ui.card().classes("absolute-center shadow-none w-80 sm:w-96 p-6"):
+        with ui.column().classes("w-full gap-5"):
+            yield

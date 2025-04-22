@@ -6,7 +6,14 @@ from nicegui import app, ui
 
 from beaverhabits.frontend import paddle_page
 from beaverhabits.frontend.admin import admin_page
-from beaverhabits.frontend.components import link
+from beaverhabits.frontend.components import (
+    auth_card,
+    auth_email,
+    auth_forgot_password,
+    auth_header,
+    auth_password,
+    link,
+)
 from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.layout import custom_header, redirect
 from beaverhabits.frontend.order_page import order_page_ui
@@ -157,33 +164,20 @@ async def login_page() -> Optional[RedirectResponse]:
         else:
             ui.notify("email or password wrong!", color="negative")
 
-    async def try_forgot_password():
-        assert forgot_entry, "forget button should be defined"
-        if not email.value:
-            ui.notify("Email is required", color="negative")
-            return
-
-        forgot_entry.props("loading")
-        await views.forgot_password(email.value)
-        forgot_entry.props(remove="loading")
-
     try:
         # Wait for the handshake before sending events to the server
         await ui.context.client.connected(timeout=5)
     except TimeoutError:
         # Ignore weak dependency
-        logger.warning("Client not connected, skipping login page")
+        logger.warning("Client not connected, skipping...")
 
-    with ui.card().classes("absolute-center shadow-none w-80 sm:w-96"):
-        with ui.column().classes("w-full gap-2"):
-            ui.label("Sign in").classes("text-3xl font-bold")
-            email = ui.input("email").on("keydown.enter", try_login).classes("w-full")
-        password = ui.input("password", password=True, password_toggle_button=True)
-        password.on("keydown.enter", try_login).classes("w-full")
+    with auth_card():
+        auth_header("Sign in")
+        email = auth_email()
+        password = auth_password().on("keydown.enter", try_login)
 
-        with ui.row().classes("gap-2 w-full"):
-            forgot_entry = link("Forgot password?", "#")
-            forgot_entry.on("click", try_forgot_password)
+        with ui.row().classes("gap-2 w-full items-center"):
+            auth_forgot_password(email)
             ui.space()
             if not await get_user_count() >= settings.MAX_USER_COUNT > 0:
                 link("Create account", "/register")
@@ -207,31 +201,15 @@ async def register_page():
         else:
             ui.navigate.to(app.storage.user.get("referrer_path", GUI_ROOT_PATH))
 
-    async def try_forgot_password():
-        assert forgot_entry, "forget button should be defined"
-        if not email.value:
-            ui.notify("Email is required", color="negative")
-            return
-
-        forgot_entry.props("loading")
-        await views.forgot_password(email.value)
-        forgot_entry.props(remove="loading")
-
     await views.validate_max_user_count()
 
-    with ui.card().classes("absolute-center shadow-none w-80 sm:w-96"):
-        with ui.column().classes("w-full gap-2"):
-            ui.label("Create account").classes("text-3xl font-bold")
-            email = ui.input("email").classes("w-full")
-        password = (
-            ui.input("password", password=True, password_toggle_button=True)
-            .on("keydown.enter", try_register)
-            .classes("w-full")
-        )
+    with auth_card():
+        auth_header("Create account")
+        email = auth_email()
+        password = auth_password().on("keydown.enter", try_register)
 
-        with ui.row().classes("gap-2 w-full"):
-            forgot_entry = link("Forgot password?", "#")
-            forgot_entry.on("click", try_forgot_password)
+        with ui.row().classes("gap-2 w-full items-center"):
+            auth_forgot_password(email)
             ui.space()
             link("Sign in", "/login")
 

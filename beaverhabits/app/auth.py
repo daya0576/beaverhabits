@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import exceptions
 from fastapi_users.exceptions import UserAlreadyExists
 from fastapi_users.jwt import generate_jwt
+from fastapi_users.manager import RESET_PASSWORD_TOKEN_AUDIENCE
 from nicegui import app
 
 from beaverhabits.app.db import User, get_async_session, get_user_db
@@ -121,8 +122,7 @@ def user_create_reset_token(user: User) -> str:
 
     token_data = {
         "sub": str(user.id),
-        # "password_fgpt": self.password_helper.hash(user.hashed_password),
-        # "aud": self.reset_password_token_audience,
+        "aud": RESET_PASSWORD_TOKEN_AUDIENCE,
     }
     assert settings.RESET_PASSWORD_TOKEN_SECRET, "Missing JWT secret"
     token = generate_jwt(
