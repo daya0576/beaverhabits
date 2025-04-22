@@ -160,7 +160,7 @@ async def login_page() -> Optional[RedirectResponse]:
         user = await user_authenticate(email=email.value, password=password.value)
         if user:
             await views.login_user(user)
-            ui.navigate.to(app.storage.user.get("referrer_path", GUI_ROOT_PATH))
+            ui.navigate.to(GUI_ROOT_PATH)
         else:
             ui.notify("email or password wrong!", color="negative")
 
@@ -199,7 +199,7 @@ async def register_page():
         except Exception as e:
             ui.notify(str(e), color="negative")
         else:
-            ui.navigate.to(app.storage.user.get("referrer_path", GUI_ROOT_PATH))
+            ui.navigate.to(GUI_ROOT_PATH)
 
     await views.validate_max_user_count()
 
