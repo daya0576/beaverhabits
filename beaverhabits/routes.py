@@ -230,8 +230,6 @@ async def forgot_password_page(user: User = Depends(get_reset_user)):
 
         logger.info(f"Trying to reset password for {user.email}")
         await views.reset_password(user, password1.value)
-        ui.notify("Password reset successfully", color="positive")
-        ui.navigate.to("/login")
 
     with auth_card():
         auth_email(user.email).disable()

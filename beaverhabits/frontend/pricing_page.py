@@ -4,7 +4,7 @@ from paddle_billing import Client, Environment, Options
 from beaverhabits import const
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
-from beaverhabits.frontend.components import redirect
+from beaverhabits.frontend.components import open_tab, redirect
 from beaverhabits.frontend.javascript import PADDLE_JS
 from beaverhabits.frontend.layout import custom_headers
 from beaverhabits.logging import logger
@@ -55,7 +55,7 @@ def get_product_price():
 
 
 def link(text: str, url: str):
-    return ui.link(target=url).classes("max-sm:hidden").tooltip(text)
+    return ui.link(target=url, new_tab=True).classes("max-sm:hidden").tooltip(text)
 
 
 def icon(text: str, url: str, icon_str: str):

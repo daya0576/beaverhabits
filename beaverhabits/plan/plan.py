@@ -17,7 +17,7 @@ async def checkout():
     if not email:
         ui.notify("Please sign to continue checkout", position="top", color="negative")
         app.storage.user["referrer_path"] = "/pricing"
-        ui.timer(2, lambda: ui.navigate.to("/register"), once=True)
+        ui.timer(2, lambda: ui.navigate.to("/register", new_tab=True), once=True)
         return
 
     ui.run_javascript(f"openCheckout('{email}')")
