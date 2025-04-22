@@ -5,6 +5,8 @@ import nicegui
 from cachetools import TTLCache
 from fastapi import Request
 
+from beaverhabits.logging import logger
+
 from .dict import DictHabitList
 from .storage import SessionStorage
 
@@ -34,3 +36,4 @@ class SessionDictStorage(SessionStorage[DictHabitList]):
     def save_user_habit_list(self, habit_list: DictHabitList) -> None:
         session_id = get_session_id()
         self._users[session_id] = habit_list
+        logger.info(f"Cache size: {len(self._users)}/4096")

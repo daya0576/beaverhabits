@@ -44,7 +44,7 @@ from beaverhabits.utils import (
 
 strptime = datetime.datetime.strptime
 
-DAILY_NOTE_MAX_LENGTH = 300
+DAILY_NOTE_MAX_LENGTH = 1000
 CALENDAR_EVENT_MASK = "%Y/%m/%d"
 
 
