@@ -70,7 +70,7 @@ async def get_habit_completions(
     date_start: str | None = None,
     date_end: str | None = None,
     limit: int | None = 10,
-    sort="acs",
+    sort="asc",
     user: User = Depends(current_active_user),
 ):
     habit = await views.get_user_habit(user, habit_id)
