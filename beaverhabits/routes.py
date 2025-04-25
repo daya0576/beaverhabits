@@ -12,6 +12,7 @@ from beaverhabits.frontend.components import (
     auth_forgot_password,
     auth_header,
     auth_password,
+    auth_redirect,
     link,
 )
 from beaverhabits.frontend.import_page import import_ui_page
@@ -171,8 +172,7 @@ async def login_page() -> Optional[RedirectResponse]:
         # Ignore weak dependency
         logger.warning("Client not connected, skipping...")
 
-    with auth_card():
-        auth_header("Sign in")
+    with auth_card(title="Sign in", func=try_login):
         email = auth_email()
         password = auth_password().on("keydown.enter", try_login)
 
@@ -180,9 +180,7 @@ async def login_page() -> Optional[RedirectResponse]:
             auth_forgot_password(email, views.forgot_password)
             ui.space()
             if not await get_user_count() >= settings.MAX_USER_COUNT > 0:
-                link("Create account", "/register")
-
-        ui.button("Continue", on_click=try_login).props("dense").classes("w-full")
+                auth_redirect("Create account", "/register")
 
 
 @ui.page("/register")
@@ -192,9 +190,22 @@ async def register_page():
         return RedirectResponse(GUI_ROOT_PATH)
 
     async def try_register():
+        if not email.value:
+            ui.notify("Email is required", color="negative")
+            return
+        if (
+            not password1.value
+            or not password2.value
+            or password1.value != password2.value
+        ):
+            ui.notify("Passwords do not match", color="negative")
+            return
+
         try:
             await views.validate_max_user_count()
-            user = await views.register_user(email=email.value, password=password.value)
+            user = await views.register_user(
+                email=email.value, password=password2.value
+            )
             await views.login_user(user)
         except Exception as e:
             ui.notify(str(e), color="negative")
@@ -203,17 +214,15 @@ async def register_page():
 
     await views.validate_max_user_count()
 
-    with auth_card():
-        auth_header("Create account")
+    with auth_card(title="Sign up", func=try_register):
         email = auth_email()
-        password = auth_password().on("keydown.enter", try_register)
+        password1 = auth_password().on("keydown.enter", try_register)
+        password2 = auth_password("Confirm password").on("keydown.enter", try_register)
 
         with ui.row().classes("gap-2 w-full items-center"):
             auth_forgot_password(email, views.forgot_password)
             ui.space()
-            link("Sign in", "/login")
-
-        ui.button("Continue", on_click=try_register).props("dense").classes("w-full")
+            auth_redirect("Sign in", "/login")
 
 
 @ui.page("/reset-password")
@@ -231,11 +240,10 @@ async def forgot_password_page(user: User = Depends(get_reset_user)):
         logger.info(f"Trying to reset password for {user.email}")
         await views.reset_password(user, password1.value)
 
-    with auth_card():
+    with auth_card(title="Reset password", func=try_reset):
         auth_email(user.email).disable()
         password1 = auth_password("New password")
         password2 = auth_password("Confirm password")
-        ui.button("Continue", on_click=try_reset).props("dense").classes("w-full")
 
 
 if settings.ENABLE_PLAN:

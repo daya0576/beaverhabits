@@ -5,7 +5,7 @@ import os
 from collections import OrderedDict
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Callable, List, Optional, Self
+from typing import Callable, Optional, Self
 
 from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
@@ -94,7 +94,7 @@ def habit_tick_dialog(record: CheckedRecord | None):
     text = record.text if record else ""
     with ui.dialog() as dialog, ui.card().props("flat") as card:
         dialog.props('backdrop-filter="blur(4px)"')
-        card.classes("w-5/6 max-w-120")
+        card.classes("w-[640px]")
 
         with ui.column().classes("gap-0 w-full"):
             t = ui.textarea(
@@ -1023,6 +1023,8 @@ def auth_header(text: str):
     with ui.row():
         ui.label(text).classes("text-3xl font-bold")
 
+def auth_redirect(text: str, target: str):
+    return link(text, target).classes("text-xs text-gray-950")
 
 def auth_forgot_password(email_input: ui.input, reset: Callable):
     async def try_forgot_password():
@@ -1035,7 +1037,7 @@ def auth_forgot_password(email_input: ui.input, reset: Callable):
         await reset(email)
         spinner.classes("hidden")
 
-    forgot_entry = link("Forgot password?", "#")
+    forgot_entry = auth_redirect("Forgot password?", "#")
     forgot_entry.on("click", try_forgot_password)
     spinner = ui.spinner().classes("hidden")
 
@@ -1050,7 +1052,6 @@ def auth_email(value: str | None = None):
 def auth_password(title: str = "Password", value: str | None = None):
     password = ui.input("password", password=True, password_toggle_button=True)
     password.classes("w-full")
-    # password.props("stack-label")
     if value:
         password.value = value
     if title:
@@ -1059,7 +1060,9 @@ def auth_password(title: str = "Password", value: str | None = None):
 
 
 @contextmanager
-def auth_card():
-    with ui.card().classes("absolute-center shadow-none w-80 sm:w-96 p-6"):
-        with ui.column().classes("w-full gap-5"):
+def auth_card(title: str, func: Callable):
+    with ui.card().classes("absolute-center shadow-none w-80 sm:w-96"):
+        with ui.column().classes("w-full gap-4"):
+            auth_header(title)
             yield
+            ui.button("Continue", on_click=func).props("dense").classes("w-full")
