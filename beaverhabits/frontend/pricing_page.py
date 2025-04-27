@@ -99,11 +99,7 @@ def description():
                 price_label.set_text(f"Pro ${get_product_price():.2f}")
 
             if plan_name == PRO:
-                try:
-                    ui.timer(0.3, lambda: set_latest_price(), once=True)
-                except TimeoutError:
-                    logger.error(f"Timer cancelled because client is not connected")
-                    return False
+                ui.context.client.on_connect(set_latest_price)
 
 
 def demo():
