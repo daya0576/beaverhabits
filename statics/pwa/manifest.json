@@ -6,7 +6,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
-  "start_url": "/",
+  "start_url": "/gui",
   "id": "beaverhabits",
   "display_override": [],
   "icons": [
