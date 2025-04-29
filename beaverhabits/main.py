@@ -1,6 +1,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 
+import psutil
 from fastapi import FastAPI, status
 from fastapi.responses import Response
 from nicegui import ui
@@ -112,7 +113,6 @@ if settings.DEBUG:
     import tracemalloc
     from tracemalloc import Snapshot
 
-    import psutil
     from psutil._common import bytes2human
 
     class MemoryMonitor:
