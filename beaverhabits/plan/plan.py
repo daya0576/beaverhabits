@@ -3,7 +3,7 @@ from nicegui import app, context, ui
 from beaverhabits.app import crud
 from beaverhabits.app.auth import user_from_token
 from beaverhabits.configs import settings
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
 
 

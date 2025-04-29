@@ -14,7 +14,7 @@ from beaverhabits.app.db import User, get_async_session, get_user_db
 from beaverhabits.app.schemas import UserCreate
 from beaverhabits.app.users import get_jwt_strategy, get_user_manager
 from beaverhabits.configs import settings
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 
 get_async_session_context = contextlib.asynccontextmanager(get_async_session)
 get_user_db_context = contextlib.asynccontextmanager(get_user_db)

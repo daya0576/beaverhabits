@@ -6,7 +6,7 @@ from beaverhabits.frontend.components import (
     HabitTotalBadge,
 )
 from beaverhabits.frontend.layout import layout
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
 
 

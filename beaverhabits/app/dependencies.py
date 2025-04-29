@@ -13,7 +13,7 @@ from beaverhabits.app.auth import (
 )
 from beaverhabits.app.db import User
 from beaverhabits.configs import settings
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 
 
 def get_bearer_token(request: Request) -> Optional[str]:

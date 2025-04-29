@@ -8,7 +8,7 @@ from nicegui import background_tasks, core, observables
 
 from beaverhabits.app.db import User
 from beaverhabits.configs import USER_DATA_FOLDER
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.storage.storage import UserStorage
 

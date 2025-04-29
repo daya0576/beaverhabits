@@ -8,7 +8,7 @@ from beaverhabits import const
 from beaverhabits.app.db import User
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.layout import layout
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
 from beaverhabits.views import user_storage

@@ -21,6 +21,7 @@ dependencies = [
     "paddle-python-sdk>=1.6.0",
     "dataclasses-json>=0.6.7",
     "aiosqlite>=0.20.0,<1.0.0",
+    "psutil>=7.0.0",
 ]
 description = ""
 readme = "README.md"
@@ -38,6 +39,8 @@ dev = [
     "pip>=24.3.1",
     "psutil>=6.1.1",
     "black>=25.1.0",
+    "pympler>=1.1",
+    "memray>=1.17.1",
 ]
 
 [project.scripts]

@@ -5,7 +5,7 @@ from nicegui.storage import observables
 
 from beaverhabits.app import crud
 from beaverhabits.app.db import User
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.storage.storage import UserStorage
 

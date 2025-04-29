@@ -5,7 +5,7 @@ import nicegui
 from cachetools import TTLCache
 from fastapi import Request
 
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 
 from .dict import DictHabitList
 from .storage import SessionStorage

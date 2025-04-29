@@ -10,7 +10,7 @@ from paddle_billing.Notifications.Requests.Headers import Headers
 
 from beaverhabits.app import crud
 from beaverhabits.configs import settings
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 
 router = APIRouter()
 

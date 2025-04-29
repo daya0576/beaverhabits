@@ -158,3 +158,6 @@ test.db
 screenshots/
 tags
 .env
+*.bin
+memray-*
+profile.svg

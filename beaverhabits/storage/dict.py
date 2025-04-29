@@ -1,7 +1,7 @@
 import datetime
 from dataclasses import dataclass, field
 
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 from beaverhabits.storage.storage import (
     Backup,
     CheckedRecord,

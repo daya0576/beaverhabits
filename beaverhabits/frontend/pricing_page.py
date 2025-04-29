@@ -7,7 +7,7 @@ from beaverhabits.frontend import icons
 from beaverhabits.frontend.components import open_tab, redirect
 from beaverhabits.frontend.javascript import PADDLE_JS
 from beaverhabits.frontend.layout import custom_headers
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 from beaverhabits.plan import plan
 
 IMAGES = [

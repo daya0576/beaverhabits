@@ -4,7 +4,7 @@ from io import BytesIO
 
 import requests
 
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.storage.storage import HabitList
 

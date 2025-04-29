@@ -20,7 +20,7 @@ from beaverhabits.app.db import User
 from beaverhabits.configs import settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.frontend.components import redirect
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 from beaverhabits.storage import get_user_dict_storage, session_storage
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
 from beaverhabits.storage.meta import GUI_ROOT_PATH

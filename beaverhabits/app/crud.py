@@ -3,7 +3,7 @@ from typing import Sequence
 
 from sqlalchemy import select
 
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 
 from .db import HabitListModel, User, UserIdentityModel, get_async_session
 

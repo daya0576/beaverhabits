@@ -15,7 +15,7 @@ from nicegui import app, ui
 from starlette import status
 
 from beaverhabits.configs import settings
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 
 WEEK_DAYS = 7
 TIME_ZONE_KEY = "timezone"

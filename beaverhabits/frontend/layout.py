@@ -14,7 +14,7 @@ from beaverhabits.frontend.components import (
     redirect,
 )
 from beaverhabits.frontend.menu import add_menu, sort_menu
-from beaverhabits.logging import logger
+from beaverhabits.logger import logger
 from beaverhabits.storage.meta import (
     get_page_title,
     get_root_path,
