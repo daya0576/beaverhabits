@@ -78,6 +78,13 @@ def get_current_list_id() -> int | str | None:
         return stored_id
 
 
+@ui.page("/")
+async def root_redirect() -> None:
+    """Redirects the root path '/' to '/gui'."""
+    logger.info("Redirecting from / to /gui")
+    ui.navigate.to('/gui')
+
+
 @ui.page("/gui/lists")
 async def lists_page(user: User = Depends(current_active_user)) -> None:
     lists = await get_user_lists(user)
@@ -85,7 +92,6 @@ async def lists_page(user: User = Depends(current_active_user)) -> None:
 
 
 @ui.page("/gui")
-@ui.page("/")
 async def index_page(
     request: Request,
     user: User = Depends(current_active_user),
