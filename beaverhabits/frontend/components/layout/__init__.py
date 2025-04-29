@@ -37,7 +37,7 @@ async def layout(
         logger.info(f"Rendering page: {path}")
         
         # Added md:justify-between for spacing on medium+ screens, removed justify-between to prevent wrapping on small screens
-        with ui.row().classes("w-full items-center md:justify-between pt-2 pr-2"): 
+        with ui.row().classes("w-full items-center justify-between pt-2 pr-2"): 
             # --- Left Element ---
             left_container = ui.row().classes("items-center") 
             with left_container:
