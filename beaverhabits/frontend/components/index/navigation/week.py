@@ -11,7 +11,7 @@ async def week_navigation(days: list[datetime.date]):
     state = ui.state(dict(can_go_forward=offset < 0))
     
     # Make gap responsive: smaller on small screens, larger on medium+
-    with ui.row().classes("items-center gap-2 md:gap-4"): 
+    with ui.row().classes("items-center gap-0 md:gap-4"): 
         ui.button(
             "←",
             on_click=lambda: change_week(offset - 1)
