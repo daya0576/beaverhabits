@@ -1,9 +1,5 @@
-# Beaver Habit Tracker
+# Beaver Prime Habit Tracker
 
-![GitHub Release](https://img.shields.io/github/v/release/daya0576/beaverhabits)
-![Docker Pulls](https://img.shields.io/docker/pulls/daya0576/beaverhabits)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/daya0576/beaverhabits/fly.yml)
-![Uptime Robot ratio (30 days)](https://img.shields.io/uptimerobot/ratio/m787647728-b1a273391c2ad5c526b1c605)
 
 A self-hosted habit tracking app without "Goals"
 
