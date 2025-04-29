@@ -31,68 +31,12 @@ This fork adds several powerful enhancements:
 
 # Getting Started
 
-## Cloud Service
-
-- Demo: https://beaverhabits.com/demo
-- Login: https://beaverhabits.com
-
 ## Self-Hosting
 
-### Unraid
-
-Simply search for "Beaver Habit Tracker" in the Community Apps store!
-
-### Ship with Docker
-
-```bash
-docker run -d --name beaverhabits \
-  -u $(id -u):$(id -g) \
-  -e HABITS_STORAGE=USER_DISK \
-  -v /path/to/host/directory:/app/.user/ \
-  -p 8080:8080 \
-  daya0576/beaverhabits:latest
-```
-
-Or Docker Compose:
-
-```yaml
-services:
-  beaverhabits:
-    container_name: beaverhabits
-    user: 1000:1000 # User permissions of your docker or default user.
-    environment:
-      # See the note below to find all the environment variables
-      - HABITS_STORAGE=USER_DISK # DATABASE stores in a single SQLite database named habits.db. USER_DISK option saves in a local json file.
-      # Skip authentication
-      - TRUSTED_LOCAL_EMAIL=<your@email.address>
-    volumes:
-      - /path/to/beaver/habits:/app/.user/ # Change directory to match your docker file scheme.
-    ports:
-      - 8080:8080
-    restart: unless-stopped
-    image: daya0576/beaverhabits:latest
-```
-
-P.S. The container starts as nobody to increase the security and make it OpenShift compatible.
-To avoid [permission issues](https://github.com/daya0576/beaverhabits/discussions/31), ensure that the UID owning the host folder aligns with the UID of the user inside the container.
-
-## Options
-
-| Name                              | Description                                                                                                                                                                               |
-| :-------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **HABITS_STORAGE**(str)           | The `DATABASE` option stores everything in a single SQLite database file named habits.db. On the other hand, the `USER_DISK` option saves habits and records in a local json file.        |
-| **FIRST_DAY_OF_WEEK**(int)        | By default, the first day of the week is set as Monday. To change it to Sunday, you can set it as `6`.                                                                                    |
-| **MAX_USER_COUNT**(int)           | By setting it to `1`, you can prevent others from signing up in the future.                                                                                                               |
-| **ENABLE_IOS_STANDALONE**(bool)   | Experiential feature to enable standalone mode on iOS. The default setting is `false`.                                                                                                    |
-| **INDEX_SHOW_HABIT_COUNT**(bool)  | To display total completed count along with the habit name on the index page. The default setting is `false`.                                                                             |
-| **INDEX_HABIT_NAME_COLUMNS**(int) | Customize the habit name column count for the index page. The default value is `5`.                                                                                                       |
-| **INDEX_HABIT_DATE_COLUMNS**(int) | Customize the date column count for the index page. The default value is `5`.                                                                                                             |
-| **TRUSTED_EMAIL_HEADER**(str)     | Delegate authentication to an authenticating reverse proxy that passes in the user's details in HTTP headers, e.g. `Cf-Access-Authenticated-User-Email`. An existing account is required. |
-| **TRUSTED_LOCAL_EMAIL**(str)      | Disables authentication entirely. A new account with the specified email will be created if it does not exist.                                                                            |
 
 ## Development
 
-BeaverHabits favors [uv](https://docs.astral.sh/uv/getting-started/) as package management tool. Here is how to set up the development environment:
+BeaverPrime favors [uv](https://docs.astral.sh/uv/getting-started/) as package management tool. Here is how to set up the development environment:
 
 ```sh
 # Install uv and all the dependencies
@@ -101,47 +45,6 @@ uv venv && uv sync
 # Start the server
 ./start.sh dev
 ```
-
-# Features
-
-[Vote](https://github.com/daya0576/beaverhabits/discussions/78) for your most wanted features.
-
-1. Habit Tracking
-   - [x] Daily notes/descriptions
-   - [x] Weekly goals (set target number of completions per week)
-   - [ ] Measurable habits
-   - [ ] Multiple states, e.g. failed, skipped
-2. Pages & UI
-   - [x] Reorder habits
-   - [x] Organize habits into lists
-   - [x] Quick filter habits by first letter
-   - [ ] Category or tag
-   - [ ] Light mode
-   - [ ] Standalone mode for iOS
-   - [ ] **Responsive layout** (wider display for desktop)
-   - [ ] **Native mobile app**
-3. Storage
-   - [x] Session-based disk storage (Demo only)
-   - [x] User-based disk storage
-   - [x] User-based db storage
-4. CICD
-   - [x] Unit tests and deployment pipeline
-   - [x] Docker build and push pipeline
-5. Authentication
-   - [x] Email & password
-   - [x] SSO Trusted email header
-   - [x] Disable authentication entirely
-6. Extensibility
-   - [x] Export & Import
-   - [x] RESTful API
-7. Others
-   - [ ] Habit calendar template, e.g. vacations
-
-## Streaks
-
-Here are my table tennis training sessions in the past year :)
-
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/db795af7-ed32-4879-b629-9fd3a2700440" />
 
 ## Import
 
