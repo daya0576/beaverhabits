@@ -9,7 +9,6 @@ from beaverhabits.sql.models import Habit
 from beaverhabits.app.db import User
 from beaverhabits.logging import logger
 from beaverhabits.frontend.components.index import (
-    week_navigation,
     habit_list_ui,
     letter_filter_ui,
     should_show_filter,
@@ -57,7 +56,6 @@ async def index_page_ui(days: list[datetime.date], habits: List[Habit], user: Us
             # Initialize letter filter state in JavaScript
             ui.run_javascript(f'window.HabitFilter.setEnabled({str(show_filter).lower()});')
             
-            # Removed week_navigation(days) call from here
             if show_filter:
                 await letter_filter_ui(active_habits)
             await habit_list_ui(days, active_habits)

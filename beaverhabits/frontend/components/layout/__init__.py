@@ -36,8 +36,8 @@ async def layout(
         path = context.client.page.path
         logger.info(f"Rendering page: {path}")
         
-        # Use justify-between, wrap elements in rows for proper spacing
-        with ui.row().classes("w-full items-center justify-between pt-2 pr-2"): 
+        # Added md:justify-between for spacing on medium+ screens, removed justify-between to prevent wrapping on small screens
+        with ui.row().classes("w-full items-center md:justify-between pt-2 pr-2"): 
             # --- Left Element ---
             left_container = ui.row().classes("items-center") 
             with left_container:
@@ -92,8 +92,8 @@ async def layout(
                     await list_selector(lists, current_list_id, path)
                 # else: Left container remains empty on index page if no user/lists
 
-            # --- Center Element (grows and centers content) ---
-            center_container = ui.row().classes("items-center justify-center flex-grow")
+            # --- Center Element (centers content, does not grow) ---
+            center_container = ui.row().classes("items-center justify-center") # Removed flex-grow
             with center_container:
                 # Add week navigation only on the main page and if days are provided
                 if path == settings.GUI_MOUNT_PATH and days:
