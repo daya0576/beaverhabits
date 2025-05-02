@@ -185,6 +185,7 @@ class MemoryMonitor:
         # print increased objects by types
         memory = psutil.Process(os.getpid()).memory_info().rss
         growth = memory - self.last_mem
+        print("Generation total memory: ", end=" ")
         print(bytes2human(memory), end=" ")
         print(
             bytes2human(growth, r"%(value)+.1f%(symbol)s") if growth else "",
