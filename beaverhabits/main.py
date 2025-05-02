@@ -1,4 +1,6 @@
 import asyncio
+import gc
+import tracemalloc
 from contextlib import asynccontextmanager
 
 import psutil
@@ -68,6 +70,10 @@ rss {rss}
 mem_total {mem_total}
 # TYPE mem_available gauge
 mem_available {mem_available}
+# TYPE uncollectable_count gauge
+uncollectable_count {uncollectable_count}
+# TYPE object_count gauge
+object_count {object_count}
 """
 
 
@@ -77,10 +83,25 @@ def exporter():
     process = psutil.Process()
     memory_info = process.memory_info()
     ram = psutil.virtual_memory()
+
+    # Garbage collection stats
+    gc.collect()
+    gc.get_objects()
+    uncollectable_count = len(gc.garbage)
+    gc_stats = gc.get_stats()
+
+    for i, stats in enumerate(gc_stats):
+        print(f"Generation {i}:", end=" ")
+        print(f"Objects: {stats['collected'] + stats['uncollectable']}", end=" ")
+        print(f"Collected: {stats['collected']}", end=" ")
+        print(f"Uncollectable: {stats['uncollectable']}")
+
     text = METRICS_TEMPLATE.format(
         rss=memory_info.rss,  # non-swapped physical memory a process has used
         mem_total=ram.total,  # total physical memory
         mem_available=ram.available,  # available memory
+        uncollectable_count=uncollectable_count,  # number of uncollectable objects
+        object_count=len(gc.get_objects()),
     )
     return Response(content=text, media_type="text/plain")
 

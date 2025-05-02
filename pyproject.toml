@@ -40,7 +40,6 @@ dev = [
     "psutil>=6.1.1",
     "black>=25.1.0",
     "pympler>=1.1",
-    "memray>=1.17.1",
 ]
 
 [project.scripts]
