@@ -77,13 +77,15 @@ uncollectable_count {uncollectable_count}
 object_count {object_count}
 """
 
-monitor = MemoryMonitor()
+# Debug memory usage
+hourly_monitor = MemoryMonitor("Hourly monitor", total_threshold=10, diff_threshold=-1)
+ui.timer(60 * 60, hourly_monitor.print_stats)
+
+exporter_monitor = MemoryMonitor("Exporter monitor")
 
 
 @app.get("/metrics", tags=["metrics"])
 def exporter():
-    monitor.print_stats()
-
     # Memory heap and stats
     process = psutil.Process()
     memory_info = process.memory_info()
@@ -95,6 +97,9 @@ def exporter():
         uncollectable_count=len(gc.garbage),  # number of uncollectable objects
         object_count=len(gc.get_objects()),
     )
+
+    exporter_monitor.print_stats()
+
     return Response(content=text, media_type="text/plain")
 
 

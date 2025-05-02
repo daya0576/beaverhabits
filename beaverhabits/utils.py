@@ -167,17 +167,21 @@ def send_email(subject: str, body: str, recipients: list[str]):
 
 class MemoryMonitor:
 
-    def __init__(self) -> None:
+    def __init__(self, source: str, diff_threshold: int = 0, total_threshold: int = 0):
+        self.source = source
         self.last_mem: int = 0
         self.obj_count: dict[str, int] = {}
+
+        self.diff_threshold: int = diff_threshold
+        self.total_threshold: int = total_threshold
 
     def print_stats(self) -> None:
         gc.collect()
 
         # print garbage collection stats
-        print(f"Generation total objects: {len(gc.get_objects())}")
+        print(f"{self.source} total objects: {len(gc.get_objects())}")
         for i, stats in enumerate(gc.get_stats()):
-            print(f"Generation {i}:", end=" ")
+            print(f"{self.__class__.__name__} {i}:", end=" ")
             print(f"Objects: {stats['collected'] + stats['uncollectable']}", end=" ")
             print(f"Collected: {stats['collected']}", end=" ")
             print(f"Uncollectable: {stats['uncollectable']}")
@@ -185,7 +189,7 @@ class MemoryMonitor:
         # print increased objects by types
         memory = psutil.Process(os.getpid()).memory_info().rss
         growth = memory - self.last_mem
-        print("Generation total memory: ", end=" ")
+        print(f"{self.source} total memory:", end=" ")
         print(bytes2human(memory), end=" ")
         print(
             bytes2human(growth, r"%(value)+.1f%(symbol)s") if growth else "",
@@ -196,11 +200,15 @@ class MemoryMonitor:
             counter[type(obj).__name__] += 1
         for cls, count in counter.items():
             prev_count = self.obj_count.get(cls, 0)
-            if count != prev_count:
+            if (
+                abs(count - prev_count) > self.diff_threshold
+                and count > self.total_threshold
+            ):
                 print(f"{cls}={count} ({count - prev_count:+})", end=" ")
                 self.obj_count[cls] = count
+        print()
+
         self.obj_count = {
             cls: count for cls, count in self.obj_count.items() if count > 0
         }
-        print()
         self.last_mem = memory
