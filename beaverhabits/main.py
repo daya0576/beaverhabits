@@ -16,6 +16,7 @@ from beaverhabits.configs import settings
 from beaverhabits.logger import logger
 from beaverhabits.routes import init_gui_routes
 from beaverhabits.scheduler import daily_backup_task
+from beaverhabits.utils import MemoryMonitor
 
 logger.info("Starting BeaverHabits...")
 
@@ -76,31 +77,22 @@ uncollectable_count {uncollectable_count}
 object_count {object_count}
 """
 
+monitor = MemoryMonitor()
+
 
 @app.get("/metrics", tags=["metrics"])
 def exporter():
+    monitor.print_stats()
+
     # Memory heap and stats
     process = psutil.Process()
     memory_info = process.memory_info()
     ram = psutil.virtual_memory()
-
-    # Garbage collection stats
-    gc.collect()
-    gc.get_objects()
-    uncollectable_count = len(gc.garbage)
-    gc_stats = gc.get_stats()
-
-    for i, stats in enumerate(gc_stats):
-        print(f"Generation {i}:", end=" ")
-        print(f"Objects: {stats['collected'] + stats['uncollectable']}", end=" ")
-        print(f"Collected: {stats['collected']}", end=" ")
-        print(f"Uncollectable: {stats['uncollectable']}")
-
     text = METRICS_TEMPLATE.format(
         rss=memory_info.rss,  # non-swapped physical memory a process has used
         mem_total=ram.total,  # total physical memory
         mem_available=ram.available,  # available memory
-        uncollectable_count=uncollectable_count,  # number of uncollectable objects
+        uncollectable_count=len(gc.garbage),  # number of uncollectable objects
         object_count=len(gc.get_objects()),
     )
     return Response(content=text, media_type="text/plain")
@@ -129,46 +121,7 @@ if settings.SENTRY_DSN:
     )
 
 
-if settings.DEBUG:
-    import os
-    import tracemalloc
-    from tracemalloc import Snapshot
-
-    from psutil._common import bytes2human
-
-    class MemoryMonitor:
-
-        def __init__(self, snapshot: Snapshot) -> None:
-            self.last_mem: int = 0
-            self.last_snapshot = snapshot
-
-        def print_stats(self) -> None:
-            # print memory diff
-            memory = psutil.Process(os.getpid()).memory_info().rss
-            growth = memory - self.last_mem
-            if growth < 1024:
-                return
-
-            print(f"Memory: {bytes2human(memory)} ({bytes2human(growth)})")
-
-            # print heap
-            snapshot = tracemalloc.take_snapshot()
-            top_stats = snapshot.compare_to(self.last_snapshot, "lineno")
-            print("[ Top 10 differences ]")
-            for stat in top_stats[:10]:
-                print(stat)
-
-            self.last_mem = memory
-            self.last_snapshot = snapshot
-
-    tracemalloc.start()
-    monitor = MemoryMonitor(tracemalloc.take_snapshot())
-    ui.timer(5.0, monitor.print_stats)
-
-
 if __name__ == "__main__":
-    import os
-
     import uvicorn
 
     if settings.DEBUG:

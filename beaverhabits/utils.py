@@ -1,17 +1,22 @@
 import datetime
+import gc
 import hashlib
+import os
 import smtplib
 import time
+from collections import Counter
 from email.mime.text import MIMEText
 from functools import wraps
 from typing import Literal, TypeAlias
 
+import psutil
 import pytz
 import sentry_sdk
 from cachetools import TTLCache
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 from nicegui import app, ui
+from psutil._common import bytes2human
 from starlette import status
 
 from beaverhabits.configs import settings
@@ -158,3 +163,43 @@ def send_email(subject: str, body: str, recipients: list[str]):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp_server:
         smtp_server.login(sender, password)
         smtp_server.sendmail(sender, recipients, msg.as_string())
+
+
+class MemoryMonitor:
+
+    def __init__(self) -> None:
+        self.last_mem: int = 0
+        self.obj_count: dict[str, int] = {}
+
+    def print_stats(self) -> None:
+        gc.collect()
+
+        # print garbage collection stats
+        print(f"Generation total objects: {len(gc.get_objects())}")
+        for i, stats in enumerate(gc.get_stats()):
+            print(f"Generation {i}:", end=" ")
+            print(f"Objects: {stats['collected'] + stats['uncollectable']}", end=" ")
+            print(f"Collected: {stats['collected']}", end=" ")
+            print(f"Uncollectable: {stats['uncollectable']}")
+
+        # print increased objects by types
+        memory = psutil.Process(os.getpid()).memory_info().rss
+        growth = memory - self.last_mem
+        print(bytes2human(memory), end=" ")
+        print(
+            bytes2human(growth, r"%(value)+.1f%(symbol)s") if growth else "",
+            end=" ",
+        )
+        counter: Counter = Counter()
+        for obj in gc.get_objects():
+            counter[type(obj).__name__] += 1
+        for cls, count in counter.items():
+            prev_count = self.obj_count.get(cls, 0)
+            if count != prev_count:
+                print(f"{cls}={count} ({count - prev_count:+})", end=" ")
+                self.obj_count[cls] = count
+        self.obj_count = {
+            cls: count for cls, count in self.obj_count.items() if count > 0
+        }
+        print()
+        self.last_mem = memory
