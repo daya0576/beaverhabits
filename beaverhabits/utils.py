@@ -198,17 +198,14 @@ class MemoryMonitor:
         counter: Counter = Counter()
         for obj in gc.get_objects():
             counter[type(obj).__name__] += 1
-        for cls, count in counter.items():
+        for cls, count in counter.most_common():
             prev_count = self.obj_count.get(cls, 0)
             if (
                 abs(count - prev_count) > self.diff_threshold
                 and count > self.total_threshold
             ):
                 print(f"{cls}={count} ({count - prev_count:+})", end=" ")
-                self.obj_count[cls] = count
         print()
 
-        self.obj_count = {
-            cls: count for cls, count in self.obj_count.items() if count > 0
-        }
+        self.obj_count = {cls: count for cls, count in counter.items() if count > 0}
         self.last_mem = memory
