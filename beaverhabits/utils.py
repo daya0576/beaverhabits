@@ -16,6 +16,7 @@ from cachetools import TTLCache
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 from nicegui import app, ui
+from nicegui.observables import ObservableDict
 from psutil._common import bytes2human
 from starlette import status
 
@@ -209,3 +210,7 @@ class MemoryMonitor:
 
         self.obj_count = {cls: count for cls, count in counter.items() if count > 0}
         self.last_mem = memory
+
+        objs = [obj for obj in gc.get_objects() if isinstance(obj, ObservableDict)]
+        if objs:
+            print(f"ObservableDicts:{objs=}")
