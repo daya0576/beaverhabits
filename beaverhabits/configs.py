@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     # SaaS
     APP_URL: str = ""
     SENTRY_DSN: str = ""
+    HIGHLIGHT_KEY: str = ""
     ADMIN_EMAIL: str = ""
     UMAMI_ANALYTICS_ID: str = ""
     ENABLE_PLAN: bool = False

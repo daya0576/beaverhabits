@@ -122,11 +122,10 @@ if settings.ENABLE_PLAN:
 init_gui_routes(app)
 
 
-# sentry
 if settings.SENTRY_DSN:
+    logger.info("Setting up Sentry...")
     import sentry_sdk
 
-    logger.info("Setting up Sentry...")
     sentry_sdk.init(settings.SENTRY_DSN, send_default_pii=True)
 
 

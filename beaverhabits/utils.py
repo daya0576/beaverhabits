@@ -11,12 +11,10 @@ from typing import Literal, TypeAlias
 
 import psutil
 import pytz
-import sentry_sdk
 from cachetools import TTLCache
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 from nicegui import app, ui
-from nicegui.observables import ObservableDict
 from psutil._common import bytes2human
 from starlette import status
 
@@ -86,7 +84,6 @@ def ratelimiter(limit: int, window: int):
 
             # Check with threshold
             if len(cache[key]) > limit:
-                sentry_sdk.capture_message("Rate limit exceeded")
                 logger.warning(
                     f"Rate limit exceeded for {func.__name__} with key {key}"
                 )
