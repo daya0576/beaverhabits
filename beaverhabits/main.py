@@ -1,11 +1,11 @@
 import asyncio
 import gc
-import tracemalloc
 from contextlib import asynccontextmanager
 
 import psutil
 from fastapi import FastAPI, status
 from fastapi.responses import Response
+from nicegui import app as nicegui_app
 from nicegui import ui
 from pydantic import BaseModel
 
@@ -81,6 +81,15 @@ object_count {object_count}
 hourly_monitor = MemoryMonitor("Hourly monitor", total_threshold=10, diff_threshold=-1)
 ui.timer(60 * 60, hourly_monitor.print_stats)
 
+
+# Clear session storage memory cache
+def clear_storage():
+    logger.info("Clearing session storage cache")
+    nicegui_app.storage._users.clear()
+
+
+ui.timer(60 * 60 * 24, clear_storage)
+
 exporter_monitor = MemoryMonitor("Exporter monitor")
 
 
@@ -118,12 +127,7 @@ if settings.SENTRY_DSN:
     import sentry_sdk
 
     logger.info("Setting up Sentry...")
-    sentry_sdk.init(
-        settings.SENTRY_DSN,
-        traces_sample_rate=1.0,
-        profile_session_sample_rate=1.0,
-        profile_lifecycle="trace",
-    )
+    sentry_sdk.init(settings.SENTRY_DSN, send_default_pii=True)
 
 
 if __name__ == "__main__":

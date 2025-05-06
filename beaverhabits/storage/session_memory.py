@@ -15,6 +15,7 @@ request_contextvar: contextvars.ContextVar[Optional[Request]] = contextvars.Cont
 )
 
 KEY_NAME = "user_habit_list"
+MAX_SIZE = 128
 
 
 def get_session_id() -> str:
@@ -27,7 +28,7 @@ def get_session_id() -> str:
 
 class SessionDictStorage(SessionStorage[DictHabitList]):
     def __init__(self) -> None:
-        self._users = TTLCache(maxsize=4096, ttl=60 * 60 * 24)  # 1 day
+        self._users = TTLCache(maxsize=MAX_SIZE, ttl=60 * 60)
 
     def get_user_habit_list(self) -> Optional[DictHabitList]:
         session_id = get_session_id()
@@ -36,4 +37,4 @@ class SessionDictStorage(SessionStorage[DictHabitList]):
     def save_user_habit_list(self, habit_list: DictHabitList) -> None:
         session_id = get_session_id()
         self._users[session_id] = habit_list
-        logger.info(f"Cache size: {len(self._users)}/4096")
+        logger.info(f"Cache size: {len(self._users)}/{MAX_SIZE}")

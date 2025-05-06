@@ -106,7 +106,6 @@ Checkout the [wiki](https://github.com/daya0576/beaverhabits/wiki) page for a fu
 - [x] RESTful APIs
 - [x] Export & Import
 - [x] PWA for iOS & Android
-- [ ] Native mobile app
 
 ## Habit Management
 - [x] Daily notes/descriptions

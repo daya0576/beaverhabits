@@ -176,29 +176,22 @@ class MemoryMonitor:
         self.diff_threshold: int = diff_threshold
         self.total_threshold: int = total_threshold
 
+    def _key(self, obj: object) -> str:
+        return f"{type(obj).__name__},{obj.__class__.__module__}"
+
     def print_stats(self) -> None:
         gc.collect()
 
-        # print garbage collection stats
-        print(f"{self.source} total objects: {len(gc.get_objects())}")
-        for i, stats in enumerate(gc.get_stats()):
-            print(f"{self.__class__.__name__} {i}:", end=" ")
-            print(f"Objects: {stats['collected'] + stats['uncollectable']}", end=" ")
-            print(f"Collected: {stats['collected']}", end=" ")
-            print(f"Uncollectable: {stats['uncollectable']}")
-
-        # print increased objects by types
+        # print memory usage
         memory = psutil.Process(os.getpid()).memory_info().rss
         growth = memory - self.last_mem
-        print(f"{self.source} total memory:", end=" ")
-        print(bytes2human(memory), end=" ")
-        print(
-            bytes2human(growth, r"%(value)+.1f%(symbol)s") if growth else "",
-            end=" ",
-        )
+        print(f"{self.source} total memory: {bytes2human(memory)}", end=" ")
+        print(bytes2human(growth, r"%(value)+.1f%(symbol)s"), end=" ")
+
+        # print objects by types
         counter: Counter = Counter()
         for obj in gc.get_objects():
-            counter[type(obj).__name__] += 1
+            counter[self._key(obj)] += 1
         for cls, count in counter.most_common():
             prev_count = self.obj_count.get(cls, 0)
             if (
@@ -210,7 +203,3 @@ class MemoryMonitor:
 
         self.obj_count = {cls: count for cls, count in counter.items() if count > 0}
         self.last_mem = memory
-
-        objs = [obj for obj in gc.get_objects() if isinstance(obj, ObservableDict)]
-        if objs:
-            print(f"ObservableDicts:{objs=}")
