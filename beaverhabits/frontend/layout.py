@@ -10,11 +10,9 @@ from beaverhabits.frontend.components import (
     menu_header,
     menu_icon_button,
     menu_icon_item,
-    open_tab,
     redirect,
 )
 from beaverhabits.frontend.menu import add_menu, sort_menu
-from beaverhabits.logger import logger
 from beaverhabits.storage.meta import (
     get_page_title,
     get_root_path,
@@ -23,7 +21,7 @@ from beaverhabits.storage.meta import (
 from beaverhabits.storage.storage import Habit, HabitList
 
 
-def custom_headers():
+def pwa_headers():
     # Apple touch icon
     ui.add_head_html(
         '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">'
@@ -45,14 +43,21 @@ def custom_headers():
     if settings.ENABLE_IOS_STANDALONE:
         ui.add_head_html('<meta name="mobile-web-app-capable" content="yes">')
 
+
+def custom_headers():
     # SEO meta tags
     ui.add_head_html(
         '<meta name="description" content="A self-hosted habit tracking app without "Goals"">'
     )
+
+    # Analytics
     if settings.UMAMI_ANALYTICS_ID:
         ui.add_head_html(
             f'<script defer src="https://cloud.umami.is/script.js" data-website-id="{settings.UMAMI_ANALYTICS_ID}"></script>'
         )
+
+    # Prevent white flash on page load
+    ui.add_css("body { background-color: #121212; color: white;  }")
 
 
 def separator():
@@ -92,9 +97,6 @@ def menu_component(habit: Habit | None = None, habit_list: HabitList | None = No
         else:
             menu_icon_item("Logout", lambda: user_logout() and ui.navigate.to("/login"))
 
-    # Prevent white flash on page load
-    ui.add_css("body { background-color: #121212; color: white;  }")
-
 
 @contextmanager
 def layout(
@@ -107,6 +109,7 @@ def layout(
     with ui.column().classes("mx-auto mx-0"):
         # Standard headers
         custom_headers()
+        pwa_headers()
 
         # Layout wrapper
         with ui.row().classes("min-w-full gap-x-1"):

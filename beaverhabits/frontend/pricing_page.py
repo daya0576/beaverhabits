@@ -4,10 +4,10 @@ from paddle_billing import Client, Environment, Options
 from beaverhabits import const
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
-from beaverhabits.frontend.components import open_tab, redirect
+from beaverhabits.frontend.components import redirect
+from beaverhabits.frontend.css import YOUTUBE_CSS
 from beaverhabits.frontend.javascript import PADDLE_JS
 from beaverhabits.frontend.layout import custom_headers
-from beaverhabits.logger import logger
 from beaverhabits.plan import plan
 
 IMAGES = [
@@ -43,7 +43,10 @@ ACTIONS = {
 }
 
 YOUTUBE = """
-<iframe width="640" height="360" max-width="100%" src="https://www.youtube.com/embed/4a16FmkGV6Y?si=OD2nNtIOqWTdBSp-" title="YouTube video player" color="white" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen</iframe>
+<iframe src="https://www.youtube.com/embed/4a16FmkGV6Y?si=OD2nNtIOqWTdBSp-" 
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen></iframe>
 """
 
 
@@ -126,8 +129,7 @@ def how_to_use():
             lambda: ui.navigate.to("/demo", new_tab=True)
         )
 
-    with ui.row().classes("max-w-full"):
-        ui.html(YOUTUBE)
+    ui.html(YOUTUBE).classes("videowrapper")
 
 
 def footer():
@@ -142,8 +144,6 @@ def footer():
 
 
 async def landing_page() -> None:
-    custom_headers()
-
     with ui.row().classes("max-w-2xl mx-auto w-full"):
         for section in (description, demo, how_to_use):
             with ui.card().classes("w-full").props("flat"):
@@ -151,5 +151,6 @@ async def landing_page() -> None:
 
         footer()
 
-    ui.add_css("body { background-color: #121212; color: white; }")
     ui.add_head_html(PADDLE_JS)
+    ui.add_css(YOUTUBE_CSS)
+    custom_headers()
