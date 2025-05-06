@@ -67,17 +67,19 @@ def separator():
 @ui.refreshable
 def menu_component(habit: Habit | None = None, habit_list: HabitList | None = None):
     """Dropdown menu for the top-right corner of the page."""
-    edit_dialog = habit_edit_dialog(habit) if habit else ui.dialog()
+
     path = context.client.page.path
 
     with ui.menu().props('role="menu"'):
         # habit page
         if habit:
+            edit_dialog = habit_edit_dialog(habit) if habit else ui.dialog()
             edit = menu_icon_item("Edit", on_click=edit_dialog.open)
             edit.props('aria-label="Edit habit"')
             separator()
             add_menu()
             separator()
+
         if habit_list:
             sort_menu(habit_list) if "add" in path else add_menu()
             separator()

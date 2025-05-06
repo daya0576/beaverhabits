@@ -178,14 +178,14 @@ class HabitCheckBox(ui.checkbox):
         # 2. Touch click: touchstart -> touchend -> mousemove -> mousedown -> mouseup -> click
         # 3. Touch move:  touchstart -> touchmove -> touchend
         self.on("mousedown", self._mouse_down_event)
-        self.on("touchstart", self._mouse_down_event)
+        self.on("touchstart.passive", self._mouse_down_event)
 
         # Event modifiers
         # 1. *Prevent* checkbox default behavior
         # 2. *Prevent* propagation of the event
         self.on("mouseup", self._mouse_up_event)
         self.on("touchend", self._mouse_up_event)
-        self.on("touchmove", self._mouse_move_event)
+        self.on("touchmove.passive", self._mouse_move_event, throttle=1)
         # self.on("mousemove", self._mouse_move_event)
 
         # Checklist: value change, scrolling
@@ -208,7 +208,7 @@ class HabitCheckBox(ui.checkbox):
         self.hold.clear()
         self.moving = False
         try:
-            async with asyncio.timeout(0.25):
+            async with asyncio.timeout(0.3):
                 await self.hold.wait()
         except asyncio.TimeoutError:
             # Long press diaglog
@@ -307,6 +307,7 @@ class HabitNameInput(ui.input):
     async def _on_blur(self):
         await self._save(self.value)
 
+    @plan.pro_required("Pro plan required to update category")
     async def _save(self, value: str):
         name, tags = self.decode_name(value)
         self.habit.name = name
@@ -834,11 +835,61 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
     if not all_tags:
         return
 
-    # display components
-    with ui.row().classes("gap-0.5 justify-right w-80"):
+    with ui.row().classes("gap-0.5 justify-right w-80") as row:
         for tag_name in all_tags:
             TagChip(tag_name, refresh=refresh)
         TagChip("Others", refresh=refresh)
+
+    # auto hide element (scrollable)
+    if not app.storage.user.get("show_tag_filter", False):
+        row.classes("hidden")
+    
+    row.classes("tag-filter")
+    ui.add_body_html(
+        """
+        <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const element = document.querySelector(".tag-filter");
+        
+            // scroll event
+            window.addEventListener('wheel', function(event) {
+                if (window.scrollY === 0 && event.deltaY < -3) {
+                    emitEvent('scrollTop', {});
+                    element.classList.remove("hidden");
+                }
+                if (window.scrollY === 0 && event.deltaY > 3) {
+                    emitEvent('scrollBottom', {});
+                    element.classList.add("hidden");
+                }
+            }, { passive: true  });
+
+            // touch event
+            let startY;
+            window.addEventListener('touchstart', function(event) {
+                startY = event.touches[0].clientY;
+            }, { passive: true  });
+            window.addEventListener('touchmove', function(event) {
+                let currentY = event.touches[0].clientY;
+                if (window.scrollY === 0 && currentY - startY < -3) {
+                    emitEvent('scrollBottom', {});
+                }
+                if (window.scrollY === 0 && currentY - startY > 3) {
+                    emitEvent('scrollTop', {});
+                }
+            }, { passive: true  });
+        });
+        </script>
+    """
+    )
+
+    def show_tag_filter():
+        app.storage.user["show_tag_filter"] = True
+
+    def hide_tag_filter():
+        app.storage.user["show_tag_filter"] = False
+
+    ui.on("scrollTop", show_tag_filter, throttle=0.5)
+    ui.on("scrollBottom", hide_tag_filter, throttle=0.5)
 
 
 def habits_by_tags(active_habits: list[Habit]) -> dict[str, list[Habit]]:
@@ -1023,8 +1074,10 @@ def auth_header(text: str):
     with ui.row():
         ui.label(text).classes("text-3xl font-bold")
 
+
 def auth_redirect(text: str, target: str):
     return link(text, target).classes("text-xs text-gray-950")
+
 
 def auth_forgot_password(email_input: ui.input, reset: Callable):
     async def try_forgot_password():
