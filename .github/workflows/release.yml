@@ -5,18 +5,16 @@ on: [push]
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.13"]
     steps:
       - uses: actions/checkout@v4
       - name: Install the latest version of uv and set the python version
         uses: astral-sh/setup-uv@v4
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Test with python ${{ matrix.python-version }}
+          python-version: "3.13"
+      - name: Test with python
         run: DATABASE_URL="sqlite+aiosqlite:///:memory:" uv run --frozen pytest
 
+  # https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
   build:
     runs-on: ubuntu-latest
     needs: test
