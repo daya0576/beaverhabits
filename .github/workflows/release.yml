@@ -40,8 +40,6 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY_IMAGE }}
-          tags: |
-            type=sha
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -64,7 +62,6 @@ jobs:
         with:
           platforms: ${{ matrix.platform }}
           file: ${{ matrix.dockerfile }}
-          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache-${{ env.PLATFORM_PAIR }}
