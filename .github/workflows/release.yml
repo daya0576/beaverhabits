@@ -66,7 +66,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           file: ${{ matrix.dockerfile }}
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=image,name=${{ env.REGISTRY_IMAGE }}:${{ github.sha }},push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache-${{ env.PLATFORM_PAIR }}
           cache-to: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache-${{ env.PLATFORM_PAIR }},mode=max
 
