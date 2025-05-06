@@ -1,6 +1,7 @@
 name: Publish Release
-
 on: [push]
+env:
+  REGISTRY_IMAGE: daya0576/beaverhabits
 
 jobs:
   test:
