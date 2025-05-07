@@ -118,10 +118,7 @@ def layout(
             title, target = title or get_page_title(), get_root_path()
             menu_header(title, target=target)
             ui.space()
-            with menu_icon_button(icons.MENU) as menu:
+            with menu_icon_button(icons.MENU):
                 menu_component(habit, habit_list)
-
-                menu.classes("hidden")
-                ui.context.client.on_connect(lambda: menu.classes(remove="hidden"))
 
         yield

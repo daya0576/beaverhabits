@@ -835,63 +835,47 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
     if not all_tags:
         return
 
-    with ui.row().classes("gap-0.5 justify-right w-80") as row:
+    with ui.row().classes("gap-0.5 justify-right w-80 hidden") as row:
         for tag_name in all_tags:
             TagChip(tag_name, refresh=refresh)
         TagChip("Others", refresh=refresh)
 
-    # auto hide element (scrollable)
-    if not app.storage.user.get("show_tag_filter", False):
-        row.classes("hidden")
-    
-    row.classes("tag-filter")
-    ui.add_body_html(
+        row.classes("tag-filter")
+        ui.add_body_html(
+            """
+            <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const element = document.querySelector(".tag-filter");
+            
+                // scroll event
+                window.addEventListener('wheel', function(event) {
+                    if (window.scrollY === 0 && event.deltaY < -1) {
+                        element.classList.remove("hidden");
+                    }
+                    if (window.scrollY === 0 && event.deltaY > 1) {
+                        element.classList.add("hidden");
+                    }
+                }, { passive: true  });
+
+                // touch event
+                let startY;
+                window.addEventListener('touchstart', function(event) {
+                    startY = event.touches[0].clientY;
+                }, { passive: true  });
+                window.addEventListener('touchmove', function(event) {
+                    let currentY = event.touches[0].clientY;
+                    if (window.scrollY === 0 && currentY - startY < -1) {
+                        element.classList.add("hidden");
+                    }
+                    if (window.scrollY === 0 && currentY - startY > 1) {
+                        element.classList.remove("hidden");
+                    }
+                }, { passive: true  });
+            });
+            </script>
         """
-        <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const element = document.querySelector(".tag-filter");
-        
-            // scroll event
-            window.addEventListener('wheel', function(event) {
-                if (window.scrollY === 0 && event.deltaY < -3) {
-                    emitEvent('scrollTop', {});
-                    element.classList.remove("hidden");
-                }
-                if (window.scrollY === 0 && event.deltaY > 3) {
-                    emitEvent('scrollBottom', {});
-                    element.classList.add("hidden");
-                }
-            }, { passive: true  });
+        )
 
-            // touch event
-            let startY;
-            window.addEventListener('touchstart', function(event) {
-                startY = event.touches[0].clientY;
-            }, { passive: true  });
-            window.addEventListener('touchmove', function(event) {
-                let currentY = event.touches[0].clientY;
-                if (window.scrollY === 0 && currentY - startY < -3) {
-                    emitEvent('scrollBottom', {});
-                    element.classList.add("hidden");
-                }
-                if (window.scrollY === 0 && currentY - startY > 3) {
-                    emitEvent('scrollTop', {});
-                    element.classList.remove("hidden");
-                }
-            }, { passive: true  });
-        });
-        </script>
-    """
-    )
-
-    def show_tag_filter():
-        app.storage.user["show_tag_filter"] = True
-
-    def hide_tag_filter():
-        app.storage.user["show_tag_filter"] = False
-
-    ui.on("scrollTop", show_tag_filter, throttle=0.5)
-    ui.on("scrollBottom", hide_tag_filter, throttle=0.5)
 
 
 def habits_by_tags(active_habits: list[Habit]) -> dict[str, list[Habit]]:
