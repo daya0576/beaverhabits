@@ -31,8 +31,6 @@ def redirect_pricing(msg: str):
 
 
 async def check_pro() -> bool:
-    if not settings.ENABLE_PLAN:
-        return True
     if "demo" in context.client.page.path:
         return True
 

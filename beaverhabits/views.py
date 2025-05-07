@@ -18,7 +18,7 @@ from beaverhabits.app.auth import (
 from beaverhabits.app.crud import get_customer_list, get_user_count, get_user_list
 from beaverhabits.app.db import User
 from beaverhabits.configs import settings
-from beaverhabits.core.backup import backup_to_telegram
+from beaverhabits.core.dependencies import backup_to_telegram
 from beaverhabits.frontend.components import redirect
 from beaverhabits.logger import logger
 from beaverhabits.storage import get_user_dict_storage, session_storage

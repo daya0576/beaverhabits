@@ -11,13 +11,12 @@ from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
 from nicegui.elements.button import Button
 
-from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
-from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
+from beaverhabits.core.dependencies import backup_to_telegram
 from beaverhabits.frontend import icons
+from beaverhabits.frontend.accessibility import index_badge_alternative_text
 from beaverhabits.logger import logger
-from beaverhabits.plan import plan
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import (
@@ -40,6 +39,7 @@ from beaverhabits.utils import (
     Y,
     ratelimiter,
 )
+from fly.plan import plan
 
 strptime = datetime.datetime.strptime
 

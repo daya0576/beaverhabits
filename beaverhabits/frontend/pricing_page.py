@@ -8,7 +8,7 @@ from beaverhabits.frontend.components import redirect
 from beaverhabits.frontend.css import YOUTUBE_CSS
 from beaverhabits.frontend.javascript import PADDLE_JS
 from beaverhabits.frontend.layout import custom_headers
-from beaverhabits.plan import plan
+from fly.plan import plan
 
 IMAGES = [
     "/statics/images/pricing/331492565-0418fa41-8985-46ef-b623-333b62b2f92e.jpg",
@@ -70,7 +70,7 @@ def icon(text: str, url: str, icon_str: str, tooltip: str):
 
 def description():
     with ui.row().classes("w-full"):
-        link("Beaver Habit Tracker", const.GUI).classes("text-3xl font-bold")
+        link("Beaver Habit Tracker", "#").classes("text-3xl font-bold")
         ui.space()
         icon("", "/login", icons.LOGIN, tooltip="Login")
         icon("", const.HOME_PAGE, icons.GITHUB, tooltip="Star us on Github!")
