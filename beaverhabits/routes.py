@@ -1,19 +1,15 @@
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from nicegui import app, ui
 
-from beaverhabits.frontend import paddle_page
-from beaverhabits.frontend.admin import admin_page
 from beaverhabits.frontend.components import (
     auth_card,
     auth_email,
     auth_forgot_password,
-    auth_header,
     auth_password,
     auth_redirect,
-    link,
 )
 from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.layout import custom_headers, redirect
@@ -25,7 +21,7 @@ from .app.auth import (
 )
 from .app.crud import get_user_count
 from .app.db import User
-from .app.dependencies import current_active_user, current_admin_user, get_reset_user
+from .app.dependencies import current_active_user, get_reset_user
 from .configs import settings
 from .frontend.add_page import add_page_ui
 from .frontend.export_page import export_page
@@ -244,33 +240,6 @@ async def forgot_password_page(user: User = Depends(get_reset_user)):
         auth_email(user.email).disable()
         password1 = auth_password("New password")
         password2 = auth_password("Confirm password")
-
-
-if settings.ENABLE_PLAN:
-    from beaverhabits.frontend.paddle_page import PRIVACY, TERMS
-    from beaverhabits.frontend.pricing_page import landing_page
-
-    @ui.page("/")
-    @ui.page("/pricing")
-    async def pricing_page():
-        await landing_page()
-
-    @ui.page("/terms")
-    def terms_page():
-        paddle_page.markdown(TERMS)
-
-    @ui.page("/privacy")
-    def privacy_page():
-        paddle_page.markdown(PRIVACY)
-
-    @ui.page("/admin", include_in_schema=False)
-    async def admin(user: User = Depends(current_admin_user)):
-        await admin_page(user)
-
-    @ui.page("/admin/backup", include_in_schema=False)
-    async def manual_backup(user: User = Depends(current_admin_user)):
-        logger.info(f"Starting backup, triggered by {user.email}")
-        await views.backup_all_users()
 
 
 def init_gui_routes(fastapi_app: FastAPI):

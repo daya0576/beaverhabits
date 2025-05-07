@@ -174,7 +174,10 @@ class MemoryMonitor:
         self.total_threshold: int = total_threshold
 
     def _key(self, obj: object) -> str:
-        return f"{type(obj).__name__},{obj.__class__.__module__}"
+        try:
+            return f"{type(obj).__name__},{obj.__class__.__module__}"
+        except ModuleNotFoundError:
+            return f"{type(obj).__name__},<unknown>"
 
     def print_stats(self) -> None:
         gc.collect()
