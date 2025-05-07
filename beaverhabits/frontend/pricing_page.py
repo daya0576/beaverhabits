@@ -4,10 +4,10 @@ from paddle_billing import Client, Environment, Options
 from beaverhabits import const
 from beaverhabits.configs import settings
 from beaverhabits.frontend import icons
-from beaverhabits.frontend.components import open_tab, redirect
+from beaverhabits.frontend.components import redirect
+from beaverhabits.frontend.css import YOUTUBE_CSS
 from beaverhabits.frontend.javascript import PADDLE_JS
 from beaverhabits.frontend.layout import custom_headers
-from beaverhabits.logger import logger
 from beaverhabits.plan import plan
 
 IMAGES = [
@@ -16,7 +16,7 @@ IMAGES = [
     "/statics/images/pricing/331492575-516c19ca-9f55-4c21-9e6d-c8f0361a5eb2.jpg",
 ]
 
-FREE, PRO = "Free $0", "Pro $9.9"
+FREE, PRO = "Basic $0", "Pro $9.9"
 PLANS = {
     FREE: {
         "Key features": [
@@ -30,20 +30,21 @@ PLANS = {
         "Buy lifetime license": [
             "Unlimited habits",
             "Daily backup",
+            "Organize Habits by Category",
             "14-day policy return",
-            "Priority support",
         ],
     },
 }
 ACTIONS = {
-    FREE: lambda: ui.button(
-        "Get Started", on_click=lambda: redirect("/register")
-    ).tooltip("Create a free account"),
+    FREE: lambda: ui.button("Get Started", on_click=lambda: redirect("/register")),
     PRO: lambda: ui.button("Upgrade").on_click(lambda: plan.checkout()),
 }
 
 YOUTUBE = """
-<iframe width="640" height="360" max-width="100%" src="https://www.youtube.com/embed/4a16FmkGV6Y?si=OD2nNtIOqWTdBSp-" title="YouTube video player" color="white" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen</iframe>
+<iframe src="https://www.youtube.com/embed/4a16FmkGV6Y?si=OD2nNtIOqWTdBSp-" 
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen></iframe>
 """
 
 
@@ -54,31 +55,32 @@ def get_product_price():
     return int(price_entity.unit_price.amount) / 100
 
 
-def link(text: str, url: str):
-    return ui.link(target=url, new_tab=True).classes("max-sm:hidden").tooltip(text)
+def link(text: str, url: str, new_tab: bool = False, tooltip=""):
+    link = ui.link(text=text, target=url, new_tab=new_tab)
+    link.classes("dark:text-white no-underline hover:no-underline")
+    if tooltip:
+        link.tooltip(tooltip)
+    return link
 
 
-def icon(text: str, url: str, icon_str: str):
-    with link(text, url):
+def icon(text: str, url: str, icon_str: str, tooltip: str):
+    with link(text, url, tooltip=tooltip).classes("max-sm:hidden"):
         ui.html(icon_str).classes("fill-white scale-125 m-1")
 
 
 def description():
     with ui.row().classes("w-full"):
-        ui.link("Beaver Habit Tracker", target=const.GUI).classes(
-            "text-3xl font-bold dark:text-white no-underline hover:no-underline"
-        )
+        link("Beaver Habit Tracker", const.GUI).classes("text-3xl font-bold")
         ui.space()
-        icon("Login", "/login", icons.LOGIN)
-        icon("GitHub", const.HOME_PAGE, icons.GITHUB)
+        icon("", "/login", icons.LOGIN, tooltip="Login")
+        icon("", const.HOME_PAGE, icons.GITHUB, tooltip="Star us on Github!")
 
     desc = ui.label("A minimal habit tracking app without 'Goals'")
     desc.classes("text-lg text-center")
 
-    with ui.row().classes("w-full grid grid-cols-1 sm:grid-cols-2"):
+    with ui.row().classes("w-full grid grid-cols-1 sm:grid-cols-2 gap-3"):
         for plan_name, features in PLANS.items():
-            with ui.card().props("bordered gap-1") as card:
-                card.style("border-radius: 10px").classes("gap-2")
+            with ui.card().props("flat").classes("gap-2"):
                 price_label = ui.label(plan_name).classes("text-2xl font-bold")
                 for feature, description in features.items():
                     ui.label(feature).classes("text-lg")
@@ -126,8 +128,7 @@ def how_to_use():
             lambda: ui.navigate.to("/demo", new_tab=True)
         )
 
-    with ui.row().classes("max-w-full"):
-        ui.html(YOUTUBE)
+    ui.html(YOUTUBE).classes("videowrapper")
 
 
 def footer():
@@ -142,14 +143,14 @@ def footer():
 
 
 async def landing_page() -> None:
-    custom_headers()
-
     with ui.row().classes("max-w-2xl mx-auto w-full"):
-        for section in (description, demo, how_to_use):
+        description()
+        for section in (demo, how_to_use):
             with ui.card().classes("w-full").props("flat"):
                 section()
 
         footer()
 
-    ui.add_css("body { background-color: #121212; color: white; }")
     ui.add_head_html(PADDLE_JS)
+    ui.add_css(YOUTUBE_CSS)
+    custom_headers()

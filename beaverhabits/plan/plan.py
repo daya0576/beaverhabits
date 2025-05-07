@@ -1,3 +1,5 @@
+import random
+
 from nicegui import app, context, ui
 
 from beaverhabits.app import crud
@@ -46,10 +48,13 @@ async def check_pro() -> bool:
 
 
 # decorator to check if user is pro, e.g. @pro_required("Max user reached")
-def pro_required(msg: str):
+def pro_required(msg: str, rate: float = 1.0):
+    if not (0 < rate <= 1):
+        raise ValueError("Rate must be between 0 and 1")
+
     def decorator(func):
         async def wrapper(*args, **kwargs):
-            if await check_pro():
+            if await check_pro() and random.random() <= rate:
                 return func(*args, **kwargs)
             else:
                 redirect_pricing(msg)

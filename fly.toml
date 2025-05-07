@@ -10,7 +10,7 @@ primary_region = "fra"
 processes = []
 
 [build]
-dockerfile="Dockerfile"
+dockerfile="docker/fly.dockerfile"
 
 [mounts]
   source = "disk"

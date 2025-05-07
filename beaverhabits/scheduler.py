@@ -26,8 +26,5 @@ async def daily_backup_task():
         # Call the function to backup all users' data
         try:
             await views.backup_all_users()
-        except Exception as e:
-            import sentry_sdk
-
-            sentry_sdk.capture_exception(e)
+        except Exception:
             logger.exception("Error during daily backup task")

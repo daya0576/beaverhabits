@@ -1,26 +1,31 @@
 name: Publish Release
-
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - 'main'
-    tags:
-      - 'v*'
-
+on: [push]
 env:
   REGISTRY_IMAGE: daya0576/beaverhabits
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the latest version of uv and set the python version
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.13"
+      - name: Test with python
+        run: DATABASE_URL="sqlite+aiosqlite:///:memory:" uv run --frozen pytest
+
+  # https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
   build:
     runs-on: ubuntu-latest
+    needs: test
     strategy:
       matrix:
         platform: [linux/amd64, linux/amd64/v3, linux/arm64]
-        dockerfile: [Dockerfile]
+        dockerfile: [docker/Dockerfile]
         include:
           - platform: linux/arm/v7
-            dockerfile: Dockerfile.nobuildkit.arm32
+            dockerfile: docker/Dockerfile.nobuildkit.arm32
 
     steps:
       - name: Prepare

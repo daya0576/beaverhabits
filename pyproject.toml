@@ -12,15 +12,13 @@ dependencies = [
     "uvicorn[standard]<1.0.0,>=0.28.0",
     "sqlalchemy[asyncio]<3.0.0,>=2.0.29",
     "asyncpg<1.0.0,>=0.29.0",
+    "aiosqlite>=0.20.0,<1.0.0",
     "pytz<2025.0,>=2024.1",
     "python-dateutil<3.0.0.0,>=2.9.0.post0",
     "loguru>=0.7.3",
     "cachetools>=5.5.1",
     "jinja2>=3.1.6",
-    "sentry-sdk[fastapi]<3.0.0,>=2.15.0",
-    "paddle-python-sdk>=1.6.0",
     "dataclasses-json>=0.6.7",
-    "aiosqlite>=0.20.0,<1.0.0",
     "psutil>=7.0.0",
 ]
 description = ""
@@ -40,6 +38,11 @@ dev = [
     "psutil>=6.1.1",
     "black>=25.1.0",
     "pympler>=1.1",
+]
+fly = [
+    "sentry-sdk[fastapi]<3.0.0,>=2.15.0",
+    "paddle-python-sdk>=1.6.0",
+    "highlight-io>=0.9.3",
 ]
 
 [project.scripts]
