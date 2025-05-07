@@ -872,9 +872,11 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
                 let currentY = event.touches[0].clientY;
                 if (window.scrollY === 0 && currentY - startY < -3) {
                     emitEvent('scrollBottom', {});
+                    element.classList.add("hidden");
                 }
                 if (window.scrollY === 0 && currentY - startY > 3) {
                     emitEvent('scrollTop', {});
+                    element.classList.remove("hidden");
                 }
             }, { passive: true  });
         });
