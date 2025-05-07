@@ -88,7 +88,7 @@ def clear_storage():
     nicegui_app.storage._users.clear()
 
 
-ui.timer(60 * 60 * 24, clear_storage)
+ui.timer(60 * 60 * 8, clear_storage)
 
 exporter_monitor = MemoryMonitor("Exporter monitor")
 

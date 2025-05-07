@@ -1,3 +1,4 @@
+import asyncio
 import random
 
 from nicegui import app, context, ui
@@ -53,13 +54,21 @@ def pro_required(msg: str, rate: float = 1.0):
         raise ValueError("Rate must be between 0 and 1")
 
     def decorator(func):
-        async def wrapper(*args, **kwargs):
+        async def wrapper_sync(*args, **kwargs):
             if await check_pro() and random.random() <= rate:
                 return func(*args, **kwargs)
             else:
                 redirect_pricing(msg)
 
-        return wrapper
+        async def wrapper_async(*args, **kwargs):
+            if await check_pro() and random.random() <= rate:
+                return await func(*args, **kwargs)
+            else:
+                redirect_pricing(msg)
+
+        if asyncio.iscoroutinefunction(func):
+            return wrapper_async
+        return wrapper_sync
 
     return decorator
 
