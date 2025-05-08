@@ -14,9 +14,10 @@ from beaverhabits.frontend.components import (
 )
 from beaverhabits.frontend.menu import add_menu, sort_menu
 from beaverhabits.storage.meta import (
-    get_page_title,
     get_root_path,
     is_page_demo,
+    page_path,
+    page_title,
 )
 from beaverhabits.storage.storage import Habit, HabitList
 
@@ -65,39 +66,22 @@ def separator():
 
 
 @ui.refreshable
-def menu_component(habit: Habit | None = None, habit_list: HabitList | None = None):
+def menu_component():
     """Dropdown menu for the top-right corner of the page."""
-
-    path = context.client.page.path
-
     with ui.menu().props('role="menu"'):
-        # habit page
-        if habit:
-            edit_dialog = habit_edit_dialog(habit) if habit else ui.dialog()
-            edit = menu_icon_item("Edit", on_click=edit_dialog.open)
-            edit.props('aria-label="Edit habit"')
-            separator()
-            add_menu()
-            separator()
-
-        if habit_list:
-            sort_menu(habit_list) if "add" in path else add_menu()
-            separator()
+        add_menu()
+        separator()
 
         # Export & import
-        if habit_list:
-            menu_icon_item("Export", lambda: redirect("export"))
-            separator()
-            imp = menu_icon_item("Import", lambda: redirect("import"))
-            if is_page_demo():
-                imp.classes("disabled")
-            separator()
+        menu_icon_item("Export", lambda: redirect("export"))
+        separator()
+        imp = menu_icon_item("Import", lambda: redirect("import"))
+        if is_page_demo():
+            imp.classes("disabled")
+        separator()
 
         # Login & Logout
-        if is_page_demo():
-            menu_icon_item("Login", lambda: ui.navigate.to("/login"))
-        else:
-            menu_icon_item("Logout", lambda: user_logout() and ui.navigate.to("/login"))
+        menu_icon_item("Logout", lambda: user_logout() and ui.navigate.to("/login"))
 
 
 @contextmanager
@@ -114,11 +98,20 @@ def layout(
         pwa_headers()
 
         # Layout wrapper
-        with ui.row().classes("min-w-full gap-x-1"):
-            title, target = title or get_page_title(), get_root_path()
+        with ui.row().classes("w-full gap-x-1"):
+            title, target = title or page_title(), get_root_path()
             menu_header(title, target=target)
             ui.space()
+
+            if habit:
+                edit_dialog = habit_edit_dialog(habit)
+                edit_btn = menu_icon_button(icons.EDIT, tooltip="Edit habit")
+                edit_btn.on_click(edit_dialog.open)
+            elif habit_list and "add" in page_path():
+                with menu_icon_button(icons.SORT, tooltip="Sort"):
+                    sort_menu(habit_list)
+
             with menu_icon_button(icons.MENU):
-                menu_component(habit, habit_list)
+                menu_component()
 
         yield
