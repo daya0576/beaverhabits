@@ -262,7 +262,7 @@ class HabitCheckBox(ui.checkbox):
 
         # icons, e.g. sym_o_notes
         checked, unchecked = icons.DONE, icons.CLOSE
-        if self.habit.period:
+        if self.habit.period and self.habit.period != EVERY_DAY:
             checked = icons.DONE_ALL
             if CStatus.PERIOD_DONE in self.status:
                 unchecked = icons.DONE
@@ -289,7 +289,6 @@ class HabitOrderCard(ui.card):
             "mouseover", lambda: self.btn and self.btn.classes("transition opacity-100")
         )
         self.on("mouseout", lambda: self.btn and self.btn.classes(remove="opacity-100"))
-
 
 
 class HabitNameInput(ui.input):
@@ -877,7 +876,6 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
             </script>
         """
         )
-
 
 
 def habits_by_tags(active_habits: list[Habit]) -> dict[str, list[Habit]]:

@@ -29,8 +29,8 @@ PLANS = {
     PRO: {
         "Buy lifetime license": [
             "Unlimited habits",
+            "Organize habits by category",
             "Daily backup",
-            "Organize Habits by Category",
             "14-day policy return",
         ],
     },
