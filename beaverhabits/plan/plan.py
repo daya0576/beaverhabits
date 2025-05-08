@@ -7,6 +7,7 @@ from beaverhabits.app import crud
 from beaverhabits.app.auth import user_from_token
 from beaverhabits.configs import settings
 from beaverhabits.logger import logger
+from beaverhabits.storage.meta import page_path
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
 
 
@@ -34,7 +35,9 @@ def redirect_pricing(msg: str):
 async def check_pro() -> bool:
     if not settings.ENABLE_PLAN:
         return True
-    if "demo" in context.client.page.path:
+    if "demo" in page_path():
+        return True
+    if settings.is_dev():
         return True
 
     token = app.storage.user.get("auth_token")
