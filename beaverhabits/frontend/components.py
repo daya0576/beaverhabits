@@ -74,12 +74,13 @@ def menu_icon_button(
     icon_name: str, click: Optional[Callable] = None, tooltip: str | None = None
 ) -> Button:
     button = ui.button(icon=icon_name, color=None, on_click=click)
-    button.props("flat=true unelevated=true padding=xs backgroup=none")
+    button.props("flat unelevated padding=xs backgroup=none")
     if tooltip:
-        button = button.tooltip(tooltip)
-
-    # Accessibility
-    button.props('aria-haspopup="true" aria-label="menu"')
+        button.tooltip(tooltip)
+        button.props(f'aria-label="{tooltip}"')
+    else:
+        # Accessibility
+        button.props('aria-haspopup="true" aria-label="menu"')
 
     return button
 
@@ -288,6 +289,7 @@ class HabitOrderCard(ui.card):
             "mouseover", lambda: self.btn and self.btn.classes("transition opacity-100")
         )
         self.on("mouseout", lambda: self.btn and self.btn.classes(remove="opacity-100"))
+
 
 
 class HabitNameInput(ui.input):
