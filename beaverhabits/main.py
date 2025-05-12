@@ -85,7 +85,7 @@ def clear_storage():
     nicegui_app.storage._users.clear()
 
 
-ui.timer(60 * 60, clear_storage)
+ui.timer(60 * 60 * 12, clear_storage)
 
 # Debug memory usage
 tracemalloc.start()

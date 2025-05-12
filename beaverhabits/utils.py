@@ -218,7 +218,7 @@ def print_memory_snapshot():
         diff = new_snapshot.compare_to(_SNAPSHOT, "lineno")
         if diff:
             for stat in diff[:10]:
-                print("MEMORY %s", stat)
+                print("MEMORY: ", stat)
         else:
             print("No memory usage difference")
     _SNAPSHOT = new_snapshot
