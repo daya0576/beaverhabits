@@ -1,5 +1,6 @@
 import asyncio
 import gc
+import tracemalloc
 from contextlib import asynccontextmanager
 
 import psutil
@@ -16,7 +17,7 @@ from beaverhabits.configs import settings
 from beaverhabits.logger import logger
 from beaverhabits.routes import init_gui_routes
 from beaverhabits.scheduler import daily_backup_task
-from beaverhabits.utils import MemoryMonitor
+from beaverhabits.utils import MemoryMonitor, print_memory_snapshot
 
 logger.info("Starting BeaverHabits...")
 
@@ -77,10 +78,6 @@ uncollectable_count {uncollectable_count}
 object_count {object_count}
 """
 
-# Debug memory usage
-hourly_monitor = MemoryMonitor("Hourly monitor", total_threshold=10, diff_threshold=-1)
-ui.timer(60 * 60, hourly_monitor.print_stats)
-
 
 # Clear session storage memory cache
 def clear_storage():
@@ -88,9 +85,11 @@ def clear_storage():
     nicegui_app.storage._users.clear()
 
 
-ui.timer(60 * 60 * 8, clear_storage)
+ui.timer(60 * 60, clear_storage)
 
-exporter_monitor = MemoryMonitor("Exporter monitor")
+# Debug memory usage
+tracemalloc.start()
+ui.timer(60 * 60, print_memory_snapshot)
 
 
 @app.get("/metrics", tags=["metrics"])
@@ -106,8 +105,6 @@ def exporter():
         uncollectable_count=len(gc.garbage),  # number of uncollectable objects
         object_count=len(gc.get_objects()),
     )
-
-    exporter_monitor.print_stats()
 
     return Response(content=text, media_type="text/plain")
 

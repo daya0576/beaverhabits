@@ -4,6 +4,7 @@ import hashlib
 import os
 import smtplib
 import time
+import tracemalloc
 from collections import Counter
 from email.mime.text import MIMEText
 from functools import wraps
@@ -177,7 +178,7 @@ class MemoryMonitor:
         try:
             return f"{type(obj).__name__},{obj.__class__.__module__}"
         except Exception as e:
-            logger.error(f"Error getting key for object: {e}")
+            logger.warning(f"Error getting key for object: {e}")
             return f"{type(obj).__name__},<unknown>"
 
     def print_stats(self) -> None:
@@ -204,3 +205,20 @@ class MemoryMonitor:
 
         self.obj_count = {cls: count for cls, count in counter.items() if count > 0}
         self.last_mem = memory
+
+
+_SNAPSHOT = None
+
+
+def print_memory_snapshot():
+    global _SNAPSHOT
+
+    new_snapshot = tracemalloc.take_snapshot()
+    if _SNAPSHOT is not None:
+        diff = new_snapshot.compare_to(_SNAPSHOT, "lineno")
+        if diff:
+            for stat in diff[:10]:
+                print("MEMORY %s", stat)
+        else:
+            print("No memory usage difference")
+    _SNAPSHOT = new_snapshot
