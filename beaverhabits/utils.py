@@ -207,18 +207,30 @@ class MemoryMonitor:
         self.last_mem = memory
 
 
-_SNAPSHOT = None
+_SNAPSHOT = _RSS = None
 
 
 def print_memory_snapshot():
-    global _SNAPSHOT
+    global _SNAPSHOT, _RSS
+
+    memory = psutil.Process(os.getpid()).memory_info().rss
+    if _RSS is not None:
+        growth = memory - _RSS
+        print(f"[DEBUG]Total memory: {bytes2human(memory)}", end=" ")
+        print(bytes2human(growth, r"%(value)+.1f%(symbol)s"), end=" ")
+        print()
+    _RSS = memory
 
     new_snapshot = tracemalloc.take_snapshot()
     if _SNAPSHOT is not None:
         diff = new_snapshot.compare_to(_SNAPSHOT, "lineno")
         if diff:
-            for stat in diff[:10]:
-                print("MEMORY: ", stat)
+            print("[DEBUG]SNAPSHOT DIFF", end=",")
+            for stat in diff[:20]:
+                if stat.size_diff < 0:
+                    continue
+                print(stat, end=";")
+            print()
         else:
             print("No memory usage difference")
     _SNAPSHOT = new_snapshot
