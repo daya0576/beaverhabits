@@ -219,7 +219,8 @@ def print_memory_snapshot():
         print(f"[DEBUG]Total memory: {bytes2human(memory)}", end=" ")
         print(bytes2human(growth, r"%(value)+.1f%(symbol)s"), end=" ")
         print()
-    _RSS = memory
+    else:
+        _RSS = memory
 
     new_snapshot = tracemalloc.take_snapshot()
     new_snapshot = new_snapshot.filter_traces(
@@ -233,13 +234,16 @@ def print_memory_snapshot():
     top_stats = new_snapshot.statistics("lineno", cumulative=True)
     print("[DEBUG]Top memory usage:")
     for stat in top_stats[:20]:
-        print(stat, end=";")
+        print("[DEBUG]", stat)
+        for line in stat.traceback.format():
+            print("[DEBUG]", line)
+        print("=" * 20)
     print()
 
     if _SNAPSHOT is not None:
         diff = new_snapshot.compare_to(_SNAPSHOT, "lineno")
         if diff:
-            print("[DEBUG]Snapshot diff:")
+            print("[DEBUG]Snapshot diff:", end=":")
             for stat in diff[:20]:
                 if stat.size_diff < 0:
                     continue
@@ -247,4 +251,5 @@ def print_memory_snapshot():
             print()
         else:
             print("No memory usage difference")
-    _SNAPSHOT = new_snapshot
+    else:
+        _SNAPSHOT = new_snapshot
