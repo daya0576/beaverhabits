@@ -5,5 +5,3 @@ try:
     __version__ = importlib.metadata.version(__name__)
 except importlib.metadata.PackageNotFoundError:
     __version__ = "nightly"  # Fallback for development mode
-
-print(f"Package version: {__version__}")

@@ -222,10 +222,24 @@ def print_memory_snapshot():
     _RSS = memory
 
     new_snapshot = tracemalloc.take_snapshot()
+    new_snapshot = new_snapshot.filter_traces(
+        (
+            tracemalloc.Filter(False, "<unknown>"),
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+            tracemalloc.Filter(False, tracemalloc.__file__),
+        )
+    )
+    top_stats = new_snapshot.statistics("lineno", cumulative=True)
+    print("[DEBUG]Top memory usage:")
+    for stat in top_stats[:20]:
+        print(stat, end=";")
+    print()
+
     if _SNAPSHOT is not None:
         diff = new_snapshot.compare_to(_SNAPSHOT, "lineno")
         if diff:
-            print("[DEBUG]SNAPSHOT DIFF", end=",")
+            print("[DEBUG]Snapshot diff:")
             for stat in diff[:20]:
                 if stat.size_diff < 0:
                     continue
