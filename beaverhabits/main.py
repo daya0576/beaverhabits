@@ -89,7 +89,7 @@ ui.timer(60 * 60 * 24, clear_storage)
 
 # Debug memory usage
 tracemalloc.start()
-ui.timer(8, print_memory_snapshot)
+ui.timer(60 * 60, print_memory_snapshot)
 
 
 @app.get("/metrics", tags=["metrics"])

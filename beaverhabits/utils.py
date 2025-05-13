@@ -231,20 +231,22 @@ def print_memory_snapshot():
             tracemalloc.Filter(False, tracemalloc.__file__),
         )
     )
-    top_stats = new_snapshot.statistics("lineno", cumulative=True)
-    print("[DEBUG]Top memory usage:")
-    for stat in top_stats[:20]:
-        print("[DEBUG]", stat)
-        for line in stat.traceback.format():
-            print("[DEBUG]", line)
-        print("=" * 20)
-    print()
 
+    # print top 10 memory usage with traceback
+    top_stats = new_snapshot.statistics("traceback")
+    for stat in top_stats[:10]:
+        print(f"[DEBUG Traceback]Top memory usage:", end=" ")
+        print("%s memory blocks: %.1f KiB" % (stat.count, stat.size / 1024))
+        for line in stat.traceback.format():
+            print("[DEBUG Traceback]", line)
+        print("[DEBUG Traceback]", "=" * 30)
+
+    # print top 10 diff memory usage
     if _SNAPSHOT is not None:
         diff = new_snapshot.compare_to(_SNAPSHOT, "lineno")
         if diff:
-            print("[DEBUG]Snapshot diff:", end=":")
-            for stat in diff[:20]:
+            print("[DEBUG Diff]Snapshot diff:", end=":")
+            for stat in diff[:10]:
                 if stat.size_diff < 0:
                     continue
                 print(stat, end=";")
