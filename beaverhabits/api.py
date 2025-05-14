@@ -90,19 +90,19 @@ async def put_habit(
     habit: UpdateHabit,
     user: User = Depends(current_active_user),
 ):
-    existingHabit = await views.get_user_habit(user, habit_id)
+    existing_habit = await views.get_user_habit(user, habit_id)
     if habit.name is not None:
-        existingHabit.name = habit.name
+        existing_habit.name = habit.name
     if habit.star is not None:
-        existingHabit.star = habit.star
+        existing_habit.star = habit.star
     if habit.status is not None:
-        existingHabit.status = habit.status
+        existing_habit.status = habit.status
     if habit.period is not None:
-        existingHabit.period = HabitFrequency.from_str(f"{habit.period.target_count}/{habit.period.period_count}{habit.period.period_type}")
+        existing_habit.period = HabitFrequency.from_str(f"{habit.period.target_count}/{habit.period.period_count}{habit.period.period_type}")
     if habit.tags is not None:
-        existingHabit.tags = habit.tags
+        existing_habit.tags = habit.tags
 
-    return format_json_response(existingHabit)
+    return format_json_response(existing_habit)
 
 
 @api_router.delete("/habits/{habit_id}", tags=["habits"])
