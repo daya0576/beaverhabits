@@ -278,9 +278,11 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
             if habit.id == habit_id:
                 return habit
 
-    async def add(self, name: str) -> None:
-        d = {"name": name, "records": [], "id": generate_short_hash(name)}
+    async def add(self, name: str) -> str:
+        id = generate_short_hash(name)
+        d = {"name": name, "records": [], "id": id}
         self.data["habits"].append(d)
+        return id
 
     async def remove(self, item: DictHabit) -> None:
         self.data["habits"].remove(item.data)

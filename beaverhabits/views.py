@@ -93,6 +93,16 @@ async def get_user_habit(user: User, habit_id: str) -> Habit:
     return habit
 
 
+async def create_user_habit(user: User, name: str) -> str:
+    habit_list = await get_user_habit_list(user)
+    return await habit_list.add(name)
+
+
+async def remove_user_habit(user: User, habit: Habit) -> None:
+    habit_list = await get_user_habit_list(user)
+    await habit_list.remove(habit)
+
+
 async def get_or_create_user_habit_list(
     user: User, days: list[datetime.date]
 ) -> HabitList:

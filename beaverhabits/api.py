@@ -48,6 +48,19 @@ async def get_habits(
     return [{"id": x.id, "name": x.name} for x in habits]
 
 
+class CreateHabit(BaseModel):
+    name: str
+
+
+@api_router.post("/habits", tags=["habits"])
+async def post_habits(
+    habit: CreateHabit,
+    user: User = Depends(current_active_user),
+):
+    id = await views.create_user_habit(user, habit.name)
+    return {"id": id, "name": habit.name}
+
+
 @api_router.get("/habits/{habit_id}", tags=["habits"])
 async def get_habit_detail(
     habit_id: str,
@@ -62,6 +75,51 @@ async def get_habit_detail(
         "status": habit.status,
     }
 
+
+class UpdateHabit(BaseModel):
+    name: str | None = None
+    star: bool | None = None
+    status: HabitStatus | None = None
+
+
+@api_router.put("/habits/{habit_id}", tags=["habits"])
+async def put_habit(
+    habit_id: str,
+    habit: UpdateHabit,
+    user: User = Depends(current_active_user),
+):
+    existingHabit = await views.get_user_habit(user, habit_id)
+    if habit.name is not None:
+        existingHabit.name = habit.name
+    if habit.star is not None:
+        existingHabit.star = habit.star
+    if habit.status is not None:
+        existingHabit.status = habit.status
+
+    return {
+        "id": existingHabit.id,
+        "name": existingHabit.name,
+        "star": existingHabit.star,
+        "records": existingHabit.records,
+        "status": existingHabit.status,
+    }
+
+
+@api_router.delete("/habits/{habit_id}", tags=["habits"])
+async def delete_habit(
+    habit_id: str,
+    user: User = Depends(current_active_user),
+):
+    habit = await views.get_user_habit(user, habit_id)
+    await views.remove_user_habit(user, habit)
+    return {
+        "id": habit.id,
+        "name": habit.name,
+        "star": habit.star,
+        "records": habit.records,
+        "status": habit.status,
+    }
+    
 
 @api_router.get("/habits/{habit_id}/completions", tags=["habits"])
 async def get_habit_completions(
@@ -104,6 +162,7 @@ async def get_habit_completions(
 class Tick(BaseModel):
     done: bool
     date: str
+    text: str | None = None
     date_fmt: str = "%d-%m-%Y"
 
 
@@ -119,7 +178,7 @@ async def put_habit_completions(
         raise HTTPException(status_code=400, detail="Invalid date format")
 
     habit = await views.get_user_habit(user, habit_id)
-    await habit.tick(day, tick.done)
+    await habit.tick(day, tick.done, tick.text)
     return {"day": day.strftime(tick.date_fmt), "done": tick.done}
 
 
