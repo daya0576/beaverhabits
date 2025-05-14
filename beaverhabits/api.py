@@ -2,11 +2,12 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from pydantic import BaseModel
+from typing import Literal
 
 from beaverhabits import views
 from beaverhabits.app.db import User
 from beaverhabits.app.dependencies import current_active_user
-from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
+from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus, Habit, HabitFrequency
 
 api_router = APIRouter()
 
@@ -67,20 +68,21 @@ async def get_habit_detail(
     user: User = Depends(current_active_user),
 ):
     habit = await views.get_user_habit(user, habit_id)
-    return {
-        "id": habit.id,
-        "name": habit.name,
-        "star": habit.star,
-        "records": habit.records,
-        "status": habit.status,
-    }
+    return format_json_response(habit)
 
 
 class UpdateHabit(BaseModel):
+    class UpdateHabitPeriod(BaseModel):
+        period_type: Literal["D", "W", "M", "Y"]
+        period_count: int
+        target_count: int
+
     name: str | None = None
     star: bool | None = None
     status: HabitStatus | None = None
-
+    period: UpdateHabitPeriod | None = None
+    tags: list[str] | None = None
+    
 
 @api_router.put("/habits/{habit_id}", tags=["habits"])
 async def put_habit(
@@ -95,14 +97,12 @@ async def put_habit(
         existingHabit.star = habit.star
     if habit.status is not None:
         existingHabit.status = habit.status
+    if habit.period is not None:
+        existingHabit.period = HabitFrequency.from_str(f"{habit.period.target_count}/{habit.period.period_count}{habit.period.period_type}")
+    if habit.tags is not None:
+        existingHabit.tags = habit.tags
 
-    return {
-        "id": existingHabit.id,
-        "name": existingHabit.name,
-        "star": existingHabit.star,
-        "records": existingHabit.records,
-        "status": existingHabit.status,
-    }
+    return format_json_response(existingHabit)
 
 
 @api_router.delete("/habits/{habit_id}", tags=["habits"])
@@ -112,13 +112,7 @@ async def delete_habit(
 ):
     habit = await views.get_user_habit(user, habit_id)
     await views.remove_user_habit(user, habit)
-    return {
-        "id": habit.id,
-        "name": habit.name,
-        "star": habit.star,
-        "records": habit.records,
-        "status": habit.status,
-    }
+    return format_json_response(habit)
     
 
 @api_router.get("/habits/{habit_id}/completions", tags=["habits"])
@@ -181,6 +175,16 @@ async def put_habit_completions(
     await habit.tick(day, tick.done, tick.text)
     return {"day": day.strftime(tick.date_fmt), "done": tick.done}
 
+def format_json_response(habit: Habit) -> dict:
+    return {
+        "id": habit.id,
+        "name": habit.name,
+        "star": habit.star,
+        "records": habit.records,
+        "status": habit.status,
+        "period": habit.period,
+        "tags": habit.tags,
+    }
 
 def init_api_routes(app: FastAPI) -> None:
     app.include_router(api_router, prefix="/api/v1")
