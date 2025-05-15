@@ -4,6 +4,7 @@ import tracemalloc
 import psutil
 from fastapi import APIRouter, FastAPI, HTTPException, status
 from fastapi.responses import Response
+from psutil._common import bytes2human
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -65,9 +66,9 @@ def init_metrics_routes(app: FastAPI) -> None:
 
 
 @router.get("/debug/tracemalloc/{action}", summary="Start tracemalloc")
-def tracemalloc_control(action: str):
+def tracemalloc_control(action: str, nframe: int = 25):
     if action == "start":
-        tracemalloc.start()
+        tracemalloc.start(nframe)
     elif action == "stop":
         tracemalloc.stop()
     else:
@@ -79,8 +80,6 @@ def tracemalloc_control(action: str):
 
 @router.get("/debug/snapshot", summary="Show top X memory allocations")
 def tracemalloc_snapshot(count: int = 10):
-    current, peak = tracemalloc.get_traced_memory()
-
     # Check for sensible input
     if count < 1 or count > 100:
         raise HTTPException(
@@ -88,6 +87,13 @@ def tracemalloc_snapshot(count: int = 10):
             detail="Count must be between 1 and 100",
         )
 
+    if not tracemalloc.is_tracing():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tracemalloc is not started",
+        )
+
+    current, peak = tracemalloc.get_traced_memory()
     snapshot = tracemalloc.take_snapshot()
 
     # Ignore <frozen importlib._bootstrap> and <unknown> files
@@ -95,11 +101,18 @@ def tracemalloc_snapshot(count: int = 10):
         (
             tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
             tracemalloc.Filter(False, "<unknown>"),
+            tracemalloc.Filter(False, tracemalloc.__file__),
         )
     )
-    top_stats = snapshot.statistics("lineno")
+    top_stats = snapshot.statistics("traceback")
     return {
-        "stats": [str(stat) for stat in top_stats[:count]],
+        "stats": [
+            {
+                "title": f"{stat.count} memory blocks: {bytes2human(stat.size)}",
+                "traces": stat.traceback.format(),
+            }
+            for stat in top_stats[:count]
+        ],
         "current": f"Current memory usage: {current / 1024**2:.4f} MB",
         "peak": f"Peak memory usage: {peak / 1024**2:.4f} MB",
     }
