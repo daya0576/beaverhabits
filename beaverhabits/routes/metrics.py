@@ -79,7 +79,7 @@ def tracemalloc_control(action: str, nframe: int = 25):
 
 
 @router.get("/debug/snapshot", summary="Show top X memory allocations")
-def tracemalloc_snapshot(count: int = 10):
+def tracemalloc_snapshot(count: int = 20):
     # Check for sensible input
     if count < 1 or count > 100:
         raise HTTPException(

@@ -150,10 +150,12 @@ async def login_user(user: User) -> None:
 
 
 async def register_user(email: str, password: str = "") -> User:
+    logger.info(f"Registering user {email}...")
     user = await user_create(email=email, password=password)
     # Create a dummy habit list for the new users
     days = [datetime.date.today() - datetime.timedelta(days=i) for i in range(30)]
     await get_or_create_user_habit_list(user, days)
+    logger.info(f"User {email} registered successfully")
     return user
 
 
