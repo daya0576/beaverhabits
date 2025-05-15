@@ -8,6 +8,7 @@ from beaverhabits.configs import settings
 
 
 async def daily_backup_task():
+    logger.info("Starting daily backup task")
     while True:
         now = datetime.datetime.now()
 

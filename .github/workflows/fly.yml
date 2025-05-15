@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - memory_debug
 
 jobs:
   pre-deploy-test:

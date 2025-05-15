@@ -1,23 +1,16 @@
 import asyncio
-import gc
-import tracemalloc
 from contextlib import asynccontextmanager
 
-import psutil
-from fastapi import FastAPI, status
-from fastapi.responses import Response
-from nicegui import app as nicegui_app
-from nicegui import ui
-from pydantic import BaseModel
+from fastapi import FastAPI
 
-from beaverhabits.api import init_api_routes
 from beaverhabits.app.app import init_auth_routes
 from beaverhabits.app.db import create_db_and_tables
 from beaverhabits.configs import settings
 from beaverhabits.logger import logger
-from beaverhabits.routes import init_gui_routes
+from beaverhabits.routes.api import init_api_routes
+from beaverhabits.routes.metrics import init_metrics_routes
+from beaverhabits.routes.routes import init_gui_routes
 from beaverhabits.scheduler import daily_backup_task
-from beaverhabits.utils import MemoryMonitor, print_memory_snapshot
 
 logger.info("Starting BeaverHabits...")
 
@@ -45,71 +38,8 @@ async def lifespan(_: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-class HealthCheck(BaseModel):
-    """Response model to validate and return when performing a health check."""
-
-    status: str = "OK"
-    stats: dict = {}
-
-
-@app.get(
-    "/health",
-    tags=["healthcheck"],
-    summary="Perform a Health Check",
-    response_description="Return HTTP Status Code 200 (OK)",
-    status_code=status.HTTP_200_OK,
-    response_model=HealthCheck,
-)
-def read_root():
-    return HealthCheck(status="OK")
-
-
-METRICS_TEMPLATE = """\
-# HELP rss Resident Set Size in bytes.
-# TYPE rss gauge
-rss {rss}
-# TYPE mem_total gauge
-mem_total {mem_total}
-# TYPE mem_available gauge
-mem_available {mem_available}
-# TYPE uncollectable_count gauge
-uncollectable_count {uncollectable_count}
-# TYPE object_count gauge
-object_count {object_count}
-"""
-
-
-# Clear session storage memory cache
-def clear_storage():
-    logger.info("Clearing session storage cache")
-    nicegui_app.storage._users.clear()
-
-
-ui.timer(60 * 60 * 24, clear_storage)
-
-# Debug memory usage
-tracemalloc.start()
-ui.timer(60 * 60, print_memory_snapshot)
-
-
-@app.get("/metrics", tags=["metrics"])
-def exporter():
-    # Memory heap and stats
-    process = psutil.Process()
-    memory_info = process.memory_info()
-    ram = psutil.virtual_memory()
-    text = METRICS_TEMPLATE.format(
-        rss=memory_info.rss,  # non-swapped physical memory a process has used
-        mem_total=ram.total,  # total physical memory
-        mem_available=ram.available,  # available memory
-        uncollectable_count=len(gc.garbage),  # number of uncollectable objects
-        object_count=len(gc.get_objects()),
-    )
-
-    return Response(content=text, media_type="text/plain")
-
-
 # auth
+init_metrics_routes(app)
 init_auth_routes(app)
 init_api_routes(app)
 if settings.ENABLE_PLAN:
