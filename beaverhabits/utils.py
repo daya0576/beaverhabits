@@ -214,13 +214,18 @@ def print_memory_snapshot():
     global _SNAPSHOT, _RSS
 
     memory = psutil.Process(os.getpid()).memory_info().rss
+    current, peak = tracemalloc.get_traced_memory()
+    growth = 0
     if _RSS is not None:
         growth = memory - _RSS
-        print(f"[DEBUG]Total memory: {bytes2human(memory)}", end=" ")
-        print(bytes2human(growth, r"%(value)+.1f%(symbol)s"), end=" ")
-        print()
     else:
         _RSS = memory
+
+    print(f"[DEBUG]Total memory: {bytes2human(memory)}", end=" ")
+    print(bytes2human(growth, r"%(value)+.1f%(symbol)s"), end=" ")
+    print(f"Current memory usage: {current / 1024**2:.4f} MB", end=" ")
+    print(f"Peak memory usage: {peak / 1024**2:.4f} MB", end=" ")
+    print()
 
     new_snapshot = tracemalloc.take_snapshot()
     new_snapshot = new_snapshot.filter_traces(

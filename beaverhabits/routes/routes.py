@@ -19,22 +19,22 @@ from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.layout import custom_headers, redirect
 from beaverhabits.frontend.order_page import order_page_ui
 
-from . import const, views
-from .app.auth import (
+from beaverhabits import const, views
+from beaverhabits.app.auth import (
     user_authenticate,
 )
-from .app.crud import get_user_count
-from .app.db import User
-from .app.dependencies import current_active_user, current_admin_user, get_reset_user
-from .configs import settings
-from .frontend.add_page import add_page_ui
-from .frontend.export_page import export_page
-from .frontend.habit_page import habit_page_ui
-from .frontend.index_page import index_page_ui
-from .frontend.streaks import heatmap_page
-from .logger import logger
-from .storage.meta import GUI_ROOT_PATH
-from .utils import dummy_days, get_user_today_date
+from beaverhabits.app.crud import get_user_count
+from beaverhabits.app.db import User
+from beaverhabits.app.dependencies import current_active_user, current_admin_user, get_reset_user
+from beaverhabits.configs import settings
+from beaverhabits.frontend.add_page import add_page_ui
+from beaverhabits.frontend.export_page import export_page
+from beaverhabits.frontend.habit_page import habit_page_ui
+from beaverhabits.frontend.index_page import index_page_ui
+from beaverhabits.frontend.streaks import heatmap_page
+from beaverhabits.logger import logger
+from beaverhabits.storage.meta import GUI_ROOT_PATH
+from beaverhabits.utils import dummy_days, get_user_today_date
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register")
 
