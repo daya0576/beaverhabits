@@ -2,22 +2,7 @@ from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
-from nicegui import app, ui
-
-from beaverhabits.frontend import paddle_page
-from beaverhabits.frontend.admin import admin_page
-from beaverhabits.frontend.components import (
-    auth_card,
-    auth_email,
-    auth_forgot_password,
-    auth_header,
-    auth_password,
-    auth_redirect,
-    link,
-)
-from beaverhabits.frontend.import_page import import_ui_page
-from beaverhabits.frontend.layout import custom_headers, redirect
-from beaverhabits.frontend.order_page import order_page_ui
+from nicegui import Client, app, ui
 
 from beaverhabits import const, views
 from beaverhabits.app.auth import (
@@ -25,12 +10,28 @@ from beaverhabits.app.auth import (
 )
 from beaverhabits.app.crud import get_user_count
 from beaverhabits.app.db import User
-from beaverhabits.app.dependencies import current_active_user, current_admin_user, get_reset_user
+from beaverhabits.app.dependencies import (
+    current_active_user,
+    current_admin_user,
+    get_reset_user,
+)
 from beaverhabits.configs import settings
+from beaverhabits.frontend import paddle_page
 from beaverhabits.frontend.add_page import add_page_ui
+from beaverhabits.frontend.admin import admin_page
+from beaverhabits.frontend.components import (
+    auth_card,
+    auth_email,
+    auth_forgot_password,
+    auth_password,
+    auth_redirect,
+)
 from beaverhabits.frontend.export_page import export_page
 from beaverhabits.frontend.habit_page import habit_page_ui
+from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.index_page import index_page_ui
+from beaverhabits.frontend.layout import custom_headers, redirect
+from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.frontend.streaks import heatmap_page
 from beaverhabits.logger import logger
 from beaverhabits.storage.meta import GUI_ROOT_PATH
@@ -144,7 +145,7 @@ async def gui_import(user: User = Depends(current_active_user)) -> None:
 
 
 @ui.page("/login")
-async def login_page() -> Optional[RedirectResponse]:
+async def login_page(client: Client) -> Optional[RedirectResponse]:
     custom_headers()
     if await views.is_gui_authenticated():
         return RedirectResponse(GUI_ROOT_PATH)
@@ -167,7 +168,7 @@ async def login_page() -> Optional[RedirectResponse]:
 
     try:
         # Wait for the handshake before sending events to the server
-        await ui.context.client.connected(timeout=2)
+        await client.connected(timeout=3)
     except TimeoutError:
         # Ignore weak dependency
         logger.warning("Client not connected, skipping...")

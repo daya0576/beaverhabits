@@ -162,7 +162,7 @@ class HabitCheckBox(ui.checkbox):
         self.today = today
         self.status = status
         value = CStatus.DONE in status
-        self.refresh = refresh
+        self.row_refresh = refresh
         super().__init__("", value=value)
         self._update_style(value)
 
@@ -196,13 +196,15 @@ class HabitCheckBox(ui.checkbox):
 
     def _refresh(self):
         logger.debug(f"Refresh: {self.day}, {self.value}")
-        if not self.refresh:
+        if not self.row_refresh:
             return
         if not self.habit.period:
             return
+        if self.habit.period == EVERY_DAY:
+            return
 
-        # Do refresh the components
-        self.refresh()
+        # Do refresh the total row
+        self.row_refresh()
 
     async def _mouse_down_event(self, e):
         logger.info(f"Down event: {self.day}, {e.args.get('type')}")
