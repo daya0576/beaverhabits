@@ -98,6 +98,14 @@ async def index_page(
 ) -> None:
     days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
     habit_list = await views.get_user_habit_list(user)
+
+    try:
+        # Wait for the handshake before sending events to the server
+        await ui.context.client.connected(timeout=3)
+    except TimeoutError:
+        # Ignore weak dependency
+        logger.warning("Client not connected, skipping...")
+
     index_page_ui(days, habit_list)
 
 
@@ -319,4 +327,5 @@ def init_gui_routes(fastapi_app: FastAPI):
         storage_secret=settings.NICEGUI_STORAGE_SECRET,
         favicon="statics/images/favicon.svg",
         dark=True,
+        binding_refresh_interval=0.05,
     )
