@@ -125,8 +125,29 @@ def tracemalloc_snapshot(count: int = 20):
     }
 
 
-@router.get("/debug/heap", summary="Show heap memory usage")
-def heap_usage():
-    """Show heap memory usage"""
-    text = str(h.heap())
-    return Response(content=text, media_type="text/plain")
+@router.get("/debug/heap/{p:path}")
+def heap_usage(p: str):
+    gc.collect()
+
+    # return Response(
+    #     content=str(h.heap()[0].byrcs[0].referrers.byrcs), media_type="text/plain"
+    # )
+
+    # grouping the items by
+    # - byclodo:    class or dict owner (Default)
+    # - byrcs:      reference count stats
+    # - referrers:  the kind of their referrer
+    # - bytype
+    # - byid
+    # - byvia:      groupby index key
+    hpy = h.heap()
+    key, stats = "h", ""
+    for s in p.split("/"):
+        if s.isdigit():
+            hpy = hpy[int(s)]
+            key = f"{key}[{s}]"
+        else:
+            hpy = getattr(hpy, s)
+            key = f"{key}.{s}"
+        stats += f"{key}:\n{str(hpy)}\n\n"
+    return Response(content=stats, media_type="text/plain")
