@@ -129,17 +129,12 @@ def tracemalloc_snapshot(count: int = 20):
 def heap_usage(p: str):
     gc.collect()
 
-    # return Response(
-    #     content=str(h.heap()[0].byrcs[0].referrers.byrcs), media_type="text/plain"
-    # )
-
     # grouping the items by
     # - byclodo:    class or dict owner (Default)
-    # - byrcs:      reference count stats
-    # - referrers:  the kind of their referrer
-    # - bytype
+    # - bytype:     same as byclodo, but with all the dicts lumped together
+    # - byrcs:      reference count stats, i.e. h.referrers.byclodo
     # - byid
-    # - byvia:      groupby index key
+    # - byvia:      groupby index, i.e. ".key"
     hpy = h.heap()
     key, stats = "h", ""
     for s in p.split("/"):
