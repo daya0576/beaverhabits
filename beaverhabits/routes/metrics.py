@@ -7,6 +7,10 @@ from fastapi.responses import Response
 from psutil._common import bytes2human
 from pydantic import BaseModel
 
+# fmt: off
+from guppy import hpy; h=hpy() # type: ignore
+# fmt: on
+
 router = APIRouter()
 
 
@@ -41,6 +45,8 @@ mem_available {mem_available}
 uncollectable_count {uncollectable_count}
 # TYPE object_count gauge
 object_count {object_count}
+# Heap size 
+heap_size {heap_size}
 """
 
 
@@ -56,6 +62,7 @@ def exporter():
         mem_available=ram.available,  # available memory
         uncollectable_count=len(gc.garbage),  # number of uncollectable objects
         object_count=len(gc.get_objects()),
+        heap_size=h.heap().size,  # size of the heap
     )
 
     return Response(content=text, media_type="text/plain")
@@ -116,3 +123,10 @@ def tracemalloc_snapshot(count: int = 20):
         "current": f"Current memory usage: {current / 1024**2:.4f} MB",
         "peak": f"Peak memory usage: {peak / 1024**2:.4f} MB",
     }
+
+
+@router.get("/debug/heap", summary="Show heap memory usage")
+def heap_usage():
+    """Show heap memory usage"""
+    text = str(h.heap())
+    return Response(content=text, media_type="text/plain")
