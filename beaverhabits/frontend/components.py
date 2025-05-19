@@ -293,7 +293,6 @@ class HabitOrderCard(ui.card):
         self.on("mouseout", lambda: self.btn and self.btn.classes(remove="opacity-100"))
 
 
-
 class HabitNameInput(ui.input):
     def __init__(self, habit: Habit, label: str = "") -> None:
         super().__init__(value=self.encode_name(habit), label=label)
@@ -845,39 +844,35 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
         TagChip("Others", refresh=refresh)
 
         row.classes("tag-filter")
-        ui.add_body_html(
+        ui.run_javascript(
             """
-            <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const element = document.querySelector(".tag-filter");
-            
-                // scroll event
-                window.addEventListener('wheel', function(event) {
-                    if (window.scrollY === 0 && event.deltaY < -1) {
-                        element.classList.remove("hidden");
-                    }
-                    if (window.scrollY === 0 && event.deltaY > 1) {
-                        element.classList.add("hidden");
-                    }
-                }, { passive: true  });
+            const element = document.querySelector(".tag-filter");
+        
+            // scroll event
+            window.addEventListener('wheel', function(event) {
+                if (window.scrollY === 0 && event.deltaY < -1) {
+                    element.classList.remove("hidden");
+                }
+                if (window.scrollY === 0 && event.deltaY > 1) {
+                    element.classList.add("hidden");
+                }
+            }, { passive: true  });
 
-                // touch event
-                let startY;
-                window.addEventListener('touchstart', function(event) {
-                    startY = event.touches[0].clientY;
-                }, { passive: true  });
-                window.addEventListener('touchmove', function(event) {
-                    let currentY = event.touches[0].clientY;
-                    if (window.scrollY === 0 && currentY - startY < -1) {
-                        element.classList.add("hidden");
-                    }
-                    if (window.scrollY === 0 && currentY - startY > 1) {
-                        element.classList.remove("hidden");
-                    }
-                }, { passive: true  });
-            });
-            </script>
-        """
+            // touch event
+            let startY;
+            window.addEventListener('touchstart', function(event) {
+                startY = event.touches[0].clientY;
+            }, { passive: true  });
+            window.addEventListener('touchmove', function(event) {
+                let currentY = event.touches[0].clientY;
+                if (window.scrollY === 0 && currentY - startY < -1) {
+                    element.classList.add("hidden");
+                }
+                if (window.scrollY === 0 && currentY - startY > 1) {
+                    element.classList.remove("hidden");
+                }
+            }, { passive: true  });
+            """
         )
 
 
