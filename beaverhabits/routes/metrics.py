@@ -62,7 +62,6 @@ def exporter():
         mem_available=ram.available,  # available memory
         uncollectable_count=len(gc.garbage),  # number of uncollectable objects
         object_count=len(gc.get_objects()),
-        heap_size=h.heap().size,  # size of the heap
     )
 
     return Response(content=text, media_type="text/plain")

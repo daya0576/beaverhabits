@@ -20,6 +20,7 @@ dependencies = [
     "jinja2>=3.1.6",
     "dataclasses-json>=0.6.7",
     "psutil>=7.0.0",
+    "uvicorn-worker>=0.3.0",
 ]
 description = ""
 readme = "README.md"
