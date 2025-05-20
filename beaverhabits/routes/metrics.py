@@ -45,8 +45,6 @@ mem_available {mem_available}
 uncollectable_count {uncollectable_count}
 # TYPE object_count gauge
 object_count {object_count}
-# Heap size 
-heap_size {heap_size}
 """
 
 
