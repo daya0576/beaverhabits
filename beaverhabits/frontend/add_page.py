@@ -10,7 +10,6 @@ from beaverhabits.frontend.components import (
     HabitNameTagBadge,
     HabitStarCheckbox,
     habits_by_tags,
-    tag_filter_component,
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
@@ -28,9 +27,6 @@ def add_ui(habit_list: HabitList):
                     'aria-label="Habit name" aria-description="press enter to save"'
                 )
 
-                if item.tags:
-                    HabitNameTagBadge(item)
-
             star = HabitStarCheckbox(item, add_ui.refresh)
             star.classes("col-span-1")
             star.props('aria-label="Star habit" aria-description="move to top of list"')
@@ -42,9 +38,6 @@ def add_ui(habit_list: HabitList):
 
 def add_page_ui(habit_list: HabitList):
     with layout(habit_list=habit_list):
-        active_habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
-        tag_filter_component(active_habits, refresh=add_ui.refresh)
-
         with ui.column().classes("items-center w-full").props("role=list"):
             add_ui(habit_list)
 

@@ -293,15 +293,19 @@ class HabitOrderCard(ui.card):
         )
         self.on("mouseout", lambda: self.btn and self.btn.classes(remove="opacity-100"))
 
+
 class HabitNameTagBadge(ui.badge):
     def __init__(self, habit: Habit):
         tags = " ".join([f"#{tag}" for tag in habit.tags])
         super().__init__(tags)
         self.classes("bg-transparent")
 
+
 class HabitNameInput(ui.input):
-    def __init__(self, habit: Habit, label: str = "", refresh: Callable | None = None) -> None:
-        super().__init__(value=habit.name, label=label)
+    def __init__(
+        self, habit: Habit, label: str = "", refresh: Callable | None = None
+    ) -> None:
+        super().__init__(value=self.encode_name(habit), label=label)
         self.habit = habit
         self.validation = self._validate
         self.refresh = refresh
@@ -323,8 +327,8 @@ class HabitNameInput(ui.input):
         logger.info(f"Habit Name changed to {name}")
         self.habit.tags = tags
         logger.info(f"Habit Tags changed to {tags}")
-        
-        self.value = name
+
+        self.value = self.encode_name(self.habit)
 
         if self.habit.tags:
             self.habit.habit_list.order_by = HabitOrder.CATEGORY
@@ -337,7 +341,6 @@ class HabitNameInput(ui.input):
         if len(value) > 50:
             return "Too long"
 
-
     @staticmethod
     def decode_name(name: str) -> tuple[str, list[str]]:
         if "#" not in name:
@@ -345,6 +348,15 @@ class HabitNameInput(ui.input):
 
         tokens = name.split("#")
         return tokens[0].strip(), [x.strip() for x in tokens[1:]]
+
+    @staticmethod
+    def encode_name(habit: Habit) -> str:
+        name = habit.name
+        if habit.tags:
+            tags = [f"#{tag}" for tag in habit.tags]
+            name = f"{name} {' '.join(tags)}"
+
+        return name
 
 
 class HabitStarCheckbox(ui.checkbox):
@@ -895,12 +907,6 @@ def habits_by_tags(active_habits: list[Habit]) -> dict[str, list[Habit]]:
             habits.setdefault(tag, []).append(habit)
     # without tags
     habits["Others"] = [h for h in active_habits if not h.tags]
-
-    selected_tags = TagManager.get_all() & set(all_tags)
-    if selected_tags:
-        habits = OrderedDict(
-            (key, value) for key, value in habits.items() if key in selected_tags
-        )
 
     return habits
 

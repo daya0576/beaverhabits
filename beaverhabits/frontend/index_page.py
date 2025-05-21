@@ -1,5 +1,6 @@
 import datetime
 import os
+from collections import OrderedDict
 from typing import List
 
 from nicegui import ui
@@ -10,6 +11,7 @@ from beaverhabits.frontend import javascript
 from beaverhabits.frontend.components import (
     HabitCheckBox,
     IndexBadge,
+    TagManager,
     habits_by_tags,
     link,
     tag_filter_component,
@@ -95,6 +97,11 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 
         # Habit Rows
         groups = habits_by_tags(active_habits)
+        if selected_tags := TagManager.get_all():
+            groups = OrderedDict(
+                (key, value) for key, value in groups.items() if key in selected_tags
+            )
+
         for tag, habit_list in groups.items():
             if not habit_list:
                 continue
