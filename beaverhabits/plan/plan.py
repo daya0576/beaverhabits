@@ -80,8 +80,11 @@ async def habit_limit_reached(habit_list: HabitList) -> bool:
     if await check_pro():
         return False
 
-    habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
-    if len(habits) >= settings.MAX_HABIT_COUNT:
+    active_habits_count = len(
+        [h for h in habit_list.habits if h.status == HabitStatus.ACTIVE]
+    )
+
+    if active_habits_count > settings.MAX_HABIT_COUNT:
         redirect_pricing("Max habit count reached!")
         return True
 

@@ -45,6 +45,7 @@ fly = [
     "paddle-python-sdk>=1.6.0",
     "highlight-io>=0.9.3",
     "guppy3>=3.1.5",
+    "memray>=1.17.2",
 ]
 
 [project.scripts]

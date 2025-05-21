@@ -27,6 +27,7 @@ from beaverhabits.storage.storage import (
     Habit,
     HabitFrequency,
     HabitList,
+    HabitOrder,
     HabitStatus,
 )
 from beaverhabits.utils import (
@@ -294,10 +295,11 @@ class HabitOrderCard(ui.card):
 
 
 class HabitNameInput(ui.input):
-    def __init__(self, habit: Habit, label: str = "") -> None:
+    def __init__(self, habit: Habit, label: str = "", refresh: Callable | None = None) -> None:
         super().__init__(value=self.encode_name(habit), label=label)
         self.habit = habit
         self.validation = self._validate
+        self.refresh = refresh
         self.props("dense hide-bottom-space")
 
         self.on("blur", self._on_blur)
@@ -310,7 +312,6 @@ class HabitNameInput(ui.input):
     async def _on_blur(self):
         await self._save(self.value)
 
-    @plan.pro_required("Pro plan required to update category")
     async def _save(self, value: str):
         name, tags = self.decode_name(value)
         self.habit.name = name
@@ -318,6 +319,11 @@ class HabitNameInput(ui.input):
         logger.info(f"Habit Name changed to {name}")
         logger.info(f"Habit Tags changed to {tags}")
         self.value = self.encode_name(self.habit)
+
+        if self.habit.tags:
+            self.habit.habit_list.order_by = HabitOrder.CATEGORY
+            if self.refresh:
+                self.refresh()
 
     def _validate(self, value: str) -> Optional[str]:
         if not value:
@@ -413,8 +419,9 @@ class HabitAddButton(ui.input):
         if await plan.habit_limit_reached(self.habit_list):
             return
 
-        await self.habit_list.add(self.value)
-        logger.info(f"Added new habit: {self.value}")
+        name, tags = HabitNameInput.decode_name(self.value)
+        await self.habit_list.add(name, tags)
+        logger.info(f"Added new habit: {name} {tags}")
         self.refresh()
         self.set_value("")
 
