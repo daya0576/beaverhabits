@@ -8,7 +8,6 @@ from beaverhabits.storage.storage import (
     Habit,
     HabitFrequency,
     HabitList,
-    HabitListBuilder,
     HabitOrder,
     HabitStatus,
 )
@@ -75,9 +74,14 @@ class HabitDataCache:
 @dataclass
 class DictHabit(Habit[DictRecord], DictStorage):
 
-    def __init__(self, data: dict) -> None:
+    def __init__(self, data: dict, habit_list: HabitList) -> None:
         self.data = data
+        self._habit_list = habit_list
         self.cache = HabitDataCache(self)
+
+    @property
+    def habit_list(self) -> HabitList:
+        return self._habit_list
 
     @property
     def id(self) -> str:
@@ -229,7 +233,7 @@ class DictHabit(Habit[DictRecord], DictStorage):
 class DictHabitList(HabitList[DictHabit], DictStorage):
     @property
     def habits(self) -> list[DictHabit]:
-        return [DictHabit(d) for d in self.data["habits"]]
+        return [DictHabit(d, self) for d in self.data["habits"]]
 
     @property
     def order(self) -> list[str]:
@@ -278,9 +282,9 @@ class DictHabitList(HabitList[DictHabit], DictStorage):
             if habit.id == habit_id:
                 return habit
 
-    async def add(self, name: str) -> str:
+    async def add(self, name: str, tags: list | None = None) -> str:
         id = generate_short_hash(name)
-        d = {"name": name, "records": [], "id": id}
+        d = {"name": name, "records": [], "id": id, "tags": tags or []}
         self.data["habits"].append(d)
         return id
 

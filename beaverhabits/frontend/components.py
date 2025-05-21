@@ -27,6 +27,7 @@ from beaverhabits.storage.storage import (
     Habit,
     HabitFrequency,
     HabitList,
+    HabitOrder,
     HabitStatus,
 )
 from beaverhabits.utils import (
@@ -293,12 +294,12 @@ class HabitOrderCard(ui.card):
         self.on("mouseout", lambda: self.btn and self.btn.classes(remove="opacity-100"))
 
 
-
 class HabitNameInput(ui.input):
-    def __init__(self, habit: Habit, label: str = "") -> None:
+    def __init__(self, habit: Habit, label: str = "", refresh: Callable | None = None) -> None:
         super().__init__(value=self.encode_name(habit), label=label)
         self.habit = habit
         self.validation = self._validate
+        self.refresh = refresh
         self.props("dense hide-bottom-space")
 
         self.on("blur", self._on_blur)
@@ -311,7 +312,6 @@ class HabitNameInput(ui.input):
     async def _on_blur(self):
         await self._save(self.value)
 
-    @plan.pro_required("Pro plan required to update category")
     async def _save(self, value: str):
         name, tags = self.decode_name(value)
         self.habit.name = name
@@ -319,6 +319,11 @@ class HabitNameInput(ui.input):
         logger.info(f"Habit Name changed to {name}")
         logger.info(f"Habit Tags changed to {tags}")
         self.value = self.encode_name(self.habit)
+
+        if self.habit.tags:
+            self.habit.habit_list.order_by = HabitOrder.CATEGORY
+            if self.refresh:
+                self.refresh()
 
     def _validate(self, value: str) -> Optional[str]:
         if not value:
@@ -414,8 +419,9 @@ class HabitAddButton(ui.input):
         if await plan.habit_limit_reached(self.habit_list):
             return
 
-        await self.habit_list.add(self.value)
-        logger.info(f"Added new habit: {self.value}")
+        name, tags = HabitNameInput.decode_name(self.value)
+        await self.habit_list.add(name, tags)
+        logger.info(f"Added new habit: {name} {tags}")
         self.refresh()
         self.set_value("")
 
@@ -845,39 +851,35 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
         TagChip("Others", refresh=refresh)
 
         row.classes("tag-filter")
-        ui.add_body_html(
+        ui.run_javascript(
             """
-            <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const element = document.querySelector(".tag-filter");
-            
-                // scroll event
-                window.addEventListener('wheel', function(event) {
-                    if (window.scrollY === 0 && event.deltaY < -1) {
-                        element.classList.remove("hidden");
-                    }
-                    if (window.scrollY === 0 && event.deltaY > 1) {
-                        element.classList.add("hidden");
-                    }
-                }, { passive: true  });
+            const element = document.querySelector(".tag-filter");
+        
+            // scroll event
+            window.addEventListener('wheel', function(event) {
+                if (window.scrollY === 0 && event.deltaY < -1) {
+                    element.classList.remove("hidden");
+                }
+                if (window.scrollY === 0 && event.deltaY > 1) {
+                    element.classList.add("hidden");
+                }
+            }, { passive: true  });
 
-                // touch event
-                let startY;
-                window.addEventListener('touchstart', function(event) {
-                    startY = event.touches[0].clientY;
-                }, { passive: true  });
-                window.addEventListener('touchmove', function(event) {
-                    let currentY = event.touches[0].clientY;
-                    if (window.scrollY === 0 && currentY - startY < -1) {
-                        element.classList.add("hidden");
-                    }
-                    if (window.scrollY === 0 && currentY - startY > 1) {
-                        element.classList.remove("hidden");
-                    }
-                }, { passive: true  });
-            });
-            </script>
-        """
+            // touch event
+            let startY;
+            window.addEventListener('touchstart', function(event) {
+                startY = event.touches[0].clientY;
+            }, { passive: true  });
+            window.addEventListener('touchmove', function(event) {
+                let currentY = event.touches[0].clientY;
+                if (window.scrollY === 0 && currentY - startY < -1) {
+                    element.classList.add("hidden");
+                }
+                if (window.scrollY === 0 && currentY - startY > 1) {
+                    element.classList.remove("hidden");
+                }
+            }, { passive: true  });
+            """
         )
 
 

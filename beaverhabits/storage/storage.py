@@ -101,6 +101,9 @@ EVERY_DAY = HabitFrequency(D, 1, 1)
 
 class Habit[R: CheckedRecord](Protocol):
     @property
+    def habit_list(self) -> "HabitList": ...
+
+    @property
     def id(self) -> str | int: ...
 
     @property
@@ -196,7 +199,7 @@ class HabitList[H: Habit](Protocol):
     @backup.setter
     def backup(self, value: Backup) -> None: ...
 
-    async def add(self, name: str) -> str: ...
+    async def add(self, name: str, tags: list | None = None) -> str: ...
 
     async def remove(self, item: H) -> None: ...
 
@@ -236,7 +239,7 @@ class HabitListBuilder:
         if self.habit_list.order_by == HabitOrder.NAME:
             habits.sort(key=lambda x: x.name.lower())
         elif self.habit_list.order_by == HabitOrder.CATEGORY:
-            habits.sort(key=lambda x: x.tags[0].lower() if x.tags else "")
+            habits.sort(key=lambda x: (0, x.tags[0].lower()) if x.tags else (1, ""))
         elif o := self.habit_list.order:
             habits.sort(
                 key=lambda x: (o.index(str(x.id)) if str(x.id) in o else float("inf"))

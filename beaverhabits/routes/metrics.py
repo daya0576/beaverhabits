@@ -1,3 +1,4 @@
+import asyncio
 import gc
 import tracemalloc
 
@@ -5,16 +6,12 @@ import psutil
 from fastapi import APIRouter, FastAPI, HTTPException, status
 from fastapi.responses import Response
 from psutil._common import bytes2human
-from pydantic import BaseModel
+
+# fmt: off
+from guppy import hpy; h=hpy() # type: ignore
+# fmt: on
 
 router = APIRouter()
-
-
-class HealthCheck(BaseModel):
-    """Response model to validate and return when performing a health check."""
-
-    status: str = "OK"
-    stats: dict = {}
 
 
 @router.get(
@@ -23,10 +20,13 @@ class HealthCheck(BaseModel):
     summary="Perform a Health Check",
     response_description="Return HTTP Status Code 200 (OK)",
     status_code=status.HTTP_200_OK,
-    response_model=HealthCheck,
 )
-def read_root():
-    return HealthCheck(status="OK")
+async def health():
+    loop = asyncio.get_event_loop()
+    return dict(
+        status="OK",
+        loop=loop.__class__.__module__,
+    )
 
 
 METRICS_TEMPLATE = """\
@@ -116,3 +116,26 @@ def tracemalloc_snapshot(count: int = 20):
         "current": f"Current memory usage: {current / 1024**2:.4f} MB",
         "peak": f"Peak memory usage: {peak / 1024**2:.4f} MB",
     }
+
+
+@router.get("/debug/heap/{p:path}")
+def heap_usage(p: str):
+    gc.collect()
+
+    # grouping the items by
+    # - byclodo:    class or dict owner (Default)
+    # - bytype:     same as byclodo, but with all the dicts lumped together
+    # - byrcs:      reference count stats, i.e. h.referrers.byclodo
+    # - byid
+    # - byvia:      groupby index, i.e. ".key"
+    hpy = h.heap()
+    key, stats = "h", ""
+    for s in p.split("/"):
+        if s.isdigit():
+            hpy = hpy[int(s)]
+            key = f"{key}[{s}]"
+        else:
+            hpy = getattr(hpy, s)
+            key = f"{key}.{s}"
+        stats += f"{key}:\n{str(hpy)}\n\n"
+    return Response(content=stats, media_type="text/plain")

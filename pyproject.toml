@@ -9,7 +9,7 @@ dependencies = [
     "nicegui>=2.7.0,<3.0.0",
     "pydantic-settings<3.0.0,>=2.2.1",
     "fastapi-users[sqlalchemy]<15.0.0,>=14.0.0",
-    "uvicorn[standard]<1.0.0,>=0.28.0",
+    "uvicorn[standard]>=0.28.0,<1.0.0",
     "sqlalchemy[asyncio]<3.0.0,>=2.0.29",
     "asyncpg<1.0.0,>=0.29.0",
     "aiosqlite>=0.20.0,<1.0.0",
@@ -20,6 +20,7 @@ dependencies = [
     "jinja2>=3.1.6",
     "dataclasses-json>=0.6.7",
     "psutil>=7.0.0",
+    "uvicorn-worker>=0.3.0",
 ]
 description = ""
 readme = "README.md"
@@ -43,6 +44,8 @@ fly = [
     "sentry-sdk[fastapi]<3.0.0,>=2.15.0",
     "paddle-python-sdk>=1.6.0",
     "highlight-io>=0.9.3",
+    "guppy3>=3.1.5",
+    "memray>=1.17.2",
 ]
 
 [project.scripts]

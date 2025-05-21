@@ -1,3 +1,4 @@
+import time
 from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
@@ -319,4 +320,5 @@ def init_gui_routes(fastapi_app: FastAPI):
         storage_secret=settings.NICEGUI_STORAGE_SECRET,
         favicon="statics/images/favicon.svg",
         dark=True,
+        binding_refresh_interval=0.05,
     )
