@@ -1,3 +1,5 @@
+from itertools import chain
+
 from nicegui import ui
 
 from beaverhabits.frontend import components
@@ -5,8 +7,10 @@ from beaverhabits.frontend.components import (
     HabitAddButton,
     HabitDeleteButton,
     HabitNameInput,
+    HabitNameTagBadge,
     HabitStarCheckbox,
     habits_by_tags,
+    tag_filter_component,
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
@@ -15,14 +19,17 @@ from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatu
 @ui.refreshable
 def add_ui(habit_list: HabitList):
     habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
-
-    for item in habits:
+    groups = habits_by_tags(habits)
+    for item in chain.from_iterable(groups.values()):
         with components.grid(columns=10).props("role=listitem"):
             with HabitNameInput(item, refresh=add_ui.refresh) as name:
                 name.classes("col-span-8 break-all")
                 name.props(
                     'aria-label="Habit name" aria-description="press enter to save"'
                 )
+
+                if item.tags:
+                    HabitNameTagBadge(item)
 
             star = HabitStarCheckbox(item, add_ui.refresh)
             star.classes("col-span-1")
@@ -35,6 +42,8 @@ def add_ui(habit_list: HabitList):
 
 def add_page_ui(habit_list: HabitList):
     with layout(habit_list=habit_list):
+        active_habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
+        tag_filter_component(active_habits, refresh=add_ui.refresh)
 
         with ui.column().classes("items-center w-full").props("role=list"):
             add_ui(habit_list)

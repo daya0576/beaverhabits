@@ -293,10 +293,15 @@ class HabitOrderCard(ui.card):
         )
         self.on("mouseout", lambda: self.btn and self.btn.classes(remove="opacity-100"))
 
+class HabitNameTagBadge(ui.badge):
+    def __init__(self, habit: Habit):
+        tags = " ".join([f"#{tag}" for tag in habit.tags])
+        super().__init__(tags)
+        self.classes("bg-transparent")
 
 class HabitNameInput(ui.input):
     def __init__(self, habit: Habit, label: str = "", refresh: Callable | None = None) -> None:
-        super().__init__(value=self.encode_name(habit), label=label)
+        super().__init__(value=habit.name, label=label)
         self.habit = habit
         self.validation = self._validate
         self.refresh = refresh
@@ -315,10 +320,11 @@ class HabitNameInput(ui.input):
     async def _save(self, value: str):
         name, tags = self.decode_name(value)
         self.habit.name = name
-        self.habit.tags = tags
         logger.info(f"Habit Name changed to {name}")
+        self.habit.tags = tags
         logger.info(f"Habit Tags changed to {tags}")
-        self.value = self.encode_name(self.habit)
+        
+        self.value = name
 
         if self.habit.tags:
             self.habit.habit_list.order_by = HabitOrder.CATEGORY
@@ -331,14 +337,6 @@ class HabitNameInput(ui.input):
         if len(value) > 50:
             return "Too long"
 
-    @staticmethod
-    def encode_name(habit: Habit) -> str:
-        name = habit.name
-        if habit.tags:
-            tags = [f"#{tag}" for tag in habit.tags]
-            name = f"{name} {' '.join(tags)}"
-
-        return name
 
     @staticmethod
     def decode_name(name: str) -> tuple[str, list[str]]:
