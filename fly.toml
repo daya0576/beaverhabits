@@ -29,3 +29,13 @@ dockerfile="docker/fly.dockerfile"
   [[services.ports]]
     port = 443
     handlers = ["tls", "http"]
+
+[deploy]
+[[http_service.checks]]
+  grace_period = "5s"
+  interval = "15s"
+  method = "GET"
+  timeout = "1s"
+  path = "/health"
+  tls_skip_verify = true
+
