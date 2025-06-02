@@ -76,7 +76,7 @@ def menu_icon_button(
 ) -> Button:
     with ui.button(color=None, on_click=click) as button:
         ui.icon(icon_name).classes("theme-menu-icon")
-        
+
         button.props("flat unelevated padding=xs backgroup=none")
         if tooltip:
             button.tooltip(tooltip)
@@ -426,7 +426,7 @@ class HabitAddButton(ui.input):
         self.habit_list = habit_list
         self.refresh = refresh
         self.on("keydown.enter", self._async_task)
-        self.props('dense color="white" label-color="white"')
+        self.props("dense")
 
     async def _async_task(self):
         # Check premium plan

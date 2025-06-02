@@ -66,7 +66,7 @@ def custom_headers():
 
     # Prevent white flash on page load
     ui.add_css(css.WHITE_FLASH_PREVENT, shared=True)
-    ui.add_css(css.THEME_COLOR_CSS)
+    ui.add_css(css.THEME_COLOR_CSS, shared=True)
 
 
 def separator():
@@ -113,10 +113,10 @@ def layout(
 
             if habit:
                 edit_dialog = habit_edit_dialog(habit)
-                edit_btn = menu_icon_button(icons.EDIT, tooltip="Edit habit")
+                edit_btn = menu_icon_button("sym_r_pen_size_3", tooltip="Edit habit")
                 edit_btn.on_click(edit_dialog.open)
             elif habit_list and "add" in page_path():
-                with menu_icon_button(icons.SORT, tooltip="Sort"):
+                with menu_icon_button("sym_r_swap_vert", tooltip="Sort"):
                     sort_menu(habit_list)
 
             with menu_icon_button("sym_r_menu"):
