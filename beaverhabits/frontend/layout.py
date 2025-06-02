@@ -119,7 +119,7 @@ def layout(
                 with menu_icon_button(icons.SORT, tooltip="Sort"):
                     sort_menu(habit_list)
 
-            with menu_icon_button(icons.MENU):
+            with menu_icon_button("sym_r_menu"):
                 menu_component()
 
         yield

@@ -69,17 +69,21 @@ WHITE_FLASH_PREVENT = """\
   --theme-color: #121212;
   --background-color: #121212;
   --link-color: #fff;
-  
-  --icon-close-color: #616161;
+    
+  --icon-unchecked-color: #616161;
+
+  --header-date-color: #9E9E9E;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    --theme-color: #EDEDED;
-    --background-color: #EDEDED;
-    --link-color: #000;
-    
-    --icon-close-color: #9E9E9E;
+    --theme-color: #F4F6F9;
+    --background-color: #F4F6F9;
+    --link-color: #121212;
+
+    --icon-unchecked-color: #BCBCBC;
+  
+    --header-date-color: #616161;
   }
 }
 
@@ -94,7 +98,17 @@ THEME_COLOR_CSS = """\
   color: var(--link-color);
 }
 
-.theme-icon-close {
-  fill: #eee;
+.theme-icon-checkbox .q-checkbox__inner--falsy .q-checkbox__icon {
+  color: var(--icon-unchecked-color);
+}
+
+.theme-header-date {
+  font-size: 85%; 
+  font-weight: 500; 
+  color: var(--header-date-color);
+}
+
+.theme-menu-icon {
+  color: var(--link-color);
 }
 """

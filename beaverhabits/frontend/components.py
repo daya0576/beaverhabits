@@ -74,14 +74,16 @@ def menu_header(title: str, target: str):
 def menu_icon_button(
     icon_name: str, click: Optional[Callable] = None, tooltip: str | None = None
 ) -> Button:
-    button = ui.button(icon=icon_name, color=None, on_click=click)
-    button.props("flat unelevated padding=xs backgroup=none")
-    if tooltip:
-        button.tooltip(tooltip)
-        button.props(f'aria-label="{tooltip}"')
-    else:
-        # Accessibility
-        button.props('aria-haspopup="true" aria-label="menu"')
+    with ui.button(color=None, on_click=click) as button:
+        ui.icon(icon_name).classes("theme-menu-icon")
+        
+        button.props("flat unelevated padding=xs backgroup=none")
+        if tooltip:
+            button.tooltip(tooltip)
+            button.props(f'aria-label="{tooltip}"')
+        else:
+            # Accessibility
+            button.props('aria-haspopup="true" aria-label="menu"')
 
     return button
 
@@ -254,6 +256,9 @@ class HabitCheckBox(ui.checkbox):
     def _update_style(self, value: bool):
         self.value = value
 
+        # Theme colors
+        self.classes("theme-icon-checkbox")
+
         # Accessibility
         days = (self.today - self.day).days
         if days == 0:
@@ -264,11 +269,10 @@ class HabitCheckBox(ui.checkbox):
             self.props(f'aria-label="{days} days ago"')
 
         # icons, e.g. sym_o_notes
-        checked, unchecked = icons.DONE, icons.CLOSE
+        checked, unchecked = "done", "close"
         if self.habit.period and self.habit.period != EVERY_DAY:
-            checked = icons.DONE_ALL
             if CStatus.PERIOD_DONE in self.status:
-                unchecked = icons.DONE
+                unchecked = "done"
 
         self.props(f'checked-icon="{checked}" unchecked-icon="{unchecked}" keep-color')
 

@@ -33,11 +33,11 @@ LEFT_CLASSES, RIGHT_CLASSES = (
     # grid 2 2 2 2 2
     f"col-span-{DATE_COLS} px-1 place-self-center",
 )
-COMPAT_CLASSES = "pl-4 pr-0 py-0 shadow-none"
+COMPAT_CLASSES = "pl-4 pr-0 py-0"
+CARD_SHADOW = "dark:shadow-none shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)]"
 
 # Sticky date row for long habit list
 STICKY_STYLES = "position: sticky; top: 0; z-index: 1;"
-HEADER_STYLES = "font-size: 85%; font-weight: 500; color: #9e9e9e"
 
 
 def grid(columns, rows):
@@ -89,11 +89,11 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
     with ui.column().classes("gap-1.5"):
         # Date Headers
         with grid(columns, 2).classes(COMPAT_CLASSES).style(STICKY_STYLES) as g:
-            g.props('aria-hidden="true"')
+            g.props('aria-hidden="true"').classes("theme-header-date")
             for it in (week_headers(days), day_headers(days)):
-                ui.label("").classes(LEFT_CLASSES).style(HEADER_STYLES)
+                ui.label("").classes(LEFT_CLASSES)
                 for label in it:
-                    ui.label(label).classes(RIGHT_CLASSES).style(HEADER_STYLES)
+                    ui.label(label).classes(RIGHT_CLASSES)
 
         # Habit Rows
         groups = habits_by_tags(active_habits)
@@ -108,7 +108,7 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                 continue
 
             for habit in habit_list:
-                with ui.card().classes(COMPAT_CLASSES):
+                with ui.card().classes(COMPAT_CLASSES).classes(CARD_SHADOW):
                     with grid(columns, 1):
                         habit_row(habit, tag, days)
 
