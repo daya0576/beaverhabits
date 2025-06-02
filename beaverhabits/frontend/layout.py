@@ -99,6 +99,7 @@ def layout(
     habit_list: HabitList | None = None,
 ):
     """Base layout for all pages."""
+
     # Center the content on small screens
     with ui.column().classes("mx-auto mx-0"):
         # Standard headers

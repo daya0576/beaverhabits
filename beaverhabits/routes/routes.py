@@ -314,6 +314,7 @@ def init_gui_routes(fastapi_app: FastAPI):
     oneyear = 365 * 24 * 60 * 60
     app.add_static_files("/statics", "statics", max_cache_age=oneyear)
     app.on_exception(handle_exception)
+
     ui.run_with(
         fastapi_app,
         title=const.PAGE_TITLE,

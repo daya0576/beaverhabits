@@ -68,7 +68,7 @@ WHITE_FLASH_PREVENT = """\
 :root {
   --theme-color: #121212;
   --background-color: #121212;
-  --link-color: #fff;
+  --link-color: #FFF;
     
   --icon-unchecked-color: #616161;
 
@@ -77,11 +77,11 @@ WHITE_FLASH_PREVENT = """\
 
 @media (prefers-color-scheme: light) {
   :root {
-    --theme-color: #F4F6F9;
-    --background-color: #F4F6F9;
+    --theme-color: #121212;
+    --background-color: #f9f9f9;
     --link-color: #121212;
 
-    --icon-unchecked-color: #BCBCBC;
+    --icon-unchecked-color: #757575;
   
     --header-date-color: #616161;
   }
@@ -100,6 +100,9 @@ THEME_COLOR_CSS = """\
 
 .theme-icon-checkbox .q-checkbox__inner--falsy .q-checkbox__icon {
   color: var(--icon-unchecked-color);
+}
+.theme-icon-checkbox .q-checkbox__icon {
+  font-weight: 500;
 }
 
 .theme-header-date {
