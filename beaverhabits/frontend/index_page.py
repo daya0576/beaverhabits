@@ -36,7 +36,7 @@ LEFT_CLASSES, RIGHT_CLASSES = (
 COMPAT_CLASSES = "pl-4 pr-0 py-0 shadow-none"
 
 # Sticky date row for long habit list
-STICKY_STYLES = "position: sticky; top: 0; z-index: 1; background-color: #121212;"
+STICKY_STYLES = "position: sticky; top: 0; z-index: 1;"
 HEADER_STYLES = "font-size: 85%; font-weight: 500; color: #9e9e9e"
 
 
@@ -129,7 +129,7 @@ def index_page_ui(days: list[datetime.date], habits: HabitList):
         tag_filter_component(active_habits, refresh=habit_list_ui.refresh)
         habit_list_ui(days, active_habits)
 
-    # Prevent long press context menu for svg image elements
-    ui.context.client.on_connect(javascript.prevent_context_menu)
     # placeholder to preload js cache (daily notes)
     ui.input("").classes("hidden").props('aria-hidden="true"')
+    # Prevent long press context menu for svg image elements
+    ui.context.client.on_connect(javascript.prevent_context_menu)

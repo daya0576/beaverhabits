@@ -63,3 +63,38 @@ YOUTUBE_CSS = """
     height: 100%;
 }
 """
+
+WHITE_FLASH_PREVENT = """\
+:root {
+  --theme-color: #121212;
+  --background-color: #121212;
+  --link-color: #fff;
+  
+  --icon-close-color: #616161;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --theme-color: #EDEDED;
+    --background-color: #EDEDED;
+    --link-color: #000;
+    
+    --icon-close-color: #9E9E9E;
+  }
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--theme-color);
+}
+"""
+
+THEME_COLOR_CSS = """\
+.nicegui-link {
+  color: var(--link-color);
+}
+
+.theme-icon-close {
+  fill: #eee;
+}
+"""

@@ -1,10 +1,10 @@
 from contextlib import contextmanager
 
-from nicegui import context, ui
+from nicegui import ui
 
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
-from beaverhabits.frontend import icons
+from beaverhabits.frontend import css, icons
 from beaverhabits.frontend.components import (
     habit_edit_dialog,
     menu_header,
@@ -20,6 +20,13 @@ from beaverhabits.storage.meta import (
     page_title,
 )
 from beaverhabits.storage.storage import Habit, HabitList
+
+THEME_COLOR = """\
+<meta name="theme-color" content="#5D4037" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+<meta name="background_color" content="#5D4037" media="(prefers-color-scheme: light)" />
+<meta name="background_color" content="#121212" media="(prefers-color-scheme: dark)" />
+"""
 
 
 def pwa_headers():
@@ -58,7 +65,8 @@ def custom_headers():
         )
 
     # Prevent white flash on page load
-    ui.add_css("body { background-color: #121212; color: white;  }")
+    ui.add_css(css.WHITE_FLASH_PREVENT, shared=True)
+    ui.add_css(css.THEME_COLOR_CSS)
 
 
 def separator():
