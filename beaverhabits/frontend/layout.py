@@ -1,10 +1,10 @@
 from contextlib import contextmanager
 
-from nicegui import context, ui
+from nicegui import ui
 
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
-from beaverhabits.frontend import icons
+from beaverhabits.frontend import css, icons
 from beaverhabits.frontend.components import (
     habit_edit_dialog,
     menu_header,
@@ -20,6 +20,13 @@ from beaverhabits.storage.meta import (
     page_title,
 )
 from beaverhabits.storage.storage import Habit, HabitList
+
+THEME_COLOR = """\
+<meta name="theme-color" content="#5D4037" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+<meta name="background_color" content="#5D4037" media="(prefers-color-scheme: light)" />
+<meta name="background_color" content="#121212" media="(prefers-color-scheme: dark)" />
+"""
 
 
 def pwa_headers():
@@ -58,7 +65,8 @@ def custom_headers():
         )
 
     # Prevent white flash on page load
-    ui.add_css("body { background-color: #121212; color: white;  }")
+    ui.add_css(css.WHITE_FLASH_PREVENT, shared=True)
+    ui.add_css(css.THEME_COLOR_CSS, shared=True)
 
 
 def separator():
@@ -91,6 +99,7 @@ def layout(
     habit_list: HabitList | None = None,
 ):
     """Base layout for all pages."""
+
     # Center the content on small screens
     with ui.column().classes("mx-auto mx-0"):
         # Standard headers
@@ -105,13 +114,13 @@ def layout(
 
             if habit:
                 edit_dialog = habit_edit_dialog(habit)
-                edit_btn = menu_icon_button(icons.EDIT, tooltip="Edit habit")
+                edit_btn = menu_icon_button("sym_r_pen_size_3", tooltip="Edit habit")
                 edit_btn.on_click(edit_dialog.open)
             elif habit_list and "add" in page_path():
-                with menu_icon_button(icons.SORT, tooltip="Sort"):
+                with menu_icon_button("sym_r_swap_vert", tooltip="Sort"):
                     sort_menu(habit_list)
 
-            with menu_icon_button(icons.MENU):
+            with menu_icon_button("sym_r_menu"):
                 menu_component()
 
         yield

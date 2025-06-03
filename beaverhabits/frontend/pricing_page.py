@@ -65,15 +65,15 @@ def link(text: str, url: str, new_tab: bool = False, tooltip=""):
 
 def icon(text: str, url: str, icon_str: str, tooltip: str):
     with link(text, url, tooltip=tooltip).classes("max-sm:hidden"):
-        ui.html(icon_str).classes("fill-white scale-125 m-1")
+        ui.icon(icon_str).classes("text-3xl")
 
 
 def description():
     with ui.row().classes("w-full"):
         link("Beaver Habit Tracker", const.GUI).classes("text-3xl font-bold")
         ui.space()
-        icon("", "/login", icons.LOGIN, tooltip="Login")
-        icon("", const.HOME_PAGE, icons.GITHUB, tooltip="Star us on Github!")
+        icon("", "/login", "sym_r_login", tooltip="Login")
+        icon("", const.HOME_PAGE, "eva-github", tooltip="Star us on Github!")
 
     desc = ui.label("A minimal habit tracking app without 'Goals'")
     desc.classes("text-lg text-center")
@@ -154,3 +154,7 @@ async def landing_page() -> None:
     ui.add_head_html(PADDLE_JS)
     ui.add_css(YOUTUBE_CSS)
     custom_headers()
+
+    ui.add_head_html(
+        '<link href="https://unpkg.com/eva-icons@1.1.3/style/eva-icons.css" rel="stylesheet" />'
+    )

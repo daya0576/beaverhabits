@@ -314,11 +314,12 @@ def init_gui_routes(fastapi_app: FastAPI):
     oneyear = 365 * 24 * 60 * 60
     app.add_static_files("/statics", "statics", max_cache_age=oneyear)
     app.on_exception(handle_exception)
+
     ui.run_with(
         fastapi_app,
         title=const.PAGE_TITLE,
         storage_secret=settings.NICEGUI_STORAGE_SECRET,
         favicon="statics/images/favicon.svg",
-        dark=True,
         binding_refresh_interval=0.05,
+        dark=None,
     )

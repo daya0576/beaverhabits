@@ -63,3 +63,56 @@ YOUTUBE_CSS = """
     height: 100%;
 }
 """
+
+WHITE_FLASH_PREVENT = """\
+:root {
+  --theme-color: #121212;
+  --background-color: #121212;
+  --link-color: #FFF;
+    
+  --icon-unchecked-color: #616161;
+
+  --header-date-color: #9E9E9E;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --theme-color: #121212;
+    --background-color: #f9f9f9;
+    --link-color: #121212;
+
+    --icon-unchecked-color: #757575;
+  
+    --header-date-color: #616161;
+  }
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--theme-color);
+}
+"""
+
+THEME_COLOR_CSS = """\
+.nicegui-link {
+  color: var(--link-color);
+}
+
+.theme-icon-checkbox .q-checkbox__inner--falsy .q-checkbox__icon {
+  color: var(--icon-unchecked-color);
+}
+.theme-icon-checkbox .q-checkbox__icon {
+  font-weight: 500;
+}
+
+.theme-header-date {
+  font-size: 85%; 
+  font-weight: 500; 
+  color: var(--header-date-color);
+}
+
+.theme-menu-icon {
+  color: var(--link-color);
+}
+
+"""

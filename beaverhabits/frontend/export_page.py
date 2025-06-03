@@ -1,23 +1,18 @@
 from nicegui import ui
 
-from beaverhabits import views
+from beaverhabits import const, views
 from beaverhabits.app.db import User
-from beaverhabits.frontend import icons
-from beaverhabits.frontend.components import habit_backup_dialog
+from beaverhabits.frontend.components import compat_card, habit_backup_dialog
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.storage import HabitList
-
-
-def compat_card():
-    return ui.card().classes("no-shadow")
 
 
 def backup_panel(habit_list: HabitList):
     backup = lambda: habit_backup_dialog(habit_list).open()
 
     ui.label("Backup your habits to JSON daily at midnight.")
-    btn = ui.button("Backup", icon=icons.BACKUP).on("click", backup)
-    btn.props('outline color="white"')
+    btn = ui.button("Backup", icon="sym_r_backup").on("click", backup)
+    btn.props("outline").classes("dark:white")
 
 
 def export_panel(habit_list: HabitList, user: User):
@@ -26,15 +21,16 @@ def export_panel(habit_list: HabitList, user: User):
     ui.label(
         "Export to JSON for a nice way to share and re-import your habits anytime."
     )
-    btn = ui.button("Export JSON", icon=icons.DOWNLOAD).on("click", export_json)
-    btn.props('outline color="white"')
+    btn = ui.button("Export JSON", icon="sym_r_download").on("click", export_json)
+    btn.props("outline")
 
 
 async def export_page(habit_list: HabitList, user: User):
-    # await views.export_user_habit_list(habit_list, user.email)
+    ui.colors(primary=const.DARK_COLOR)
+
     with layout(title="Export"):
         with ui.column().classes("w-80"):
-            with compat_card():
+            with compat_card().classes("w-full"):
                 export_panel(habit_list, user)
-            with compat_card():
+            with compat_card().classes("w-full"):
                 backup_panel(habit_list)

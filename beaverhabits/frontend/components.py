@@ -62,6 +62,10 @@ def link(text: str, target: str, color: str = "text-white") -> ui.link:
     )
 
 
+def compat_card():
+    return ui.card().classes("no-shadow")
+
+
 def menu_header(title: str, target: str):
     link = ui.link(title, target=target)
     link.classes(
@@ -74,14 +78,16 @@ def menu_header(title: str, target: str):
 def menu_icon_button(
     icon_name: str, click: Optional[Callable] = None, tooltip: str | None = None
 ) -> Button:
-    button = ui.button(icon=icon_name, color=None, on_click=click)
-    button.props("flat unelevated padding=xs backgroup=none")
-    if tooltip:
-        button.tooltip(tooltip)
-        button.props(f'aria-label="{tooltip}"')
-    else:
-        # Accessibility
-        button.props('aria-haspopup="true" aria-label="menu"')
+    with ui.button(color=None, on_click=click) as button:
+        ui.icon(icon_name).classes("theme-menu-icon")
+
+        button.props("flat unelevated padding=xs backgroup=none")
+        if tooltip:
+            button.tooltip(tooltip)
+            button.props(f'aria-label="{tooltip}"')
+        else:
+            # Accessibility
+            button.props('aria-haspopup="true" aria-label="menu"')
 
     return button
 
@@ -254,6 +260,9 @@ class HabitCheckBox(ui.checkbox):
     def _update_style(self, value: bool):
         self.value = value
 
+        # Theme colors
+        self.classes("theme-icon-checkbox")
+
         # Accessibility
         days = (self.today - self.day).days
         if days == 0:
@@ -264,11 +273,10 @@ class HabitCheckBox(ui.checkbox):
             self.props(f'aria-label="{days} days ago"')
 
         # icons, e.g. sym_o_notes
-        checked, unchecked = icons.DONE, icons.CLOSE
+        checked, unchecked = "check", "close"
         if self.habit.period and self.habit.period != EVERY_DAY:
-            checked = icons.DONE_ALL
             if CStatus.PERIOD_DONE in self.status:
-                unchecked = icons.DONE
+                unchecked = "done"
 
         self.props(f'checked-icon="{checked}" unchecked-icon="{unchecked}" keep-color')
 
@@ -422,7 +430,7 @@ class HabitAddButton(ui.input):
         self.habit_list = habit_list
         self.refresh = refresh
         self.on("keydown.enter", self._async_task)
-        self.props('dense color="white" label-color="white"')
+        self.props("dense")
 
     async def _async_task(self):
         # Check premium plan
@@ -623,7 +631,7 @@ def habit_heat_map(
         # Headers
         with ui.row(wrap=False).classes("gap-0"):
             for header in calendar.headers:
-                header_lable = ui.label(header).classes("text-gray-300 text-center")
+                header_lable = ui.label(header).classes("dark:text-gray-300 text-center")
                 header_lable.style("width: 20px; line-height: 18px; font-size: 9px;")
             ui.label().style("width: 22px;")
 
@@ -638,7 +646,7 @@ def habit_heat_map(
                         ui.label().style("width: 20px; height: 20px;")
 
                 week_day_abbr_label = ui.label(calendar.week_days[i])
-                week_day_abbr_label.classes("indent-1.5 text-gray-300")
+                week_day_abbr_label.classes("indent-1.5 dark:text-gray-300")
                 week_day_abbr_label.style(
                     "width: 22px; line-height: 20px; font-size: 9px;"
                 )
@@ -1051,7 +1059,7 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
             with ui.row().classes("items-center"):
                 target_count = number_input(p.target_count, label="Times")
 
-                ui.label("/").classes("text-gray-300")
+                ui.label("/").classes("dark:text-gray-300")
 
                 period_count = number_input(value=p.period_count, label="Every")
                 period_type = ui.select(
