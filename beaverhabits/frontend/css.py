@@ -114,4 +114,5 @@ THEME_COLOR_CSS = """\
 .theme-menu-icon {
   color: var(--link-color);
 }
+
 """
