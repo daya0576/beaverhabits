@@ -21,6 +21,7 @@ from beaverhabits.storage.meta import (
     page_title,
 )
 from beaverhabits.storage.storage import Habit, HabitList
+from beaverhabits.utils import fetch_user_dark_mode, get_or_create_user_dark_mode
 
 THEME_COLOR = """\
 <meta name="theme-color" content="#5D4037" media="(prefers-color-scheme: light)" />
@@ -68,6 +69,9 @@ def custom_headers():
     # Prevent white flash on page load
     ui.add_css(css.WHITE_FLASH_PREVENT, shared=True)
     ui.add_css(css.THEME_COLOR_CSS, shared=True)
+
+    ui.context.client.on_connect(get_or_create_user_dark_mode)
+    ui.context.client.on_connect(views.apply_theme_style)
 
 
 def separator():
@@ -125,5 +129,3 @@ def layout(
                 menu_component()
 
         yield
-
-        app.on_connect(views.apply_custom_css)

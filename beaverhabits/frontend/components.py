@@ -39,6 +39,7 @@ from beaverhabits.utils import (
     M,
     W,
     Y,
+    get_or_create_user_dark_mode,
     ratelimiter,
 )
 
@@ -596,13 +597,25 @@ class CalendarCheckBox(ui.checkbox):
         return bool(record and record.done)
 
     def _icon_svg(self):
+        unchecked_text_color = checked_text_color = "rgb(255,255,255)"
         unchecked_color, checked_color = "rgb(54,54,54)", icons.PRIMARY_COLOR
         if CStatus.PERIOD_DONE in self.status:
             # Normalization + Linear Interpolation
             unchecked_color = "rgb(40,87,141)"
+
+        dark = get_or_create_user_dark_mode()
+        logger.warning(f"Dark mode: {dark}")
+        if dark == False:
+            unchecked_color = "rgb(222,222,222)"
+            unchecked_text_color  = "rgb(158, 158, 158)"
+
         return (
-            icons.SQUARE.format(color=unchecked_color, text=self.day.day),
-            icons.SQUARE.format(color=checked_color, text=self.day.day),
+            icons.SQUARE.format(
+                color=unchecked_color, text=self.day.day, text_color=unchecked_text_color
+            ),
+            icons.SQUARE.format(
+                color=checked_color, text=self.day.day, text_color=checked_text_color
+            ),
         )
 
     async def _async_task(self, e: events.ValueChangeEventArguments):
@@ -631,7 +644,9 @@ def habit_heat_map(
         # Headers
         with ui.row(wrap=False).classes("gap-0"):
             for header in calendar.headers:
-                header_lable = ui.label(header).classes("dark:text-gray-300 text-center")
+                header_lable = ui.label(header).classes(
+                    "text-gray-600 dark:text-gray-300 text-center"
+                )
                 header_lable.style("width: 20px; line-height: 18px; font-size: 9px;")
             ui.label().style("width: 22px;")
 
@@ -646,7 +661,7 @@ def habit_heat_map(
                         ui.label().style("width: 20px; height: 20px;")
 
                 week_day_abbr_label = ui.label(calendar.week_days[i])
-                week_day_abbr_label.classes("indent-1.5 dark:text-gray-300")
+                week_day_abbr_label.classes("indent-1.5 text-gray-600 dark:text-gray-300")
                 week_day_abbr_label.style(
                     "width: 22px; line-height: 20px; font-size: 9px;"
                 )

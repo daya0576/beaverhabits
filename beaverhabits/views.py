@@ -277,7 +277,7 @@ async def update_custom_css(user: User, css: str) -> None:
     )
 
 
-async def apply_custom_css() -> None:
+async def apply_theme_style() -> None:
     custom_css = app.storage.user.get("custom_css", "")
     if custom_css:
         ui.add_head_html(f"<style>{custom_css}</style>")
