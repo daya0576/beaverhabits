@@ -1,10 +1,11 @@
 from contextlib import contextmanager
 
-from nicegui import ui
+from nicegui import app, ui
 
+from beaverhabits import views
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
-from beaverhabits.frontend import css, icons
+from beaverhabits.frontend import css, icons, javascript
 from beaverhabits.frontend.components import (
     habit_edit_dialog,
     menu_header,
@@ -124,3 +125,5 @@ def layout(
                 menu_component()
 
         yield
+
+        app.on_connect(views.apply_custom_css)

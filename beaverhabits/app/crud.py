@@ -5,7 +5,13 @@ from sqlalchemy import select
 
 from beaverhabits.logger import logger
 
-from .db import HabitListModel, User, UserIdentityModel, get_async_session
+from .db import (
+    HabitListModel,
+    User,
+    UserConfigsModel,
+    UserIdentityModel,
+    get_async_session,
+)
 
 get_async_session_context = contextlib.asynccontextmanager(get_async_session)
 
@@ -133,3 +139,33 @@ async def update_user_identity(customer_id: str, data: dict, activate: bool) -> 
         user_identity.activated = activate
         await session.commit()
         logger.info(f"[CRUD] User identity updated: {user_identity}")
+
+
+async def get_user_configs(user: User) -> dict | None:
+    async with get_async_session_context() as session:
+        stmt = select(UserConfigsModel).where(UserConfigsModel.user_id == user.id)
+        result = await session.execute(stmt)
+        user_configs = result.scalar()
+        if user_configs:
+            return user_configs.config_data
+        return None
+
+
+async def update_user_configs(user: User, config_data: dict) -> None:
+    async with get_async_session_context() as session:
+        stmt = select(UserConfigsModel).where(UserConfigsModel.user_id == user.id)
+        result = await session.execute(stmt)
+        user_configs = result.scalar()
+
+        if not user_configs:
+            user_configs = UserConfigsModel(user_id=user.id, config_data=config_data)
+            session.add(user_configs)
+            await session.commit()
+            return
+
+        if user_configs.config_data == config_data:
+            logger.warning(f"[CRUD] User {user.id} configs unchanged")
+            return
+
+        user_configs.config_data = {**user_configs.config_data, **config_data}
+        await session.commit()

@@ -2,11 +2,13 @@ import asyncio
 import datetime
 import json
 import random
+from dataclasses import dataclass
 from typing import Sequence
 
 from fastapi import HTTPException
 from nicegui import app, run, ui
 
+from beaverhabits.app import crud
 from beaverhabits.app.auth import (
     user_check_token,
     user_create,
@@ -241,3 +243,42 @@ async def reset_password(user: User, password: str) -> None:
 
     await login_user(new_user)
     redirect(GUI_ROOT_PATH)
+
+
+@dataclass
+class UserConfigs:
+    custom_css: str | None = None
+
+
+async def get_user_configs(user: User) -> UserConfigs:
+    configs = await crud.get_user_configs(user) or {}
+    return UserConfigs(
+        custom_css=configs.get("css", None),
+    )
+
+
+async def cache_user_configs(user: User) -> None:
+    configs = await get_user_configs(user)
+    app.storage.user.update(
+        {
+            "custom_css": configs.custom_css or "",
+        }
+    )
+
+
+async def update_custom_css(user: User, css: str) -> None:
+    app.storage.user["custom_css"] = css
+
+    await crud.update_user_configs(
+        user,
+        {
+            "css": css,
+        },
+    )
+
+
+async def apply_custom_css() -> None:
+    custom_css = app.storage.user.get("custom_css", "")
+    if custom_css:
+        ui.add_head_html(f"<style>{custom_css}</style>")
+        logger.info(f"Applied custom CSS...")

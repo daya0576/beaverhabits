@@ -273,7 +273,7 @@ class HabitCheckBox(ui.checkbox):
             self.props(f'aria-label="{days} days ago"')
 
         # icons, e.g. sym_o_notes
-        checked, unchecked = "check", "close"
+        checked, unchecked = "sym_o_check", "sym_o_close"
         if self.habit.period and self.habit.period != EVERY_DAY:
             if CStatus.PERIOD_DONE in self.status:
                 unchecked = "done"

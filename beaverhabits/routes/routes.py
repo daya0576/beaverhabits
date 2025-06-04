@@ -33,6 +33,7 @@ from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.index_page import index_page_ui
 from beaverhabits.frontend.layout import custom_headers, redirect
 from beaverhabits.frontend.order_page import order_page_ui
+from beaverhabits.frontend.settings_page import settings_page
 from beaverhabits.frontend.streaks import heatmap_page
 from beaverhabits.logger import logger
 from beaverhabits.storage.meta import GUI_ROOT_PATH
@@ -145,6 +146,12 @@ async def gui_import(user: User = Depends(current_active_user)) -> None:
     import_ui_page(user)
 
 
+@ui.page("/settings")
+@ui.page("/gui/settings")
+async def gui_settings(user: User = Depends(current_active_user)) -> None:
+    await settings_page(user)
+
+
 @ui.page("/login")
 async def login_page(client: Client) -> Optional[RedirectResponse]:
     custom_headers()
@@ -163,6 +170,7 @@ async def login_page(client: Client) -> Optional[RedirectResponse]:
         user = await user_authenticate(email=email.value, password=password.value)
         if user:
             await views.login_user(user)
+            await views.cache_user_configs(user)
             ui.navigate.to(GUI_ROOT_PATH)
         else:
             ui.notify("email or password wrong!", color="negative")

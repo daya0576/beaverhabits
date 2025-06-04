@@ -65,25 +65,28 @@ YOUTUBE_CSS = """
 """
 
 WHITE_FLASH_PREVENT = """\
+
 :root {
   --theme-color: #121212;
-  --background-color: #121212;
-  --link-color: #FFF;
-    
-  --icon-unchecked-color: #616161;
+  --background-color: #f9f9f9;
+  --link-color: #121212;
 
-  --header-date-color: #9E9E9E;
+  --icon-unchecked-color: #CCC;
+
+  --header-date-color: #616161;
+  --habit-card-box-shadow: 0 1px 3px rgba(0,0,0,0.12);
 }
 
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
     --theme-color: #121212;
-    --background-color: #f9f9f9;
-    --link-color: #121212;
+    --background-color: #121212;
+    --link-color: #FFF;
+    
+    --icon-unchecked-color: #616161;
 
-    --icon-unchecked-color: #757575;
-  
-    --header-date-color: #616161;
+    --header-date-color: #9E9E9E;
+    --habit-card-box-shadow: none;
   }
 }
 
@@ -101,8 +104,8 @@ THEME_COLOR_CSS = """\
 .theme-icon-checkbox .q-checkbox__inner--falsy .q-checkbox__icon {
   color: var(--icon-unchecked-color);
 }
-.theme-icon-checkbox .q-checkbox__icon {
-  font-weight: 500;
+.theme-icon-checkbox .q-checkbox__inner--truthy .q-checkbox__icon {
+  /* font-size: 0.55em; */
 }
 
 .theme-header-date {
@@ -115,4 +118,7 @@ THEME_COLOR_CSS = """\
   color: var(--link-color);
 }
 
+.theme-card-shadow {
+  box-shadow: var(--habit-card-box-shadow);
+}
 """
