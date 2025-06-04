@@ -71,6 +71,7 @@ WHITE_FLASH_PREVENT = """\
   --background-color: #f9f9f9;
   --link-color: #121212;
 
+  --icon-checked-color: #6796CF;
   --icon-unchecked-color: #CCC;
 
   --header-date-color: #616161;
@@ -83,6 +84,7 @@ WHITE_FLASH_PREVENT = """\
     --background-color: #121212;
     --link-color: #FFF;
     
+    --icon-checked-color: #6796CF;
     --icon-unchecked-color: #616161;
 
     --header-date-color: #9E9E9E;
@@ -105,6 +107,7 @@ THEME_COLOR_CSS = """\
   color: var(--icon-unchecked-color);
 }
 .theme-icon-checkbox .q-checkbox__inner--truthy .q-checkbox__icon {
+  color: var(--icon-checked-color);
   /* font-size: 0.55em; */
 }
 
