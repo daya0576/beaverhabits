@@ -65,14 +65,13 @@ YOUTUBE_CSS = """
 """
 
 WHITE_FLASH_PREVENT = """\
-
 :root {
   --theme-color: #121212;
   --background-color: #f9f9f9;
   --link-color: #121212;
 
-  --icon-checked-color: #6796CF;
-  --icon-unchecked-color: #CCC;
+  --icon-checked-color: #1976d2;
+  --icon-unchecked-color: #BDBDBD;
 
   --header-date-color: #616161;
   --habit-card-box-shadow: 0 1px 3px rgba(0,0,0,0.12);

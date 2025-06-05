@@ -39,7 +39,7 @@ from beaverhabits.utils import (
     M,
     W,
     Y,
-    get_or_create_user_dark_mode,
+    get_user_dark_mode,
     ratelimiter,
 )
 
@@ -68,12 +68,10 @@ def compat_card():
 
 
 def menu_header(title: str, target: str):
-    link = ui.link(title, target=target)
-    link.classes(
-        "text-semibold text-2xl dark:text-white no-underline hover:no-underline"
-    )
-    link.props('role="heading" aria-level="1" aria-label="Go to home page"')
-    return link
+    page_title = link(title, target=target)
+    page_title.classes("text-2xl")
+    page_title.props('role="heading" aria-level="1" aria-label="Go to home page"')
+    return page_title
 
 
 def menu_icon_button(
@@ -603,14 +601,16 @@ class CalendarCheckBox(ui.checkbox):
             # Normalization + Linear Interpolation
             unchecked_color = "rgb(40,87,141)"
 
-        dark = get_or_create_user_dark_mode()
+        dark = get_user_dark_mode()
         if dark == False:
             unchecked_color = "rgb(222,222,222)"
-            unchecked_text_color  = "rgb(100,100,100)"
+            unchecked_text_color = "rgb(100,100,100)"
 
         return (
             icons.SQUARE.format(
-                color=unchecked_color, text=self.day.day, text_color=unchecked_text_color
+                color=unchecked_color,
+                text=self.day.day,
+                text_color=unchecked_text_color,
             ),
             icons.SQUARE.format(
                 color=checked_color, text=self.day.day, text_color=checked_text_color
@@ -660,7 +660,9 @@ def habit_heat_map(
                         ui.label().style("width: 20px; height: 20px;")
 
                 week_day_abbr_label = ui.label(calendar.week_days[i])
-                week_day_abbr_label.classes("indent-1.5 text-gray-600 dark:text-gray-300")
+                week_day_abbr_label.classes(
+                    "indent-1.5 text-gray-600 dark:text-gray-300"
+                )
                 week_day_abbr_label.style(
                     "width: 22px; line-height: 20px; font-size: 9px;"
                 )

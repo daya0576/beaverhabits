@@ -125,7 +125,6 @@ def index_page_ui(days: list[datetime.date], habits: HabitList):
         days = list(reversed(days))
 
     with layout(habit_list=habits):
-        # Category
         tag_filter_component(active_habits, refresh=habit_list_ui.refresh)
         habit_list_ui(days, active_habits)
 

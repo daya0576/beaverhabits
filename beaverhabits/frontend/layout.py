@@ -21,14 +21,7 @@ from beaverhabits.storage.meta import (
     page_title,
 )
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.utils import get_or_create_user_dark_mode
-
-THEME_COLOR = """\
-<meta name="theme-color" content="#5D4037" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
-<meta name="background_color" content="#5D4037" media="(prefers-color-scheme: light)" />
-<meta name="background_color" content="#121212" media="(prefers-color-scheme: dark)" />
-"""
+from beaverhabits.utils import get_user_dark_mode
 
 
 def pwa_headers():
@@ -40,7 +33,6 @@ def pwa_headers():
     ui.add_head_html(
         '<meta name="apple-mobile-web-app-status-bar-style" content="black">'
     )
-    ui.add_head_html('<meta name="theme-color" content="#121212">')
     # viewBox="90 90 220 220"
     ui.add_head_html(
         '<link rel="apple-touch-icon" href="/statics/images/apple-touch-icon-v4.png">'
@@ -48,6 +40,14 @@ def pwa_headers():
 
     # PWA support
     ui.add_head_html('<link rel="manifest" href="/statics/pwa/manifest.json">')
+
+    # Extend background to iOS notch
+    ui.add_head_html(
+        """
+        <meta name="theme-color" content="#F9F9F9" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+        """
+    )
 
     # Experimental iOS standalone mode
     if settings.ENABLE_IOS_STANDALONE:
@@ -70,7 +70,7 @@ def custom_headers():
     ui.add_css(css.WHITE_FLASH_PREVENT, shared=True)
     ui.add_css(css.THEME_COLOR_CSS, shared=True)
 
-    ui.context.client.on_connect(get_or_create_user_dark_mode)
+    ui.context.client.on_connect(lambda: get_user_dark_mode(refresh=True))
     ui.context.client.on_connect(views.apply_theme_style)
 
 
@@ -103,13 +103,12 @@ def layout(
     habit: Habit | None = None,
     habit_list: HabitList | None = None,
 ):
-    """Base layout for all pages."""
+    # Standard headers
+    custom_headers()
+    pwa_headers()
 
     # Center the content on small screens
     with ui.column().classes("mx-auto mx-0"):
-        # Standard headers
-        custom_headers()
-        pwa_headers()
 
         # Layout wrapper
         with ui.row().classes("w-full gap-x-1"):
@@ -122,10 +121,10 @@ def layout(
                 edit_btn = menu_icon_button("sym_r_pen_size_3", tooltip="Edit habit")
                 edit_btn.on_click(edit_dialog.open)
             elif habit_list and "add" in page_path():
-                with menu_icon_button("sym_r_swap_vert", tooltip="Sort"):
+                with menu_icon_button("sym_o_swap_vert", tooltip="Sort"):
                     sort_menu(habit_list)
 
-            with menu_icon_button("sym_r_menu"):
+            with menu_icon_button("sym_o_menu"):
                 menu_component()
 
         yield
