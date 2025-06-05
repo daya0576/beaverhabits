@@ -604,10 +604,9 @@ class CalendarCheckBox(ui.checkbox):
             unchecked_color = "rgb(40,87,141)"
 
         dark = get_or_create_user_dark_mode()
-        logger.warning(f"Dark mode: {dark}")
         if dark == False:
             unchecked_color = "rgb(222,222,222)"
-            unchecked_text_color  = "rgb(158, 158, 158)"
+            unchecked_text_color  = "rgb(100,100,100)"
 
         return (
             icons.SQUARE.format(
