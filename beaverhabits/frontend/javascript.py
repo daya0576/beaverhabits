@@ -1,4 +1,5 @@
 from jinja2 import Environment
+from loguru import logger
 from nicegui import __version__ as version
 from nicegui import ui
 
@@ -108,3 +109,15 @@ def unhover_checkboxes():
 
 def load_cache():
     ui.run_javascript(LOAD_CACHE)
+
+
+def show_icons():
+    logger.info("Showing icons in the menu")
+    ui.run_javascript(
+        """
+        const icons = document.querySelectorAll('.theme-icon-lazy');
+        icons.forEach(icon => {
+            icon.classList.remove("invisible");
+        });
+        """
+    )

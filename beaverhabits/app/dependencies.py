@@ -1,4 +1,5 @@
-from typing import Annotated, Optional
+import contextvars
+from typing import Annotated, Callable, Optional
 
 from fastapi import Depends, HTTPException, Request
 from fastapi.security.utils import get_authorization_scheme_param

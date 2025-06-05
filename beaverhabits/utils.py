@@ -24,6 +24,7 @@ from beaverhabits.logger import logger
 
 WEEK_DAYS = 7
 TIME_ZONE_KEY = "timezone"
+DARK_MODE_KEY = "dark_mode"
 
 PERIOD_TYPES = D, W, M, Y = "D", "W", "M", "Y"
 PERIOD_TYPES_FOR_HUMAN = {D: "Day(s)", W: "Week(s)", M: "Month(s)", Y: "Year(s)"}
@@ -39,14 +40,34 @@ async def fetch_user_timezone() -> None:
 
 
 async def get_or_create_user_timezone() -> str:
-    logger.info("Getting user timezone...")
     if timezone := app.storage.user.get(TIME_ZONE_KEY):
-        logger.info(f"User timezone from storage: {timezone}")
         return timezone
 
     ui.context.client.on_connect(fetch_user_timezone)
-
     return "UTC"
+
+
+async def fetch_user_dark_mode() -> None:
+    try:
+        dark = await ui.run_javascript("Quasar.Dark.isActive")
+        app.storage.user[DARK_MODE_KEY] = dark
+        logger.info(f"User dark mode from browser: {dark}")
+    except Exception as e:
+        logger.error(f"Error fetching user dark mode: {e}")
+
+
+def get_or_create_user_dark_mode() -> bool | None:
+    try:
+        dark = app.storage.user.get(DARK_MODE_KEY)
+    except Exception as e:
+        logger.error(f"Error get user dark mode: {e}")
+        dark = None
+
+    if dark is not None:
+        return dark
+
+    ui.context.client.on_connect(fetch_user_dark_mode)
+    return None
 
 
 async def get_user_today_date() -> datetime.date:

@@ -12,7 +12,6 @@ from beaverhabits.frontend.components import (
     HabitCheckBox,
     IndexBadge,
     TagManager,
-    compat_card,
     habits_by_tags,
     link,
     tag_filter_component,
@@ -35,11 +34,6 @@ LEFT_CLASSES, RIGHT_CLASSES = (
     f"col-span-{DATE_COLS} px-1 place-self-center",
 )
 COMPAT_CLASSES = "pl-4 pr-0 py-0 dark:shadow-none"
-# https://htmlcssfreebies.com/css-box-shadow-examples/
-CARD_SHADOW_STYLE = "box-shadow: rgba(0, 0, 0, 0.15) 0px 0px 0px 1px;"
-CARD_SHADOW_STYLE = (
-    "box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);"
-)
 
 # Sticky date row for long habit list
 STICKY_STYLES = "position: sticky; top: 0; z-index: 1;"
@@ -81,6 +75,7 @@ def habit_row(habit: Habit, tag: str, days: list[datetime.date]):
             status, habit, today, day, refresh=habit_list_ui.refresh
         )
         checkbox.classes(RIGHT_CLASSES)
+        # checkbox.classes("theme-icon-lazy invisible")
 
     if settings.INDEX_SHOW_HABIT_COUNT:
         IndexBadge(today, habit).classes(RIGHT_CLASSES)
@@ -113,7 +108,7 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
                 continue
 
             for habit in habit_list:
-                with ui.card().classes(COMPAT_CLASSES).style(CARD_SHADOW_STYLE):
+                with ui.card().classes(COMPAT_CLASSES).classes("theme-card-shadow"):
                     with grid(columns, 1):
                         habit_row(habit, tag, days)
 

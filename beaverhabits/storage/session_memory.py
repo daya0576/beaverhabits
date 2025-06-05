@@ -1,18 +1,12 @@
-import contextvars
 from typing import Optional
 
 import nicegui
 from cachetools import TTLCache
-from fastapi import Request
 
 from beaverhabits.logger import logger
 
 from .dict import DictHabitList
 from .storage import SessionStorage
-
-request_contextvar: contextvars.ContextVar[Optional[Request]] = contextvars.ContextVar(
-    "request_var", default=None
-)
 
 KEY_NAME = "user_habit_list"
 MAX_SIZE = 128
