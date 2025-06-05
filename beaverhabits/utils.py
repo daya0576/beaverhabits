@@ -48,14 +48,21 @@ async def get_or_create_user_timezone() -> str:
 
 
 async def fetch_user_dark_mode() -> None:
-    logger.info("Fetching user dark mode from browser...")
-    dark = await ui.run_javascript("Quasar.Dark.isActive")
-    app.storage.user[DARK_MODE_KEY] = dark
-    logger.info(f"User dark mode from browser: {dark}")
+    try:
+        dark = await ui.run_javascript("Quasar.Dark.isActive")
+        app.storage.user[DARK_MODE_KEY] = dark
+        logger.info(f"User dark mode from browser: {dark}")
+    except Exception as e:
+        logger.error(f"Error fetching user dark mode: {e}")
 
 
 def get_or_create_user_dark_mode() -> bool | None:
-    dark = app.storage.user.get(DARK_MODE_KEY)
+    try:
+        dark = app.storage.user.get(DARK_MODE_KEY)
+    except Exception as e:
+        logger.error(f"Error get user dark mode: {e}")
+        dark = None
+
     if dark is not None:
         return dark
 

@@ -21,7 +21,7 @@ from beaverhabits.storage.meta import (
     page_title,
 )
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.utils import fetch_user_dark_mode, get_or_create_user_dark_mode
+from beaverhabits.utils import get_or_create_user_dark_mode
 
 THEME_COLOR = """\
 <meta name="theme-color" content="#5D4037" media="(prefers-color-scheme: light)" />
