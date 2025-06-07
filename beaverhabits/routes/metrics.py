@@ -8,7 +8,10 @@ from fastapi.responses import Response
 from psutil._common import bytes2human
 
 # fmt: off
-from guppy import hpy; h=hpy() # type: ignore
+try:
+    from guppy import hpy; h=hpy() # type: ignore
+except ImportError:
+    pass
 # fmt: on
 
 router = APIRouter()

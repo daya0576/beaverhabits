@@ -22,7 +22,7 @@ def export_panel(habit_list: HabitList, user: User):
         "Export to JSON for a nice way to share and re-import your habits anytime."
     )
     btn = ui.button("Export JSON", icon="sym_r_download").on("click", export_json)
-    btn.props("outline")
+    btn.props("outline").classes("dark:text-white")
 
 
 async def export_page(habit_list: HabitList, user: User):
