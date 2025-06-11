@@ -82,6 +82,9 @@ body {
 }
 
 .body--light {
+  background-color: #f9f9f9;
+  color: #121212;
+  
   .nicegui-link {
     color: #121212;
   }
@@ -109,6 +112,9 @@ body {
 }
 
 .body--dark {
+  background-color: #121212;
+  color: #121212;
+
   .nicegui-link {
     color: #FFF;
   }
