@@ -65,10 +65,23 @@ YOUTUBE_CSS = """
 """
 
 WHITE_FLASH_PREVENT = """\
+:root {
+  --theme-color: #121212;
+  --background-color: #f9f9f9;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --theme-color: #121212;
+    --background-color: #121212;
+  }
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--theme-color);
+}
+
 .body--light {
-  background-color: #f9f9f9;
-  color: #121212;
-  
   .nicegui-link {
     color: #121212;
   }
@@ -96,9 +109,6 @@ WHITE_FLASH_PREVENT = """\
 }
 
 .body--dark {
-  background-color: #121212;
-  color: #121212;
-  
   .nicegui-link {
     color: #FFF;
   }
