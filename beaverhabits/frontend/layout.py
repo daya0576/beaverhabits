@@ -1,11 +1,11 @@
 from contextlib import contextmanager
 
-from nicegui import app, ui
+from nicegui import ui
 
 from beaverhabits import views
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
-from beaverhabits.frontend import css, icons, javascript
+from beaverhabits.frontend import css
 from beaverhabits.frontend.components import (
     habit_edit_dialog,
     menu_header,
@@ -14,6 +14,7 @@ from beaverhabits.frontend.components import (
     redirect,
 )
 from beaverhabits.frontend.menu import add_menu, sort_menu
+from beaverhabits.logger import logger
 from beaverhabits.storage.meta import (
     get_root_path,
     is_page_demo,
@@ -68,7 +69,6 @@ def custom_headers():
 
     # Prevent white flash on page load
     ui.add_css(css.WHITE_FLASH_PREVENT, shared=True)
-    ui.add_css(css.THEME_COLOR_CSS, shared=True)
 
     ui.context.client.on_connect(lambda: get_user_dark_mode(refresh=True))
     ui.context.client.on_connect(views.apply_theme_style)

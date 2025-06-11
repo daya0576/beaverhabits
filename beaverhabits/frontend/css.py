@@ -65,62 +65,63 @@ YOUTUBE_CSS = """
 """
 
 WHITE_FLASH_PREVENT = """\
-:root {
-  --theme-color: #121212;
-  --background-color: #f9f9f9;
-  --link-color: #121212;
+.body--light {
+  background-color: #f9f9f9;
+  color: #121212;
+  
+  .nicegui-link {
+    color: #121212;
+  }
 
-  --icon-checked-color: #1976d2;
-  --icon-unchecked-color: #BDBDBD;
+  .theme-icon-checkbox .q-checkbox__inner--falsy .q-checkbox__icon {
+    color: #BDBDBD;
+  }
+  .theme-icon-checkbox .q-checkbox__inner--truthy .q-checkbox__icon {
+    color: #1976d2;
+  }
 
-  --header-date-color: #616161;
-  --habit-card-box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-}
+  .theme-header-date {
+    font-size: 85%; 
+    font-weight: 500; 
+    color: #616161;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --theme-color: #121212;
-    --background-color: #121212;
-    --link-color: #FFF;
-    
-    --icon-checked-color: #6796CF;
-    --icon-unchecked-color: #616161;
+  .theme-menu-icon {
+    color: #121212;
+  }
 
-    --header-date-color: #9E9E9E;
-    --habit-card-box-shadow: none;
+  .theme-card-shadow {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
   }
 }
 
-body {
-  background-color: var(--background-color);
-  color: var(--theme-color);
-}
-"""
+.body--dark {
+  background-color: #121212;
+  color: #121212;
+  
+  .nicegui-link {
+    color: #FFF;
+  }
 
-THEME_COLOR_CSS = """\
-.nicegui-link {
-  color: var(--link-color);
-}
+  .theme-icon-checkbox .q-checkbox__inner--falsy .q-checkbox__icon {
+    color: #616161;
+  }
+  .theme-icon-checkbox .q-checkbox__inner--truthy .q-checkbox__icon {
+    color: #6796CF;
+  }
 
-.theme-icon-checkbox .q-checkbox__inner--falsy .q-checkbox__icon {
-  color: var(--icon-unchecked-color);
-}
-.theme-icon-checkbox .q-checkbox__inner--truthy .q-checkbox__icon {
-  color: var(--icon-checked-color);
-  /* font-size: 0.55em; */
-}
+  .theme-header-date {
+    font-size: 85%; 
+    font-weight: 500; 
+    color: #9E9E9E;
+  }
 
-.theme-header-date {
-  font-size: 85%; 
-  font-weight: 500; 
-  color: var(--header-date-color);
-}
+  .theme-menu-icon {
+    color: #FFF;
+  }
 
-.theme-menu-icon {
-  color: var(--link-color);
-}
-
-.theme-card-shadow {
-  box-shadow: var(--habit-card-box-shadow);
+  .theme-card-shadow {
+    box-shadow: none;
+  }
 }
 """

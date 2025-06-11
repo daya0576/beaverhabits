@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     NICEGUI_STORAGE_SECRET: str = "dev"
     GUI_MOUNT_PATH: str = "/gui"
     DEMO_MOUNT_PATH: str = "/demo"
+    DARK_MODE: bool | None = None
 
     # Storage
     HABITS_STORAGE: StorageType = StorageType.USER_DATABASE
