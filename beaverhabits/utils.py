@@ -56,7 +56,21 @@ async def fetch_user_dark_mode() -> None:
         logger.error(f"Error fetching user dark mode: {e}")
 
 
+def set_user_dark_mode(dark: bool) -> None:
+    if settings.DARK_MODE != None:
+        raise ValueError("Dark mode is set in settings, cannot change it manually.")
+
+    try:
+        app.storage.user[DARK_MODE_KEY] = dark
+        logger.info(f"User dark mode set to: {dark}")
+    except Exception as e:
+        logger.error(f"Error setting user dark mode: {e}")
+
+
 def get_user_dark_mode(refresh=False) -> bool | None:
+    if settings.DARK_MODE != None:
+        return settings.DARK_MODE
+
     try:
         dark = app.storage.user.get(DARK_MODE_KEY)
     except Exception as e:
