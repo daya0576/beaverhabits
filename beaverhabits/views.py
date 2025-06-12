@@ -287,3 +287,5 @@ async def apply_theme_style() -> None:
     if custom_css:
         ui.add_head_html(f"<style>{custom_css}</style>")
         logger.info(f"Applied custom CSS...")
+    else:
+        ui.add_head_html(f"<style>const.CSS_EDIT_ME</style>")

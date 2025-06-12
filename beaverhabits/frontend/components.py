@@ -11,6 +11,7 @@ from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
 from nicegui.elements.button import Button
 
+from beaverhabits import const
 from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
@@ -45,7 +46,6 @@ from beaverhabits.utils import (
 
 strptime = datetime.datetime.strptime
 
-DAILY_NOTE_MAX_LENGTH = 1000
 CALENDAR_EVENT_MASK = "%Y/%m/%d"
 
 
@@ -104,23 +104,20 @@ def habit_tick_dialog(record: CheckedRecord | None):
         card.classes("w-[640px]")
 
         with ui.column().classes("gap-0 w-full"):
-            t = ui.textarea(
-                label="Note",
-                value=text,
-                validation={
-                    "Too long!": lambda value: len(value) < DAILY_NOTE_MAX_LENGTH
-                },
+            t = ui.editor(value=text).props("flat dense")
+            t.props(
+                ''':toolbar="[ ['bold', 'italic', 'strike', 'underline' ], ['viewsource']]"'''
             )
             t.classes("w-full")
-            # t.props("autogrow")
 
-            with ui.row():
-                ui.button("Yes", on_click=lambda: dialog.submit((True, t.value))).props(
-                    "flat"
-                )
-                ui.button("No", on_click=lambda: dialog.submit((False, t.value))).props(
-                    "flat"
-                )
+        ui.separator()
+
+        with ui.row():
+            yes = ui.button("Yes", on_click=lambda: dialog.submit((True, t.value)))
+            yes.props("flat")
+            no = ui.button("No", on_click=lambda: dialog.submit((False, t.value)))
+            no.props("flat")
+
     return dialog
 
 
@@ -132,7 +129,8 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
         return
 
     yes, text = result
-    if text and len(text) > DAILY_NOTE_MAX_LENGTH:
+    max_words = settings.DAILY_NOTE_MAX_LENGTH
+    if text and len(text) > max_words > 0:
         ui.notify("Note is too long", color="negative")
         return
 
@@ -769,12 +767,12 @@ def habit_notes(habit: Habit, limit: int = 10):
             # text = record.text.replace(" ", "&nbsp;")
             color = "primary" if record.done else "grey-8"
             with ui.timeline_entry(
-                body=text,
                 subtitle=record.day.strftime("%B %d, %Y"),
                 color=color,
             ) as entry:
                 # https://github.com/zauberzeug/nicegui/wiki/FAQs#why-do-all-my-elements-have-the-same-value
                 entry.on("dblclick", lambda _, d=record.day: note_tick(habit, d))
+                ui.html(text)
 
 
 def habit_streak(today: datetime.date, habit: Habit):

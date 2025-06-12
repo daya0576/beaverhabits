@@ -1,16 +1,9 @@
 from nicegui import ui
 
-from beaverhabits import views
+from beaverhabits import const, views
 from beaverhabits.app.db import User
 from beaverhabits.frontend.layout import layout
 from beaverhabits.utils import set_user_dark_mode
-
-EDIT_ME = """\
-/* Edit this CSS to customize theme */
-/* body {
-    background-color: #ddd !important;
-} */
-"""
 
 
 async def settings_page(user: User):
@@ -29,13 +22,15 @@ async def settings_page(user: User):
 
     with layout(title="Settings"):
         with ui.column().classes("w-[600px]"):
-            # ui.label("Darkmode").classes("text-lg font-bold")
-            # with ui.row():
-            #     ui.button("Dark", on_click=lambda: toggle_dark_mode(True))
-            #     ui.button("Light", on_click=lambda: toggle_dark_mode(False))
+            ui.label("Darkmode").classes("text-lg font-bold dark:text-white")
+            with ui.row():
+                ui.button("Dark", on_click=lambda: ui.dark_mode().enable())
+                ui.button("Light", on_click=lambda: ui.dark_mode().disable())
 
-            ui.label("Custom CSS").classes("text-lg font-bold")
+            ui.label("Custom CSS").classes("text-lg font-bold dark:text-white")
             editor = ui.codemirror(
-                configs.custom_css or EDIT_ME, language="CSS", theme="githubDark"
+                configs.custom_css or const.CSS_EDIT_ME,
+                language="CSS",
+                theme="githubDark",
             ).classes("h-96")
             editor.on_value_change(update_custom_css)

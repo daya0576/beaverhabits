@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     PADDLE_PRODUCT_ID: str = ""
     PADDLE_PRICE_ID: str = ""
     PADDLE_CALLBACK_KEY: str = ""
+    # set to max integer
+    DAILY_NOTE_MAX_LENGTH: int = -1
 
     # Email
     SMTP_EMAIL_USERNAME: str = ""
