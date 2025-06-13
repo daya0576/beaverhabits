@@ -118,13 +118,20 @@ def habit_tick_dialog(record: CheckedRecord | None):
             no = ui.button("No", on_click=lambda: dialog.submit((False, t.value)))
             no.props("flat")
 
-    return dialog
+    return dialog, t
 
 
 async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     record = habit.record_by(day)
-    result = await habit_tick_dialog(record)
+    dialog, editor = habit_tick_dialog(record)
+    dialog.open()
 
+    # Avoid blocking UI
+    # Compatibility with old records
+    if record and (note := await record.get_note()):
+        editor.value = note
+    
+    result = await dialog
     if result is None:
         return
 
@@ -135,7 +142,7 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
         return
 
     record = await habit.tick(day, yes, text)
-    logger.info(f"Habit ticked: {day} {yes}, note: {text}")
+    logger.info(f"Habit ticked: {day} {yes}, note: {len(text)}")
     return record.done
 
 
@@ -767,6 +774,7 @@ def habit_notes(habit: Habit, limit: int = 10):
             # text = record.text.replace(" ", "&nbsp;")
             color = "primary" if record.done else "grey-8"
             with ui.timeline_entry(
+                body=text,
                 subtitle=record.day.strftime("%B %d, %Y"),
                 color=color,
             ) as entry:
