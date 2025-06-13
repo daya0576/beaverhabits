@@ -105,6 +105,10 @@ def habit_tick_dialog(record: CheckedRecord | None):
 
         with ui.column().classes("gap-0 w-full"):
             t = ui.editor(value=text).props("flat dense")
+            
+            # hack value change events
+            # t.on("keydown.enter.prevent", None)
+
             t.props(
                 ''':toolbar="[ ['bold', 'italic', 'strike', 'underline' ], ['viewsource']]"'''
             )
@@ -130,7 +134,7 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     # Compatibility with old records
     if record and (note := await record.get_note()):
         editor.value = note
-    
+
     result = await dialog
     if result is None:
         return

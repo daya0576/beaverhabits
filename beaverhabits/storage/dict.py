@@ -217,7 +217,7 @@ class DictHabit(Habit[DictRecord], DictStorage):
         record = self.ticked_data.get(day)
 
         note_uuid = None
-        if text:
+        if text != None:
             note_uuid = await crud.add_habit_note(self.id, text, day)
 
         if record is not None:
@@ -226,8 +226,9 @@ class DictHabit(Habit[DictRecord], DictStorage):
             if record.done != done:
                 new_data["done"] = done
             if note_uuid and note_uuid != record.data.get("note"):
-                new_data["text"] = text
+                new_data["note"] = str(note_uuid)
             if new_data:
+                logger.debug(f"new data : {new_data}")
                 record.data.update(new_data)
         else:
             # Create a new record if it doesn't exist
