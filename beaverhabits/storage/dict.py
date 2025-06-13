@@ -1,6 +1,8 @@
 import datetime
+import uuid
 from dataclasses import dataclass, field
 
+from beaverhabits.app import crud
 from beaverhabits.logger import logger
 from beaverhabits.storage.storage import (
     Backup,
@@ -39,6 +41,14 @@ class DictRecord(CheckedRecord, DictStorage):
     d3: [x]              d3: [x]            d3: [ ]
     """
 
+    def __init__(self, data: dict, habit: "DictHabit") -> None:
+        self.data = data
+        self._habit = habit
+
+    @property
+    def habit(self) -> "DictHabit":
+        return self._habit
+
     @property
     def day(self) -> datetime.date:
         date = datetime.datetime.strptime(self.data["day"], DAY_MASK)
@@ -59,6 +69,28 @@ class DictRecord(CheckedRecord, DictStorage):
     @text.setter
     def text(self, value: str) -> None:
         self.data["text"] = value
+
+    async def get_note(self) -> str | None:
+        logger.info(f"Fetching note for habit {self.habit.id} on day {self.day}")
+        note_uuid_value = self.data.get("note", None)
+        if not note_uuid_value:
+            return None
+
+        note = await crud.get_habit_note(
+            self.habit.id,
+            note_uuid=uuid.UUID(note_uuid_value),
+        )
+        if not note:
+            raise ValueError(
+                f"Note with UUID4 {self.data['note']} not found in habit list."
+            )
+
+        return note.text
+
+    async def add_note(self, value: str | None) -> None:
+        if not value:
+            logger.warning("Attempted to add None or empty note text.")
+            return
 
 
 class HabitDataCache:
@@ -137,7 +169,7 @@ class DictHabit(Habit[DictRecord], DictStorage):
 
     @property
     def records(self) -> list[DictRecord]:
-        return [DictRecord(d) for d in self.data["records"]]
+        return [DictRecord(d, self) for d in self.data["records"]]
 
     @property
     def period(self) -> HabitFrequency | None:
@@ -184,22 +216,29 @@ class DictHabit(Habit[DictRecord], DictStorage):
         # Find the record in the cache
         record = self.ticked_data.get(day)
 
+        note_uuid = None
+        if text:
+            note_uuid = await crud.add_habit_note(self.id, text, day)
+
         if record is not None:
             # Update only if necessary to avoid unnecessary writes
             new_data = {}
             if record.done != done:
                 new_data["done"] = done
-            if text is not None and record.text != text:
+            if note_uuid and note_uuid != record.data.get("note"):
                 new_data["text"] = text
             if new_data:
                 record.data.update(new_data)
-
         else:
-            # Update storage once
+            # Create a new record if it doesn't exist
             data = {"day": day.strftime(DAY_MASK), "done": done}
-            if text is not None:
-                data["text"] = text
+            if note_uuid:
+                data["note"] = str(note_uuid)
             self.data["records"].append(data)
+            record = DictRecord(data, self)
+
+        if text is not None:
+            await record.add_note(text)
 
         # Update the cache
         self.cache.refresh()

@@ -4,13 +4,16 @@ from dataclasses import asdict, dataclass
 from enum import Enum, auto
 from typing import List, Literal, Optional, Protocol, Self
 
-from dataclasses_json import DataClassJsonMixin, dataclass_json
+from dataclasses_json import DataClassJsonMixin
 
 from beaverhabits.app.db import User
 from beaverhabits.utils import PERIOD_TYPES, D
 
 
 class CheckedRecord(Protocol):
+    @property
+    def habit(self) -> "Habit": ...
+
     @property
     def day(self) -> datetime.date: ...
 
@@ -25,6 +28,8 @@ class CheckedRecord(Protocol):
 
     @text.setter
     def text(self, value: str) -> None: ...
+
+    async def get_note(self) -> str | None: ...
 
     def __str__(self):
         return f"{self.day} {'[x]' if self.done else '[ ]'}"

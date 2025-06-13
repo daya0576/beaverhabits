@@ -1,4 +1,6 @@
 import contextlib
+import datetime
+import uuid
 from typing import Sequence
 
 from sqlalchemy import select
@@ -7,6 +9,7 @@ from beaverhabits.logger import logger
 
 from .db import (
     HabitListModel,
+    HabitNote,
     User,
     UserConfigsModel,
     UserIdentityModel,
@@ -35,6 +38,8 @@ async def update_user_habit_list(user: User, data: dict) -> None:
             logger.warning(f"[CRUD] User {user.id} habit list unchanged")
             return
 
+        if not data:
+            raise ValueError(f"User {user.id} habit list data cannot be empty")
         habit_list.data = data
         await session.commit()
         logger.info(f"[CRUD] User {user.id} habit list updated")
@@ -169,3 +174,51 @@ async def update_user_configs(user: User, config_data: dict) -> None:
 
         user_configs.config_data = {**user_configs.config_data, **config_data}
         await session.commit()
+
+
+async def add_habit_note(habit_id: str, text: str, date: datetime.date) -> uuid.UUID:
+    async with get_async_session_context() as session:
+        note = HabitNote(
+            habit_id=habit_id,
+            note_uuid=uuid.uuid4(),
+            text=text,
+            date=date,
+            extra={},
+        )
+        session.add(note)
+        await session.commit()
+        logger.info(f"[CRUD] Habit note added: {note}")
+
+        return note.note_uuid
+
+
+async def get_habit_note(
+    habit_id: str | None,
+    note_id: int | None = None,
+    note_uuid: uuid.UUID | None = None,
+) -> HabitNote | None:
+    async with get_async_session_context() as session:
+        stmt = select(HabitNote).where(HabitNote.habit_id == habit_id)
+        if note_id is not None:
+            stmt = stmt.where(HabitNote.id == note_id)
+        if note_uuid is not None:
+            stmt = stmt.where(HabitNote.note_uuid == str(note_uuid))
+
+        result = await session.execute(stmt)
+        note = result.scalar()
+        logger.info(f"[CRUD] Habit note query: {note}")
+        return note
+
+
+async def filter_habit_notes(
+    habit_list: HabitListModel, note_uuid_list: list[int]
+) -> Sequence[HabitNote]:
+    async with get_async_session_context() as session:
+        stmt = select(HabitNote).where(
+            HabitNote.habit_id == habit_list.id,
+            HabitNote.note_uuid.in_(note_uuid_list),
+        )
+        result = await session.execute(stmt)
+        notes = result.scalars().all()
+        logger.info(f"[CRUD] Habit notes query: {notes}")
+        return notes

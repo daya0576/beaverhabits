@@ -12,7 +12,6 @@ GUI = "/gui"
 DARK_COLOR = "#121212"
 
 CSS_EDIT_ME = """\
-/* Edit this CSS to customize theme */
 .q-editor .q-editor__content img {
   max-width: 80px;
 }

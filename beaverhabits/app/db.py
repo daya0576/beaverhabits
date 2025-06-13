@@ -1,10 +1,11 @@
 import datetime
+import uuid
 from typing import AsyncGenerator
 
 from fastapi import Depends
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 from fastapi_users_db_sqlalchemy.generics import GUID
-from sqlalchemy import JSON, DateTime, ForeignKey, func
+from sqlalchemy import JSON, DateTime, ForeignKey, Index, func
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -49,6 +50,26 @@ class HabitListModel(TimestampMixin, Base):
 
     user_id = mapped_column(GUID, ForeignKey("user.id"), index=True)
     user = relationship("User", back_populates="habit_list")
+
+
+class HabitNote(TimestampMixin, Base):
+    __tablename__ = "habit_note"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    note_uuid: Mapped[uuid.UUID] = mapped_column(GUID, unique=True, index=True)
+    habit_id: Mapped[str] = mapped_column(index=True, nullable=False)
+
+    text: Mapped[str] = mapped_column(nullable=False)
+    date: Mapped[datetime.date] = mapped_column(index=True, nullable=False)
+
+    extra: Mapped[dict] = mapped_column(JSON, nullable=True)
+
+    __table_args__ = (Index("ix_habit_id_date", "habit_id", "date"),)
+
+    def __str__(self) -> str:
+        return (
+            f"{self.habit_id} - {self.note_uuid} ({self.date}) - {len(self.text)} chars"
+        )
 
 
 class UserIdentityModel(TimestampMixin, Base):

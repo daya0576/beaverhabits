@@ -8,6 +8,7 @@ from nicegui import Client, app, ui
 from beaverhabits import const, views
 from beaverhabits.app.auth import (
     user_authenticate,
+    user_logout,
 )
 from beaverhabits.app.crud import get_user_count
 from beaverhabits.app.db import User
@@ -150,6 +151,12 @@ async def gui_import(user: User = Depends(current_active_user)) -> None:
 @ui.page("/gui/settings")
 async def gui_settings(user: User = Depends(current_active_user)) -> None:
     await settings_page(user)
+
+
+@ui.page("/logout")
+async def logout_page() -> Optional[RedirectResponse]:
+    user_logout()
+    ui.navigate.to("/login")
 
 
 @ui.page("/login")

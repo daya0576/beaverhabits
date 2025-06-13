@@ -56,15 +56,12 @@ async def fetch_user_dark_mode() -> None:
         logger.error(f"Error fetching user dark mode: {e}")
 
 
-def get_user_dark_mode(refresh=False) -> bool | None:
+def get_user_dark_mode() -> bool | None:
     try:
         dark = app.storage.user.get(DARK_MODE_KEY)
     except Exception as e:
         logger.error(f"Error get user dark mode: {e}")
         dark = None
-
-    if refresh:
-        ui.context.client.on_connect(fetch_user_dark_mode)
 
     return dark
 
