@@ -10,6 +10,7 @@ from typing import Callable, Optional, Self
 from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
 from nicegui.elements.button import Button
+from nicegui.elements.editor import Editor
 
 from beaverhabits import const
 from beaverhabits.accessibility import index_badge_alternative_text
@@ -97,6 +98,17 @@ def menu_icon_item(*args, **kwargs):
     return menu_item.props('dense role="menuitem"')
 
 
+class NoteEditor(Editor, component="libs/note.js"):
+    def __init__(self, value: str = "") -> None:
+        super().__init__(value=value)
+        self.props("flat dense")
+        self.props(
+            ''':toolbar="[ ['bold', 'italic', 'strike', 'underline' ], ['viewsource']]"'''
+        )
+        self.props('aria-label="Habit note editor"')
+        self.props('aria-required="true"')
+
+
 def habit_tick_dialog(record: CheckedRecord | None):
     text = record.text if record else ""
     with ui.dialog() as dialog, ui.card().props("flat") as card:
@@ -104,23 +116,16 @@ def habit_tick_dialog(record: CheckedRecord | None):
         card.classes("w-[640px]")
 
         with ui.column().classes("gap-0 w-full"):
-            t = ui.editor(value=text).props("flat dense")
-            
-            # hack value change events
-            # t.on("keydown.enter.prevent", None)
-
-            t.props(
-                ''':toolbar="[ ['bold', 'italic', 'strike', 'underline' ], ['viewsource']]"'''
-            )
+            t = NoteEditor(value=text)
             t.classes("w-full")
 
         ui.separator()
 
-        with ui.row():
+        with ui.row().classes("gap-2"):
             yes = ui.button("Yes", on_click=lambda: dialog.submit((True, t.value)))
-            yes.props("flat")
+            yes.props("flat dense").classes("py-0 px-3")
             no = ui.button("No", on_click=lambda: dialog.submit((False, t.value)))
-            no.props("flat")
+            no.props("flat dense").classes("py-0 px-3")
 
     return dialog, t
 

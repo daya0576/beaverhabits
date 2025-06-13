@@ -129,6 +129,7 @@ def index_page_ui(days: list[datetime.date], habits: HabitList):
         habit_list_ui(days, active_habits)
 
     # placeholder to preload js cache (daily notes)
-    ui.input("").classes("hidden").props('aria-hidden="true"')
+    ui.editor(value="pre cache").classes("hidden").props('aria-hidden="true"')
+
     # Prevent long press context menu for svg image elements
     ui.context.client.on_connect(javascript.prevent_context_menu)
