@@ -119,12 +119,14 @@ body {
     color: #FFF;
   }
 
-  .theme-icon-checkbox .q-checkbox__inner--falsy .q-checkbox__icon {
-    color: #616161;
-  }
-  .theme-icon-checkbox .q-checkbox__inner--truthy .q-checkbox__icon {
-    color: #6796CF;
-  }
+.theme-icon-checkbox {
+    .q-checkbox__inner--falsy .q-checkbox__icon {
+      color: var(--icon-unchecked-color);
+    }
+    .q-checkbox__inner--truthy .q-checkbox__icon {
+      color: var(--icon-checked-color);
+    }
+}
 
   .theme-header-date {
     font-size: 85%; 

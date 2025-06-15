@@ -98,15 +98,17 @@ def menu_icon_item(*args, **kwargs):
     return menu_item.props('dense role="menuitem"')
 
 
-class NoteEditor(Editor, component="libs/note.js"):
+class NoteEditor(Editor, component="note.js"):
     def __init__(self, value: str = "") -> None:
         super().__init__(value=value)
+
         self.props("flat dense")
         self.props(
             ''':toolbar="[ ['bold', 'italic', 'strike', 'underline' ], ['viewsource']]"'''
         )
         self.props('aria-label="Habit note editor"')
         self.props('aria-required="true"')
+
 
 
 def habit_tick_dialog(record: CheckedRecord | None):
@@ -119,12 +121,17 @@ def habit_tick_dialog(record: CheckedRecord | None):
             t = NoteEditor(value=text)
             t.classes("w-full")
 
+        def habit_note_submit(result):
+            dialog.submit((result, t.value, t))
+            t.run_method("send_value")
+            dialog.close()
+
         ui.separator()
 
         with ui.row().classes("gap-2"):
-            yes = ui.button("Yes", on_click=lambda: dialog.submit((True, t.value)))
+            yes = ui.button("Yes", on_click=lambda: habit_note_submit(True))
             yes.props("flat dense").classes("py-0 px-3")
-            no = ui.button("No", on_click=lambda: dialog.submit((False, t.value)))
+            no = ui.button("No", on_click=lambda: habit_note_submit(False))
             no.props("flat dense").classes("py-0 px-3")
 
     return dialog, t
