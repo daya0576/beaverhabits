@@ -589,6 +589,17 @@ class CalendarCheckBox(ui.checkbox):
             self.on("mousedown.prevent", lambda: True)
             self.on("touchstart.prevent", lambda: True)
 
+        # Hold on event flag
+        self.hold = asyncio.Event()
+        self.moving = False
+
+        self.on("mousedown", self._mouse_down_event)
+        self.on("touchstart.passive", self._mouse_down_event)
+
+        self.on("mouseup", self._mouse_up_event)
+        self.on("touchend", self._mouse_up_event)
+        self.on("touchmove.passive", self._mouse_move_event, throttle=1)
+
     @property
     def ticked(self) -> bool:
         record = self.habit.ticked_data.get(self.day)
@@ -625,6 +636,30 @@ class CalendarCheckBox(ui.checkbox):
         if self.refresh:
             logger.debug("refresh page")
             self.refresh()
+
+    async def _mouse_down_event(self, e):
+        logger.info(f"Down event: {self.day}, {e.args.get('type')}")
+        self.hold.clear()
+        self.moving = False
+        try:
+            async with asyncio.timeout(0.3):
+                await self.hold.wait()
+        except asyncio.TimeoutError:
+            # Long press diaglog
+            value = await note_tick(self.habit, self.day)
+            if value is not None:
+                self.value = value
+            if self.refresh:
+                self.refresh()
+
+    async def _mouse_up_event(self, e):
+        logger.info(f"Up event: {self.day}, {e.args.get('type')}")
+        self.hold.set()
+
+    async def _mouse_move_event(self):
+        # logger.info(f"Move event: {self.day}, {e}")
+        self.moving = True
+        self.hold.set()
 
 
 @ui.refreshable
