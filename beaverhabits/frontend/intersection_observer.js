@@ -1,4 +1,3 @@
-
 export default {
   template: '<div style="position: absolute"></div>',
   mounted() {

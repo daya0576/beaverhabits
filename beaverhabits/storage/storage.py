@@ -29,8 +29,6 @@ class CheckedRecord(Protocol):
     @text.setter
     def text(self, value: str) -> None: ...
 
-    async def get_note(self) -> str | None: ...
-
     def __str__(self):
         return f"{self.day} {'[x]' if self.done else '[ ]'}"
 

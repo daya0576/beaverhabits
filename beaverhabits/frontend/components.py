@@ -103,12 +103,8 @@ class NoteEditor(Editor, component="note.js"):
         super().__init__(value=value)
 
         self.props("flat dense")
-        self.props(
-            ''':toolbar="[ ['bold', 'italic', 'strike', 'underline' ], ['viewsource']]"'''
-        )
         self.props('aria-label="Habit note editor"')
         self.props('aria-required="true"')
-
 
 
 def habit_tick_dialog(record: CheckedRecord | None):
@@ -122,9 +118,7 @@ def habit_tick_dialog(record: CheckedRecord | None):
             t.classes("w-full")
 
         def habit_note_submit(result):
-            dialog.submit((result, t.value, t))
-            t.run_method("send_value")
-            dialog.close()
+            dialog.submit((result, t.value))
 
         ui.separator()
 
@@ -134,18 +128,12 @@ def habit_tick_dialog(record: CheckedRecord | None):
             no = ui.button("No", on_click=lambda: habit_note_submit(False))
             no.props("flat dense").classes("py-0 px-3")
 
-    return dialog, t
+    return dialog
 
 
 async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     record = habit.record_by(day)
-    dialog, editor = habit_tick_dialog(record)
-    dialog.open()
-
-    # Avoid blocking UI
-    # Compatibility with old records
-    if record and (note := await record.get_note()):
-        editor.value = note
+    dialog = habit_tick_dialog(record)
 
     result = await dialog
     if result is None:
@@ -790,7 +778,6 @@ def habit_notes(habit: Habit, limit: int = 10):
             # text = record.text.replace(" ", "&nbsp;")
             color = "primary" if record.done else "grey-8"
             with ui.timeline_entry(
-                body=text,
                 subtitle=record.day.strftime("%B %d, %Y"),
                 color=color,
             ) as entry:

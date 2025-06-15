@@ -52,26 +52,6 @@ class HabitListModel(TimestampMixin, Base):
     user = relationship("User", back_populates="habit_list")
 
 
-class HabitNote(TimestampMixin, Base):
-    __tablename__ = "habit_note"
-
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    note_uuid: Mapped[uuid.UUID] = mapped_column(GUID, unique=True, index=True)
-    habit_id: Mapped[str] = mapped_column(index=True, nullable=False)
-
-    text: Mapped[str] = mapped_column(nullable=False)
-    date: Mapped[datetime.date] = mapped_column(index=True, nullable=False)
-
-    extra: Mapped[dict] = mapped_column(JSON, nullable=True)
-
-    __table_args__ = (Index("ix_habit_id_date", "habit_id", "date"),)
-
-    def __str__(self) -> str:
-        return (
-            f"{self.habit_id} - {self.note_uuid} ({self.date}) - {len(self.text)} chars"
-        )
-
-
 class UserIdentityModel(TimestampMixin, Base):
     __tablename__ = "customer"
 

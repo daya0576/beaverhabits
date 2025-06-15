@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     PADDLE_PRICE_ID: str = ""
     PADDLE_CALLBACK_KEY: str = ""
     # set to max integer
-    DAILY_NOTE_MAX_LENGTH: int = -1
+    DAILY_NOTE_MAX_LENGTH: int = 1024
 
     # Email
     SMTP_EMAIL_USERNAME: str = ""
