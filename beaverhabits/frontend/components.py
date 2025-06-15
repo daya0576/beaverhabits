@@ -114,19 +114,17 @@ def habit_tick_dialog(record: CheckedRecord | None):
         card.classes("w-[640px]")
 
         with ui.column().classes("gap-0 w-full"):
-            t = NoteEditor(value=text)
+            t = ui.textarea(label="note", value=text)
             t.classes("w-full")
 
         def habit_note_submit(result):
             dialog.submit((result, t.value))
 
-        ui.separator()
-
         with ui.row().classes("gap-2"):
             yes = ui.button("Yes", on_click=lambda: habit_note_submit(True))
-            yes.props("flat dense").classes("py-0 px-3")
+            yes.props("flat")
             no = ui.button("No", on_click=lambda: habit_note_submit(False))
-            no.props("flat dense").classes("py-0 px-3")
+            no.props("flat")
 
     return dialog
 
