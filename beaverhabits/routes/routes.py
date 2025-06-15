@@ -8,6 +8,7 @@ from nicegui import Client, app, ui
 from beaverhabits import const, views
 from beaverhabits.app.auth import (
     user_authenticate,
+    user_logout,
 )
 from beaverhabits.app.crud import get_user_count
 from beaverhabits.app.db import User
@@ -150,6 +151,12 @@ async def gui_import(user: User = Depends(current_active_user)) -> None:
 @ui.page("/gui/settings")
 async def gui_settings(user: User = Depends(current_active_user)) -> None:
     await settings_page(user)
+
+
+@ui.page("/logout")
+async def logout_page() -> Optional[RedirectResponse]:
+    user_logout()
+    ui.navigate.to("/login")
 
 
 @ui.page("/login")
@@ -328,6 +335,6 @@ def init_gui_routes(fastapi_app: FastAPI):
         title=const.PAGE_TITLE,
         storage_secret=settings.NICEGUI_STORAGE_SECRET,
         favicon="statics/images/favicon.svg",
-        binding_refresh_interval=0.05,
         dark=settings.DARK_MODE,
+        reconnect_timeout=10,
     )

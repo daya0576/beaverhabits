@@ -1,4 +1,6 @@
 import contextlib
+import datetime
+import uuid
 from typing import Sequence
 
 from sqlalchemy import select
@@ -35,6 +37,8 @@ async def update_user_habit_list(user: User, data: dict) -> None:
             logger.warning(f"[CRUD] User {user.id} habit list unchanged")
             return
 
+        if not data:
+            raise ValueError(f"User {user.id} habit list data cannot be empty")
         habit_list.data = data
         await session.commit()
         logger.info(f"[CRUD] User {user.id} habit list updated")

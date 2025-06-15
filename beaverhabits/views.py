@@ -8,6 +8,7 @@ from typing import Sequence
 from fastapi import HTTPException
 from nicegui import app, run, ui
 
+from beaverhabits import const
 from beaverhabits.app import crud
 from beaverhabits.app.auth import (
     user_check_token,
@@ -81,7 +82,7 @@ async def get_user_habit_list(user: User) -> HabitList:
     except Exception:
         raise HTTPException(
             status_code=404,
-            detail="The habit list data may be broken or missing, please contact the administrator.",
+            detail="The habit list data may be broken or missing, please contact the administrator. /logout",
         )
 
 
@@ -286,4 +287,5 @@ async def apply_theme_style() -> None:
 
     if custom_css:
         ui.add_head_html(f"<style>{custom_css}</style>")
-        logger.info(f"Applied custom CSS...")
+    else:
+        ui.add_head_html(f"<style>{const.CSS_EDIT_ME}</style>")

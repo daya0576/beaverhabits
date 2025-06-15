@@ -10,3 +10,9 @@ TAGS_ALL = "ALL"
 GUI = "/gui"
 
 DARK_COLOR = "#121212"
+
+CSS_EDIT_ME = """\
+.q-editor .q-editor__content img {
+  max-width: 80px;
+}
+"""

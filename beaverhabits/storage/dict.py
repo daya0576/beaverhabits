@@ -39,6 +39,14 @@ class DictRecord(CheckedRecord, DictStorage):
     d3: [x]              d3: [x]            d3: [ ]
     """
 
+    def __init__(self, data: dict, habit: "DictHabit") -> None:
+        self.data = data
+        self._habit = habit
+
+    @property
+    def habit(self) -> "DictHabit":
+        return self._habit
+
     @property
     def day(self) -> datetime.date:
         date = datetime.datetime.strptime(self.data["day"], DAY_MASK)
@@ -137,7 +145,7 @@ class DictHabit(Habit[DictRecord], DictStorage):
 
     @property
     def records(self) -> list[DictRecord]:
-        return [DictRecord(d) for d in self.data["records"]]
+        return [DictRecord(d, self) for d in self.data["records"]]
 
     @property
     def period(self) -> HabitFrequency | None:
