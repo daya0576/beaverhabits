@@ -16,6 +16,3 @@ CSS_EDIT_ME = """\
   max-width: 80px;
 }
 """
-
-
-TEXT_EDITOR_DEFINATIONS = """ :definitions="{ save: { tip: 'Save your work', icon: 'save', label: 'Save', handler: saveWork }, upload: { tip: 'Upload to cloud', icon: 'cloud_upload', label: 'Upload', handler: uploadIt } }" """
