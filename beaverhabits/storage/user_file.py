@@ -37,11 +37,16 @@ class FilePersistentDict(observables.ObservableDict):
             self.filepath.parent.mkdir(exist_ok=True)
 
         async def backup() -> None:
-            async with aiofiles.open(self.filepath, "w", encoding=self.encoding) as f:
+            try:
                 logger.debug(f"Backing up {self.filepath}")
-                if not self:
-                    raise ValueError("Empty content to write!!!")
                 content = json.dumps(self, indent=self.indent)
+                assert content, "Content to write should not be empty!"
+            except Exception as e:
+                logger.exception(f"Error while backing up {self.filepath}: {e}")
+                return
+
+            async with aiofiles.open(self.filepath, "w", encoding=self.encoding) as f:
+                logger.debug(f"Writing content length: {len(content)}")
                 await f.write(content)
 
         if core.loop:
