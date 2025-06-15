@@ -18,6 +18,8 @@ get_async_session_context = contextlib.asynccontextmanager(get_async_session)
 
 async def update_user_habit_list(user: User, data: dict) -> None:
     async with get_async_session_context() as session:
+        assert data, "Habit list data cannot be empty"
+
         stmt = select(HabitListModel).where(HabitListModel.user_id == user.id)
         result = await session.execute(stmt)
         habit_list = result.scalar()

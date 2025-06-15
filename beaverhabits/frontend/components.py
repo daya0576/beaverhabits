@@ -45,7 +45,6 @@ from beaverhabits.utils import (
 
 strptime = datetime.datetime.strptime
 
-DAILY_NOTE_MAX_LENGTH = 1000
 CALENDAR_EVENT_MASK = "%Y/%m/%d"
 
 
@@ -108,11 +107,11 @@ def habit_tick_dialog(record: CheckedRecord | None):
                 label="Note",
                 value=text,
                 validation={
-                    "Too long!": lambda value: len(value) < DAILY_NOTE_MAX_LENGTH
+                    "Too long!": lambda value: len(value)
+                    < settings.DAILY_NOTE_MAX_LENGTH
                 },
             )
             t.classes("w-full")
-            # t.props("autogrow")
 
             with ui.row():
                 ui.button("Yes", on_click=lambda: dialog.submit((True, t.value))).props(
@@ -121,20 +120,28 @@ def habit_tick_dialog(record: CheckedRecord | None):
                 ui.button("No", on_click=lambda: dialog.submit((False, t.value))).props(
                     "flat"
                 )
-    return dialog
+
+    return dialog, t
 
 
 async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     record = habit.record_by(day)
-    result = await habit_tick_dialog(record)
+    dialog, t = habit_tick_dialog(record)
 
+    # Realtime saving
+    async def t_value_change(e: events.ValueChangeEventArguments):
+        if record:
+            if abs(len(e.value) - len(record.text)) < 10:
+                return
+        await habit.tick(day, record.done if record else False, e.value)
+
+    t.on_value_change(t_value_change)
+
+    # Form submit 
+    result = await dialog
     if result is None:
         return
-
     yes, text = result
-    if text and len(text) > DAILY_NOTE_MAX_LENGTH:
-        ui.notify("Note is too long", color="negative")
-        return
 
     record = await habit.tick(day, yes, text)
     logger.info(f"Habit ticked: {day} {yes}, note: {text}")
