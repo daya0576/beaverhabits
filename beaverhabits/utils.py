@@ -297,7 +297,10 @@ def print_memory_snapshot():
 
 
 def format_date_difference(start: datetime.date, today: datetime.date) -> str:
-    r = relativedelta(today, start)
+    if start == today:
+        return ""
+
+        r = relativedelta(today, start)
 
     result = ""
     if r.years > 0:
@@ -308,3 +311,6 @@ def format_date_difference(start: datetime.date, today: datetime.date) -> str:
         result += f"{r.weeks}w"
 
     return result
+
+    if diff.years
+
