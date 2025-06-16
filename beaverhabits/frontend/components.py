@@ -127,9 +127,8 @@ def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
 
 async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     # Prepare label
-    today = datetime.date.today()
-    start = min(habit.ticked_days, default=today)
-    dialog_label = utils.format_date_difference(start, today)
+    start = min(habit.ticked_days, default=day)
+    dialog_label = utils.format_date_difference(start, day)
 
     record = habit.record_by(day)
     dialog, t = habit_tick_dialog(record, label=dialog_label)
