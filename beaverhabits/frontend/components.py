@@ -125,19 +125,23 @@ def habit_tick_dialog(record: CheckedRecord | None):
 
 
 async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
+    # Prepare label
+    today = datetime.date.today()
+    start = min(habit.ticked_days, default=today)
+
     record = habit.record_by(day)
     dialog, t = habit_tick_dialog(record)
 
     # Realtime saving
     async def t_value_change(e: events.ValueChangeEventArguments):
         if record:
-            if abs(len(e.value) - len(record.text)) < 10:
+            if abs(len(e.value) - len(record.text)) < 24:
                 return
         await habit.tick(day, record.done if record else False, e.value)
 
     t.on_value_change(t_value_change)
 
-    # Form submit 
+    # Form submit
     result = await dialog
     if result is None:
         return
