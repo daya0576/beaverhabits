@@ -297,20 +297,20 @@ def print_memory_snapshot():
 
 
 def format_date_difference(start: datetime.date, today: datetime.date) -> str:
-    if start == today:
+    if today < start:
         return ""
 
-        r = relativedelta(today, start)
+    start = start - datetime.timedelta(days=1)
+    diff = relativedelta(today, start)
 
-    result = ""
-    if r.years > 0:
-        result += f"{r.years}y"
-    if r.months > 0:
-        result += f"{r.months}m"
-    elif r.weeks > 0:
-        result += f"{r.weeks}w"
+    parts = []
+    if diff.years >= 1:
+        parts.append(f"{diff.years} years")
 
-    return result
+    if diff.months >= 1:
+        parts.append(f"{diff.months} months")
 
-    if diff.years
+    if diff.days >= 1:
+        parts.append(f"{diff.days} days")
 
+    return " ".join(parts)
