@@ -294,3 +294,23 @@ def print_memory_snapshot():
             print("No memory usage difference")
     else:
         _SNAPSHOT = new_snapshot
+
+
+def format_date_difference(start: datetime.date, today: datetime.date) -> str:
+    if today < start:
+        return ""
+
+    start = start - datetime.timedelta(days=1)
+    diff = relativedelta(today, start)
+
+    parts = []
+    if diff.years >= 1:
+        parts.append(f"{diff.years} years")
+
+    if diff.months >= 1:
+        parts.append(f"{diff.months} months")
+
+    if diff.days >= 1:
+        parts.append(f"{diff.days} days")
+
+    return " ".join(parts)

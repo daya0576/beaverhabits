@@ -11,6 +11,7 @@ from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
 from nicegui.elements.button import Button
 
+from beaverhabits import utils
 from beaverhabits.accessibility import index_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
@@ -96,7 +97,7 @@ def menu_icon_item(*args, **kwargs):
     return menu_item.props('dense role="menuitem"')
 
 
-def habit_tick_dialog(record: CheckedRecord | None):
+def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
     text = record.text if record else ""
     with ui.dialog() as dialog, ui.card().props("flat") as card:
         dialog.props('backdrop-filter="blur(4px)"')
@@ -104,7 +105,7 @@ def habit_tick_dialog(record: CheckedRecord | None):
 
         with ui.column().classes("gap-0 w-full"):
             t = ui.textarea(
-                label="Note",
+                label=f"Note ({label})" if label else "Note",
                 value=text,
                 validation={
                     "Too long!": lambda value: len(value)
@@ -125,19 +126,24 @@ def habit_tick_dialog(record: CheckedRecord | None):
 
 
 async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
+    # Prepare label
+    today = datetime.date.today()
+    start = min(habit.ticked_days, default=today)
+    dialog_label = utils.format_date_difference(start, today)
+
     record = habit.record_by(day)
-    dialog, t = habit_tick_dialog(record)
+    dialog, t = habit_tick_dialog(record, label=dialog_label)
 
     # Realtime saving
     async def t_value_change(e: events.ValueChangeEventArguments):
         if record:
-            if abs(len(e.value) - len(record.text)) < 10:
+            if abs(len(e.value) - len(record.text)) < 24:
                 return
         await habit.tick(day, record.done if record else False, e.value)
 
     t.on_value_change(t_value_change)
 
-    # Form submit 
+    # Form submit
     result = await dialog
     if result is None:
         return
