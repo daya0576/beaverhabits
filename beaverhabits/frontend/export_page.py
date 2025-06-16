@@ -11,8 +11,9 @@ def backup_panel(habit_list: HabitList):
     backup = lambda: habit_backup_dialog(habit_list).open()
 
     ui.label("Backup your habits to JSON daily at midnight.")
-    btn = ui.button("Backup", icon="sym_r_backup").on("click", backup)
-    btn.props("outline").classes("dark:white")
+    btn = ui.button("Backup", icon="sym_r_backup", color=None)
+    btn.on("click", backup)
+    btn.props("outline")
 
 
 def export_panel(habit_list: HabitList, user: User):
@@ -21,8 +22,9 @@ def export_panel(habit_list: HabitList, user: User):
     ui.label(
         "Export to JSON for a nice way to share and re-import your habits anytime."
     )
-    btn = ui.button("Export JSON", icon="sym_r_download").on("click", export_json)
-    btn.props("outline").classes("dark:text-white")
+    btn = ui.button("Export JSON", icon="sym_r_download", color=None)
+    btn.on("click", export_json)
+    btn.props("outline")
 
 
 async def export_page(habit_list: HabitList, user: User):
