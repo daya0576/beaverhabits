@@ -79,6 +79,9 @@ WHITE_FLASH_PREVENT = """\
 body {
   background-color: var(--background-color);
   color: var(--theme-color);
+
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .body--light {

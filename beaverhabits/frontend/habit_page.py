@@ -4,6 +4,7 @@ from contextlib import contextmanager
 
 from nicegui import ui
 
+from beaverhabits.frontend import javascript
 from beaverhabits.frontend.components import (
     CalendarHeatmap,
     HabitDateInput,
@@ -97,3 +98,6 @@ def habit_page_ui(today: datetime.date, habit: Habit):
 
     with layout(title=habit.name, habit=habit):
         habit_page(today, habit)
+
+    # Prevent long press context menu for svg image elements
+    ui.context.client.on_connect(javascript.prevent_context_menu)
