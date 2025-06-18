@@ -22,9 +22,13 @@ def menu_component() -> None:
 
         if show_export:
             compat_menu("Export", lambda: open_tab("export"))
-            ui.separator()
+            # ui.separator() # Keep separator logic clean, maybe group user settings
         if show_import:
             compat_menu("Import", lambda: redirect("import"))
-            ui.separator()
+
+        # Adding Change Password link here
+        ui.separator() # Separator before user-specific actions like change password and logout
+        compat_menu("Change Password", lambda: ui.navigate.to("/gui/change-password")) # Use ui.navigate.to for internal links
+        ui.separator()
 
         compat_menu("Logout", lambda: user_logout() and ui.navigate.to("/login"))

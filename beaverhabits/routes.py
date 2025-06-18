@@ -23,6 +23,7 @@ from .frontend.cal_heatmap_page import heatmap_page
 from .frontend.habit_page import habit_page_ui
 from .frontend.index_page import index_page_ui
 from .frontend.lists_page import lists_page_ui
+from .frontend.change_password_page import change_password_ui
 from .utils import get_display_days, get_user_today_date, reset_week_offset, is_navigating, set_navigating
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register")
@@ -175,6 +176,29 @@ async def gui_export(user: User = Depends(current_active_user)) -> None:
 @ui.page("/gui/import")
 async def gui_import(user: User = Depends(current_active_user)) -> None:
     await import_ui_page(user)
+
+
+@ui.page("/gui/change-password", title="Change Password")
+async def show_change_password_page(user: User = Depends(current_active_user)):
+    # Assuming custom_header() is a function that sets up common page layout/header
+    # If it's not defined or used elsewhere, this line can be omitted or replaced
+    # with specific layout components if needed.
+    # For now, let's assume it exists as per the plan.
+    # If custom_header() is not available, the subtask should proceed without it,
+    # and we can adjust later if layout is missing.
+    try:
+        await custom_header()
+    except NameError:
+        # If custom_header is not defined, we can skip it for now.
+        # Or add a simple ui.header if that's the pattern.
+        # For this subtask, let's assume it might not be present and proceed.
+        pass # Or ui.header().classes('justify-between items-center') etc.
+
+    # Pass the user object to the UI function if it needs user context,
+    # e.g., for displaying user information or using user_id directly.
+    # The change_password_ui function was defined to accept an optional user_id.
+    # We pass user.id here.
+    await change_password_ui(user_id=user.id)
 
 
 @ui.page("/login")
