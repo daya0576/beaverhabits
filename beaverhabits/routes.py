@@ -29,53 +29,14 @@ UNRESTRICTED_PAGE_ROUTES = ("/login", "/register")
 
 
 def get_current_list_id() -> int | str | None:
-    """Get current list ID from query parameters or storage."""
+    """Get current list ID from storage."""
     try:
-        # Check if context.client.page exists and has query attribute
-        if not hasattr(context, 'client') or not hasattr(context.client, 'page') or not hasattr(context.client.page, 'query'):
-            logger.debug("Cannot access page query parameters - context.client.page.query not available")
-            # Fall back to storage
-            stored_id = app.storage.user.get("current_list")
-            logger.info(f"Using list ID from storage (no query available): {stored_id!r}")
-            return stored_id
-            
-        # Get raw list parameter from URL
-        list_param = context.client.page.query.get("list")
-        logger.info(f"URL parameter 'list': {list_param!r} (type: {type(list_param)})")
-        
-        # Explicitly handle "None" case (case-insensitive)
-        if list_param and list_param.lower() == "none":
-            logger.info("'None' list selected (showing only habits with no list)")
-            return "None"
-        
-        # If parameter exists but is empty, or parameter doesn't exist
-        if list_param == "" or list_param is None:
-            stored_id = app.storage.user.get("current_list")
-            logger.info(f"No list parameter in URL, using from storage: {stored_id!r}")
-            if stored_id:
-                return stored_id
-            
-            logger.info("No list selected (showing all habits)")
-            return None
-        
-        # Clean up list ID for integer values
-        try:
-            list_id = int(list_param.strip())
-            logger.info(f"Using list ID from URL: {list_id}")
-            
-            # Store for persistence
-            app.storage.user.update({"current_list": list_id})
-            return list_id
-        except ValueError:
-            logger.warning(f"Invalid list ID format: {list_param!r}")
-            return None
-            
-    except Exception as e:
-        # Try storage as fallback for any errors
-        logger.error(f"Error getting list ID: {str(e)}")
         stored_id = app.storage.user.get("current_list")
-        logger.info(f"Using list ID from storage (fallback): {stored_id!r}")
+        logger.info(f"Using list ID from storage: {stored_id!r}")
         return stored_id
+    except Exception as e:
+        logger.error(f"Error getting list ID from storage: {str(e)}")
+        return None
 
 
 @ui.page("/")
@@ -180,9 +141,12 @@ async def order_page(
 
 
 @ui.page("/gui/habits/{habit_id}")
-async def habit_page(habit_id: str, user: User = Depends(current_active_user)) -> None:
+async def habit_page(habit_id: str, user: User = Depends(current_active_user)) -> Optional[RedirectResponse]:
     today = await get_user_today_date()
     habit = await views.get_user_habit(user, habit_id)
+    if habit is None:
+        ui.notify(f"Habit with ID {habit_id} not found.", color="negative")
+        return RedirectResponse("/gui")
     await habit_page_ui(today, habit, user)
 
 
@@ -190,8 +154,11 @@ async def habit_page(habit_id: str, user: User = Depends(current_active_user)) -
 @ui.page("/gui/habits/{habit_id}/heatmap")
 async def gui_habit_page_heatmap(
     habit_id: str, user: User = Depends(current_active_user)
-) -> None:
+) -> Optional[RedirectResponse]:
     habit = await views.get_user_habit(user, habit_id)
+    if habit is None:
+        ui.notify(f"Habit with ID {habit_id} not found.", color="negative")
+        return RedirectResponse("/gui")
     today = await get_user_today_date()
     await heatmap_page(today, habit, user)
 
@@ -216,23 +183,33 @@ async def login_page() -> Optional[RedirectResponse]:
     if await views.is_gui_authenticated():
         return RedirectResponse("/gui")
 
+    # Pre-fill email if remembered
+    remembered_email = app.storage.user.get("remembered_email")
+    remembered_flag = app.storage.user.get("remember_me", False)
+
     async def try_login():
         user = await user_authenticate(email=email.value, password=password.value)
         token = user and await user_create_token(user)
         if token is not None:
             app.storage.user.update({"auth_token": token})
+            if remember_me.value:
+                app.storage.user.update({"remembered_email": email.value, "remember_me": True})
+            else:
+                app.storage.user.update({"remembered_email": None, "remember_me": False})
             ui.navigate.to(app.storage.user.get("referrer_path", "/"))
         else:
             ui.notify("email or password wrong!", color="negative")
 
     with ui.card().classes("absolute-center shadow-none w-96"):
-        email = ui.input("email").on("keydown.enter", try_login)
+        email = ui.input("email", value=remembered_email or "").on("keydown.enter", try_login)
         email.classes("w-56")
 
         password = ui.input("password", password=True, password_toggle_button=True)
         password.on("keydown.enter", try_login)
         password.classes("w-56")
-
+        
+        remember_me = ui.checkbox("Remember me", value=remembered_flag)
+        
         with ui.element("div").classes("flex mt-4 justify-between items-center"):
             ui.button("Continue", on_click=try_login).props('padding="xs lg"')
 
