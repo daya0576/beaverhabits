@@ -77,26 +77,18 @@ async def change_user_password(user_id: uuid.UUID, old_password: str, new_passwo
                 logger.error(f"User with ID {user_id} not found for password change.")
                 raise HTTPException(status_code=404, detail="User not found.")
 
-            # Verify old password
-            # UserManager.password_helper is usually available and public
-            if not user_manager.password_helper.verify(old_password, user.hashed_password):
+            # Verify old password - CORRECTED LINE
+            if not await user_manager.verify_password(old_password, user):
                 logger.warning(f"Incorrect old password attempt for user {user_id}.")
-                # Raising an exception that the frontend can catch and display
                 raise InvalidPasswordException(reason="Incorrect old password.")
 
             # Update to new password
             try:
+                # user_manager.update_password already saves the user
                 await user_manager.update_password(user, new_password)
                 logger.info(f"Password successfully changed for user {user_id}.")
-                # fastapi-users' update_password already saves the user,
-                # but if not, session.commit() would be needed here.
-                # await session.commit() # Ensure changes are committed if user_manager doesn't do it.
-                                        # UserManager.update() which is called by update_password handles the db update.
                 return True
             except Exception as e:
-                # Log the full exception for debugging
                 logger.error(f"Error updating password for user {user_id}: {e}", exc_info=True)
-                # Raise a generic error for the frontend
                 raise HTTPException(status_code=500, detail=f"Failed to update password: {e}")
-    # Fallback if session could not be established, though get_async_session should handle this
     return False
