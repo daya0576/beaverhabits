@@ -187,7 +187,7 @@ async def show_change_password_page(user: User = Depends(current_active_user)):
     # If custom_header() is not available, the subtask should proceed without it,
     # and we can adjust later if layout is missing.
     try:
-        await custom_header()
+        custom_header() # Removed await
     except NameError:
         # If custom_header is not defined, we can skip it for now.
         # Or add a simple ui.header if that's the pattern.
