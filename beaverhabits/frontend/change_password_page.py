@@ -51,7 +51,7 @@ async def change_password_ui(user_id: int | None = None): # user_id is passed fr
 
     with ui.card().classes("w-full max-w-md mx-auto p-6"):
         ui.label("Change Password").classes("text-2xl font-semibold mb-4 text-center")
-        with ui.form().classes("space-y-4"): # Ensure this is ui.form, not just a div acting as one
+        with ui.element('form').classes("space-y-4"): # Corrected line
             old_password_input
             new_password_input
             confirm_password_input
