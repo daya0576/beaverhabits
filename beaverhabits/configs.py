@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     # Auth
     TRUSTED_EMAIL_HEADER: str = ""
     TRUSTED_LOCAL_EMAIL: str = ""
+    SKIP_OLD_PASSWORD_CHECK_ON_CHANGE: bool = True # Added for temporarily skipping old password check
 
     # Customization
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY

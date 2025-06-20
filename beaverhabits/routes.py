@@ -17,6 +17,7 @@ from .app.auth import (
 from .app.crud import get_user_count, get_user_habits, get_user_lists
 from .app.db import User
 from .app.dependencies import current_active_user
+from .app.users import UserManager, get_user_manager # Added UserManager, get_user_manager
 from .configs import settings
 from .frontend.add_page import add_page_ui
 from .frontend.cal_heatmap_page import heatmap_page
@@ -179,7 +180,7 @@ async def gui_import(user: User = Depends(current_active_user)) -> None:
 
 
 @ui.page("/gui/change-password", title="Change Password")
-async def show_change_password_page(user: User = Depends(current_active_user)):
+async def show_change_password_page(user: User = Depends(current_active_user), user_manager: UserManager = Depends(get_user_manager)): # Added user_manager dependency
     # Assuming custom_header() is a function that sets up common page layout/header
     # If it's not defined or used elsewhere, this line can be omitted or replaced
     # with specific layout components if needed.
@@ -197,8 +198,8 @@ async def show_change_password_page(user: User = Depends(current_active_user)):
     # Pass the user object to the UI function if it needs user context,
     # e.g., for displaying user information or using user_id directly.
     # The change_password_ui function was defined to accept an optional user_id.
-    # We pass user.id here.
-    await change_password_ui(user_id=user.id)
+    # We pass user_manager and user.id here.
+    await change_password_ui(user_manager=user_manager, user_id=user.id)
 
 
 @ui.page("/login")

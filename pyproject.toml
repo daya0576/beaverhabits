@@ -18,6 +18,7 @@ dependencies = [
     "python-dateutil<3.0.0.0,>=2.9.0.post0",
     "loguru>=0.7.3",
     "cachetools>=5.5.1",
+    "passlib[bcrypt]>=1.7.4",
 ]
 description = ""
 readme = "README.md"
