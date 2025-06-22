@@ -256,6 +256,25 @@ async def forgot_password_page(user: User = Depends(get_reset_user)):
         password2 = auth_password("Confirm password")
 
 
+@app.post("/api/note/image")
+async def upload_note_image(
+    request: Request, user: User = Depends(current_active_user)
+):
+    """
+    Upload an image for a note.
+    """
+    form = await request.form()
+    file = form.get("file")
+    if not file:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No file provided"
+        )
+
+    logger.info(f"Uploading image for user {user.email}")
+
+    return {"path": "123"}
+
+
 if settings.ENABLE_PLAN:
     from beaverhabits.frontend.paddle_page import PRIVACY, TERMS
     from beaverhabits.frontend.pricing_page import landing_page

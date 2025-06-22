@@ -17,6 +17,7 @@ from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.frontend import icons
+from beaverhabits.frontend.textarea import Textarea
 from beaverhabits.logger import logger
 from beaverhabits.plan import plan
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
@@ -104,7 +105,7 @@ def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
         card.classes("w-[640px]")
 
         with ui.column().classes("gap-0 w-full"):
-            t = ui.textarea(
+            t = Textarea(
                 label=f"Note ({label})" if label else "Note",
                 value=text,
                 validation={
