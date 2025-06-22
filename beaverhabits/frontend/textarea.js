@@ -96,14 +96,16 @@ export default {
       }
     },
     async uploadImage(imageFile) {
-      const formData = new FormData();
+      var formData = new FormData();
       formData.append("file", imageFile);
       try {
-        const response = await axios.post("/assets", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+        const response = await fetch("/assets/", {
+          method: "POST",
+          body: formData,
         });
+        if (!response.ok) {
+          throw new Error("Image upload failed");
+        }
         return response.data.url;
       } catch (error) {
         console.error("Image upload failed:", error);

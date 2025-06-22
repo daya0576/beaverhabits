@@ -1,7 +1,7 @@
 import io
 from typing import Annotated, Optional
 
-from fastapi import Depends, FastAPI, File, HTTPException, Request, status
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile, status
 from fastapi.responses import RedirectResponse, StreamingResponse
 from nicegui import Client, app, ui
 
@@ -261,7 +261,6 @@ async def forgot_password_page(user: User = Depends(get_reset_user)):
 async def upload_note_image(
     file: Annotated[bytes, File()], user: User = Depends(current_active_user)
 ):
-    logger.info(f"Uploading image, size: {len(file)} bytes")
     if not file:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No file provided"
