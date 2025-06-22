@@ -86,6 +86,7 @@ export default {
         const imageFile = images[0].getAsFile();
         if (imageFile) {
           const url = await this.uploadImage(imageFile);
+          console.log("Image upload response:", url);
           if (url) {
             this.inputValue = this.inputValue.replace(
               placeholder,
@@ -99,14 +100,15 @@ export default {
       var formData = new FormData();
       formData.append("file", imageFile);
       try {
-        const response = await fetch("/assets/", {
+        const response = await fetch("/assets", {
           method: "POST",
           body: formData,
         });
         if (!response.ok) {
           throw new Error("Image upload failed");
         }
-        return response.data.url;
+        const responseData = await response.json();
+        return responseData.url;
       } catch (error) {
         console.error("Image upload failed:", error);
       }
