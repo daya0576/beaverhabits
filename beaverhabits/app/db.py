@@ -1,5 +1,6 @@
 import datetime
 from typing import AsyncGenerator
+from uuid import UUID
 
 from fastapi import Depends
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
@@ -80,9 +81,10 @@ class UserConfigsModel(TimestampMixin, Base):
 
 
 class UserNoteImageModel(TimestampMixin, Base):
-    __tablename__ = "user_note_images"
+    __tablename__ = "user_images"
 
-    id: Mapped[GUID] = mapped_column(GUID, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    unique_id: Mapped[UUID] = mapped_column(GUID, unique=True, index=True)
     user_id = mapped_column(GUID, ForeignKey("user.id"), index=True)
     user = relationship("User", back_populates="note_images")
 

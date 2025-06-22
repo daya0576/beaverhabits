@@ -79,15 +79,15 @@ export default {
       // Prevent default paste behavior
       event.preventDefault();
 
-      const placeholder = "<span>Loading...</span>";
-      document.execCommand("insertHTML", false, placeholder);
+      const placeholder = "![Uploading image.png…]()";
+      document.execCommand("insertText", false, placeholder);
 
       if (images.length > 0) {
         const imageFile = images[0].getAsFile();
         if (imageFile) {
           const url = await this.uploadImage(imageFile);
           if (url) {
-            this.content = this.content.replace(
+            this.inputValue = this.inputValue.replace(
               placeholder,
               `<img src="${url}"/>`,
             );
@@ -99,7 +99,7 @@ export default {
       const formData = new FormData();
       formData.append("file", imageFile);
       try {
-        const response = await axios.post("/api/note/image", formData, {
+        const response = await axios.post("/assets", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -107,7 +107,6 @@ export default {
         return response.data.url;
       } catch (error) {
         console.error("Image upload failed:", error);
-        this.content = this.content.replace("Loading...", "Upload failed");
       }
     },
   },

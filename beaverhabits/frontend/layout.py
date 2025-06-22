@@ -67,9 +67,7 @@ def custom_headers():
             f'<script defer src="https://cloud.umami.is/script.js" data-website-id="{settings.UMAMI_ANALYTICS_ID}"></script>'
         )
 
-    ui.add_head_html(
-        '<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>'
-    )
+    ui.add_head_html('<script src="/statics/libs/axios.min.js"></script>')
 
     # Prevent white flash on page load
     ui.add_css(css.WHITE_FLASH_PREVENT, shared=True)

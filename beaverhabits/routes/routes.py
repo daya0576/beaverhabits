@@ -1,8 +1,8 @@
-import time
-from typing import Optional
+import io
+from typing import Annotated, Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
-from fastapi.responses import RedirectResponse
+from fastapi import Depends, FastAPI, File, HTTPException, Request, status
+from fastapi.responses import RedirectResponse, StreamingResponse
 from nicegui import Client, app, ui
 
 from beaverhabits import const, views
@@ -36,6 +36,7 @@ from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.frontend.settings_page import settings_page
 from beaverhabits.frontend.streaks import heatmap_page
 from beaverhabits.logger import logger
+from beaverhabits.storage import image_storage
 from beaverhabits.storage.meta import GUI_ROOT_PATH
 from beaverhabits.utils import dummy_days, get_user_today_date
 
@@ -256,23 +257,27 @@ async def forgot_password_page(user: User = Depends(get_reset_user)):
         password2 = auth_password("Confirm password")
 
 
-@app.post("/api/note/image")
+@app.post("/assets")
 async def upload_note_image(
-    request: Request, user: User = Depends(current_active_user)
+    file: Annotated[bytes, File()], user: User = Depends(current_active_user)
 ):
-    """
-    Upload an image for a note.
-    """
-    form = await request.form()
-    file = form.get("file")
+    logger.info(f"Uploading image, size: {len(file)} bytes")
     if not file:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No file provided"
         )
 
-    logger.info(f"Uploading image for user {user.email}")
+    return await image_storage.save(file, user)
 
-    return {"path": "123"}
+
+@app.get("/assets/{image_id}")
+async def get_note_image(image_id: str, user: User = Depends(current_active_user)):
+    img = await image_storage.get(image_id, user)
+    if not (img and img.blob):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
+        )
+    return StreamingResponse(io.BytesIO(img.blob), media_type="image/png")
 
 
 if settings.ENABLE_PLAN:

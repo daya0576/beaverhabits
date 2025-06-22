@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass
 from enum import Enum, auto
 from typing import List, Literal, Optional, Protocol, Self
 
-from dataclasses_json import DataClassJsonMixin, dataclass_json
+from dataclasses_json import DataClassJsonMixin
 
 from beaverhabits.app.db import User
 from beaverhabits.utils import PERIOD_TYPES, D
@@ -253,3 +253,17 @@ class HabitListBuilder:
         habits.sort(key=lambda x: all_status.index(x.status))
 
         return habits
+
+
+@dataclass
+class ImageObject(DataClassJsonMixin):
+    id: str
+    url: str
+    blob: bytes | None = None
+    owner: str | None = None
+
+
+class ImageStorage(Protocol):
+    async def save(self, byte_data: bytes, user: User | None = None) -> ImageObject: ...
+
+    async def get(self, uuid: str, user: User | None = None) -> ImageObject | None: ...

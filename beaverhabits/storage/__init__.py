@@ -1,4 +1,5 @@
 from beaverhabits.configs import StorageType, settings
+from beaverhabits.storage.images import DatabaseImageStorage
 from beaverhabits.storage.session_memory import SessionDictStorage
 from beaverhabits.storage.storage import SessionStorage, UserStorage
 from beaverhabits.storage.user_db import UserDatabaseStorage
@@ -8,6 +9,9 @@ session_storage = SessionDictStorage()
 user_disk_storage = UserDiskStorage()
 user_database_storage = UserDatabaseStorage()
 sqlite_storage = None
+
+# TODO: retrieve image storage backend for each user
+image_storage = DatabaseImageStorage()
 
 
 def get_sessions_storage() -> SessionStorage:
