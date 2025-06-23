@@ -1,6 +1,5 @@
 from jinja2 import Environment
 from loguru import logger
-from nicegui import __version__ as version
 from nicegui import ui
 
 from beaverhabits.configs import settings
@@ -26,27 +25,6 @@ elements.forEach(element => {
   });
 });
 """
-
-LOAD_CACHE = """\
-const scriptUrls = [
-  '/_nicegui/{__version__}/components/b0b17893a51343979e2090deee730538/input.js',
-  '/_nicegui/{__version__}/components/b0b17893a51343979e2090deee730538/echart.js',
-  '/_nicegui/{__version__}/libraries/c3db162d662122eb0e7be8cd04794fac/echarts.min.js',
-  '/_nicegui/{__version__}/static/utils/dynamic_properties.js'
-];
-
-setTimeout(() => {
-    for (let i = 0; i < scriptUrls.length; i++) {
-      const script = document.createElement('script'); 
-      script.src = scriptUrls[i];                     
-      script.async = true;
-      document.head.appendChild(script);             
-      console.log(`Script loaded: ${scriptUrls[i]}`);
-    }
-}, 500);
-""".replace(
-    "{__version__}", version
-)
 
 PADDLE_JS_TEMPLATE = """\
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
@@ -105,10 +83,6 @@ def prevent_context_menu():
 
 def unhover_checkboxes():
     ui.run_javascript(UNHOVER_CHECKBOXES)
-
-
-def load_cache():
-    ui.run_javascript(LOAD_CACHE)
 
 
 def show_icons():
