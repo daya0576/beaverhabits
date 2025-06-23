@@ -17,6 +17,7 @@ from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.frontend import icons
+from beaverhabits.frontend.textarea import Textarea
 from beaverhabits.logger import logger
 from beaverhabits.plan import plan
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
@@ -104,7 +105,7 @@ def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
         card.classes("w-[640px]")
 
         with ui.column().classes("gap-0 w-full"):
-            t = ui.textarea(
+            t = Textarea(
                 label=f"Note ({label})" if label else "Note",
                 value=text,
                 validation={
@@ -150,6 +151,7 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
 
     record = await habit.tick(day, yes, text)
     logger.info(f"Habit ticked: {day} {yes}, note: {text}")
+
     return record.done
 
 
@@ -806,6 +808,12 @@ class HabitTag(ui.chip):
         self.style("margin: 0px 2px")
 
 
+async def on_dblclick(habit, day):
+    await note_tick(habit, day)
+    habit_notes.refresh()
+
+
+@ui.refreshable
 def habit_notes(habit: Habit, limit: int = 10):
     notes = [x for x in habit.records if x.text]
     notes.sort(key=lambda x: x.day, reverse=True)
@@ -816,12 +824,17 @@ def habit_notes(habit: Habit, limit: int = 10):
             # text = record.text.replace(" ", "&nbsp;")
             color = "primary" if record.done else "grey-8"
             with ui.timeline_entry(
-                body=text,
                 subtitle=record.day.strftime("%B %d, %Y"),
                 color=color,
             ) as entry:
+                with ui.column().classes("gap-0"):
+                    try:
+                        ui.html(text)
+                    except Exception as e:
+                        ui.label(f"Error rendering note: {e}").classes("text-red-500")
+
                 # https://github.com/zauberzeug/nicegui/wiki/FAQs#why-do-all-my-elements-have-the-same-value
-                entry.on("dblclick", lambda _, d=record.day: note_tick(habit, d))
+                entry.on("dblclick", lambda _, d=record.day: on_dblclick(habit, d))
 
 
 def habit_streak(today: datetime.date, habit: Habit):

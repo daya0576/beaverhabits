@@ -22,7 +22,7 @@ from beaverhabits.storage.meta import (
     page_title,
 )
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.utils import get_user_dark_mode
+from beaverhabits.utils import fetch_user_dark_mode
 
 
 def pwa_headers():
@@ -70,7 +70,7 @@ def custom_headers():
     # Prevent white flash on page load
     ui.add_css(css.WHITE_FLASH_PREVENT, shared=True)
 
-    ui.context.client.on_connect(lambda: get_user_dark_mode(refresh=True))
+    ui.context.client.on_connect(fetch_user_dark_mode)
     ui.context.client.on_connect(views.apply_theme_style)
 
 

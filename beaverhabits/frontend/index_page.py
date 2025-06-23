@@ -7,7 +7,7 @@ from nicegui import ui
 
 from beaverhabits.configs import settings
 from beaverhabits.core.completions import get_habit_date_completion
-from beaverhabits.frontend import javascript
+from beaverhabits.frontend import javascript, textarea
 from beaverhabits.frontend.components import (
     HabitCheckBox,
     IndexBadge,
@@ -129,6 +129,7 @@ def index_page_ui(days: list[datetime.date], habits: HabitList):
         habit_list_ui(days, active_habits)
 
     # placeholder to preload js cache (daily notes)
+    textarea.Textarea("").classes("hidden").props('aria-hidden="true"')
     ui.input("").classes("hidden").props('aria-hidden="true"')
     # Prevent long press context menu for svg image elements
     ui.context.client.on_connect(javascript.prevent_context_menu)

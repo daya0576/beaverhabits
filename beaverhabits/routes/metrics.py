@@ -1,5 +1,6 @@
 import asyncio
 import gc
+import platform
 import tracemalloc
 
 import psutil
@@ -29,6 +30,7 @@ async def health():
     return dict(
         status="OK",
         loop=loop.__class__.__module__,
+        python_version=platform.python_version(),
     )
 
 

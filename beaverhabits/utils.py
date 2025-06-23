@@ -67,7 +67,7 @@ def set_user_dark_mode(dark: bool) -> None:
         logger.error(f"Error setting user dark mode: {e}")
 
 
-def get_user_dark_mode(refresh=False) -> bool | None:
+def get_user_dark_mode() -> bool | None:
     if settings.DARK_MODE != None:
         return settings.DARK_MODE
 
@@ -76,9 +76,6 @@ def get_user_dark_mode(refresh=False) -> bool | None:
     except Exception as e:
         logger.error(f"Error get user dark mode: {e}")
         dark = None
-
-    if refresh:
-        ui.context.client.on_connect(fetch_user_dark_mode)
 
     return dark
 

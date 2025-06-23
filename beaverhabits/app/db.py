@@ -1,5 +1,6 @@
 import datetime
 from typing import AsyncGenerator
+from uuid import UUID
 
 from fastapi import Depends
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
@@ -39,6 +40,9 @@ class User(TimestampMixin, SQLAlchemyBaseUserTableUUID, Base):
     configs: Mapped["UserConfigsModel"] = relationship(
         back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
+    note_images: Mapped["UserNoteImageModel"] = relationship(
+        back_populates="user", uselist=True, cascade="all, delete-orphan"
+    )
 
 
 class HabitListModel(TimestampMixin, Base):
@@ -74,6 +78,18 @@ class UserConfigsModel(TimestampMixin, Base):
 
     # Example config field
     config_data: Mapped[dict] = mapped_column(JSON, nullable=False)
+
+
+class UserNoteImageModel(TimestampMixin, Base):
+    __tablename__ = "user_images"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    unique_id: Mapped[UUID] = mapped_column(GUID, unique=True, index=True)
+    user_id = mapped_column(GUID, ForeignKey("user.id"), index=True)
+    user = relationship("User", back_populates="note_images")
+
+    blob: Mapped[bytes] = mapped_column("blob", nullable=False)
+    extra: Mapped[dict] = mapped_column(JSON, nullable=True)
 
 
 # SSL Mode: https://www.postgresql.org/docs/9.0/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS
