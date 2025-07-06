@@ -50,7 +50,7 @@ strptime = datetime.datetime.strptime
 
 CALENDAR_EVENT_MASK = "%Y/%m/%d"
 
-PRESS_DELAY = 250
+PRESS_DELAY = 180
 
 
 def redirect(x):
