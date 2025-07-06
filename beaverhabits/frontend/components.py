@@ -186,33 +186,23 @@ class HabitCheckBox(ui.checkbox):
         super().__init__("", value=value)
         self._update_style(value)
 
-        # Hold on event flag
-        self.hold = asyncio.Event()
-        self.moving = False
-
         # Click Event
         self.on("click", self._click_event)
 
-        # Touch and hold event
+        # Press and hold
+        self.props('data-long-press-delay="300"')
         # Sequence of events: https://ui.toast.com/posts/en_20220106
-        # 1. Mouse click: mousedown -> mouseup -> click
-        # 2. Touch click: touchstart -> touchend -> mousemove -> mousedown -> mouseup -> click
-        # 3. Touch move:  touchstart -> touchmove -> touchend
-        self.on("mousedown", self._mouse_down_event)
-        self.on("touchstart.passive", self._mouse_down_event)
-
+        #   1. Mouse click: mousedown -> mouseup -> click
+        #   2. Touch click: touchstart -> touchend -> mousemove -> mousedown -> mouseup -> click
+        #   3. Touch move:  touchstart -> touchmove -> touchend
         # Event modifiers
-        # 1. *Prevent* checkbox default behavior
-        # 2. *Prevent* propagation of the event
-        self.on("mouseup", self._mouse_up_event)
-        self.on("touchend", self._mouse_up_event)
-        self.on("touchmove.passive", self._mouse_move_event, throttle=1)
-        # self.on("mousemove", self._mouse_move_event)
-
+        #   1. *Prevent* checkbox default behavior
+        #   2. *Prevent* propagation of the event
         # Checklist: value change, scrolling
-        # - Desktop browser
-        # - iOS browser / standalone mode
-        # - Android browser / PWA
+        #   - Desktop browser
+        #   - iOS browser / standalone mode
+        #   - Android browser / PWA
+        self.on("long-press", self._async_long_press_task)
 
     def _refresh(self):
         logger.debug(f"Refresh: {self.day}, {self.value}")
@@ -226,23 +216,6 @@ class HabitCheckBox(ui.checkbox):
         # Do refresh the total row
         self.row_refresh()
 
-    async def _mouse_down_event(self, e):
-        logger.info(f"Down event: {self.day}, {e.args.get('type')}")
-        self.hold.clear()
-        self.moving = False
-        try:
-            async with asyncio.timeout(0.3):
-                await self.hold.wait()
-        except asyncio.TimeoutError:
-            # Long press diaglog
-            value = await note_tick(self.habit, self.day)
-
-            if value is not None:
-                self.value = value
-                self._refresh()
-
-            await self._blur()
-
     async def _click_event(self, e):
         self.value = e.sender.value
 
@@ -251,14 +224,15 @@ class HabitCheckBox(ui.checkbox):
 
         self._refresh()
 
-    async def _mouse_up_event(self, e):
-        logger.info(f"Up event: {self.day}, {e.args.get('type')}")
-        self.hold.set()
+    async def _async_long_press_task(self):
+        # Long press diaglog
+        value = await note_tick(self.habit, self.day)
 
-    async def _mouse_move_event(self):
-        # logger.info(f"Move event: {self.day}, {e}")
-        self.moving = True
-        self.hold.set()
+        if value is not None:
+            self.value = value
+            self._refresh()
+
+        await self._blur()
 
     async def _blur(self):
         # Resolve ripple issue
