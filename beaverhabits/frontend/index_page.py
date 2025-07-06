@@ -12,12 +12,11 @@ from beaverhabits.frontend.components import (
     HabitCheckBox,
     IndexBadge,
     TagManager,
+    habit_name_menu,
     habits_by_tags,
-    link,
     tag_filter_component,
 )
 from beaverhabits.frontend.layout import layout
-from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import (
     Habit,
     HabitList,
@@ -60,10 +59,7 @@ def day_headers(days: list[datetime.date]):
 
 
 def habit_row(habit: Habit, tag: str, days: list[datetime.date]):
-    # truncate name
-    root_path = get_root_path()
-    redirect_page = os.path.join(root_path, "habits", str(habit.id))
-    name = link(habit.name, target=redirect_page)
+    name = habit_name_menu(habit, index_page_ui.refresh)
     name.classes(LEFT_CLASSES)
     name.props(f'role="heading" aria-level="2" aria-label="{habit.name}"')
 
@@ -115,6 +111,7 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
             ui.space()
 
 
+@ui.refreshable
 def index_page_ui(days: list[datetime.date], habits: HabitList):
     active_habits = HabitListBuilder(habits).status(HabitStatus.ACTIVE).build()
     if not active_habits:

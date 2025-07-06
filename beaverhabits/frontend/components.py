@@ -1,5 +1,5 @@
-import asyncio
 import calendar
+import copy
 import datetime
 import os
 from collections import OrderedDict
@@ -9,6 +9,7 @@ from typing import Callable, Optional, Self
 
 from dateutil.relativedelta import relativedelta
 from nicegui import app, events, ui
+from nicegui.element import Element
 from nicegui.elements.button import Button
 
 from beaverhabits import utils
@@ -49,6 +50,8 @@ strptime = datetime.datetime.strptime
 
 CALENDAR_EVENT_MASK = "%Y/%m/%d"
 
+PRESS_DELAY = 180
+
 
 def redirect(x):
     ui.navigate.to(os.path.join(get_root_path(), x))
@@ -66,6 +69,19 @@ def link(text: str, target: str, color: str = "text-white") -> ui.link:
 
 def compat_card():
     return ui.card().classes("no-shadow")
+
+
+@contextmanager
+def compat_menu():
+    with ui.menu() as menu:
+        yield menu
+
+    # styling
+    menu.props("transition-duration=100")
+
+
+def separator():
+    ui.separator().props('aria-hidden="true"')
 
 
 def menu_header(title: str, target: str):
@@ -186,33 +202,23 @@ class HabitCheckBox(ui.checkbox):
         super().__init__("", value=value)
         self._update_style(value)
 
-        # Hold on event flag
-        self.hold = asyncio.Event()
-        self.moving = False
-
         # Click Event
         self.on("click", self._click_event)
 
-        # Touch and hold event
+        # Press and hold
+        self.props(f'data-long-press-delay="{PRESS_DELAY}"')
         # Sequence of events: https://ui.toast.com/posts/en_20220106
-        # 1. Mouse click: mousedown -> mouseup -> click
-        # 2. Touch click: touchstart -> touchend -> mousemove -> mousedown -> mouseup -> click
-        # 3. Touch move:  touchstart -> touchmove -> touchend
-        self.on("mousedown", self._mouse_down_event)
-        self.on("touchstart.passive", self._mouse_down_event)
-
+        #   1. Mouse click: mousedown -> mouseup -> click
+        #   2. Touch click: touchstart -> touchend -> mousemove -> mousedown -> mouseup -> click
+        #   3. Touch move:  touchstart -> touchmove -> touchend
         # Event modifiers
-        # 1. *Prevent* checkbox default behavior
-        # 2. *Prevent* propagation of the event
-        self.on("mouseup", self._mouse_up_event)
-        self.on("touchend", self._mouse_up_event)
-        self.on("touchmove.passive", self._mouse_move_event, throttle=1)
-        # self.on("mousemove", self._mouse_move_event)
-
+        #   1. *Prevent* checkbox default behavior
+        #   2. *Prevent* propagation of the event
         # Checklist: value change, scrolling
-        # - Desktop browser
-        # - iOS browser / standalone mode
-        # - Android browser / PWA
+        #   - Desktop browser
+        #   - iOS browser / standalone mode
+        #   - Android browser / PWA
+        self.on("long-press", self._async_long_press_task)
 
     def _refresh(self):
         logger.debug(f"Refresh: {self.day}, {self.value}")
@@ -226,23 +232,6 @@ class HabitCheckBox(ui.checkbox):
         # Do refresh the total row
         self.row_refresh()
 
-    async def _mouse_down_event(self, e):
-        logger.info(f"Down event: {self.day}, {e.args.get('type')}")
-        self.hold.clear()
-        self.moving = False
-        try:
-            async with asyncio.timeout(0.3):
-                await self.hold.wait()
-        except asyncio.TimeoutError:
-            # Long press diaglog
-            value = await note_tick(self.habit, self.day)
-
-            if value is not None:
-                self.value = value
-                self._refresh()
-
-            await self._blur()
-
     async def _click_event(self, e):
         self.value = e.sender.value
 
@@ -251,14 +240,15 @@ class HabitCheckBox(ui.checkbox):
 
         self._refresh()
 
-    async def _mouse_up_event(self, e):
-        logger.info(f"Up event: {self.day}, {e.args.get('type')}")
-        self.hold.set()
+    async def _async_long_press_task(self):
+        # Long press diaglog
+        value = await note_tick(self.habit, self.day)
 
-    async def _mouse_move_event(self):
-        # logger.info(f"Move event: {self.day}, {e}")
-        self.moving = True
-        self.hold.set()
+        if value is not None:
+            self.value = value
+            self._refresh()
+
+        await self._blur()
 
     async def _blur(self):
         # Resolve ripple issue
@@ -324,7 +314,11 @@ class HabitNameTagBadge(ui.badge):
 
 class HabitNameInput(ui.input):
     def __init__(
-        self, habit: Habit, label: str = "", refresh: Callable | None = None
+        self,
+        habit: Habit,
+        label: str = "",
+        refresh: Callable | None = None,
+        auto_save: bool = True,
     ) -> None:
         super().__init__(value=self.encode_name(habit), label=label)
         self.habit = habit
@@ -332,8 +326,9 @@ class HabitNameInput(ui.input):
         self.refresh = refresh
         self.props("dense hide-bottom-space")
 
-        self.on("blur", self._on_blur)
-        self.on("keydown.enter", self._on_keydown_enter)
+        if auto_save:
+            self.on("blur", self._on_blur)
+            self.on("keydown.enter", self._on_keydown_enter)
 
     async def _on_keydown_enter(self):
         await self._save(self.value)
@@ -598,21 +593,14 @@ class CalendarCheckBox(ui.checkbox):
         self.props(f'unchecked-icon="{unchecked_icon}"')
         self.props(f'checked-icon="{checked_icon}"')
 
-        self.on_value_change(self._async_task)
+        self.on_value_change(self._async_click_task)
         if readonly:
             self.on("mousedown.prevent", lambda: True)
             self.on("touchstart.prevent", lambda: True)
 
         # Hold on event flag
-        self.hold = asyncio.Event()
-        self.moving = False
-
-        self.on("mousedown", self._mouse_down_event)
-        self.on("touchstart.passive", self._mouse_down_event)
-
-        self.on("mouseup", self._mouse_up_event)
-        self.on("touchend", self._mouse_up_event)
-        self.on("touchmove.passive", self._mouse_move_event, throttle=1)
+        self.props(f'data-long-press-delay="{PRESS_DELAY}"')
+        self.on("long-press", self._async_long_press_task)
 
     @property
     def ticked(self) -> bool:
@@ -642,7 +630,7 @@ class CalendarCheckBox(ui.checkbox):
             ),
         )
 
-    async def _async_task(self, e: events.ValueChangeEventArguments):
+    async def _async_click_task(self, e: events.ValueChangeEventArguments):
         # Update persistent storage
         await self.habit.tick(self.day, e.value)
         logger.info(f"Day {self.day} ticked: {e.value}")
@@ -651,29 +639,13 @@ class CalendarCheckBox(ui.checkbox):
             logger.debug("refresh page")
             self.refresh()
 
-    async def _mouse_down_event(self, e):
-        logger.info(f"Down event: {self.day}, {e.args.get('type')}")
-        self.hold.clear()
-        self.moving = False
-        try:
-            async with asyncio.timeout(0.3):
-                await self.hold.wait()
-        except asyncio.TimeoutError:
-            # Long press diaglog
-            value = await note_tick(self.habit, self.day)
-            if value is not None:
-                self.value = value
-            if self.refresh:
-                self.refresh()
-
-    async def _mouse_up_event(self, e):
-        logger.info(f"Up event: {self.day}, {e.args.get('type')}")
-        self.hold.set()
-
-    async def _mouse_move_event(self):
-        # logger.info(f"Move event: {self.day}, {e}")
-        self.moving = True
-        self.hold.set()
+    async def _async_long_press_task(self):
+        # Long press diaglog
+        value = await note_tick(self.habit, self.day)
+        if value is not None:
+            self.value = value
+        if self.refresh:
+            self.refresh()
 
 
 @ui.refreshable
@@ -1083,6 +1055,13 @@ def habit_backup_dialog(habit_list: HabitList) -> ui.dialog:
     return dialog
 
 
+def habit_remove(habit: Habit):
+    habit.status = HabitStatus.ARCHIVED
+
+    # wildly reload the page
+    ui.navigate.reload()
+
+
 def habit_edit_dialog(habit: Habit) -> ui.dialog:
     p = habit.period or EVERY_DAY
 
@@ -1114,10 +1093,19 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
         logger.info(f"Habit period changed to {habit.period}")
         dialog.close()
 
-        # wildly reload the page
-        ui.navigate.reload()
-
         return True
+
+    async def save() -> None:
+        try_update_period()
+        dialog.submit(True)
+
+    async def copy() -> None:
+        await habit.habit_list.add(habit_name_input.value, habit.tags)
+        dialog.submit(True)
+
+    async def remove() -> None:
+        await habit.habit_list.remove(habit)
+        dialog.submit(True)
 
     def reset():
         period_type.value = EVERY_DAY.period_type
@@ -1129,7 +1117,7 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
         card.classes("w-5/6 max-w-64")
 
         with ui.column().classes("w-full"):
-            HabitNameInput(habit, label="Name").classes("w-full")
+            habit_name_input = HabitNameInput(habit, label="Name").classes("w-full")
 
             # Habit Frequency
             with ui.row().classes("items-center"):
@@ -1143,8 +1131,10 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
                 ).props("dense")
 
             with ui.row():
-                ui.button("Save", on_click=try_update_period).props("flat")
-                ui.button("Reset", on_click=reset).props("flat")
+                ui.button("Save", on_click=save).props("flat dense")
+                ui.button("Duplicate", on_click=copy).props("flat dense")
+                ui.button("Remove", on_click=remove).props("flat dense")
+                # ui.button("Reset", on_click=reset).props("flat dense")
 
     return dialog
 
@@ -1198,3 +1188,24 @@ def auth_card(title: str, func: Callable):
             auth_header(title)
             yield
             ui.button("Continue", on_click=func).props("dense").classes("w-full")
+
+
+def habit_name_menu(
+    habit: Habit,
+    refresh: Callable | None = None,
+) -> Element:
+    root_path = get_root_path()
+    target_page = os.path.join(root_path, "habits", str(habit.id))
+    name = link(habit.name, target=target_page)
+    dialog = habit_edit_dialog(habit)
+
+    async def edit_habit():
+        result = await dialog
+        if refresh and result:
+            refresh()
+
+    # presss and hold
+    name.props(f'data-long-press-delay="{PRESS_DELAY}"')
+    name.on("long-press.prevent", edit_habit)
+
+    return name

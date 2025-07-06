@@ -36,7 +36,7 @@ PLANS = {
     },
 }
 ACTIONS = {
-    FREE: lambda: ui.button("Get Started", on_click=lambda: redirect("/register")),
+    FREE: lambda: ui.button("Get Started", on_click=lambda: redirect("/login")),
     PRO: lambda: ui.button("Upgrade").on_click(lambda: plan.checkout()),
 }
 
