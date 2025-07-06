@@ -12,6 +12,7 @@ from beaverhabits.frontend.components import (
     menu_icon_button,
     menu_icon_item,
     redirect,
+    separator,
 )
 from beaverhabits.frontend.menu import add_menu, sort_menu
 from beaverhabits.logger import logger
@@ -77,14 +78,10 @@ def custom_headers():
     ui.context.client.on_connect(views.apply_theme_style)
 
 
-def separator():
-    ui.separator().props('aria-hidden="true"')
-
-
 @ui.refreshable
 def menu_component():
     """Dropdown menu for the top-right corner of the page."""
-    with ui.menu().props('role="menu"'):
+    with ui.menu().props('role="menu" transition-duration="50"'):
         add_menu()
         separator()
 

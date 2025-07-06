@@ -214,6 +214,16 @@ class DictHabit(Habit[DictRecord], DictStorage):
             {"day": day.strftime(DAY_MASK), "done": True} for day in result
         ]
 
+    def copy(self) -> "Habit":
+        new_data = {
+            "name": f"{self.name} (copy)",
+            "tags": self.tags,
+            "star": self.star,
+            "period": self.period.to_dict() if self.period else None,
+            "records": [],
+        }
+        return DictHabit(new_data, self.habit_list)
+
     def to_dict(self) -> dict:
         return self.data
 

@@ -7,7 +7,6 @@ from beaverhabits.frontend.components import (
     HabitAddButton,
     HabitDeleteButton,
     HabitNameInput,
-    HabitNameTagBadge,
     HabitStarCheckbox,
     habits_by_tags,
 )
