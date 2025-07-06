@@ -598,21 +598,14 @@ class CalendarCheckBox(ui.checkbox):
         self.props(f'unchecked-icon="{unchecked_icon}"')
         self.props(f'checked-icon="{checked_icon}"')
 
-        self.on_value_change(self._async_task)
+        self.on_value_change(self._async_click_task)
         if readonly:
             self.on("mousedown.prevent", lambda: True)
             self.on("touchstart.prevent", lambda: True)
 
         # Hold on event flag
-        self.hold = asyncio.Event()
-        self.moving = False
-
-        self.on("mousedown", self._mouse_down_event)
-        self.on("touchstart.passive", self._mouse_down_event)
-
-        self.on("mouseup", self._mouse_up_event)
-        self.on("touchend", self._mouse_up_event)
-        self.on("touchmove.passive", self._mouse_move_event, throttle=1)
+        self.props('data-long-press-delay="300"')
+        self.on("long-press", self._async_long_press_task)
 
     @property
     def ticked(self) -> bool:
@@ -642,7 +635,7 @@ class CalendarCheckBox(ui.checkbox):
             ),
         )
 
-    async def _async_task(self, e: events.ValueChangeEventArguments):
+    async def _async_click_task(self, e: events.ValueChangeEventArguments):
         # Update persistent storage
         await self.habit.tick(self.day, e.value)
         logger.info(f"Day {self.day} ticked: {e.value}")
@@ -651,29 +644,13 @@ class CalendarCheckBox(ui.checkbox):
             logger.debug("refresh page")
             self.refresh()
 
-    async def _mouse_down_event(self, e):
-        logger.info(f"Down event: {self.day}, {e.args.get('type')}")
-        self.hold.clear()
-        self.moving = False
-        try:
-            async with asyncio.timeout(0.3):
-                await self.hold.wait()
-        except asyncio.TimeoutError:
-            # Long press diaglog
-            value = await note_tick(self.habit, self.day)
-            if value is not None:
-                self.value = value
-            if self.refresh:
-                self.refresh()
-
-    async def _mouse_up_event(self, e):
-        logger.info(f"Up event: {self.day}, {e.args.get('type')}")
-        self.hold.set()
-
-    async def _mouse_move_event(self):
-        # logger.info(f"Move event: {self.day}, {e}")
-        self.moving = True
-        self.hold.set()
+    async def _async_long_press_task(self):
+        # Long press diaglog
+        value = await note_tick(self.habit, self.day)
+        if value is not None:
+            self.value = value
+        if self.refresh:
+            self.refresh()
 
 
 @ui.refreshable
