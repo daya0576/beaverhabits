@@ -38,7 +38,7 @@ from beaverhabits.frontend.streaks import heatmap_page
 from beaverhabits.logger import logger
 from beaverhabits.storage import image_storage
 from beaverhabits.storage.meta import GUI_ROOT_PATH
-from beaverhabits.utils import dummy_days, get_user_today_date
+from beaverhabits.utils import dummy_days, fetch_user_dark_mode, get_user_today_date
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register")
 
@@ -345,6 +345,8 @@ def init_gui_routes(fastapi_app: FastAPI):
     oneyear = 365 * 24 * 60 * 60
     app.add_static_files("/statics", "statics", max_cache_age=oneyear)
     app.on_exception(handle_exception)
+    app.on_connect(fetch_user_dark_mode)
+    app.on_connect(views.apply_theme_style)
 
     ui.run_with(
         fastapi_app,

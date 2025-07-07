@@ -81,7 +81,14 @@ body {
   color: var(--theme-color);
 
   user-select: none;
+  touch-callout:none;
+  -webkit-touch-callout:none;
+  -webkit-touch-callout: none;
+  -webkit-user-callout: none;
   -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-modify: none;
+  -webkit-highlight: none;
 }
 
 .body--light {
@@ -127,6 +134,9 @@ body {
   }
   .theme-icon-checkbox .q-checkbox__inner--truthy .q-checkbox__icon {
     color: #6796CF;
+  }
+  .q-checkbox--dark .q-checkbox__inner--falsy {
+    color: hsla(0, 0%, 100%, .5);
   }
 
   .theme-header-date {

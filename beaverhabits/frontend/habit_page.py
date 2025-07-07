@@ -100,4 +100,4 @@ def habit_page_ui(today: datetime.date, habit: Habit):
         habit_page(today, habit)
 
     # Prevent long press context menu for svg image elements
-    ui.context.client.on_connect(javascript.prevent_context_menu)
+    javascript.prevent_context_menu()

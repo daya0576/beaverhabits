@@ -73,9 +73,6 @@ def custom_headers():
     # Prevent white flash on page load
     ui.add_css(css.WHITE_FLASH_PREVENT, shared=True)
 
-    ui.context.client.on_connect(fetch_user_dark_mode)
-    ui.context.client.on_connect(views.apply_theme_style)
-
 
 @ui.refreshable
 def menu_component():
