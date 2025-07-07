@@ -1,4 +1,5 @@
 import datetime
+import functools
 import gc
 import hashlib
 import os
@@ -15,7 +16,7 @@ import pytz
 from cachetools import TTLCache
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
-from nicegui import app, ui
+from nicegui import app, background_tasks, ui
 from psutil._common import bytes2human
 from starlette import status
 
@@ -31,6 +32,16 @@ PERIOD_TYPES_FOR_HUMAN = {D: "Day(s)", W: "Week(s)", M: "Month(s)", Y: "Year(s)"
 PERIOD_TYPE: TypeAlias = Literal["D", "W", "M", "Y"]
 
 
+def on_connect_task(fn):
+    @functools.wraps(fn)
+    async def wrapper(*args, **kwargs):
+        logger.info(f"On connect: {fn.__name__}")
+        return await fn(*args, **kwargs)
+
+    return wrapper
+
+
+@on_connect_task
 async def fetch_user_timezone() -> None:
     timezone = await ui.run_javascript(
         "Intl.DateTimeFormat().resolvedOptions().timeZone"
@@ -47,6 +58,7 @@ async def get_or_create_user_timezone() -> str:
     return "UTC"
 
 
+@on_connect_task
 async def fetch_user_dark_mode() -> None:
     try:
         dark = await ui.run_javascript("Quasar.Dark.isActive")

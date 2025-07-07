@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     PADDLE_PRODUCT_ID: str = ""
     PADDLE_PRICE_ID: str = ""
     PADDLE_CALLBACK_KEY: str = ""
+    HIGHLIGHT_IO_PROJECT_ID: str = ""
 
     # Email
     SMTP_EMAIL_USERNAME: str = ""

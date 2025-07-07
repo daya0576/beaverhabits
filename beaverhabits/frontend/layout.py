@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 
-from nicegui import ui
+from nicegui import background_tasks, ui
 
 from beaverhabits import views
 from beaverhabits.app.auth import user_logout
@@ -15,7 +15,6 @@ from beaverhabits.frontend.components import (
     separator,
 )
 from beaverhabits.frontend.menu import add_menu, sort_menu
-from beaverhabits.logger import logger
 from beaverhabits.storage.meta import (
     get_root_path,
     is_page_demo,

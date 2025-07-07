@@ -38,6 +38,22 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+if settings.HIGHLIGHT_IO_PROJECT_ID:
+    import highlight_io
+    from highlight_io.integrations.fastapi import FastAPIMiddleware
+
+    # `instrument_logging=True` sets up logging instrumentation.
+    # if you do not want to send logs or are using `loguru`, pass `instrument_logging=False`
+    H = highlight_io.H(
+        settings.HIGHLIGHT_IO_PROJECT_ID,
+        instrument_logging=False,
+        service_name="beaverhabits",
+        service_version="git-sha",
+        environment=settings.ENV,
+    )
+
+    app.add_middleware(FastAPIMiddleware)
+
 
 # auth
 init_metrics_routes(app)
