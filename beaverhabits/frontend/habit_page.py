@@ -98,6 +98,3 @@ def habit_page_ui(today: datetime.date, habit: Habit):
 
     with layout(title=habit.name, habit=habit):
         habit_page(today, habit)
-
-    # Prevent long press context menu for svg image elements
-    javascript.prevent_context_menu()

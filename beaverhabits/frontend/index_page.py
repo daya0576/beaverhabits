@@ -128,5 +128,3 @@ def index_page_ui(days: list[datetime.date], habits: HabitList):
     # placeholder to preload js cache (daily notes)
     textarea.Textarea("").classes("hidden").props('aria-hidden="true"')
     ui.input("").classes("hidden").props('aria-hidden="true"')
-    # Prevent long press context menu for svg image elements
-    javascript.prevent_context_menu()

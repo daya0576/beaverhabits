@@ -78,6 +78,7 @@ PADDLE_JS = env.from_string(PADDLE_JS_TEMPLATE).render(
 
 
 def prevent_context_menu():
+    logger.info("Run javascript to prevent context menu for iOS")
     ui.run_javascript(PREVENT_CONTEXT_MENU)
 
 

@@ -17,7 +17,7 @@ from beaverhabits.app.dependencies import (
     get_reset_user,
 )
 from beaverhabits.configs import settings
-from beaverhabits.frontend import paddle_page
+from beaverhabits.frontend import javascript, paddle_page
 from beaverhabits.frontend.add_page import add_page_ui
 from beaverhabits.frontend.admin import admin_page
 from beaverhabits.frontend.components import (
@@ -347,6 +347,7 @@ def init_gui_routes(fastapi_app: FastAPI):
     app.on_exception(handle_exception)
     app.on_connect(fetch_user_dark_mode)
     app.on_connect(views.apply_theme_style)
+    app.on_connect(javascript.prevent_context_menu)
 
     ui.run_with(
         fastapi_app,
