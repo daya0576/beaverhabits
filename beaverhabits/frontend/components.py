@@ -1221,17 +1221,18 @@ def habit_name_menu(
 
     with link(habit.name, target=target_page) as name:
         with ui.menu() as menu:
-            menu.props("context-menu")
+            menu.props('auto-close no-parent-event transition-duration=0')
             menu_icon_item("Edit", edit_habit)
-            separator()
-            menu_icon_item("Open", lambda: redirect(target_page))
             separator()
             menu_icon_item("Duplicate", copy_habit)
             separator()
             menu_icon_item("Archive", remove_habit)
+            separator()
+            menu_icon_item("Reorder", lambda: redirect("order"))
 
     # presss and hold
     name.props(f'data-long-press-delay="{PRESS_DELAY}"')
     name.on("long-press.prevent", menu.open)
+    name.on("contextmenu", menu.open)
 
     return name
