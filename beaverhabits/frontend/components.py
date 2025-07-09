@@ -1,5 +1,4 @@
 import calendar
-import copy
 import datetime
 import os
 from collections import OrderedDict
@@ -1096,15 +1095,11 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
         return True
 
     async def save() -> None:
+        if habit not in habit.habit_list.habits:
+            await habit.habit_list.add(habit.name, tags=habit.tags)
+        
         try_update_period()
-        dialog.submit(True)
-
-    async def copy() -> None:
-        await habit.habit_list.add(habit_name_input.value, habit.tags)
-        dialog.submit(True)
-
-    async def remove() -> None:
-        await habit.habit_list.remove(habit)
+        
         dialog.submit(True)
 
     def reset():
@@ -1117,7 +1112,8 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
         card.classes("w-5/6 max-w-64")
 
         with ui.column().classes("w-full"):
-            habit_name_input = HabitNameInput(habit, label="Name").classes("w-full")
+            habit_name_input = HabitNameInput(habit, label="Name")
+            habit_name_input.classes("w-full")
 
             # Habit Frequency
             with ui.row().classes("items-center"):
@@ -1132,9 +1128,7 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
 
             with ui.row():
                 ui.button("Save", on_click=save).props("flat dense")
-                ui.button("Duplicate", on_click=copy).props("flat dense")
-                ui.button("Remove", on_click=remove).props("flat dense")
-                # ui.button("Reset", on_click=reset).props("flat dense")
+                ui.button("Reset", on_click=reset).props("flat dense")
 
     return dialog
 
@@ -1196,16 +1190,36 @@ def habit_name_menu(
 ) -> Element:
     root_path = get_root_path()
     target_page = os.path.join(root_path, "habits", str(habit.id))
-    name = link(habit.name, target=target_page)
-    dialog = habit_edit_dialog(habit)
+
+    edit_dialog = habit_edit_dialog(habit)
+    copy_dialog = habit_edit_dialog(habit.copy())
 
     async def edit_habit():
-        result = await dialog
+        result = await edit_dialog
         if refresh and result:
             refresh()
 
+    async def copy_habit():
+        result = await copy_dialog
+        if refresh and result:
+            refresh()
+
+    async def remove_habit():
+        await habit.habit_list.remove(habit)
+        if refresh:
+            refresh()
+
+    with link(habit.name, target=target_page) as name:
+        with ui.menu() as menu:
+            menu.props("context-menu")
+            menu_icon_item("Edit", edit_habit)
+            separator()
+            menu_icon_item("Duplicate", copy_habit)
+            separator()
+            menu_icon_item("Remove", remove_habit)
+
     # presss and hold
     name.props(f'data-long-press-delay="{PRESS_DELAY}"')
-    name.on("long-press.prevent", edit_habit)
+    name.on("long-press.prevent", menu.open)
 
     return name

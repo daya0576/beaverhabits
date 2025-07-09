@@ -216,7 +216,7 @@ class DictHabit(Habit[DictRecord], DictStorage):
 
     def copy(self) -> "Habit":
         new_data = {
-            "name": f"{self.name} (copy)",
+            "name": self.name,
             "tags": self.tags,
             "star": self.star,
             "period": self.period.to_dict() if self.period else None,

@@ -355,4 +355,5 @@ def init_gui_routes(fastapi_app: FastAPI):
         storage_secret=settings.NICEGUI_STORAGE_SECRET,
         favicon="statics/images/favicon.svg",
         dark=settings.DARK_MODE,
+        reconnect_timeout=10,
     )
