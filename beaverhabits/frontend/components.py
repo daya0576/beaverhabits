@@ -114,7 +114,6 @@ def menu_icon_item(*args, **kwargs):
 
 
 def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
-    text = record.text if record else ""
     with ui.dialog() as dialog, ui.card().props("flat") as card:
         dialog.props('backdrop-filter="blur(4px)"')
         card.classes("w-[640px]")
@@ -122,7 +121,7 @@ def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
         with ui.column().classes("gap-0 w-full"):
             t = Textarea(
                 label=f"Note ({label})" if label else "Note",
-                value=text,
+                value=record.text if record else "",
                 validation={
                     "Too long!": lambda value: len(value)
                     < settings.DAILY_NOTE_MAX_LENGTH
@@ -140,34 +139,40 @@ def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
 
     return dialog, t
 
+class HabitNote:
+    def __init__(self, habit: Habit, day: datetime.date) -> None:
+        self.habit = habit 
+        self.day = day
+        self.record = habit.record_by(day)
 
-async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
-    # Prepare label
-    start = min(habit.ticked_days, default=day)
-    dialog_label = utils.format_date_difference(start, day)
+        # Prepare label
+        start = min(habit.ticked_days, default=day)
+        self.dialog_label = utils.format_date_difference(start, day)
+        self.dialog, self.t = habit_tick_dialog(self.record, label=self.dialog_label)
+        self.t.on_value_change(self.textarea_value_change)
 
-    record = habit.record_by(day)
-    dialog, t = habit_tick_dialog(record, label=dialog_label)
-
-    # Realtime saving
-    async def t_value_change(e: events.ValueChangeEventArguments):
-        if record:
+    async def textarea_value_change(self, e: events.ValueChangeEventArguments):
+        if len(e.value) < 10:
+            return 
+        
+        if record := self.record:
             if abs(len(e.value) - len(record.text)) < 24:
                 return
-        await habit.tick(day, record.done if record else False, e.value)
+        
+        # Realtime saving
+        await self.habit.tick(self.day, record.done if record else False, e.value)
+    
+    async def note_tick(self) -> bool | None:
+        # Final submit
+        result = await self.dialog
+        if result is None:
+            return
+        yes, text = result
 
-    t.on_value_change(t_value_change)
+        record = await self.habit.tick(self.day, yes, text)
+        logger.info(f"Habit ticked: {self.day} {yes}, note: {text}")
 
-    # Form submit
-    result = await dialog
-    if result is None:
-        return
-    yes, text = result
-
-    record = await habit.tick(day, yes, text)
-    logger.info(f"Habit ticked: {day} {yes}, note: {text}")
-
-    return record.done
+        return record.done
 
 
 @ratelimiter(limit=30, window=30)
@@ -205,6 +210,7 @@ class HabitCheckBox(ui.checkbox):
         self.on("click", self._click_event)
 
         # Press and hold
+        self.note = HabitNote(habit, day)
         self.props(f'data-long-press-delay="{PRESS_DELAY}"')
         # Sequence of events: https://ui.toast.com/posts/en_20220106
         #   1. Mouse click: mousedown -> mouseup -> click
@@ -241,13 +247,15 @@ class HabitCheckBox(ui.checkbox):
 
     async def _async_long_press_task(self):
         # Long press diaglog
-        value = await note_tick(self.habit, self.day)
+        value = await self.note.note_tick()
 
         if value is not None:
             self.value = value
             self._refresh()
 
         await self._blur()
+        
+        self.note = HabitNote(self.habit, self.day)
 
     async def _blur(self):
         # Resolve ripple issue
@@ -598,6 +606,7 @@ class CalendarCheckBox(ui.checkbox):
             self.on("touchstart.prevent", lambda: True)
 
         # Hold on event flag
+        self.note= HabitNote(self.habit, self.day)
         self.props(f'data-long-press-delay="{PRESS_DELAY}"')
         self.on("long-press", self._async_long_press_task)
 
@@ -640,9 +649,10 @@ class CalendarCheckBox(ui.checkbox):
 
     async def _async_long_press_task(self):
         # Long press diaglog
-        value = await note_tick(self.habit, self.day)
+        value = await self.note.note_tick()
         if value is not None:
             self.value = value
+        
         if self.refresh:
             self.refresh()
 
@@ -780,7 +790,7 @@ class HabitTag(ui.chip):
 
 
 async def on_dblclick(habit, day):
-    await note_tick(habit, day)
+    await HabitNote(habit, day).note_tick()
     habit_notes.refresh()
 
 
@@ -922,10 +932,10 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
         
             // scroll event
             window.addEventListener('wheel', function(event) {
-                if (window.scrollY === 0 && event.deltaY < -1) {
+                if (window.scrollY === 0 && event.deltaY < -30) {
                     element.classList.remove("hidden");
                 }
-                if (window.scrollY === 0 && event.deltaY > 1) {
+                if (window.scrollY === 0 && event.deltaY > 30) {
                     element.classList.add("hidden");
                 }
             }, { passive: true  });
@@ -937,10 +947,10 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
             }, { passive: true  });
             window.addEventListener('touchmove', function(event) {
                 let currentY = event.touches[0].clientY;
-                if (window.scrollY === 0 && currentY - startY < -1) {
+                if (window.scrollY === 0 && currentY - startY < -30) {
                     element.classList.add("hidden");
                 }
-                if (window.scrollY === 0 && currentY - startY > 1) {
+                if (window.scrollY === 0 && currentY - startY > 30) {
                     element.classList.remove("hidden");
                 }
             }, { passive: true  });
@@ -1205,7 +1215,7 @@ def habit_name_menu(
             refresh()
 
     async def remove_habit():
-        await habit.habit_list.remove(habit)
+        habit.status = HabitStatus.ARCHIVED
         if refresh:
             refresh()
 
@@ -1214,9 +1224,11 @@ def habit_name_menu(
             menu.props("context-menu")
             menu_icon_item("Edit", edit_habit)
             separator()
+            menu_icon_item("Open", lambda: redirect(target_page))
+            separator()
             menu_icon_item("Duplicate", copy_habit)
             separator()
-            menu_icon_item("Remove", remove_habit)
+            menu_icon_item("Archive", remove_habit)
 
     # presss and hold
     name.props(f'data-long-press-delay="{PRESS_DELAY}"')

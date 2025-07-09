@@ -93,8 +93,8 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 
         # Habit Rows
         groups = habits_by_tags(active_habits)
-        if len(groups) > 1:
-            if selected_tags := TagManager.get_all():
+        if len(groups) >= 2:
+            if selected_tags := TagManager.get_all() & groups.keys():
                 groups = OrderedDict(
                     (k, v) for k, v in groups.items() if k in selected_tags
                 )
@@ -122,7 +122,6 @@ def index_page_ui(days: list[datetime.date], habits: HabitList):
         days = list(reversed(days))
 
     with layout(habit_list=habits):
-        tag_filter_component(active_habits, refresh=habit_list_ui.refresh)
         habit_list_ui(days, active_habits)
 
     # placeholder to preload js cache (daily notes)
