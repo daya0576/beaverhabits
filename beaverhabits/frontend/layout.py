@@ -14,6 +14,7 @@ from beaverhabits.frontend.components import (
     redirect,
     separator,
 )
+from beaverhabits.frontend.javascript import PREVENT_CONTEXT_MENU
 from beaverhabits.frontend.menu import add_menu, sort_menu
 from beaverhabits.storage.meta import (
     get_root_path,
@@ -72,6 +73,9 @@ def custom_headers():
 
     # Prevent white flash on page load
     ui.add_css(css.WHITE_FLASH_PREVENT)
+
+    # prevent context menu
+    ui.add_body_html(f"<script>{PREVENT_CONTEXT_MENU}</script>")
 
 
 @ui.refreshable

@@ -18,6 +18,7 @@ from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.frontend import icons
+from beaverhabits.frontend.javascript import force_checkbox_blur
 from beaverhabits.frontend.textarea import Textarea
 from beaverhabits.logger import logger
 from beaverhabits.plan import plan
@@ -161,10 +162,13 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     # Form submit
     logger.info(f"Waiting for dialog {habit}...")
     result = await dialog
+
+    await force_checkbox_blur()
+
     if result is None:
         return
-    yes, text = result
 
+    yes, text = result
     record = await habit.tick(day, yes, text)
     logger.info(f"Habit ticked: {day} {yes}, note: {text}")
 
@@ -257,8 +261,6 @@ class HabitCheckBox(ui.checkbox):
                 self.value = value
                 self._refresh()
 
-            await self._blur()
-
     async def _click_event(self, e):
         self.value = e.sender.value
 
@@ -275,16 +277,6 @@ class HabitCheckBox(ui.checkbox):
         # logger.info(f"Move event: {self.day}, {e}")
         self.moving = True
         self.hold.set()
-
-    async def _blur(self):
-        # Resolve ripple issue
-        # https://github.com/quasarframework/quasar/blob/dev/ui/src/components/checkbox/QCheckbox.sass
-        await ui.run_javascript(
-            """
-           const checkboxes = document.querySelectorAll('.q-checkbox');
-           checkboxes.forEach(checkbox => {checkbox.blur()});
-           """
-        )
 
     def _update_style(self, value: bool):
         self.value = value
