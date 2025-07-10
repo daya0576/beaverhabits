@@ -49,7 +49,7 @@ strptime = datetime.datetime.strptime
 
 CALENDAR_EVENT_MASK = "%Y/%m/%d"
 
-PRESS_DELAY = 180
+PRESS_DELAY = 150
 
 
 def redirect(x):
@@ -139,40 +139,36 @@ def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
 
     return dialog, t
 
-class HabitNote:
-    def __init__(self, habit: Habit, day: datetime.date) -> None:
-        self.habit = habit 
-        self.day = day
-        self.record = habit.record_by(day)
 
-        # Prepare label
-        start = min(habit.ticked_days, default=day)
-        self.dialog_label = utils.format_date_difference(start, day)
-        self.dialog, self.t = habit_tick_dialog(self.record, label=self.dialog_label)
-        self.t.on_value_change(self.textarea_value_change)
+async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
+    logger.info(f"Taking note for {habit}...")
+    start = min(habit.ticked_days, default=day)
+    dialog_label = utils.format_date_difference(start, day)
 
-    async def textarea_value_change(self, e: events.ValueChangeEventArguments):
-        if len(e.value) < 10:
-            return 
-        
-        if record := self.record:
+    record = habit.record_by(day)
+    dialog, t = habit_tick_dialog(record, label=dialog_label)
+
+    # Realtime saving
+    async def t_value_change(e: events.ValueChangeEventArguments):
+        if record:
+
             if abs(len(e.value) - len(record.text)) < 24:
                 return
-        
-        # Realtime saving
-        await self.habit.tick(self.day, record.done if record else False, e.value)
-    
-    async def note_tick(self) -> bool | None:
-        # Final submit
-        result = await self.dialog
-        if result is None:
-            return
-        yes, text = result
+        await habit.tick(day, record.done if record else False, e.value)
 
-        record = await self.habit.tick(self.day, yes, text)
-        logger.info(f"Habit ticked: {self.day} {yes}, note: {text}")
+    t.on_value_change(t_value_change)
 
-        return record.done
+    # Form submit
+    logger.info(f"Waiting for dialog {habit}...")
+    result = await dialog
+    if result is None:
+        return
+    yes, text = result
+
+    record = await habit.tick(day, yes, text)
+    logger.info(f"Habit ticked: {day} {yes}, note: {text}")
+
+    return record.done
 
 
 @ratelimiter(limit=30, window=30)
@@ -210,7 +206,6 @@ class HabitCheckBox(ui.checkbox):
         self.on("click", self._click_event)
 
         # Press and hold
-        self.note = HabitNote(habit, day)
         self.props(f'data-long-press-delay="{PRESS_DELAY}"')
         # Sequence of events: https://ui.toast.com/posts/en_20220106
         #   1. Mouse click: mousedown -> mouseup -> click
@@ -247,15 +242,13 @@ class HabitCheckBox(ui.checkbox):
 
     async def _async_long_press_task(self):
         # Long press diaglog
-        value = await self.note.note_tick()
+        value = await note_tick(self.habit, self.day)
 
         if value is not None:
             self.value = value
             self._refresh()
 
         await self._blur()
-        
-        self.note = HabitNote(self.habit, self.day)
 
     async def _blur(self):
         # Resolve ripple issue
@@ -606,7 +599,6 @@ class CalendarCheckBox(ui.checkbox):
             self.on("touchstart.prevent", lambda: True)
 
         # Hold on event flag
-        self.note= HabitNote(self.habit, self.day)
         self.props(f'data-long-press-delay="{PRESS_DELAY}"')
         self.on("long-press", self._async_long_press_task)
 
@@ -649,10 +641,10 @@ class CalendarCheckBox(ui.checkbox):
 
     async def _async_long_press_task(self):
         # Long press diaglog
-        value = await self.note.note_tick()
+        value = await note_tick(self.habit, self.day)
         if value is not None:
             self.value = value
-        
+
         if self.refresh:
             self.refresh()
 
@@ -790,7 +782,7 @@ class HabitTag(ui.chip):
 
 
 async def on_dblclick(habit, day):
-    await HabitNote(habit, day).note_tick()
+    await note_tick(habit, day)
     habit_notes.refresh()
 
 
@@ -1107,9 +1099,9 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
     async def save() -> None:
         if habit not in habit.habit_list.habits:
             await habit.habit_list.add(habit.name, tags=habit.tags)
-        
+
         try_update_period()
-        
+
         dialog.submit(True)
 
     def reset():
@@ -1221,7 +1213,7 @@ def habit_name_menu(
 
     with link(habit.name, target=target_page) as name:
         with ui.menu() as menu:
-            menu.props('auto-close no-parent-event transition-duration=0')
+            menu.props("auto-close no-parent-event transition-duration=0")
             menu_icon_item("Edit", edit_habit)
             separator()
             menu_icon_item("Duplicate", copy_habit)
