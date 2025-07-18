@@ -2,7 +2,7 @@ import datetime
 import re
 from dataclasses import asdict, dataclass
 from enum import Enum, auto
-from typing import List, Literal, Optional, Protocol, Self
+from typing import List, Literal, Optional, Protocol, Self, TypeVar
 
 from dataclasses_json import DataClassJsonMixin
 
@@ -72,11 +72,12 @@ class HabitFrequency:
         # Parse from pattern
         m = re.match(cls.PATTERN, value)
 
-        # Extract the values
+        # Check for a valid match BEFORE accessing groups
         if not m:
             raise ValueError(f"Invalid pattern: {value}")
 
-        t_c, p_c, p_t = m.groups()[1:]
+        # Extract the values
+        t_c, p_c, p_t = m.groups()
         if p_t not in PERIOD_TYPES:
             raise ValueError(f"Invalid period type: {p_t}")
         if not p_c.isdigit() or not t_c.isdigit():
@@ -85,6 +86,7 @@ class HabitFrequency:
 
         # Create the object
         return cls(p_t, p_c, t_c)
+
 
     def __eq__(self, other):
         if isinstance(other, HabitFrequency):
@@ -99,7 +101,10 @@ class HabitFrequency:
 EVERY_DAY = HabitFrequency(D, 1, 1)
 
 
-class Habit[R: CheckedRecord](Protocol):
+R = TypeVar("R", bound=CheckedRecord)
+
+
+class Habit(Protocol[R]):
     @property
     def habit_list(self) -> "HabitList": ...
 
@@ -178,7 +183,10 @@ class Backup(DataClassJsonMixin):
     telegram_chat_id: str | None = None
 
 
-class HabitList[H: Habit](Protocol):
+H = TypeVar("H", bound=Habit)
+
+
+class HabitList(Protocol[H]):
 
     @property
     def habits(self) -> List[H]: ...
@@ -208,13 +216,16 @@ class HabitList[H: Habit](Protocol):
     async def get_habit_by(self, habit_id: str) -> Optional[H]: ...
 
 
-class SessionStorage[L: HabitList](Protocol):
+L = TypeVar("L", bound=HabitList)
+
+
+class SessionStorage(Protocol[L]):
     def get_user_habit_list(self) -> Optional[L]: ...
 
     def save_user_habit_list(self, habit_list: L) -> None: ...
 
 
-class UserStorage[L: HabitList](Protocol):
+class UserStorage(Protocol[L]):
     async def get_user_habit_list(self, user: User) -> L: ...
 
     async def init_user_habit_list(self, user: User, habit_list: L) -> None: ...
