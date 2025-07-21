@@ -346,8 +346,7 @@ def init_gui_routes(fastapi_app: FastAPI):
     app.add_static_files("/statics", "statics", max_cache_age=oneyear)
     app.on_exception(handle_exception)
     app.on_connect(fetch_user_dark_mode)
-    app.on_connect(views.apply_theme_style)
-    app.on_connect(javascript.prevent_context_menu)
+    # app.on_connect(views.apply_theme_style)
 
     ui.run_with(
         fastapi_app,

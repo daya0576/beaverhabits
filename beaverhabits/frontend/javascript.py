@@ -96,3 +96,14 @@ def show_icons():
         });
         """
     )
+
+
+async def force_checkbox_blur():
+    # Resolve ripple issue
+    # https://github.com/quasarframework/quasar/blob/dev/ui/src/components/checkbox/QCheckbox.sass
+    await ui.run_javascript(
+        """
+       const checkboxes = document.querySelectorAll('.q-checkbox');
+       checkboxes.forEach(checkbox => {checkbox.blur()});
+       """
+    )

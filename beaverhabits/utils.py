@@ -61,6 +61,9 @@ async def get_or_create_user_timezone() -> str:
 
 @on_connect_task
 async def fetch_user_dark_mode() -> None:
+    if app.storage.user.get(DARK_MODE_KEY) is not None:
+        return
+
     try:
         dark = await ui.run_javascript("Quasar.Dark.isActive")
         app.storage.user[DARK_MODE_KEY] = dark

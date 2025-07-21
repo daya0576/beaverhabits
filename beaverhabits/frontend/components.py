@@ -1,3 +1,4 @@
+import asyncio
 import calendar
 import datetime
 import os
@@ -17,6 +18,7 @@ from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.frontend import icons
+from beaverhabits.frontend.javascript import force_checkbox_blur
 from beaverhabits.frontend.textarea import Textarea
 from beaverhabits.logger import logger
 from beaverhabits.plan import plan
@@ -49,7 +51,7 @@ strptime = datetime.datetime.strptime
 
 CALENDAR_EVENT_MASK = "%Y/%m/%d"
 
-PRESS_DELAY = 180
+PRESS_DELAY = 150
 
 
 def redirect(x):
@@ -139,40 +141,38 @@ def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
 
     return dialog, t
 
-class HabitNote:
-    def __init__(self, habit: Habit, day: datetime.date) -> None:
-        self.habit = habit 
-        self.day = day
-        self.record = habit.record_by(day)
 
-        # Prepare label
-        start = min(habit.ticked_days, default=day)
-        self.dialog_label = utils.format_date_difference(start, day)
-        self.dialog, self.t = habit_tick_dialog(self.record, label=self.dialog_label)
-        self.t.on_value_change(self.textarea_value_change)
+async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
+    start = min(habit.ticked_days, default=day)
+    dialog_label = utils.format_date_difference(start, day)
 
-    async def textarea_value_change(self, e: events.ValueChangeEventArguments):
-        if len(e.value) < 10:
-            return 
-        
-        if record := self.record:
+    record = habit.record_by(day)
+    dialog, t = habit_tick_dialog(record, label=dialog_label)
+
+    # Realtime saving
+    async def t_value_change(e: events.ValueChangeEventArguments):
+        if record:
+
             if abs(len(e.value) - len(record.text)) < 24:
                 return
-        
-        # Realtime saving
-        await self.habit.tick(self.day, record.done if record else False, e.value)
-    
-    async def note_tick(self) -> bool | None:
-        # Final submit
-        result = await self.dialog
-        if result is None:
-            return
-        yes, text = result
+        await habit.tick(day, record.done if record else False, e.value)
 
-        record = await self.habit.tick(self.day, yes, text)
-        logger.info(f"Habit ticked: {self.day} {yes}, note: {text}")
+    t.on_value_change(t_value_change)
 
-        return record.done
+    # Form submit
+    logger.info(f"Waiting for dialog {habit}...")
+    result = await dialog
+
+    await force_checkbox_blur()
+
+    if result is None:
+        return
+
+    yes, text = result
+    record = await habit.tick(day, yes, text)
+    logger.info(f"Habit ticked: {day} {yes}, note: {text}")
+
+    return record.done
 
 
 @ratelimiter(limit=30, window=30)
@@ -206,24 +206,33 @@ class HabitCheckBox(ui.checkbox):
         super().__init__("", value=value)
         self._update_style(value)
 
+        # Hold on event flag
+        self.hold = asyncio.Event()
+        self.moving = False
+
         # Click Event
         self.on("click", self._click_event)
 
-        # Press and hold
-        self.note = HabitNote(habit, day)
-        self.props(f'data-long-press-delay="{PRESS_DELAY}"')
+        # Touch and hold event
         # Sequence of events: https://ui.toast.com/posts/en_20220106
-        #   1. Mouse click: mousedown -> mouseup -> click
-        #   2. Touch click: touchstart -> touchend -> mousemove -> mousedown -> mouseup -> click
-        #   3. Touch move:  touchstart -> touchmove -> touchend
+        # 1. Mouse click: mousedown -> mouseup -> click
+        # 2. Touch click: touchstart -> touchend -> mousemove -> mousedown -> mouseup -> click
+        # 3. Touch move:  touchstart -> touchmove -> touchend
+        self.on("mousedown", self._mouse_down_event)
+        self.on("touchstart.passive", self._mouse_down_event)
+
         # Event modifiers
-        #   1. *Prevent* checkbox default behavior
-        #   2. *Prevent* propagation of the event
+        # 1. *Prevent* checkbox default behavior
+        # 2. *Prevent* propagation of the event
+        self.on("mouseup", self._mouse_up_event)
+        self.on("touchend", self._mouse_up_event)
+        self.on("touchmove.passive", self._mouse_move_event, throttle=1)
+        # self.on("mousemove", self._mouse_move_event)
+
         # Checklist: value change, scrolling
-        #   - Desktop browser
-        #   - iOS browser / standalone mode
-        #   - Android browser / PWA
-        self.on("long-press", self._async_long_press_task)
+        # - Desktop browser
+        # - iOS browser / standalone mode
+        # - Android browser / PWA
 
     def _refresh(self):
         logger.debug(f"Refresh: {self.day}, {self.value}")
@@ -237,6 +246,21 @@ class HabitCheckBox(ui.checkbox):
         # Do refresh the total row
         self.row_refresh()
 
+    async def _mouse_down_event(self, e):
+        logger.info(f"Down event: {self.day}, {e.args.get('type')}")
+        self.hold.clear()
+        self.moving = False
+        try:
+            async with asyncio.timeout(0.2):
+                await self.hold.wait()
+        except asyncio.TimeoutError:
+            # Long press diaglog
+            value = await note_tick(self.habit, self.day)
+
+            if value is not None:
+                self.value = value
+                self._refresh()
+
     async def _click_event(self, e):
         self.value = e.sender.value
 
@@ -245,27 +269,14 @@ class HabitCheckBox(ui.checkbox):
 
         self._refresh()
 
-    async def _async_long_press_task(self):
-        # Long press diaglog
-        value = await self.note.note_tick()
+    async def _mouse_up_event(self, e):
+        logger.info(f"Up event: {self.day}, {e.args.get('type')}")
+        self.hold.set()
 
-        if value is not None:
-            self.value = value
-            self._refresh()
-
-        await self._blur()
-        
-        self.note = HabitNote(self.habit, self.day)
-
-    async def _blur(self):
-        # Resolve ripple issue
-        # https://github.com/quasarframework/quasar/blob/dev/ui/src/components/checkbox/QCheckbox.sass
-        await ui.run_javascript(
-            """
-           const checkboxes = document.querySelectorAll('.q-checkbox');
-           checkboxes.forEach(checkbox => {checkbox.blur()});
-           """
-        )
+    async def _mouse_move_event(self):
+        # logger.info(f"Move event: {self.day}, {e}")
+        self.moving = True
+        self.hold.set()
 
     def _update_style(self, value: bool):
         self.value = value
@@ -606,7 +617,6 @@ class CalendarCheckBox(ui.checkbox):
             self.on("touchstart.prevent", lambda: True)
 
         # Hold on event flag
-        self.note= HabitNote(self.habit, self.day)
         self.props(f'data-long-press-delay="{PRESS_DELAY}"')
         self.on("long-press", self._async_long_press_task)
 
@@ -649,10 +659,10 @@ class CalendarCheckBox(ui.checkbox):
 
     async def _async_long_press_task(self):
         # Long press diaglog
-        value = await self.note.note_tick()
+        value = await note_tick(self.habit, self.day)
         if value is not None:
             self.value = value
-        
+
         if self.refresh:
             self.refresh()
 
@@ -790,7 +800,7 @@ class HabitTag(ui.chip):
 
 
 async def on_dblclick(habit, day):
-    await HabitNote(habit, day).note_tick()
+    await note_tick(habit, day)
     habit_notes.refresh()
 
 
@@ -1107,9 +1117,9 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
     async def save() -> None:
         if habit not in habit.habit_list.habits:
             await habit.habit_list.add(habit.name, tags=habit.tags)
-        
+
         try_update_period()
-        
+
         dialog.submit(True)
 
     def reset():
@@ -1221,7 +1231,7 @@ def habit_name_menu(
 
     with link(habit.name, target=target_page) as name:
         with ui.menu() as menu:
-            menu.props('auto-close no-parent-event transition-duration=0')
+            menu.props("auto-close no-parent-event transition-duration=0")
             menu_icon_item("Edit", edit_habit)
             separator()
             menu_icon_item("Duplicate", copy_habit)
