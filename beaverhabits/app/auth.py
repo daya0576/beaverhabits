@@ -118,7 +118,7 @@ async def user_get_by_id(user_id: UUID) -> User:
 
 
 def user_logout() -> bool:
-    app.storage.user.update({"auth_token": ""})
+    app.storage.user.clear()
     return True
 
 

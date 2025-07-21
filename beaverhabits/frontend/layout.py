@@ -22,7 +22,6 @@ from beaverhabits.storage.meta import (
     page_title,
 )
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.utils import fetch_user_dark_mode
 
 
 def pwa_headers():
