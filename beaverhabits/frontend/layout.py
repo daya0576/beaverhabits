@@ -1,3 +1,4 @@
+import time
 from contextlib import contextmanager
 
 from nicegui import background_tasks, ui
@@ -26,18 +27,13 @@ from beaverhabits.storage.storage import Habit, HabitList
 
 
 def pwa_headers():
-    # Apple touch icon
-    ui.add_head_html(
-        '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">'
-    )
-    ui.add_head_html('<meta name="apple-mobile-web-app-title" content="Beaver">')
-    ui.add_head_html(
-        '<meta name="apple-mobile-web-app-status-bar-style" content="black">'
-    )
-    # viewBox="90 90 220 220"
-    ui.add_head_html(
-        '<link rel="apple-touch-icon" href="/statics/images/apple-touch-icon-v4.png">'
-    )
+    # Viewport Settings for Web Applications
+    # https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html#//apple_ref/doc/uid/TP40006509-SW19
+    # ui.add_head_html(
+    #     '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">'
+    # )
+
+    time.sleep(1)
 
     # PWA support
     ui.add_head_html('<link rel="manifest" href="/statics/pwa/manifest.json">')
@@ -52,7 +48,21 @@ def pwa_headers():
 
     # Experimental iOS standalone mode
     if settings.ENABLE_IOS_STANDALONE:
+        # Apple touch icon
+        ui.add_head_html(
+            '<link rel="apple-touch-icon" href="/statics/images/apple-touch-icon-v4.png">'
+        )
+        # Specifying a Launch Screen Image
+        ui.add_head_html(
+            '<link rel="apple-touch-startup-image" href="/statics/images/apple-touch-icon-v4.png">'
+        )
+        # Hiding Safari User Interface Components
         ui.add_head_html('<meta name="mobile-web-app-capable" content="yes">')
+        # Adding a Launch Icon Title
+        ui.add_head_html('<meta name="apple-mobile-web-app-title" content="Beaver">')
+        ui.add_head_html(
+            '<meta name="apple-mobile-web-app-status-bar-style" content="black">'
+        )
 
 
 def custom_headers():
