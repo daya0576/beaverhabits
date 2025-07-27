@@ -29,9 +29,6 @@ from beaverhabits.storage.storage import Habit, HabitList
 def pwa_headers():
     # Viewport Settings for Web Applications
     # https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html#//apple_ref/doc/uid/TP40006509-SW19
-    # ui.add_head_html(
-    #     '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">'
-    # )
     ui.add_head_html(
         '<meta name = "viewport" content = "user-scalable=no, width=device-width">'
     )
@@ -47,23 +44,24 @@ def pwa_headers():
         """
     )
 
+    # Apple touch icon
+    ui.add_head_html(
+        '<link rel="apple-touch-icon" href="/statics/images/apple-touch-icon-v4.png">'
+    )
+    # Specifying a Launch Screen Image
+    ui.add_head_html(
+        '<link rel="apple-touch-startup-image" href="/statics/images/apple-touch-icon-v4.png">'
+    )
+    # Adding a Launch Icon Title
+    ui.add_head_html('<meta name="apple-mobile-web-app-title" content="Beaver">')
+    ui.add_head_html(
+        '<meta name="apple-mobile-web-app-status-bar-style" content="black">'
+    )
+
     # Experimental iOS standalone mode
     if settings.ENABLE_IOS_STANDALONE:
-        # Apple touch icon
-        ui.add_head_html(
-            '<link rel="apple-touch-icon" href="/statics/images/apple-touch-icon-v4.png">'
-        )
-        # Specifying a Launch Screen Image
-        ui.add_head_html(
-            '<link rel="apple-touch-startup-image" href="/statics/images/apple-touch-icon-v4.png">'
-        )
         # Hiding Safari User Interface Components
         ui.add_head_html('<meta name="mobile-web-app-capable" content="yes">')
-        # Adding a Launch Icon Title
-        ui.add_head_html('<meta name="apple-mobile-web-app-title" content="Beaver">')
-        ui.add_head_html(
-            '<meta name="apple-mobile-web-app-status-bar-style" content="black">'
-        )
 
 
 def custom_headers():
