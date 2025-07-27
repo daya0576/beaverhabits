@@ -130,6 +130,7 @@ def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
                 },
             )
             t.classes("w-full")
+            t.style("font-size: 14px;")
 
             with ui.row():
                 ui.button("Yes", on_click=lambda: dialog.submit((True, t.value))).props(

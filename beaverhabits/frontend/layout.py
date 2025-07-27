@@ -32,8 +32,9 @@ def pwa_headers():
     # ui.add_head_html(
     #     '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">'
     # )
-
-    time.sleep(1)
+    ui.add_head_html(
+        '<meta name = "viewport" content = "user-scalable=no, width=device-width">'
+    )
 
     # PWA support
     ui.add_head_html('<link rel="manifest" href="/statics/pwa/manifest.json">')
