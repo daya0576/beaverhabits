@@ -355,4 +355,7 @@ def init_gui_routes(fastapi_app: FastAPI):
         favicon="statics/images/favicon.svg",
         dark=settings.DARK_MODE,
         reconnect_timeout=10,
+        # Viewport Settings for Web Applications
+        # https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html#//apple_ref/doc/uid/TP40006509-SW19
+        viewport="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no",
     )

@@ -1,12 +1,11 @@
 {
+  "id": "beaverhabits",
   "name": "Beaver",
   "short_name": "Beaver",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
   "start_url": "/gui/",
-  "id": "beaverhabits",
-  "display_override": [],
   "icons": [
     {
       "src": "/statics/images/apple-touch-icon-v4.png",
