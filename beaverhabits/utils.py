@@ -201,7 +201,7 @@ def send_email(subject: str, body: str, recipients: list[str]):
     sender = settings.SMTP_EMAIL_USERNAME
     password = settings.SMTP_EMAIL_PASSWORD
 
-    msg = MIMEText(body)
+    msg = MIMEText(body or subject)
     msg["Subject"] = subject
     msg["From"] = sender
     msg["To"] = ", ".join(recipients)

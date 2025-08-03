@@ -109,14 +109,13 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
 @ui.refreshable
 def index_page_ui(days: list[datetime.date], habits: HabitList):
     active_habits = HabitListBuilder(habits).status(HabitStatus.ACTIVE).build()
-    if not active_habits:
-        ui.label("List is empty.").classes("mx-auto w-80")
-        return
-
     if settings.INDEX_HABIT_DATE_REVERSE:
         days = list(reversed(days))
 
     with layout(habit_list=habits):
+        if not active_habits:
+            ui.label("List is empty.").classes("mx-auto w-80")
+            return
         habit_list_ui(days, active_habits)
 
     # placeholder to preload js cache (daily notes)

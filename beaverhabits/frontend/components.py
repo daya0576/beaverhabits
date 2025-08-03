@@ -1237,9 +1237,9 @@ def habit_name_menu(
             separator()
             menu_icon_item("Duplicate", copy_habit)
             separator()
-            menu_icon_item("Archive", remove_habit)
-            separator()
             menu_icon_item("Reorder", lambda: redirect("order"))
+            separator()
+            menu_icon_item("Archive", remove_habit)
 
     # presss and hold
     name.props(f'data-long-press-delay="{PRESS_DELAY}"')
