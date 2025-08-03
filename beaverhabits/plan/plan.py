@@ -1,14 +1,14 @@
 import asyncio
 import random
 
-from nicegui import app, context, ui
+from nicegui import app, ui
 
 from beaverhabits.app import crud
 from beaverhabits.app.auth import user_from_token
 from beaverhabits.configs import settings
 from beaverhabits.logger import logger
 from beaverhabits.storage.meta import page_path
-from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
+from beaverhabits.storage.storage import HabitList, HabitStatus
 
 
 async def checkout():
@@ -17,12 +17,6 @@ async def checkout():
     user = await user_from_token(token)
     email = user.email if user else ""
     logger.info(f"Checkout email: {email}")
-
-    if not email:
-        ui.notify("Please sign to continue checkout", position="top", color="negative")
-        app.storage.user["referrer_path"] = "/pricing"
-        ui.timer(2, lambda: ui.navigate.to("/register", new_tab=True), once=True)
-        return
 
     ui.run_javascript(f"openCheckout('{email}')")
 
@@ -36,8 +30,6 @@ async def check_pro() -> bool:
     if not settings.ENABLE_PLAN:
         return True
     if "demo" in page_path():
-        return True
-    if settings.is_dev():
         return True
 
     token = app.storage.user.get("auth_token")

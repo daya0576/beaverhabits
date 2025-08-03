@@ -122,22 +122,23 @@ async def get_or_create_user_habit_list(
     return habit_list
 
 
-async def export_user_habit_list(habit_list: HabitList, user_identify: str) -> None:
+async def export_user_habit_list(habit_list: HabitList, user_identify: str) -> bool:
     habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
 
     # json to binary
     now = datetime.datetime.now()
-    if isinstance(habit_list, DictHabitList):
-        export_d = {
-            "user_email": user_identify,
-            "exported_at": now.strftime("%Y-%m-%d %H:%M:%S"),
-            "habits": [habit.to_dict() for habit in habits],
-        }
-        binary_data = json.dumps(export_d).encode()
-        file_name = f"beaverhabits_{now.strftime('%Y_%m_%d')}.json"
-        ui.download(binary_data, file_name)
-    else:
-        ui.notification("Export failed, please try again later.")
+    if not isinstance(habit_list, DictHabitList):
+        return False
+
+    export_d = {
+        "user_email": user_identify,
+        "exported_at": now.strftime("%Y-%m-%d %H:%M:%S"),
+        "habits": [habit.to_dict() for habit in habits],
+    }
+    binary_data = json.dumps(export_d).encode()
+    file_name = f"beaverhabits_{now.strftime('%Y_%m_%d')}.json"
+    ui.download(binary_data, file_name)
+    return True
 
 
 async def validate_max_user_count():

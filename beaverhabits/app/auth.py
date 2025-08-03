@@ -172,3 +172,10 @@ async def user_reset_password(user: User, new_password: str) -> User:
                     user, {"password": new_password}
                 )
                 return updated_user
+
+
+async def user_deletion(user: User) -> None:
+    async with get_async_session_context() as session:
+        async with get_user_db_context(session) as user_db:
+            async with get_user_manager_context(user_db) as user_manager:
+                await user_manager.delete(user)
