@@ -25,10 +25,12 @@ A self-hosted habit tracking app without "Goals"
 
 # Getting Started
 
-## Cloud
+## Cloud Service (SaaS)
+
+Zero configuration, high availability, and low latency powered by global edge network.
 
 - Demo: https://beaverhabits.com/demo
-- Login: https://beaverhabits.com
+- Pricing Plans: https://beaverhabits.com
 
 ## Self-Hosting
 
@@ -101,24 +103,27 @@ uv venv && uv sync
 
 # Features
 
-Checkout the [wiki](https://github.com/daya0576/beaverhabits/wiki) page for a full list of features, and [vote](https://github.com/daya0576/beaverhabits/discussions/78) on your most wanted feature.
+### Extensibility
+- [x] [Import From Existing Setup](https://github.com/daya0576/beaverhabits/wiki/Import-From-Existing-Setup)
+- [x] [Beaver Habit Tracker API How‐to Guide](https://github.com/daya0576/beaverhabits/wiki/Beaver-Habit-Tracker-API-How%E2%80%90to-Guide)
+- [x] [iOS Web App Support](https://github.com/daya0576/beaverhabits/wiki/To-add-standalone-mode-for-iOS-(Web-Application))
 
-## Extensibility
-- [x] RESTful APIs
-- [x] Export & Import
-- [x] PWA for iOS & Android
-
-## Habit Management
-- [x] Daily notes/descriptions
-- [x] Reorder habits (manually or automatic)
-- [x] Organize Habits by Tag
-- [x] Periodic habits
-- [ ] Measurable habits (WIP)
-- [ ] Multiple states
+### Habit Management
+- [x] [Context Menu Actions](https://github.com/daya0576/beaverhabits/releases/tag/v0.7.0) (edit/duplicate/archive)
+- [x] Daily Notes & Comments
+- [x] Flexible Habit Ordering
+- [x] [Organize Habits by Category](https://github.com/daya0576/beaverhabits/wiki/Organize-Habits-by-Category)
+- [x] [Periodic habits](https://github.com/daya0576/beaverhabits/wiki/Periodic-habits)
+- [ ] Measurable Habits (Coming Soon)
+- [ ] Multiple States (Planned)
 
 ## Authentication
 - [x] Trusted Header SSO
 - [x] Bypass login page
+
+### Appearance
+- [x] Theme Options (Light Mode/Dark Mode)
+- [x] Custom CSS Styling
 
 Here are my table tennis training sessions over the past year ^^
 
