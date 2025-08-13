@@ -7,7 +7,12 @@ from beaverhabits.frontend.components import (
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.logger import logger
-from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
+from beaverhabits.storage.storage import (
+    HabitList,
+    HabitListBuilder,
+    HabitOrder,
+    HabitStatus,
+)
 
 
 async def item_drop(e, habit_list: HabitList):
@@ -42,6 +47,7 @@ async def item_drop(e, habit_list: HabitList):
 
     # Update order
     habit_list.order = [str(x.id) for x in habits]
+    habit_list.order_by = HabitOrder.MANUALLY
     logger.info(f"New order: {habits}")
 
     add_ui.refresh()
@@ -60,7 +66,7 @@ def add_ui(habit_list: HabitList):
                 continue
 
         with components.HabitOrderCard(item) as card:
-            with ui.row().classes("min-h-10 w-80 items-center"):
+            with ui.row().classes("min-h-10 w-80 items-center gap-2"):
                 ui.label(item.name)
 
                 ui.space()
@@ -69,6 +75,10 @@ def add_ui(habit_list: HabitList):
                     btn = HabitDeleteButton(item, habit_list, add_ui.refresh)
                     btn.classes("opacity-0")
                     card.btn = btn
+
+                for tag in item.tags:
+                    ui.badge(tag).props("color=grey-9")
+
                 badge = HabitTotalBadge(item)
                 badge.props("color=grey-9")
 

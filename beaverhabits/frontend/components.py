@@ -366,7 +366,6 @@ class HabitNameInput(ui.input):
         self.value = self.encode_name(self.habit)
 
         if self.habit.tags:
-            self.habit.habit_list.order_by = HabitOrder.CATEGORY
             if self.refresh:
                 self.refresh()
 
@@ -767,7 +766,6 @@ class HabitTotalBadge(ui.badge):
     def __init__(self, habit: Habit) -> None:
         super().__init__()
         self.bind_text_from(habit, "ticked_days", backward=lambda x: str(len(x)))
-
 
 class IndexBadge(HabitTotalBadge):
     def __init__(self, today: datetime.date, habit: Habit) -> None:
