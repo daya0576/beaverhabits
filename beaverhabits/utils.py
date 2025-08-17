@@ -16,7 +16,7 @@ import pytz
 from cachetools import TTLCache
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
-from nicegui import app, background_tasks, ui
+from nicegui import app, ui
 from psutil._common import bytes2human
 from starlette import status
 

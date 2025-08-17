@@ -8,6 +8,11 @@ from fastapi import APIRouter, FastAPI, HTTPException, status
 from fastapi.responses import Response
 from psutil._common import bytes2human
 
+try:
+    from beaverhabits.version import IDENTITY
+except:
+    IDENTITY = "unknown"
+
 # fmt: off
 try:
     from guppy import hpy; h=hpy() # type: ignore
@@ -31,6 +36,7 @@ async def health():
         status="OK",
         loop=loop.__class__.__module__,
         python_version=platform.python_version(),
+        identity=IDENTITY,
     )
 
 

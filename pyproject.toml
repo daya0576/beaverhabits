@@ -3,7 +3,6 @@ authors = [
     {name = "Henry Zhu", email = "daya0576@gmail.com"},
 ]
 name = "beaverhabits"
-version = "0.5.1"
 requires-python = "<4.0,>=3.12"
 dependencies = [
     "nicegui>=2.7.0,<3.0.0",

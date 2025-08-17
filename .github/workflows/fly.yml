@@ -12,6 +12,12 @@ jobs:
         python-version: ["3.13"]
     steps:
       - uses: actions/checkout@v4
+      - name: Generate Version Info
+        run: |
+          GIT_HASH=$(git rev-parse --short HEAD)
+          GIT_TAG=$(git describe --tags --abbrev=0)
+          echo "IDENTITY = \"beaverhabits/${GIT_TAG}@${GIT_HASH}\"" > ${{ github.workspace }}/beaverhabits/version.py
+
       - name: Install the latest version of uv and set the python version
         uses: astral-sh/setup-uv@v4
         with:
@@ -26,6 +32,12 @@ jobs:
     concurrency: deploy-group # optional: ensure only one action runs at a time
     steps:
       - uses: actions/checkout@v4
+      - name: Generate Version Info
+        run: |
+          GIT_HASH=$(git rev-parse --short HEAD)
+          GIT_TAG=$(git describe --tags --abbrev=0)
+          echo "IDENTITY = \"beaverhabits/${GIT_TAG}@${GIT_HASH}\"" > ${{ github.workspace }}/beaverhabits/version.py
+
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
         env:
