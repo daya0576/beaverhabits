@@ -12,6 +12,8 @@ jobs:
         python-version: ["3.13"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: 'true'
       - name: Generate Version Info
         run: |
           GIT_HASH=$(git rev-parse --short HEAD)
@@ -32,6 +34,8 @@ jobs:
     concurrency: deploy-group # optional: ensure only one action runs at a time
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: 'true'
       - name: Generate Version Info
         run: |
           GIT_HASH=$(git rev-parse --short HEAD)
