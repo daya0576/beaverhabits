@@ -67,6 +67,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
+          context: ${{ github.workspace }}
           platforms: ${{ matrix.platform }}
           file: ${{ matrix.dockerfile }}
           labels: ${{ steps.meta.outputs.labels }}
