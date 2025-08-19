@@ -87,6 +87,7 @@ To avoid [permission issues](https://github.com/daya0576/beaverhabits/discussion
 | **TRUSTED_LOCAL_EMAIL**(str) | Disables login page entirely. A new account with the specified email will be created if it does not exist. |
 | **INDEX_HABIT_DATE_REVERSE**(bool) | Reverse the order of dates to display (default value is false). |
 | **UMAMI_ANALYTICS_ID**(str) | Umami analytics tracking id. If left empty (default) no tracking snippet will be injected. |
+| **UMAMI_SCRIPT_URL**(str) | Umami analytics tracking script url. If `UMAMI_ANALYTICS_ID` is left empty (default), no tracking snippet will be injected. The default value is `https://cloud.umami.is/script.js`. |
 | **DARK_MODE**(bool) | Default: `None` for "auto" mode.  |
 
 ## Development
