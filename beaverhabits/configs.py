@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     HIGHLIGHT_KEY: str = ""
     ADMIN_EMAIL: str = ""
     UMAMI_ANALYTICS_ID: str = ""
+    UMAMI_SCRIPT_URL: str = "https://cloud.umami.is/script.js"
     ENABLE_PLAN: bool = False
     MAX_HABIT_COUNT: int = 5
     PADDLE_SANDBOX: bool = True

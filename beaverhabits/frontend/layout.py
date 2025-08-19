@@ -56,7 +56,7 @@ def custom_headers():
     # Analytics
     if settings.UMAMI_ANALYTICS_ID:
         ui.add_head_html(
-            f'<script defer src="https://cloud.umami.is/script.js" data-website-id="{settings.UMAMI_ANALYTICS_ID}"></script>'
+            f'<script defer src="{settings.UMAMI_SCRIPT_URL}" data-website-id="{settings.UMAMI_ANALYTICS_ID}"></script>'
         )
 
     # Long-press event
