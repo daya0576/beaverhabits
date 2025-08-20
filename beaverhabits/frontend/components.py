@@ -13,7 +13,7 @@ from nicegui.element import Element
 from nicegui.elements.button import Button
 
 from beaverhabits import utils
-from beaverhabits.accessibility import index_badge_alternative_text
+from beaverhabits.accessibility import index_total_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
@@ -761,24 +761,44 @@ def habit_history(today: datetime.date, habit: Habit, total_months: int = 13):
     )
     echart.classes("h-40")
 
+class HabitStreakBadge(ui.badge):
+    def __init__(self, habit: Habit) -> None:
+        super().__init__()
 
 class HabitTotalBadge(ui.badge):
     def __init__(self, habit: Habit) -> None:
         super().__init__()
         self.bind_text_from(habit, "ticked_days", backward=lambda x: str(len(x)))
 
-class IndexBadge(HabitTotalBadge):
-    def __init__(self, today: datetime.date, habit: Habit) -> None:
-        super().__init__(habit)
+
+class IndexBadge(ui.badge):
+    def __init__(self) -> None:
+        super().__init__()
         self.props("color=grey-9 rounded transparent")
         self.style("font-size: 80%; font-weight: 500")
+
+class IndexStreakBadge(HabitStreakBadge, IndexBadge):
+    def __init__(self, today: datetime.date, habit: Habit) -> None:
+        super().__init__(habit)
 
         # Accessibility
         ticked_days = habit.ticked_days
         self.props(
             f' tabindex="0" '
             f'aria-label="total completion: {len(ticked_days)};'
-            f'{index_badge_alternative_text(today, habit)}"'
+            f'{index_total_badge_alternative_text(today, habit)}"'
+        )
+
+class IndexTotalBadge(HabitTotalBadge, IndexBadge):
+    def __init__(self, today: datetime.date, habit: Habit) -> None:
+        super().__init__(habit)
+
+        # Accessibility
+        ticked_days = habit.ticked_days
+        self.props(
+            f' tabindex="0" '
+            f'aria-label="total completion: {len(ticked_days)};'
+            f'{index_total_badge_alternative_text(today, habit)}"'
         )
 
 
