@@ -77,6 +77,8 @@ class Settings(BaseSettings):
     INDEX_HABIT_DATE_COLUMNS: int = 5
     INDEX_HABIT_DATE_REVERSE: bool = False
 
+    HABIT_SHOW_EVERY_DAY_STREAKS: bool = False
+
     DAILY_NOTE_MAX_LENGTH: int = 1024
 
     # Backup inverval(in seconds), default is oneday

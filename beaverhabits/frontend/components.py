@@ -242,11 +242,12 @@ class HabitCheckBox(ui.checkbox):
             return
         if not self.habit.period:
             return
-        if self.habit.period == EVERY_DAY and not settings.INDEX_SHOW_HABIT_STREAK:
-            return
 
-        # Do refresh the total row
-        self.row_refresh()
+        if self.habit.period and self.habit.period != EVERY_DAY:
+            self.row_refresh()
+        
+        if settings.INDEX_SHOW_HABIT_STREAK:
+            self.row_refresh()
 
     async def _mouse_down_event(self, e):
         logger.info(f"Down event: {self.day}, {e.args.get('type')}")
