@@ -241,7 +241,7 @@ class HabitCheckBox(ui.checkbox):
             return
         if not self.habit.period:
             return
-        if self.habit.period == EVERY_DAY:
+        if self.habit.period == EVERY_DAY and not settings.HABIT_SHOW_EVERY_DAY_STREAKS:
             return
 
         # Do refresh the total row
