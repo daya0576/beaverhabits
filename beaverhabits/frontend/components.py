@@ -778,7 +778,7 @@ class HabitStreakBadge(ui.badge):
                 return NO_STREAK
 
             streaks_data = streaks["data"]
-            if type(streaks_data) == NoneType or len(streaks_data) <= 0:
+            if len(streaks_data) <= 0:
                 return NO_STREAK
 
             return str(streaks_data[-1])
@@ -897,11 +897,7 @@ def habit_streak(today: datetime.date, habit: Habit):
         return
 
     months = streaks["months"]
-    if type(months) == NoneType:
-        return
     data = streaks["data"] 
-    if type(data) == NoneType:
-        return
 
     # draw the graph
     months = [x.strftime("%d/%m") for x in months]
