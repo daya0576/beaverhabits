@@ -241,7 +241,7 @@ class HabitCheckBox(ui.checkbox):
             return
         if not self.habit.period:
             return
-        if self.habit.period == EVERY_DAY:
+        if self.habit.period == EVERY_DAY and not settings.INDEX_SHOW_HABIT_STREAK:
             return
 
         # Do refresh the total row
@@ -766,9 +766,13 @@ class HabitStreakBadge(ui.badge):
         super().__init__()
 
         streaks_data = compose_habit_streaks(today, habit)["data"]
-        last_streak = 0
-        if (len(streaks_data) > 0):
-            last_streak = streaks_data[-1]
+        last_streak = str(0)
+
+        if habit.period:
+            if (len(streaks_data) > 0):
+                last_streak = str(streaks_data[-1])
+        else:
+            last_streak = "-"
 
         self.set_text(last_streak)
 
