@@ -2,7 +2,6 @@ import asyncio
 import calendar
 import datetime
 import os
-from types import NoneType
 from collections import OrderedDict
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -775,7 +774,7 @@ class HabitStreakBadge(ui.badge):
         if habit.period:
             streaks = compose_habit_streaks(today, habit)
 
-            if type(streaks) == NoneType:
+            if streaks == None:
                 return NO_STREAK
 
             streaks_data = streaks["data"]
@@ -894,7 +893,7 @@ def compose_habit_streaks(today: datetime.date, habit: Habit):
 
 def habit_streak(today: datetime.date, habit: Habit):
     streaks = compose_habit_streaks(today, habit)
-    if type(streaks) == NoneType:
+    if streaks == None:
         return
 
     months = streaks["months"]
