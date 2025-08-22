@@ -123,7 +123,7 @@ uv venv && uv sync
 - [x] Bypass login page
 
 ### Appearance
-- [x] Theme Options (Light Mode/Dark Mode)
+- [x] [Theme Options (Light Mode/Dark Mode)](https://github.com/daya0576/beaverhabits/releases/tag/v0.6.0)
 - [x] Custom CSS Styling
 
 Here are my table tennis training sessions over the past year ^^
