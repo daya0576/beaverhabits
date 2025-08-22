@@ -765,10 +765,11 @@ class HabitStreakBadge(ui.badge):
     def __init__(self, today: datetime.date, habit: Habit) -> None:
         super().__init__()
 
-        streaks_data = compose_habit_streaks(today, habit)["data"]
         last_streak = str(0)
 
         if habit.period:
+            streaks_data = compose_habit_streaks(today, habit)["data"]
+
             if (len(streaks_data) > 0):
                 last_streak = str(streaks_data[-1])
         else:
