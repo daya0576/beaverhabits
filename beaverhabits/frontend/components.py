@@ -762,8 +762,15 @@ def habit_history(today: datetime.date, habit: Habit, total_months: int = 13):
     echart.classes("h-40")
 
 class HabitStreakBadge(ui.badge):
-    def __init__(self, habit: Habit) -> None:
+    def __init__(self, today: datetime.date, habit: Habit) -> None:
         super().__init__()
+
+        streaks_data = compose_habit_streaks(today, habit)["data"]
+        last_streak = 0
+        if (len(streaks_data) > 0):
+            last_streak = streaks_data[-1]
+
+        self.set_text(last_streak)
 
 class HabitTotalBadge(ui.badge):
     def __init__(self, habit: Habit) -> None:
@@ -779,7 +786,7 @@ class IndexBadge(ui.badge):
 
 class IndexStreakBadge(HabitStreakBadge, IndexBadge):
     def __init__(self, today: datetime.date, habit: Habit) -> None:
-        super().__init__(habit)
+        super().__init__(today, habit)
 
         # Accessibility
         ticked_days = habit.ticked_days
@@ -847,7 +854,7 @@ def habit_notes(habit: Habit, limit: int = 10):
                 entry.on("dblclick", lambda _, d=record.day: on_dblclick(habit, d))
 
 
-def habit_streak(today: datetime.date, habit: Habit):
+def compose_habit_streaks(today: datetime.date, habit: Habit):
     status = get_habit_date_completion(habit, today.replace(year=today.year - 1), today)
     dates = sorted(status.keys(), reverse=True)
     if len(dates) <= 1:
@@ -868,6 +875,13 @@ def habit_streak(today: datetime.date, habit: Habit):
     else:
         months.insert(0, dates[-1])
         data.insert(0, streak_count)
+
+    return {"months": months, "data": data}
+
+def habit_streak(today: datetime.date, habit: Habit):
+    streaks = compose_habit_streaks(today, habit)
+    months = streaks["months"]
+    data = streaks["data"] 
 
     # draw the graph
     months = [x.strftime("%d/%m") for x in months]
