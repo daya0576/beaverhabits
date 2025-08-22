@@ -893,8 +893,15 @@ def compose_habit_streaks(today: datetime.date, habit: Habit):
 
 def habit_streak(today: datetime.date, habit: Habit):
     streaks = compose_habit_streaks(today, habit)
+    if type(streaks) == NoneType:
+        return
+
     months = streaks["months"]
+    if type(months) == NoneType:
+        return
     data = streaks["data"] 
+    if type(data) == NoneType:
+        return
 
     # draw the graph
     months = [x.strftime("%d/%m") for x in months]
