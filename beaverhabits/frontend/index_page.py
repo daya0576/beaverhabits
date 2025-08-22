@@ -10,7 +10,8 @@ from beaverhabits.core.completions import get_habit_date_completion
 from beaverhabits.frontend import javascript, textarea
 from beaverhabits.frontend.components import (
     HabitCheckBox,
-    IndexBadge,
+    IndexStreakBadge,
+    IndexTotalBadge,
     TagManager,
     habit_name_menu,
     habits_by_tags,
@@ -26,6 +27,7 @@ from beaverhabits.storage.storage import (
 
 NAME_COLS, DATE_COLS = settings.INDEX_HABIT_NAME_COLUMNS, 2
 COUNT_BADGE_COLS = 2 if settings.INDEX_SHOW_HABIT_COUNT else 0
+COUNT_BADGE_COLS += 2 if settings.INDEX_SHOW_HABIT_STREAK else 0
 LEFT_CLASSES, RIGHT_CLASSES = (
     # grid 5
     f"col-span-{NAME_COLS} truncate max-w-[{24 * NAME_COLS}px]",
@@ -47,6 +49,8 @@ def grid(columns, rows):
 def week_headers(days: list[datetime.date]):
     for day in days:
         yield day.strftime("%a")
+    if settings.INDEX_SHOW_HABIT_STREAK:
+        yield "Stk"
     if settings.INDEX_SHOW_HABIT_COUNT:
         yield "Sum"
 
@@ -54,6 +58,8 @@ def week_headers(days: list[datetime.date]):
 def day_headers(days: list[datetime.date]):
     for day in days:
         yield day.strftime("%d")
+    if settings.INDEX_SHOW_HABIT_STREAK:
+        yield "*"
     if settings.INDEX_SHOW_HABIT_COUNT:
         yield "#"
 
@@ -73,8 +79,11 @@ def habit_row(habit: Habit, tag: str, days: list[datetime.date]):
         checkbox.classes(RIGHT_CLASSES)
         # checkbox.classes("theme-icon-lazy invisible")
 
+    if settings.INDEX_SHOW_HABIT_STREAK:
+        IndexStreakBadge(today, habit).classes(RIGHT_CLASSES)
+
     if settings.INDEX_SHOW_HABIT_COUNT:
-        IndexBadge(today, habit).classes(RIGHT_CLASSES)
+        IndexTotalBadge(today, habit).classes(RIGHT_CLASSES)
 
 
 @ui.refreshable

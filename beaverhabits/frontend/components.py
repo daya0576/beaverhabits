@@ -13,7 +13,7 @@ from nicegui.element import Element
 from nicegui.elements.button import Button
 
 from beaverhabits import utils
-from beaverhabits.accessibility import index_badge_alternative_text
+from beaverhabits.accessibility import index_total_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
@@ -241,11 +241,12 @@ class HabitCheckBox(ui.checkbox):
             return
         if not self.habit.period:
             return
-        if self.habit.period == EVERY_DAY and not settings.HABIT_SHOW_EVERY_DAY_STREAKS:
-            return
 
-        # Do refresh the total row
-        self.row_refresh()
+        if self.habit.period and self.habit.period != EVERY_DAY:
+            self.row_refresh()
+        
+        if settings.INDEX_SHOW_HABIT_STREAK:
+            self.row_refresh()
 
     async def _mouse_down_event(self, e):
         logger.info(f"Down event: {self.day}, {e.args.get('type')}")
@@ -761,24 +762,63 @@ def habit_history(today: datetime.date, habit: Habit, total_months: int = 13):
     )
     echart.classes("h-40")
 
+class HabitStreakBadge(ui.badge):
+    def __init__(self, today: datetime.date, habit: Habit) -> None:
+        super().__init__()
+        self.set_text(self.streak_text(today, habit))
+
+    def streak_text(self, today: datetime.date, habit: Habit) -> str:
+        NO_STREAK = "0"
+        NO_PERIOD = "-"
+
+        if habit.period:
+            streaks = compose_habit_streaks(today, habit)
+
+            if streaks == None:
+                return NO_STREAK
+
+            streaks_data = streaks["data"]
+            if len(streaks_data) <= 0:
+                return NO_STREAK
+
+            return str(streaks_data[-1])
+        else:
+            return NO_PERIOD
 
 class HabitTotalBadge(ui.badge):
     def __init__(self, habit: Habit) -> None:
         super().__init__()
         self.bind_text_from(habit, "ticked_days", backward=lambda x: str(len(x)))
 
-class IndexBadge(HabitTotalBadge):
-    def __init__(self, today: datetime.date, habit: Habit) -> None:
-        super().__init__(habit)
+
+class IndexBadge(ui.badge):
+    def __init__(self) -> None:
+        super().__init__()
         self.props("color=grey-9 rounded transparent")
         self.style("font-size: 80%; font-weight: 500")
+
+class IndexStreakBadge(HabitStreakBadge, IndexBadge):
+    def __init__(self, today: datetime.date, habit: Habit) -> None:
+        super().__init__(today, habit)
 
         # Accessibility
         ticked_days = habit.ticked_days
         self.props(
             f' tabindex="0" '
             f'aria-label="total completion: {len(ticked_days)};'
-            f'{index_badge_alternative_text(today, habit)}"'
+            f'{index_total_badge_alternative_text(today, habit)}"'
+        )
+
+class IndexTotalBadge(HabitTotalBadge, IndexBadge):
+    def __init__(self, today: datetime.date, habit: Habit) -> None:
+        super().__init__(habit)
+
+        # Accessibility
+        ticked_days = habit.ticked_days
+        self.props(
+            f' tabindex="0" '
+            f'aria-label="total completion: {len(ticked_days)};'
+            f'{index_total_badge_alternative_text(today, habit)}"'
         )
 
 
@@ -827,7 +867,7 @@ def habit_notes(habit: Habit, limit: int = 10):
                 entry.on("dblclick", lambda _, d=record.day: on_dblclick(habit, d))
 
 
-def habit_streak(today: datetime.date, habit: Habit):
+def compose_habit_streaks(today: datetime.date, habit: Habit):
     status = get_habit_date_completion(habit, today.replace(year=today.year - 1), today)
     dates = sorted(status.keys(), reverse=True)
     if len(dates) <= 1:
@@ -848,6 +888,16 @@ def habit_streak(today: datetime.date, habit: Habit):
     else:
         months.insert(0, dates[-1])
         data.insert(0, streak_count)
+
+    return {"months": months, "data": data}
+
+def habit_streak(today: datetime.date, habit: Habit):
+    streaks = compose_habit_streaks(today, habit)
+    if streaks == None:
+        return
+
+    months = streaks["months"]
+    data = streaks["data"] 
 
     # draw the graph
     months = [x.strftime("%d/%m") for x in months]

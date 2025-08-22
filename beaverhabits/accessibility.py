@@ -39,5 +39,5 @@ def description(text: str):
         ui.html(text)
 
 
-def index_badge_alternative_text(today: datetime.date, habit):
+def index_total_badge_alternative_text(today: datetime.date, habit):
     return f"{build_weeks_text_alternative(today, habit.ticked_days)}; {build_months_text_alternative(today, habit.ticked_days)}"

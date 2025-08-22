@@ -72,6 +72,7 @@ class Settings(BaseSettings):
     TAG_SELECTION_MODE: TagSelectionMode = TagSelectionMode.MULTI
 
     INDEX_SHOW_HABIT_COUNT: bool = False
+    INDEX_SHOW_HABIT_STREAK: bool = False
     INDEX_HABIT_NAME_COLUMNS: int = 5
     INDEX_HABIT_DATE_COLUMNS: int = 5
     INDEX_HABIT_DATE_REVERSE: bool = False
