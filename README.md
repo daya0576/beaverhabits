@@ -11,6 +11,10 @@ A self-hosted habit tracking app without "Goals"
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/c0ce98cf-5a44-4bbc-8cd3-c7afb20af671' width='250'>
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/516c19ca-9f55-4c21-9e6d-c8f0361a5eb2' width='250'>
 
+Inspired by:
+- Android mobile app "Loop Habit Tracker" created by [@iSoron](https://github.com/iSoron/uhabits)
+- NiceGUI Todo List example from [@zauberzeug](https://github.com/zauberzeug)
+
 
 # Derivatives
 
@@ -105,31 +109,7 @@ uv venv && uv sync
 
 # Features
 
-### Extensibility
-- [x] [Import From Existing Setup](https://github.com/daya0576/beaverhabits/wiki/Import-From-Existing-Setup)
-- [x] [Beaver Habit Tracker API How‐to Guide](https://github.com/daya0576/beaverhabits/wiki/Beaver-Habit-Tracker-API-How%E2%80%90to-Guide)
-- [x] [iOS Web App Support](https://github.com/daya0576/beaverhabits/wiki/To-add-standalone-mode-for-iOS-(Web-Application))
-
-### Habit Management
-- [x] [Context Menu Actions](https://github.com/daya0576/beaverhabits/releases/tag/v0.7.0) (edit/duplicate/archive)
-- [x] Daily Notes & Comments
-- [x] Flexible Habit Ordering
-- [x] [Organize Habits by Category](https://github.com/daya0576/beaverhabits/wiki/Organize-Habits-by-Category)
-- [x] [Periodic habits](https://github.com/daya0576/beaverhabits/wiki/Periodic-habits)
-- [ ] Measurable Habits (Coming Soon)
-- [ ] Multiple States (Planned)
-
-## Authentication
-- [x] Trusted Header SSO
-- [x] Bypass login page
-
-### Appearance
-- [x] [Theme Options (Light Mode/Dark Mode)](https://github.com/daya0576/beaverhabits/releases/tag/v0.6.0)
-- [x] Custom CSS Styling
-
-Here are my table tennis training sessions over the past year ^^
-
-<img width="750" alt="image" src="https://github.com/user-attachments/assets/1b01435e-5327-4dc6-96d1-1738e2647e53" />
+For a complete list of features, please visit our [Wiki page](https://github.com/daya0576/beaverhabits/wiki).
 
 # Sponsor
 <a href="https://www.buymeacoffee.com/henryzhu" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" alt="Buy Me A Coffee" height="41" width="174"></a>
