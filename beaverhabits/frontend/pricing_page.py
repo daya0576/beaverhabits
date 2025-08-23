@@ -131,6 +131,23 @@ def how_to_use():
     ui.html(YOUTUBE).classes("videowrapper")
 
 
+def why_user_love():
+    ui.label("Why users ❤️ BeaverHabits").classes("text-2xl font-bold")
+    comments = [
+        "I love this idea. I like the simplicity and the lack of ‘Goals’, which always trigger me.",
+        "Great job i like that is simple and aesthetic and not overwhelmed with soo much options.",
+        "Both this and Loop Habit Tracker are exactly what I was looking for. Well done. Oh, and dope choice of name. I also put a ton of time into that game, haha.",
+        "There are many habit-tracking tools out there, but the beauty of Beaver Habit Tracker is its amazing simplicity. It just runs on any browser on your PC or mobile, and it just does the job.",
+    ]
+
+    with ui.column().classes("w-full gap-1"):
+        for comment in comments:
+            # ui.label(f'> "{comment}"')
+            ui.markdown(f"> {comment}")
+
+        ui.markdown(f"> ...")
+
+
 def footer():
     with ui.row().classes("w-full"):
         ui.space()
@@ -145,7 +162,7 @@ def footer():
 async def landing_page() -> None:
     with ui.row().classes("max-w-2xl mx-auto w-full"):
         description()
-        for section in (demo, how_to_use):
+        for section in (demo, how_to_use, why_user_love):
             with ui.card().classes("w-full").props("flat"):
                 section()
 

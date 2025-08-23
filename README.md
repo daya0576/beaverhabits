@@ -60,7 +60,8 @@ services:
     container_name: beaverhabits
     user: 1000:1000 # User permissions of your docker or default user.
     environment:
-      # See the note below to find all the environment variables
+      # See the link below to find all the environment variables
+      # https://github.com/daya0576/beaverhabits/wiki/Development#options
       - HABITS_STORAGE=USER_DISK # DATABASE stores in a single SQLite database named habits.db. USER_DISK option saves in a local json file.
       - TRUSTED_LOCAL_EMAIL=your@email.com # Skip authentication
       - INDEX_HABIT_DATE_COLUMNS=5 # Customize the date columns for the index page.
@@ -76,24 +77,6 @@ services:
 P.S. The container starts as nobody to increase the security and make it OpenShift compatible.
 To avoid [permission issues](https://github.com/daya0576/beaverhabits/discussions/31), ensure that the UID owning the host folder aligns with the UID of the user inside the container.
 
-## Options
-
-| Name | Description |
-|:--|:--|
-| **HABITS_STORAGE**(str) | The `DATABASE` option stores everything in a single SQLite database file named habits.db. On the other hand, the `USER_DISK` option saves habits and records in a local json file. |
-| **FIRST_DAY_OF_WEEK**(int) | By default, the first day of the week is set as Monday. To change it to Sunday, you can set it as `6`. |
-| **MAX_USER_COUNT**(int) | By setting it to `1`, you can prevent others from signing up in the future. |
-| **ENABLE_IOS_STANDALONE**(bool) | Experiential feature to  enable standalone mode on iOS. The default setting is `true`. |
-| **INDEX_SHOW_HABIT_COUNT**(bool) | To display total completed count along with the habit name on the index page. The default setting is `false`. |
-| **INDEX_SHOW_HABIT_STREAK**(bool) | To display current streak along with the habit name on the index page. The default setting is `false`. |
-| **INDEX_HABIT_NAME_COLUMNS**(int) | Customize the habit name column size to display for the index page. The default value is `5`. |
-| **INDEX_HABIT_DATE_COLUMNS**(int) | Customize the displayed dates for the index page. The default value is `5`. |
-| **TRUSTED_EMAIL_HEADER**(str) | Delegate authentication to an authenticating reverse proxy that passes in the user's details in HTTP headers, e.g. `Cf-Access-Authenticated-User-Email`. An existing account is required. |
-| **TRUSTED_LOCAL_EMAIL**(str) | Disables login page entirely. A new account with the specified email will be created if it does not exist. |
-| **INDEX_HABIT_DATE_REVERSE**(bool) | Reverse the order of dates to display (default value is false). |
-| **UMAMI_ANALYTICS_ID**(str) | Umami analytics tracking id. If left empty (default) no tracking snippet will be injected. |
-| **UMAMI_SCRIPT_URL**(str) | Umami analytics tracking script url. If `UMAMI_ANALYTICS_ID` is left empty (default), no tracking snippet will be injected. The default value is `https://cloud.umami.is/script.js`. |
-| **DARK_MODE**(bool) | Default: `None` for "auto" mode.  |
 
 ## Development
 
