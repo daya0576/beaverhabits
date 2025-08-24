@@ -629,14 +629,20 @@ class CalendarCheckBox(ui.checkbox):
     def _icon_svg(self):
         unchecked_text_color = checked_text_color = "rgb(255,255,255)"
         unchecked_color, checked_color = "rgb(54,54,54)", icons.PRIMARY_COLOR
-        if CStatus.PERIOD_DONE in self.status:
-            # Normalization + Linear Interpolation
-            unchecked_color = "rgb(40,87,141)"
 
         dark = get_user_dark_mode()
         if dark == False:
             unchecked_color = "rgb(222,222,222)"
             unchecked_text_color = "rgb(100,100,100)"
+
+        if CStatus.PERIOD_DONE in self.status:
+            # Normalization + Linear Interpolation
+            if dark:
+                unchecked_color = "rgb(40,87,141)"
+            else:
+                # Interpolation with .25
+                unchecked_color = "rgb(201,213,226)"
+
 
         return (
             icons.SQUARE.format(
