@@ -219,7 +219,6 @@ class DictHabit(Habit[DictRecord], DictStorage):
 
             if partial_data:
                 record.data.update(partial_data)
-                logger.debug(f"Record update: {partial_data}")
 
         else:
 
@@ -230,7 +229,6 @@ class DictHabit(Habit[DictRecord], DictStorage):
             if state is not None:
                 data["state"] = state.value
             self.data["records"].append(data)
-            logger.debug(f"Record create: {data}")
 
         # Update the cache
         self.cache.refresh()

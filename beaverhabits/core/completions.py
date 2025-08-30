@@ -78,11 +78,9 @@ COMPLETION_HANDLERS = [period, done]
 def get_habit_date_completion(
     habit: Habit, start: datetime.date, end: datetime.date
 ) -> dict[datetime.date, CheckedState]:
-    logger.debug("Calculate date completion status...")
     result = {}
     for handler in COMPLETION_HANDLERS:
         completions = handler(habit, start, end)
-        logger.debug(f"{handler.__name__}: {completions}")
         if not completions:
             continue
 
