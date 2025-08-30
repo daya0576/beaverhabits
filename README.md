@@ -11,11 +11,6 @@ A self-hosted habit tracking app without "Goals"
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/c0ce98cf-5a44-4bbc-8cd3-c7afb20af671' width='250'>
 <img src='https://github.com/daya0576/beaverhabits/assets/6239652/516c19ca-9f55-4c21-9e6d-c8f0361a5eb2' width='250'>
 
-Inspired by:
-- Android mobile app "Loop Habit Tracker" created by [@iSoron](https://github.com/iSoron/uhabits)
-- NiceGUI Todo List example from [@zauberzeug](https://github.com/zauberzeug)
-
-
 # Derivatives
 
 [Beaver Habit Tracker API How‐to Guide](https://github.com/daya0576/beaverhabits/wiki/Beaver-Habit-Tracker-API-How%E2%80%90to-Guide)
@@ -93,6 +88,10 @@ uv venv && uv sync
 # Features
 
 For a complete list of features, please visit our [Wiki page](https://github.com/daya0576/beaverhabits/wiki).
+
+Inspired by:
+- Android mobile app "Loop Habit Tracker" created by [@iSoron](https://github.com/iSoron/uhabits)
+- NiceGUI Todo List example from [@zauberzeug](https://github.com/zauberzeug)
 
 # Sponsor
 <a href="https://www.buymeacoffee.com/henryzhu" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" alt="Buy Me A Coffee" height="41" width="174"></a>
