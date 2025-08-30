@@ -648,7 +648,7 @@ class CalendarCheckBox(ui.checkbox):
             unchecked_color = "rgb(222,222,222)"
             unchecked_text_color = "rgb(100,100,100)"
 
-        if CheckedState.PERIOD_DONE == self.status:
+        if self.status in (CheckedState.PERIOD_DONE, CheckedState.SKIPPED):
             # Normalization + Linear Interpolation
             if dark:
                 unchecked_color = "rgb(40,87,141)"
