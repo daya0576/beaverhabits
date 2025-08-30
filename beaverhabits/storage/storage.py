@@ -13,6 +13,8 @@ from beaverhabits.utils import PERIOD_TYPES, D
 class CheckedState(Enum):
     UNKNOWN = "UNKNOWN"
     DONE = "DONE"
+
+    PERIOD_DONE = "PERIOD_DONE"
     SKIPPED = "SKIPPED"
 
 
@@ -165,7 +167,11 @@ class Habit[R: CheckedRecord](Protocol):
         return self.ticked_data.get(day)
 
     async def tick(
-        self, day: datetime.date, done: bool, text: str | None = None
+        self,
+        day: datetime.date,
+        done: bool,
+        text: str | None = None,
+        state: CheckedState | None = None,
     ) -> CheckedRecord: ...
 
     def copy(self) -> "Habit": ...

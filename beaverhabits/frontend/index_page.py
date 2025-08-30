@@ -19,6 +19,7 @@ from beaverhabits.frontend.components import (
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.storage import (
+    CheckedState,
     Habit,
     HabitList,
     HabitListBuilder,
@@ -72,7 +73,7 @@ def habit_row(habit: Habit, tag: str, days: list[datetime.date]):
     today = max(days)
     status_map = get_habit_date_completion(habit, min(days), today)
     for day in days:
-        status = status_map.get(day, [])
+        status = status_map.get(day, CheckedState.UNKNOWN)
         checkbox = HabitCheckBox(
             status, habit, today, day, refresh=habit_list_ui.refresh
         )

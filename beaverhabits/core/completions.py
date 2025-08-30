@@ -1,29 +1,18 @@
 import datetime
-from collections import defaultdict
-from enum import Enum, auto
 
 from beaverhabits.logger import logger
 from beaverhabits.storage.storage import EVERY_DAY, CheckedState, Habit, HabitFrequency
 from beaverhabits.utils import date_move, get_period_fist_day, timeit
 
-CStatus = Enum(
-    "CStatus", [("DONE", auto()), ("PERIOD_DONE", auto()), ("SKIPPED", auto())]
-)
-
 
 def done(
     habit: Habit, start: datetime.date, end: datetime.date
-) -> dict[datetime.date, CStatus] | None:
-    return {day: CStatus.DONE for day in habit.ticked_days if start <= day <= end}
-
-
-def skip(
-    habit: Habit, start: datetime.date, end: datetime.date
-) -> dict[datetime.date, CStatus] | None:
+) -> dict[datetime.date, CheckedState] | None:
     return {
-        day: CStatus.SKIPPED
+        day: record.state
         for day, record in habit.ticked_data.items()
-        if start <= day <= end and record.state is CheckedState.SKIPPED
+        if start <= day <= end
+        and record.state in (CheckedState.DONE, CheckedState.SKIPPED)
     }
 
 
@@ -49,7 +38,7 @@ class PeriodIterator:
 @timeit(3)
 def period(
     habit: Habit, start: datetime.date, end: datetime.date
-) -> dict[datetime.date, CStatus] | None:
+) -> dict[datetime.date, CheckedState] | None:
     # Example:
     # - Ride mountain bike twice a week
     # - Visit my mother every second weekend
@@ -80,20 +69,23 @@ def period(
             for i in range((right - left).days):
                 result.add(left + datetime.timedelta(days=i))
 
-    return {day: CStatus.PERIOD_DONE for day in result}
+    return {day: CheckedState.PERIOD_DONE for day in result}
 
 
-COMPLETION_HANDLERS = [period, done, skip]
+COMPLETION_HANDLERS = [period, done]
 
 
 def get_habit_date_completion(
     habit: Habit, start: datetime.date, end: datetime.date
-) -> dict[datetime.date, list[CStatus]]:
-    result = defaultdict(list)
+) -> dict[datetime.date, CheckedState]:
+    logger.debug("Calculate date completion status...")
+    result = {}
     for handler in COMPLETION_HANDLERS:
-        completion = handler(habit, start, end)
-        if not completion:
+        completions = handler(habit, start, end)
+        logger.debug(f"{handler.__name__}: {completions}")
+        if not completions:
             continue
-        for day, status in completion.items():
-            result[day].append(status)
+
+        result = {**result, **completions}
+
     return result

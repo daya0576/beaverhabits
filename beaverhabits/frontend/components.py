@@ -16,7 +16,7 @@ from beaverhabits import utils
 from beaverhabits.accessibility import index_total_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
-from beaverhabits.core.completions import CStatus, get_habit_date_completion
+from beaverhabits.core.completions import CheckedState, get_habit_date_completion
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.javascript import force_checkbox_blur
 from beaverhabits.frontend.textarea import Textarea
@@ -32,7 +32,6 @@ from beaverhabits.storage.storage import (
     Habit,
     HabitFrequency,
     HabitList,
-    HabitOrder,
     HabitStatus,
 )
 from beaverhabits.utils import (
@@ -134,17 +133,21 @@ def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
             t.style("font-size: 14px;")
 
             with ui.row():
-                ui.button("done", on_click=lambda: dialog.submit((CheckedState.DONE, t.value))).props(
-                    "flat"
-                )
-                ui.button("skipped", on_click=lambda: dialog.submit((CheckedState.SKIPPED, t.value))).props(
-                    "flat"
-                )
+                ui.button(
+                    "done",
+                    on_click=lambda: dialog.submit((True, None, t.value)),
+                ).props("flat")
+                ui.button(
+                    "skipped",
+                    on_click=lambda: dialog.submit(
+                        (False, CheckedState.SKIPPED, t.value)
+                    ),
+                ).props("flat")
 
     return dialog, t
 
 
-async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
+async def note_tick(habit: Habit, day: datetime.date) -> CheckedRecord | None:
     start = min(habit.ticked_days, default=day)
     dialog_label = utils.format_date_difference(start, day)
 
@@ -154,7 +157,6 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     # Realtime saving
     async def t_value_change(e: events.ValueChangeEventArguments):
         if record:
-
             if abs(len(e.value) - len(record.text)) < 24:
                 return
         await habit.tick(day, record.done if record else False, e.value)
@@ -170,16 +172,11 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     if result is None:
         return
 
-    state, text = result
-    if state is CheckedState.DONE:
-        record = await habit.tick(day, True, text)
-    else:
-        # skipped
-        record = await habit.tick(day, False, text)
-        record.state = state
-    
-    logger.info(f"Habit ticked: {day}, note: {text}, state: {state}")
-    return record.done
+    yes, state, text = result
+    record = await habit.tick(day, yes, text, state)
+
+    logger.info(f"Habit ticked: {day}, yes: {yes}, note: {text}, state: {state}")
+    return record
 
 
 @ratelimiter(limit=30, window=30)
@@ -198,7 +195,7 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool):
 class HabitCheckBox(ui.checkbox):
     def __init__(
         self,
-        status: list[CStatus],
+        state: CheckedState,
         habit: Habit,
         today: datetime.date,
         day: datetime.date,
@@ -207,8 +204,8 @@ class HabitCheckBox(ui.checkbox):
         self.habit = habit
         self.day = day
         self.today = today
-        self.status = status
-        value = CStatus.DONE in status
+        self.status = state
+        value = self.checkbox_value(state)
         self.row_refresh = refresh
         super().__init__("", value=value)
         self._update_style(value)
@@ -242,17 +239,25 @@ class HabitCheckBox(ui.checkbox):
         # - Android browser / PWA
 
     def _refresh(self):
-        logger.debug(f"Refresh: {self.day}, {self.value}")
         if not self.row_refresh:
-            return
-        if not self.habit.period:
             return
 
         if self.habit.period and self.habit.period != EVERY_DAY:
             self.row_refresh()
-        
-        if settings.INDEX_SHOW_HABIT_STREAK:
+
+        elif settings.INDEX_SHOW_HABIT_STREAK:
             self.row_refresh()
+
+    def checkbox_value(self, state: CheckedState) -> bool | None:
+        if state is CheckedState.DONE:
+            value = True
+        elif state is CheckedState.UNKNOWN:
+            value = False
+        else:
+            # Indeterminate state e.g. skipped, failed, etc.
+            value = None
+
+        return value
 
     async def _mouse_down_event(self, e):
         logger.info(f"Down event: {self.day}, {e.args.get('type')}")
@@ -263,9 +268,10 @@ class HabitCheckBox(ui.checkbox):
                 await self.hold.wait()
         except asyncio.TimeoutError:
             # Long press diaglog
-            value = await note_tick(self.habit, self.day)
-
-            if value is not None:
+            record = await note_tick(self.habit, self.day)
+            if record is not None:
+                value = self.checkbox_value(record.state)
+                logger.debug(f"note tick value changed: {self.value} -> {value}")
                 self.value = value
                 self._refresh()
 
@@ -286,7 +292,7 @@ class HabitCheckBox(ui.checkbox):
         self.moving = True
         self.hold.set()
 
-    def _update_style(self, value: bool):
+    def _update_style(self, value: bool | None):
         self.value = value
 
         # Theme colors
@@ -302,15 +308,13 @@ class HabitCheckBox(ui.checkbox):
             self.props(f'aria-label="{days} days ago"')
 
         # icons, e.g. sym_o_notes
-        checked, unchecked = "sym_o_check", "sym_o_close"
-        if self.habit.period and self.habit.period != EVERY_DAY:
-            if CStatus.PERIOD_DONE in self.status:
-                unchecked = "done"
-        # Skipped date
-        if CStatus.SKIPPED in self.status:
-            unchecked = "done"
-
-        self.props(f'checked-icon="{checked}" unchecked-icon="{unchecked}" keep-color')
+        checked_icon, unchecked_icon = "sym_o_check", "sym_o_close"
+        self.props(
+            f'checked-icon="{checked_icon}" '
+            f'unchecked-icon="{unchecked_icon}" '
+            f'indeterminate-icon="{checked_icon}" '
+            "keep-color "
+        )
 
 
 class HabitOrderCard(ui.card):
@@ -605,7 +609,7 @@ class CalendarCheckBox(ui.checkbox):
         self,
         habit: Habit,
         day: datetime.date,
-        status: list[CStatus],
+        status: CheckedState,
         readonly: bool = False,
         refresh: Callable | None = None,
     ) -> None:
@@ -644,14 +648,13 @@ class CalendarCheckBox(ui.checkbox):
             unchecked_color = "rgb(222,222,222)"
             unchecked_text_color = "rgb(100,100,100)"
 
-        if CStatus.PERIOD_DONE in self.status:
+        if CheckedState.PERIOD_DONE == self.status:
             # Normalization + Linear Interpolation
             if dark:
                 unchecked_color = "rgb(40,87,141)"
             else:
                 # Interpolation with .25
                 unchecked_color = "rgb(201,213,226)"
-
 
         return (
             icons.SQUARE.format(
@@ -675,7 +678,9 @@ class CalendarCheckBox(ui.checkbox):
 
     async def _async_long_press_task(self):
         # Long press diaglog
-        value = await note_tick(self.habit, self.day)
+        record = await note_tick(self.habit, self.day)
+
+        value = record.done if record else None
         if value is not None:
             self.value = value
 
@@ -710,7 +715,7 @@ def habit_heat_map(
             with ui.row(wrap=False).classes("gap-0"):
                 for day in weekday_days:
                     if day <= calendar.today:
-                        status = status_map.get(day, [])
+                        status = status_map.get(day, CheckedState.UNKNOWN)
                         CalendarCheckBox(habit, day, status, readonly, refresh=refresh)
                     else:
                         ui.label().style("width: 20px; height: 20px;")
@@ -777,6 +782,7 @@ def habit_history(today: datetime.date, habit: Habit, total_months: int = 13):
     )
     echart.classes("h-40")
 
+
 class HabitStreakBadge(ui.badge):
     def __init__(self, today: datetime.date, habit: Habit) -> None:
         super().__init__()
@@ -800,6 +806,7 @@ class HabitStreakBadge(ui.badge):
         else:
             return NO_PERIOD
 
+
 class HabitTotalBadge(ui.badge):
     def __init__(self, habit: Habit) -> None:
         super().__init__()
@@ -812,6 +819,7 @@ class IndexBadge(ui.badge):
         self.props("color=grey-9 rounded transparent")
         self.style("font-size: 80%; font-weight: 500")
 
+
 class IndexStreakBadge(HabitStreakBadge, IndexBadge):
     def __init__(self, today: datetime.date, habit: Habit) -> None:
         super().__init__(today, habit)
@@ -823,6 +831,7 @@ class IndexStreakBadge(HabitStreakBadge, IndexBadge):
             f'aria-label="total completion: {len(ticked_days)};'
             f'{index_total_badge_alternative_text(today, habit)}"'
         )
+
 
 class IndexTotalBadge(HabitTotalBadge, IndexBadge):
     def __init__(self, today: datetime.date, habit: Habit) -> None:
@@ -906,13 +915,14 @@ def compose_habit_streaks(today: datetime.date, habit: Habit):
 
     return {"months": months, "data": data}
 
+
 def habit_streak(today: datetime.date, habit: Habit):
     streaks = compose_habit_streaks(today, habit)
     if streaks == None:
         return
 
     months = streaks["months"]
-    data = streaks["data"] 
+    data = streaks["data"]
 
     # draw the graph
     months = [x.strftime("%d/%m") for x in months]
