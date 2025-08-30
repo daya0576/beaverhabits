@@ -5,6 +5,7 @@ from beaverhabits.logger import logger
 from beaverhabits.storage.storage import (
     Backup,
     CheckedRecord,
+    CheckedState,
     Habit,
     HabitFrequency,
     HabitList,
@@ -59,6 +60,24 @@ class DictRecord(CheckedRecord, DictStorage):
     @text.setter
     def text(self, value: str) -> None:
         self.data["text"] = value
+
+    @property
+    def state(self) -> CheckedState:
+        state_value = self.data.get("state")
+
+        if state_value is None:
+            return CheckedState.UNKNOWN
+
+        try:
+            return CheckedState(state_value)
+        except ValueError:
+            logger.error(f"Invalid value: {state_value}")
+            self.data["status"] = None
+            return CheckedState.UNKNOWN
+
+    @state.setter
+    def state(self, value: CheckedState) -> None:
+        self.data["state"] = value.value
 
 
 class HabitDataCache:

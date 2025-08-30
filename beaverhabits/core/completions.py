@@ -3,16 +3,28 @@ from collections import defaultdict
 from enum import Enum, auto
 
 from beaverhabits.logger import logger
-from beaverhabits.storage.storage import EVERY_DAY, Habit, HabitFrequency
+from beaverhabits.storage.storage import EVERY_DAY, CheckedState, Habit, HabitFrequency
 from beaverhabits.utils import date_move, get_period_fist_day, timeit
 
-CStatus = Enum("CStatus", [("DONE", auto()), ("PERIOD_DONE", auto())])
+CStatus = Enum(
+    "CStatus", [("DONE", auto()), ("PERIOD_DONE", auto()), ("SKIPPED", auto())]
+)
 
 
 def done(
     habit: Habit, start: datetime.date, end: datetime.date
 ) -> dict[datetime.date, CStatus] | None:
     return {day: CStatus.DONE for day in habit.ticked_days if start <= day <= end}
+
+
+def skip(
+    habit: Habit, start: datetime.date, end: datetime.date
+) -> dict[datetime.date, CStatus] | None:
+    return {
+        day: CStatus.SKIPPED
+        for day, record in habit.ticked_data.items()
+        if start <= day <= end and record.state is CheckedState.SKIPPED
+    }
 
 
 class PeriodIterator:
@@ -71,7 +83,7 @@ def period(
     return {day: CStatus.PERIOD_DONE for day in result}
 
 
-COMPLETION_HANDLERS = [period, done]
+COMPLETION_HANDLERS = [period, done, skip]
 
 
 def get_habit_date_completion(

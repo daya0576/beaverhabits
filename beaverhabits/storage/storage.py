@@ -10,6 +10,12 @@ from beaverhabits.app.db import User
 from beaverhabits.utils import PERIOD_TYPES, D
 
 
+class CheckedState(Enum):
+    UNKNOWN = "UNKNOWN"
+    DONE = "DONE"
+    SKIPPED = "SKIPPED"
+
+
 class CheckedRecord(Protocol):
     @property
     def day(self) -> datetime.date: ...
@@ -25,6 +31,12 @@ class CheckedRecord(Protocol):
 
     @text.setter
     def text(self, value: str) -> None: ...
+
+    @property
+    def state(self) -> CheckedState: ...
+
+    @state.setter
+    def state(self, value: CheckedState) -> None: ...
 
     def __str__(self):
         return f"{self.day} {'[x]' if self.done else '[ ]'}"

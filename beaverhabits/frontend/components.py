@@ -28,6 +28,7 @@ from beaverhabits.storage.storage import (
     EVERY_DAY,
     Backup,
     CheckedRecord,
+    CheckedState,
     Habit,
     HabitFrequency,
     HabitList,
@@ -133,10 +134,10 @@ def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
             t.style("font-size: 14px;")
 
             with ui.row():
-                ui.button("Yes", on_click=lambda: dialog.submit((True, t.value))).props(
+                ui.button("done", on_click=lambda: dialog.submit((CheckedState.DONE, t.value))).props(
                     "flat"
                 )
-                ui.button("No", on_click=lambda: dialog.submit((False, t.value))).props(
+                ui.button("skipped", on_click=lambda: dialog.submit((CheckedState.SKIPPED, t.value))).props(
                     "flat"
                 )
 
@@ -169,10 +170,15 @@ async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
     if result is None:
         return
 
-    yes, text = result
-    record = await habit.tick(day, yes, text)
-    logger.info(f"Habit ticked: {day} {yes}, note: {text}")
-
+    state, text = result
+    if state is CheckedState.DONE:
+        record = await habit.tick(day, True, text)
+    else:
+        # skipped
+        record = await habit.tick(day, False, text)
+        record.state = state
+    
+    logger.info(f"Habit ticked: {day}, note: {text}, state: {state}")
     return record.done
 
 
@@ -300,6 +306,9 @@ class HabitCheckBox(ui.checkbox):
         if self.habit.period and self.habit.period != EVERY_DAY:
             if CStatus.PERIOD_DONE in self.status:
                 unchecked = "done"
+        # Skipped date
+        if CStatus.SKIPPED in self.status:
+            unchecked = "done"
 
         self.props(f'checked-icon="{checked}" unchecked-icon="{unchecked}" keep-color')
 
