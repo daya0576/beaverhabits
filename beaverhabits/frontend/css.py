@@ -102,6 +102,9 @@ body {
   .theme-icon-checkbox .q-checkbox__inner--falsy .q-checkbox__icon {
     color: #BDBDBD;
   }
+  .theme-icon-checkbox .q-checkbox__inner--indet .q-checkbox__icon {
+    color: #BDBDBD;
+  }
   .theme-icon-checkbox .q-checkbox__inner--truthy .q-checkbox__icon {
     color: #1976d2;
   }
@@ -130,6 +133,9 @@ body {
   }
 
   .theme-icon-checkbox .q-checkbox__inner--falsy .q-checkbox__icon {
+    color: #616161;
+  }
+  .theme-icon-checkbox .q-checkbox__inner--indet .q-checkbox__icon {
     color: #616161;
   }
   .theme-icon-checkbox .q-checkbox__inner--truthy .q-checkbox__icon {

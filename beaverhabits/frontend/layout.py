@@ -1,9 +1,7 @@
-import time
 from contextlib import contextmanager
 
-from nicegui import background_tasks, ui
+from nicegui import ui
 
-from beaverhabits import views
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
 from beaverhabits.frontend import css
