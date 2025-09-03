@@ -3,7 +3,7 @@ authors = [
     {name = "Henry Zhu", email = "daya0576@gmail.com"},
 ]
 name = "beaverhabits"
-dynamic = ["version"]
+version = "0.7.0"
 requires-python = "<4.0,>=3.12"
 dependencies = [
     "nicegui>=2.7.0,<3.0.0",
@@ -53,12 +53,3 @@ fly = [
 [project.scripts]
 main = "beaverhabits.routes:main"
 
-[build-system]
-requires = ["hatchling", "uv-dynamic-versioning"]
-build-backend = "hatchling.build"
-
-[tool.hatch.version]
-source = "uv-dynamic-versioning"
-
-[tool.uv-dynamic-versioning]
-fallback-version = "0.0.0"

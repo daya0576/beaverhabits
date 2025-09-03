@@ -10,14 +10,6 @@ from beaverhabits.app.db import User
 from beaverhabits.utils import PERIOD_TYPES, D
 
 
-class CheckedState(Enum):
-    UNKNOWN = "UNKNOWN"
-    DONE = "DONE"
-
-    PERIOD_DONE = "PERIOD_DONE"
-    SKIPPED = "SKIPPED"
-
-
 class CheckedRecord(Protocol):
     @property
     def day(self) -> datetime.date: ...
@@ -35,10 +27,7 @@ class CheckedRecord(Protocol):
     def text(self, value: str) -> None: ...
 
     @property
-    def state(self) -> CheckedState: ...
-
-    @state.setter
-    def state(self, value: CheckedState) -> None: ...
+    def skipped(self) -> bool: ...
 
     def __str__(self):
         return f"{self.day} {'[x]' if self.done else '[ ]'}"
@@ -171,7 +160,6 @@ class Habit[R: CheckedRecord](Protocol):
         day: datetime.date,
         done: bool,
         text: str | None = None,
-        state: CheckedState | None = None,
     ) -> CheckedRecord: ...
 
     def copy(self) -> "Habit": ...

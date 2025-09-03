@@ -5,7 +5,6 @@ from beaverhabits.logger import logger
 from beaverhabits.storage.storage import (
     Backup,
     CheckedRecord,
-    CheckedState,
     Habit,
     HabitFrequency,
     HabitList,
@@ -62,22 +61,8 @@ class DictRecord(CheckedRecord, DictStorage):
         self.data["text"] = value
 
     @property
-    def state(self) -> CheckedState:
-        state_value = self.data.get("state")
-
-        if state_value is None:
-            return CheckedState.DONE if self.done else CheckedState.UNKNOWN
-
-        try:
-            return CheckedState(state_value)
-        except ValueError:
-            logger.error(f"Invalid value: {state_value}")
-            self.data["status"] = None
-            return CheckedState.UNKNOWN
-
-    @state.setter
-    def state(self, value: CheckedState) -> None:
-        self.data["state"] = value.value
+    def skipped(self) -> bool:
+        return "#skipped" in self.text
 
 
 class HabitDataCache:
@@ -202,7 +187,6 @@ class DictHabit(Habit[DictRecord], DictStorage):
         day: datetime.date,
         done: bool,
         text: str | None = None,
-        state: CheckedState | None = None,
     ) -> CheckedRecord:
         # Find the record in the cache
         record = self.ticked_data.get(day)
@@ -214,8 +198,6 @@ class DictHabit(Habit[DictRecord], DictStorage):
                 partial_data["done"] = done
             if text is not None and record.text != text:
                 partial_data["text"] = text
-            if record.state != state:
-                partial_data["state"] = state.value if state else None
 
             if partial_data:
                 record.data.update(partial_data)
@@ -226,8 +208,6 @@ class DictHabit(Habit[DictRecord], DictStorage):
             data = {"day": day.strftime(DAY_MASK), "done": done}
             if text is not None:
                 data["text"] = text
-            if state is not None:
-                data["state"] = state.value
             self.data["records"].append(data)
 
         # Update the cache

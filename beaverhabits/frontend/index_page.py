@@ -1,25 +1,20 @@
 import datetime
-import os
-from collections import OrderedDict
 from typing import List
 
 from nicegui import ui
 
 from beaverhabits.configs import settings
-from beaverhabits.core.completions import get_habit_date_completion
+from beaverhabits.core.completions import CheckedState, get_habit_date_completion
 from beaverhabits.frontend import javascript, textarea
 from beaverhabits.frontend.components import (
     HabitCheckBox,
     IndexStreakBadge,
     IndexTotalBadge,
-    TagManager,
     habit_name_menu,
     habits_by_tags,
-    tag_filter_component,
 )
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.storage import (
-    CheckedState,
     Habit,
     HabitList,
     HabitListBuilder,

@@ -28,7 +28,6 @@ from beaverhabits.storage.storage import (
     EVERY_DAY,
     Backup,
     CheckedRecord,
-    CheckedState,
     Habit,
     HabitFrequency,
     HabitList,
@@ -134,14 +133,12 @@ def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
 
             with ui.row():
                 ui.button(
-                    "done",
-                    on_click=lambda: dialog.submit((True, None, t.value)),
+                    "yes",
+                    on_click=lambda: dialog.submit((True, t.value)),
                 ).props("flat")
                 ui.button(
-                    "skipped",
-                    on_click=lambda: dialog.submit(
-                        (False, CheckedState.SKIPPED, t.value)
-                    ),
+                    "no",
+                    on_click=lambda: dialog.submit((False, t.value)),
                 ).props("flat")
 
     return dialog, t
@@ -172,10 +169,10 @@ async def note_tick(habit: Habit, day: datetime.date) -> CheckedRecord | None:
     if result is None:
         return
 
-    yes, state, text = result
-    record = await habit.tick(day, yes, text, state)
+    yes, text = result
+    record = await habit.tick(day, yes, text)
 
-    logger.info(f"Habit ticked: {day}, yes: {yes}, note: {text}, state: {state}")
+    logger.info(f"Habit ticked: {day}, yes: {yes}, note: {text}")
     return record
 
 
@@ -205,7 +202,7 @@ class HabitCheckBox(ui.checkbox):
         self.day = day
         self.today = today
         self.status = state
-        value = self.checkbox_value(state)
+        value = state is CheckedState.DONE
         self.row_refresh = refresh
         super().__init__("", value=value)
         self._update_style(value)
@@ -248,17 +245,6 @@ class HabitCheckBox(ui.checkbox):
         elif settings.INDEX_SHOW_HABIT_STREAK:
             self.row_refresh()
 
-    def checkbox_value(self, state: CheckedState) -> bool | None:
-        if state is CheckedState.DONE:
-            value = True
-        elif state is CheckedState.UNKNOWN:
-            value = False
-        else:
-            # Indeterminate state e.g. skipped, failed, etc.
-            value = None
-
-        return value
-
     async def _mouse_down_event(self, e):
         logger.info(f"Down event: {self.day}, {e.args.get('type')}")
         self.hold.clear()
@@ -270,9 +256,8 @@ class HabitCheckBox(ui.checkbox):
             # Long press diaglog
             record = await note_tick(self.habit, self.day)
             if record is not None:
-                value = self.checkbox_value(record.state)
-                logger.debug(f"note tick value changed: {self.value} -> {value}")
-                self.value = value
+                logger.debug(f"note tick value changed: {self.value} -> {record.done}")
+                self.value = record.done
                 self._refresh()
 
     async def _click_event(self, e):
@@ -309,12 +294,19 @@ class HabitCheckBox(ui.checkbox):
 
         # icons, e.g. sym_o_notes
         checked_icon, unchecked_icon = "sym_o_check", "sym_o_close"
+        skipped_icon = "sym_o_remove"
+
         self.props(
             f'checked-icon="{checked_icon}" '
             f'unchecked-icon="{unchecked_icon}" '
             f'indeterminate-icon="{checked_icon}" '
             "keep-color "
         )
+
+        if self.status is CheckedState.SKIPPED:
+            self.props(f'unchecked-icon="{skipped_icon}"')
+        if self.status is CheckedState.PERIOD_DONE:
+            self.props(f'unchecked-icon="{checked_icon}"')
 
 
 class HabitOrderCard(ui.card):
