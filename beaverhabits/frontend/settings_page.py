@@ -18,7 +18,7 @@ async def settings_page(user: User):
 
     async def update_custom_css(e):
         await views.update_custom_css(user, e.value)
-        await views.apply_theme_style()
+        views.apply_theme_style()
 
     def toggle_dark_mode(value: bool):
         set_user_dark_mode(value)

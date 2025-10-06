@@ -278,7 +278,7 @@ async def update_custom_css(user: User, css: str) -> None:
     )
 
 
-async def apply_theme_style() -> None:
+def apply_theme_style() -> None:
     try:
         custom_css = app.storage.user.get("custom_css", "")
     except Exception as e:
