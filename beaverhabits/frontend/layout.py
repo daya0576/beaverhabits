@@ -68,6 +68,9 @@ def custom_headers():
     # prevent context menu
     ui.add_body_html(f"<script>{PREVENT_CONTEXT_MENU}</script>")
 
+    # custom css styles
+    views.apply_theme_style()
+
 
 @ui.refreshable
 def menu_component():
