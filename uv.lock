@@ -375,7 +375,6 @@ dev = [
     { name = "webdriver-manager" },
 ]
 fly = [
-    { name = "guppy3" },
     { name = "highlight-io" },
     { name = "memray" },
     { name = "paddle-python-sdk" },
@@ -419,7 +418,6 @@ dev = [
     { name = "webdriver-manager", specifier = ">=4.0.1,<5.0.0" },
 ]
 fly = [
-    { name = "guppy3", specifier = ">=3.1.5" },
     { name = "highlight-io", specifier = ">=0.9.3" },
     { name = "memray", specifier = ">=1.17.2" },
     { name = "paddle-python-sdk", specifier = ">=1.6.0" },
@@ -930,50 +928,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/34/72/9614c465dc206155d93eff0ca20d42e1e35afc533971379482de953521a4/gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec", size = 375031, upload-time = "2024-08-10T20:25:27.378Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/7d/6dac2a6e1eba33ee43f318edbed4ff29151a49b5d37f080aad1e6469bca4/gunicorn-23.0.0-py3-none-any.whl", hash = "sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d", size = 85029, upload-time = "2024-08-10T20:25:24.996Z" },
-]
-
-[[package]]
-name = "guppy3"
-version = "3.1.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/0f/bb/d498ab5132830ea6246ba320358048b4ff046d8f063369f121750b807a1d/guppy3-3.1.5.tar.gz", hash = "sha256:97fbe606a23f837ad109d122bf30fba355785add2dcb68e9a6be335846dd4c48", size = 334938, upload-time = "2025-01-03T10:33:12.114Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/60/c6/7353ab666ffcedefcce1d025b2941b84fe6fe2fd5387b12a8fc6bc35437a/guppy3-3.1.5-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:c64a90f7b65a103cb3856238397625d7c6202f195d9c6b23fa172c021360021f", size = 443151, upload-time = "2025-01-03T10:31:35.721Z" },
-    { url = "https://files.pythonhosted.org/packages/02/ba/c4ee8902199023a1a71f2be06c2f81388850018f3c2f54485aa674ddcc6b/guppy3-3.1.5-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:20971fd32a580231bc1f8b527d4dfa27f8627b04f45bab1c4152241ae9083ca9", size = 351493, upload-time = "2025-01-03T10:31:36.936Z" },
-    { url = "https://files.pythonhosted.org/packages/ed/62/70692fc88e9a5cccd3824f983bc212130e8d6357c17d3a5ac2ef1671bc49/guppy3-3.1.5-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:fbb73531c001ba391ef6a0a0f629deb1eaf19d079a5c2539b21c807458fb87cb", size = 350508, upload-time = "2025-01-03T10:31:38.064Z" },
-    { url = "https://files.pythonhosted.org/packages/3b/e7/3d9eee53c053f958796316710a4a30e669ef7899b6c305620002d907dd7a/guppy3-3.1.5-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:98d76235468ea4106b54208c79d1b9ddf32ae112544ebda180a4f0f3fd36f952", size = 706160, upload-time = "2025-01-03T10:31:40.591Z" },
-    { url = "https://files.pythonhosted.org/packages/11/65/e10b1d55a4622e8c8274e36a9e079a293eb43990400807e500ebf21d8e87/guppy3-3.1.5-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:2bf7238f690b5a75f759b5a4f7d15533d00053a1053d9558903bfc80e36a33fe", size = 629513, upload-time = "2025-01-03T10:31:41.877Z" },
-    { url = "https://files.pythonhosted.org/packages/c7/a6/d809dfd20f9db8150e879dd205659f61af69e045be1f679946a0007b0a20/guppy3-3.1.5-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:3b8a6bedd40a1749b662bcf4afefc8ad23bf6b7b64f9279db5900a9a13a7d9ad", size = 733089, upload-time = "2025-01-03T10:31:43.202Z" },
-    { url = "https://files.pythonhosted.org/packages/4b/96/9bc300f4a457807747fdb25b03b690dc70a48e4d2c4b13afe461ddeabc72/guppy3-3.1.5-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:3431f82bfa70b011e75ec47d8ad0f7b5ecf02eb05f702c6a5e4c694ca7942925", size = 713914, upload-time = "2025-01-03T10:31:44.345Z" },
-    { url = "https://files.pythonhosted.org/packages/99/11/9e68b167a4b37ad8172c7d7e6be212eb261835447da8b7b1e73ba0126f39/guppy3-3.1.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bf76e3a1f83b7d1f11366e659b49fbf7f71a5dc8f7ae3d58e80575021cb391f7", size = 708167, upload-time = "2025-01-03T10:31:46.631Z" },
-    { url = "https://files.pythonhosted.org/packages/39/6a/3d253f59f0c098b395a6821b4cea2c7a35785b113ec63496ea791d640214/guppy3-3.1.5-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:92e262d32fd55d73aaff1814e07d3970b3a43421c695b58d1539b6fd64185dff", size = 681361, upload-time = "2025-01-03T10:31:49.12Z" },
-    { url = "https://files.pythonhosted.org/packages/25/ef/76c2caf31fcc2b45b76685c48503cc8fe8f343b6e3eda14891bb2c7b4b0b/guppy3-3.1.5-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:e7cabd97a3726db499022ba985a911f7620d527ac563363ac75a953073490e69", size = 689761, upload-time = "2025-01-03T10:31:50.476Z" },
-    { url = "https://files.pythonhosted.org/packages/ef/a8/d9b7902231a6524b7d4cb721a9cefd572cddff92858aa91ff7f392032d24/guppy3-3.1.5-cp312-cp312-musllinux_1_2_armv7l.whl", hash = "sha256:6c30693a57a16a316f7d285071db1654c5e3fb6c18358710ba0258fc3552be89", size = 675605, upload-time = "2025-01-03T10:31:51.719Z" },
-    { url = "https://files.pythonhosted.org/packages/3b/db/a6133fce96500ed4594fef96f496832a37714b8902330080496367ef1c32/guppy3-3.1.5-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:a7585b5e52369486034eb859eca1b378d8db447eec42ea7d78a0e63975f81a06", size = 676389, upload-time = "2025-01-03T10:31:54.098Z" },
-    { url = "https://files.pythonhosted.org/packages/fb/fe/ec680c7fa1d3c04280b017575c1befdd81011f92ee405d0a7ddfa6264ef1/guppy3-3.1.5-cp312-cp312-musllinux_1_2_ppc64le.whl", hash = "sha256:34e672c13c715877ac26477f14a275fd56366abff9aae4710ae7714c192e0fe6", size = 719935, upload-time = "2025-01-03T10:31:55.948Z" },
-    { url = "https://files.pythonhosted.org/packages/3f/de/59ff1890dafa486ff6913fbcef91a2e767fa8e5fc61dac79e03db24497a9/guppy3-3.1.5-cp312-cp312-musllinux_1_2_s390x.whl", hash = "sha256:c24145610a4f98b15adafe3eb778f102dfef17f8850141bf3fcd4a41e4dc4cc4", size = 703421, upload-time = "2025-01-03T10:31:57.214Z" },
-    { url = "https://files.pythonhosted.org/packages/05/c3/a54253a14da5a364c4161bc6c0266f8a7f6af232fef852e160bec8f2f235/guppy3-3.1.5-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:a55c935eeabb71476c333fc433f103ba0de4e1772f974ac6ae0e517f20e8edee", size = 694133, upload-time = "2025-01-03T10:31:58.523Z" },
-    { url = "https://files.pythonhosted.org/packages/75/17/cd3d9db80f533e966936dd217cd133fb88cb522983be9b8c60ec03dc492e/guppy3-3.1.5-cp312-cp312-win32.whl", hash = "sha256:e30eb7c750b24eaaebc5ba2afb140c840427b97ba4e2a823f0f443efedbf879f", size = 330358, upload-time = "2025-01-03T10:32:01.065Z" },
-    { url = "https://files.pythonhosted.org/packages/68/f4/36cf52c754bea073ce9ddfc194dcf413e359244d52bd96b31c4c4a7127e1/guppy3-3.1.5-cp312-cp312-win_amd64.whl", hash = "sha256:9d62173ff5001b1606db0f2e85a1fc0383abd0c93949b7028f2520c3bb0b3b47", size = 344303, upload-time = "2025-01-03T10:32:02.251Z" },
-    { url = "https://files.pythonhosted.org/packages/22/64/8796886105a11685334d96888757e0061cf89c762c05d521e96100f100ea/guppy3-3.1.5-cp312-cp312-win_arm64.whl", hash = "sha256:9123e0fc5025d085cfb2b728fb25363abbe21cba34c1d490de90fe89e0c38478", size = 337763, upload-time = "2025-01-03T10:32:03.537Z" },
-    { url = "https://files.pythonhosted.org/packages/43/88/66690f661fa122c19a9e6dfd18c39f5e2a15f58de7ae9f6375c33cfb3692/guppy3-3.1.5-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:2c04e259cee616c21011df9ad0bdc5b0e9dbdd62e5d0b288e11cd51ff7f56cc9", size = 444229, upload-time = "2025-01-03T10:32:04.779Z" },
-    { url = "https://files.pythonhosted.org/packages/f9/5b/93cf4ee5891b7580de0f504d75a553a9e245a8611406657cb7c984c29f29/guppy3-3.1.5-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:8cebb33b86c679403e59ac26352184ddbff29c12ccd5041a5974a9566dcc0e62", size = 352068, upload-time = "2025-01-03T10:32:06.049Z" },
-    { url = "https://files.pythonhosted.org/packages/14/b8/6fb198fcc45020ad321bd59ba53104f0fb0080c7763cf65d4f8b090eee19/guppy3-3.1.5-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:28b8e603361c744d3d5d9730f88190eb6c5e19912c2034c5f0ac64bac804f055", size = 351106, upload-time = "2025-01-03T10:32:08.763Z" },
-    { url = "https://files.pythonhosted.org/packages/13/e7/e9482bf4548eb484ca55604006ae99e1aeb633fd4c54b3ebb3030c489438/guppy3-3.1.5-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fa085ace6509b83e47d5870f4e63435943de886abe10a339c15a3f8ed41b8ec3", size = 717255, upload-time = "2025-01-03T10:32:11.256Z" },
-    { url = "https://files.pythonhosted.org/packages/24/fd/fa627248fc8623d4fbff706119b7e7b3733171fe8cb417114ca95ea3de3e/guppy3-3.1.5-cp313-cp313-manylinux_2_17_armv7l.manylinux2014_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:5f5231db471ddcabf02337d2f3292d7c659c106893282ea106f5b4be8e373406", size = 641119, upload-time = "2025-01-03T10:32:13.215Z" },
-    { url = "https://files.pythonhosted.org/packages/c4/82/4a0f4a7e3e71aa704fa9ac58d8e4eccbfad98c3f4584f3c27267f334d804/guppy3-3.1.5-cp313-cp313-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:44c448a48b63bb53e3a55cd931005b39803ee10a70bf39cf5382b633ee3c31d2", size = 745330, upload-time = "2025-01-03T10:32:15.016Z" },
-    { url = "https://files.pythonhosted.org/packages/55/70/540bfeb53a68ec29f7de77f2bccae095ac751cfe16e3b3da20989123773c/guppy3-3.1.5-cp313-cp313-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:f8e225c99b42a69431bb48d7dc735f6b46409e2fa607a957b470cf4098c756bb", size = 725926, upload-time = "2025-01-03T10:32:16.388Z" },
-    { url = "https://files.pythonhosted.org/packages/71/03/8bfb34868a0115ab5f408cb29a3912852fdfffdaa2a519fd6ed59840d39e/guppy3-3.1.5-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d237bac310a30c13f370ea3f7e28a8878bee6cb9cc3449e4233e154e1787d62c", size = 720171, upload-time = "2025-01-03T10:32:17.71Z" },
-    { url = "https://files.pythonhosted.org/packages/0e/f7/bd2cf747fee024e7efe0e508e1c33fa54119846da494014a5da12ce6f703/guppy3-3.1.5-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:034109e58d3eae6cc6ade7a125c6c62b53355008ea70ec87d0859014f8d0c4fe", size = 692855, upload-time = "2025-01-03T10:32:21.828Z" },
-    { url = "https://files.pythonhosted.org/packages/cf/06/c02a7b2c0b2f0d02b4e3099f76043145dac278d5ef441a30a00ca8aef312/guppy3-3.1.5-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:5e24d87395e515b511c80cf0aae5ec75dc4c7b49a3744d327f7c0ece24314682", size = 701088, upload-time = "2025-01-03T10:32:23.28Z" },
-    { url = "https://files.pythonhosted.org/packages/3b/a0/9c52dfeea46efb355310c6852513be7f7a916c19fbb6eb9fc4f901eeab0e/guppy3-3.1.5-cp313-cp313-musllinux_1_2_armv7l.whl", hash = "sha256:41c418d631f81a08e9e088e8f31b5d6a1e38f18cad8f6873dbdd199277547a6a", size = 686580, upload-time = "2025-01-03T10:32:25.868Z" },
-    { url = "https://files.pythonhosted.org/packages/89/d0/9296c9bc0998c2d5b263e156981e8391f37327df45b22d65010738c8b0a5/guppy3-3.1.5-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:d0529c471b367e7a6f906aebca72cd073c0961fdf089e0697f6c4d3b260720c6", size = 687492, upload-time = "2025-01-03T10:32:27.271Z" },
-    { url = "https://files.pythonhosted.org/packages/84/ba/21f52dbbb22ae57a62e80b7ddceef95b0f5aa3688f8c2d9ba84cce5fd07a/guppy3-3.1.5-cp313-cp313-musllinux_1_2_ppc64le.whl", hash = "sha256:12e9b9df798a9b62ebbfd2b65b2638bd4fff5139b9d6315acb641232f1399fe4", size = 731271, upload-time = "2025-01-03T10:32:28.535Z" },
-    { url = "https://files.pythonhosted.org/packages/14/34/034350bbc52da8208dc4ce98931ffa9391fc127ab15fca1213f16dc4abc0/guppy3-3.1.5-cp313-cp313-musllinux_1_2_s390x.whl", hash = "sha256:a59ce90ac74b418b27ef1461ebda95b89e292a3a15aad90bbffa7e8bb35a6cdc", size = 714920, upload-time = "2025-01-03T10:32:29.945Z" },
-    { url = "https://files.pythonhosted.org/packages/9d/66/8cd6c66393a64b3dcd022898fd17351e856b94152622dd924ccee7ed61f4/guppy3-3.1.5-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:54122b972186be129ba0b680a597b5287bcc940865921942631dfb0abf382983", size = 705866, upload-time = "2025-01-03T10:32:32.393Z" },
-    { url = "https://files.pythonhosted.org/packages/34/e1/5fcee0ec7fe47aa124866b8d048a9261674c0f515fd2026eb346c3582446/guppy3-3.1.5-cp313-cp313-win32.whl", hash = "sha256:f5a326d3ec33d63a05efd0bc5d14fe751d4df27a8af8c6f05ac4990bbce87f81", size = 330828, upload-time = "2025-01-03T10:32:33.728Z" },
-    { url = "https://files.pythonhosted.org/packages/ed/3b/fe7290cac17c9bce257a15ab301d0926f747d7fe2c665e244890f70fe4db/guppy3-3.1.5-cp313-cp313-win_amd64.whl", hash = "sha256:7bfc83dbcfc814a799d2f7fe34f84db59d552f61921c05ea256df22b89568543", size = 345564, upload-time = "2025-01-03T10:32:35.156Z" },
-    { url = "https://files.pythonhosted.org/packages/26/75/be6dba39ff48311628bb84f032f40a09bef1cb4554467899e6be518a2a4f/guppy3-3.1.5-cp313-cp313-win_arm64.whl", hash = "sha256:91613da1ad5f60167fdf921b8f325e33e3afdbd2ac7b25175e89f9ccfe468d73", size = 338772, upload-time = "2025-01-03T10:32:36.644Z" },
 ]
 
 [[package]]
