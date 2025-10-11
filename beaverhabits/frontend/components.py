@@ -1241,7 +1241,7 @@ def auth_forgot_password(email_input: ui.input, reset: Callable):
 
 
 def auth_email(value: str | None = None):
-    email = ui.input("email").classes("w-full")
+    email = ui.input("Email").classes("w-full")
     if value:
         email.value = value
     return email
