@@ -65,7 +65,7 @@ def link(text: str, url: str, new_tab: bool = False, tooltip=""):
 
 def icon(text: str, url: str, icon_str: str, tooltip: str):
     with link(text, url, tooltip=tooltip).classes("max-sm:hidden"):
-        ui.icon(icon_str).classes("text-3xl")
+        ui.icon(icon_str).style("font-size: 30px")
 
 
 def description():
