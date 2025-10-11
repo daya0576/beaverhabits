@@ -3,6 +3,7 @@ import gc
 import platform
 import tracemalloc
 
+import nicegui
 import psutil
 from fastapi import APIRouter, FastAPI, HTTPException, status
 from fastapi.responses import Response
@@ -37,6 +38,7 @@ async def health():
         loop=loop.__class__.__module__,
         python_version=platform.python_version(),
         identity=IDENTITY,
+        nicegui_version=nicegui.__version__,
     )
 
 
