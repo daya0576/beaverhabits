@@ -60,6 +60,10 @@ class DictRecord(CheckedRecord, DictStorage):
     def text(self, value: str) -> None:
         self.data["text"] = value
 
+    @property
+    def skipped(self) -> bool:
+        return "#skipped" in self.text
+
 
 class HabitDataCache:
     def __init__(self, habit: "DictHabit"):
@@ -179,23 +183,28 @@ class DictHabit(Habit[DictRecord], DictStorage):
         return self.cache.ticked_data
 
     async def tick(
-        self, day: datetime.date, done: bool, text: str | None = None
+        self,
+        day: datetime.date,
+        done: bool,
+        text: str | None = None,
     ) -> CheckedRecord:
         # Find the record in the cache
         record = self.ticked_data.get(day)
 
         if record is not None:
             # Update only if necessary to avoid unnecessary writes
-            new_data = {}
+            partial_data = {}
             if record.done != done:
-                new_data["done"] = done
+                partial_data["done"] = done
             if text is not None and record.text != text:
-                new_data["text"] = text
-            if new_data:
-                record.data.update(new_data)
+                partial_data["text"] = text
+
+            if partial_data:
+                record.data.update(partial_data)
 
         else:
-            # Update storage once
+
+            # Create record once
             data = {"day": day.strftime(DAY_MASK), "done": done}
             if text is not None:
                 data["text"] = text
