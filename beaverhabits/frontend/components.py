@@ -115,7 +115,13 @@ def menu_icon_item(*args, **kwargs):
     return menu_item.props('dense role="menuitem"')
 
 
-def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
+def habit_tick_dialog(habit: Habit, day: datetime.date):
+    record = habit.record_by(day)
+
+    # Textarea label
+    start = min(habit.ticked_days, default=day)
+    label = utils.format_date_difference(start, day)
+
     with ui.dialog() as dialog, ui.card().props("flat") as card:
         dialog.props('backdrop-filter="blur(4px)"')
         card.classes("w-[640px]")
@@ -140,25 +146,25 @@ def habit_tick_dialog(record: CheckedRecord | None, label="Note"):
                     "flat"
                 )
 
-    return dialog, t
-
-
-async def note_tick(habit: Habit, day: datetime.date) -> bool | None:
-    start = min(habit.ticked_days, default=day)
-    dialog_label = utils.format_date_difference(start, day)
-
-    record = habit.record_by(day)
-    dialog, t = habit_tick_dialog(record, label=dialog_label)
-
     # Realtime saving
     async def t_value_change(e: events.ValueChangeEventArguments):
         if record:
-
             if abs(len(e.value) - len(record.text)) < 24:
                 return
         await habit.tick(day, record.done if record else False, e.value)
 
     t.on_value_change(t_value_change)
+
+    return dialog
+
+
+async def note_tick(
+    habit: Habit,
+    day: datetime.date,
+    dialog: ui.dialog | None = None,
+) -> bool | None:
+    if not dialog:
+        dialog = habit_tick_dialog(habit, day)
 
     # Form submit
     logger.info(f"Waiting for dialog {habit}...")
@@ -214,7 +220,7 @@ class HabitCheckBox(ui.checkbox):
         # Click Event
         self.on("click", self._click_event)
 
-        # Touch and hold event
+        # Press and hold event
         # Sequence of events: https://ui.toast.com/posts/en_20220106
         # 1. Mouse click: mousedown -> mouseup -> click
         # 2. Touch click: touchstart -> touchend -> mousemove -> mousedown -> mouseup -> click
@@ -239,12 +245,10 @@ class HabitCheckBox(ui.checkbox):
         logger.debug(f"Refresh: {self.day}, {self.value}")
         if not self.row_refresh:
             return
-        if not self.habit.period:
-            return
 
         if self.habit.period and self.habit.period != EVERY_DAY:
             self.row_refresh()
-        
+
         if settings.INDEX_SHOW_HABIT_STREAK:
             self.row_refresh()
 
@@ -258,7 +262,6 @@ class HabitCheckBox(ui.checkbox):
         except asyncio.TimeoutError:
             # Long press diaglog
             value = await note_tick(self.habit, self.day)
-
             if value is not None:
                 self.value = value
                 self._refresh()
@@ -643,7 +646,6 @@ class CalendarCheckBox(ui.checkbox):
                 # Interpolation with .25
                 unchecked_color = "rgb(201,213,226)"
 
-
         return (
             icons.SQUARE.format(
                 color=unchecked_color,
@@ -768,6 +770,7 @@ def habit_history(today: datetime.date, habit: Habit, total_months: int = 13):
     )
     echart.classes("h-40")
 
+
 class HabitStreakBadge(ui.badge):
     def __init__(self, today: datetime.date, habit: Habit) -> None:
         super().__init__()
@@ -791,6 +794,7 @@ class HabitStreakBadge(ui.badge):
         else:
             return NO_PERIOD
 
+
 class HabitTotalBadge(ui.badge):
     def __init__(self, habit: Habit) -> None:
         super().__init__()
@@ -803,6 +807,7 @@ class IndexBadge(ui.badge):
         self.props("color=grey-9 rounded transparent")
         self.style("font-size: 80%; font-weight: 500")
 
+
 class IndexStreakBadge(HabitStreakBadge, IndexBadge):
     def __init__(self, today: datetime.date, habit: Habit) -> None:
         super().__init__(today, habit)
@@ -814,6 +819,7 @@ class IndexStreakBadge(HabitStreakBadge, IndexBadge):
             f'aria-label="total completion: {len(ticked_days)};'
             f'{index_total_badge_alternative_text(today, habit)}"'
         )
+
 
 class IndexTotalBadge(HabitTotalBadge, IndexBadge):
     def __init__(self, today: datetime.date, habit: Habit) -> None:
@@ -865,7 +871,7 @@ def habit_notes(habit: Habit, limit: int = 10):
             ) as entry:
                 with ui.column().classes("gap-0"):
                     try:
-                        ui.html(text)
+                        ui.html(text, sanitize=False)
                     except Exception as e:
                         ui.label(f"Error rendering note: {e}").classes("text-red-500")
 
@@ -897,13 +903,14 @@ def compose_habit_streaks(today: datetime.date, habit: Habit):
 
     return {"months": months, "data": data}
 
+
 def habit_streak(today: datetime.date, habit: Habit):
     streaks = compose_habit_streaks(today, habit)
     if streaks == None:
         return
 
     months = streaks["months"]
-    data = streaks["data"] 
+    data = streaks["data"]
 
     # draw the graph
     months = [x.strftime("%d/%m") for x in months]
@@ -1234,7 +1241,7 @@ def auth_forgot_password(email_input: ui.input, reset: Callable):
 
 
 def auth_email(value: str | None = None):
-    email = ui.input("email").classes("w-full")
+    email = ui.input("Email").classes("w-full")
     if value:
         email.value = value
     return email

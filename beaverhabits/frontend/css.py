@@ -123,7 +123,7 @@ body {
 
 .body--dark {
   background-color: #121212;
-  color: #121212;
+  color: #fff;
 
   .nicegui-link {
     color: #FFF;

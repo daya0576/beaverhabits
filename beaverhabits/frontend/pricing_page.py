@@ -65,7 +65,7 @@ def link(text: str, url: str, new_tab: bool = False, tooltip=""):
 
 def icon(text: str, url: str, icon_str: str, tooltip: str):
     with link(text, url, tooltip=tooltip).classes("max-sm:hidden"):
-        ui.icon(icon_str).classes("text-3xl")
+        ui.icon(icon_str).style("font-size: 30px")
 
 
 def description():
@@ -113,7 +113,7 @@ def demo():
             "Make it <b>satisfying</b>: tracking can become its own form of reward",
         ]
         for reason in reasons:
-            ui.html(reason).style("font-size: 1rem; margin: 0px !important;")
+            ui.html(reason, sanitize=False).style("font-size: 1rem; margin: 0px !important;")
 
     with ui.grid(columns=3).classes("w-full gap-1"):
         for image in IMAGES:
@@ -128,7 +128,7 @@ def how_to_use():
             lambda: ui.navigate.to("/demo", new_tab=True)
         )
 
-    ui.html(YOUTUBE).classes("videowrapper")
+    ui.html(YOUTUBE, sanitize=False).classes("videowrapper")
 
 
 def why_user_love():
@@ -151,7 +151,7 @@ def why_user_love():
 def footer():
     with ui.row().classes("w-full"):
         ui.space()
-        link = lambda text, url: ui.link(text, url, True).classes("text-primary")
+        link = lambda text, url: ui.link(text, url, True)
         link("Wiki", "https://github.com/daya0576/beaverhabits/wiki")
         link("Contact", "mailto:daya0576@gmail.com")
         link("Privacy Policy", "/privacy")

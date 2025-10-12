@@ -68,10 +68,10 @@ async def import_from_csv(text: str) -> HabitList:
 def import_ui_page(user: User):
     async def handle_upload(e: events.UploadEventArguments):
         try:
-            text = e.content.read().decode("utf-8")
-            if e.name.endswith(".json"):
+            text = await e.file.text()
+            if e.file.name.endswith(".json"):
                 other = await import_from_json(text)
-            elif e.name.endswith(".csv"):
+            elif e.file.name.endswith(".csv"):
                 other = await import_from_csv(text)
             else:
                 raise ValueError("Unsupported format")

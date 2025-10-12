@@ -50,7 +50,6 @@ async def test_user_db(screen: Screen):
     screen.open("/", timeout=60)
 
 
-@pytest.mark.asyncio
 async def test_user_disk(screen: Screen):
     settings.HABITS_STORAGE = StorageType.USER_DISK
     user = await get_or_create_user()

@@ -36,7 +36,7 @@ def description(text: str):
     # l = ui.label(text).classes("hidden")
     # return l.props('aria-hidden="false" tabindex="0" aria-label="{text}"')
     with ui.element("p").classes("hidden"):
-        ui.html(text)
+        ui.html(text, sanitize=False)
 
 
 def index_total_badge_alternative_text(today: datetime.date, habit):

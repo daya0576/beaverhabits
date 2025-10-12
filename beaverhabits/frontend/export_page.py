@@ -40,8 +40,8 @@ def delete_account(habit_list: HabitList, user: User):
             f"⚠️ Warning: Account {user.email} will be permanently deleted. This action cannot be reversed."
         )
         with ui.row():
-            ui.button("Yes", on_click=lambda: dialog.submit("Yes"))
-            ui.button("No", on_click=lambda: dialog.submit("No"))
+            ui.button("Yes", on_click=lambda: dialog.submit(True))
+            ui.button("No", on_click=lambda: dialog.submit(False))
 
     export_json = lambda: views.export_user_habit_list(habit_list, user.email)
 

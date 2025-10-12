@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import os
 from collections import OrderedDict
@@ -15,6 +16,7 @@ from beaverhabits.frontend.components import (
     TagManager,
     habit_name_menu,
     habits_by_tags,
+    note_tick,
     tag_filter_component,
 )
 from beaverhabits.frontend.layout import layout

@@ -6,7 +6,7 @@ name = "beaverhabits"
 dynamic = ["version"]
 requires-python = "<4.0,>=3.12"
 dependencies = [
-    "nicegui>=2.7.0,<3.0.0",
+    "nicegui>=3.0.0",
     "pydantic-settings<3.0.0,>=2.2.1",
     "fastapi-users[sqlalchemy]<15.0.0,>=14.0.0",
     "uvicorn[standard]>=0.28.0,<1.0.0",
@@ -46,7 +46,7 @@ fly = [
     "sentry-sdk[fastapi]<3.0.0,>=2.15.0",
     "paddle-python-sdk>=1.6.0",
     "highlight-io>=0.9.3",
-    "guppy3>=3.1.5",
+    # "guppy3>=3.1.5",
     "memray>=1.17.2",
 ]
 

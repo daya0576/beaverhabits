@@ -1,13 +1,14 @@
 import datetime
 
-from nicegui import app
-from nicegui.testing import Screen
+from nicegui import app, ui
+from nicegui.testing import Screen, User
 
 from beaverhabits.frontend.add_page import add_page_ui
 from beaverhabits.frontend.habit_page import habit_page_ui
 from beaverhabits.frontend.index_page import index_page_ui
 from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.views import dummy_habit_list
+from tests.test_storage import get_or_create_user
 
 # Test cases:
 # https://github.com/zauberzeug/nicegui/tree/main/tests
@@ -22,46 +23,51 @@ def dummy_days(count):
     return [today - datetime.timedelta(days=i) for i in reversed(range(count))]
 
 
-def test_index_page(screen: Screen) -> None:
-    app.add_static_files("/statics", "statics")
-    app.add_static_files("/media", "statics")
-
+async def test_index_page(user: User) -> None:
     days = dummy_days(7)
     habits = dummy_habit_list(days)
 
-    index_page_ui(days, habits)
+    @ui.page("/")
+    def page():
+        index_page_ui(days, habits)
 
-    screen.open("/", timeout=60)
-    screen.should_contain("Habits")
+    await user.open("/")
+    await user.should_see("Habits")
 
 
-def test_add_page(screen: Screen) -> None:
+async def test_add_page(user) -> None:
     days = dummy_days(7)
     habits = dummy_habit_list(days)
 
-    add_page_ui(habits)
+    @ui.page("/")
+    def page():
+        add_page_ui(habits)
 
-    screen.open("/", timeout=60)
-    screen.should_contain("Habits")
+    await user.open("/")
+    await user.should_see("Habits")
 
 
-def test_order_page(screen: Screen) -> None:
+async def test_order_page(user) -> None:
     days = dummy_days(7)
     habits = dummy_habit_list(days)
 
-    order_page_ui(habits)
+    @ui.page("/")
+    def page():
+        order_page_ui(habits)
 
-    screen.open("/", timeout=60)
-    screen.should_contain("Habits")
+    await user.open("/")
+    await user.should_see("Habits")
 
 
-def test_habit_detail_page(screen: Screen) -> None:
+async def test_habit_detail_page(user) -> None:
     days = dummy_days(7)
     today = days[-1]
     habits = dummy_habit_list(days)
     habit = habits.habits[0]
 
-    habit_page_ui(today, habit)
+    @ui.page("/")
+    def page():
+        habit_page_ui(today, habit)
 
-    screen.open("/", timeout=60)
-    screen.should_contain("Order pizz")
+    await user.open("/")
+    await user.should_see("Order pizz")
