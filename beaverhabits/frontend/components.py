@@ -1030,6 +1030,24 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
         )
 
 
+def filter_habits_with_tags(active_habits: list[Habit]) -> list[Habit]:
+    selected_tags = TagManager.get_all()
+    if not selected_tags:
+        return active_habits
+
+    filtered_habits = []
+    for habit in active_habits:
+        if not habit.tags and "Others" in selected_tags:
+            filtered_habits.append(habit)
+            continue
+
+        for tag in habit.tags:
+            if tag in selected_tags:
+                filtered_habits.append(habit)
+                break
+
+    return filtered_habits
+
 def habits_by_tags(active_habits: list[Habit]) -> dict[str, list[Habit]]:
     all_tags = get_all_tags(active_habits)
     if not all_tags:
