@@ -14,6 +14,7 @@ from beaverhabits.frontend.components import (
     IndexStreakBadge,
     IndexTotalBadge,
     TagManager,
+    filter_habits_with_tags,
     habit_name_menu,
     habits_by_tags,
     note_tick,
@@ -90,6 +91,9 @@ def habit_row(habit: Habit, tag: str, days: list[datetime.date]):
 
 @ui.refreshable
 def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
+    if settings.ENABLE_TAG_FILTERS:
+        active_habits = filter_habits_with_tags(active_habits)
+
     # Total cloumn for each row
     columns = NAME_COLS + len(days) * DATE_COLS + COUNT_BADGE_COLS
 
@@ -124,6 +128,9 @@ def index_page_ui(days: list[datetime.date], habits: HabitList):
         days = list(reversed(days))
 
     with layout(habit_list=habits):
+        if settings.ENABLE_TAG_FILTERS:
+            tag_filter_component(active_habits, refresh=habit_list_ui.refresh)
+
         if not active_habits:
             ui.label("List is empty.").classes("mx-auto w-80")
             return
