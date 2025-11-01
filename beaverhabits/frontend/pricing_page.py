@@ -75,7 +75,7 @@ def description():
         icon("", "/login", "sym_r_login", tooltip="Login")
         icon("", const.HOME_PAGE, "eva-github", tooltip="Star us on Github!")
 
-    desc = ui.label("Simple habit tracking app without 'Goals'")
+    desc = ui.label("A simple habit tracking app without goals")
     desc.classes("text-lg text-center")
 
     with ui.row().classes("w-full grid grid-cols-1 sm:grid-cols-2 gap-3"):
