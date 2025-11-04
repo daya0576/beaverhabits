@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
     ENABLE_IOS_STANDALONE: bool = True
     TAG_SELECTION_MODE: TagSelectionMode = TagSelectionMode.MULTI
-    ENABLE_TAG_FILTERS: bool = False
+    ENABLE_TAG_FILTERS: bool = True
 
     INDEX_SHOW_HABIT_COUNT: bool = False
     INDEX_SHOW_HABIT_STREAK: bool = False
