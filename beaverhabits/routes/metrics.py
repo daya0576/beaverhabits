@@ -78,7 +78,9 @@ def init_metrics_routes(app: FastAPI) -> None:
     app.include_router(router)
 
 
-@router.get("/debug/tracemalloc/{action}", summary="Start tracemalloc")
+@router.get(
+    "/debug/tracemalloc/{action}", summary="Start tracemalloc", include_in_schema=False
+)
 def tracemalloc_control(action: str, nframe: int = 25):
     if action == "start":
         tracemalloc.start(nframe)
@@ -91,7 +93,9 @@ def tracemalloc_control(action: str, nframe: int = 25):
         )
 
 
-@router.get("/debug/snapshot", summary="Show top X memory allocations")
+@router.get(
+    "/debug/snapshot", summary="Show top X memory allocations", include_in_schema=False
+)
 def tracemalloc_snapshot(count: int = 20):
     # Check for sensible input
     if count < 1 or count > 100:
@@ -131,7 +135,7 @@ def tracemalloc_snapshot(count: int = 20):
     }
 
 
-@router.get("/debug/heap/{p:path}")
+@router.get("/debug/heap/{p:path}", include_in_schema=False)
 def heap_usage(p: str):
     gc.collect()
 

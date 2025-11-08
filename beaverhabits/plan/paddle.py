@@ -79,7 +79,7 @@ async def refund(data: dict) -> None:
     logger.info(f"Refund for customer_id: {customer_id}")
 
 
-@router.post("/callback")
+@router.post("/callback", include_in_schema=False)
 async def webhook(data: dict, request: FastAPIRequest) -> dict:
     paddle_request = PaddleRequest(
         body=await request.body(),
