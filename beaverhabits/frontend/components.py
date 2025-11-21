@@ -1052,6 +1052,9 @@ def filter_habits_with_tags(active_habits: list[Habit]) -> list[Habit]:
                 filtered_habits.append(habit)
                 break
 
+    if not filtered_habits:
+        return active_habits
+
     return filtered_habits
 
 def habits_by_tags(active_habits: list[Habit]) -> dict[str, list[Habit]]:
