@@ -14,7 +14,7 @@ from nicegui.elements.button import Button
 
 from beaverhabits import utils
 from beaverhabits.accessibility import index_total_badge_alternative_text
-from beaverhabits.configs import TagSelectionMode, settings
+from beaverhabits.configs import StreakIconText, TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.frontend import icons
@@ -594,6 +594,19 @@ class CalendarHeatmap:
         ]
 
 
+def get_streak_icon_text_decoration(text: str) -> str:
+    decorations = []
+    if "#skip" in text:
+        decorations.append("line-through")
+    if "#star" in text:
+        decorations.append("underline")
+
+    decoration = " ".join(decorations)
+    if decoration:
+        decoration = f"text-decoration: {decoration};"
+    return decoration
+
+
 class CalendarCheckBox(ui.checkbox):
     def __init__(
         self,
@@ -604,10 +617,11 @@ class CalendarCheckBox(ui.checkbox):
         refresh: Callable | None = None,
     ) -> None:
         self.habit = habit
+        self.record = habit.record_by(day)
         self.day = day
         self.status = status
         self.refresh = refresh
-        super().__init__("", value=self.ticked)
+        super().__init__("", value=bool(self.record and self.record.done))
 
         self.classes("inline-block")
         self.props("dense")
@@ -624,15 +638,11 @@ class CalendarCheckBox(ui.checkbox):
         self.props(f'data-long-press-delay="{PRESS_DELAY}"')
         self.on("long-press", self._async_long_press_task)
 
-    @property
-    def ticked(self) -> bool:
-        record = self.habit.ticked_data.get(self.day)
-        return bool(record and record.done)
-
     def _icon_svg(self):
         unchecked_text_color = checked_text_color = "rgb(255,255,255)"
         unchecked_color, checked_color = "rgb(54,54,54)", icons.PRIMARY_COLOR
 
+        # Customize icon colors
         dark = get_user_dark_mode()
         if dark == False:
             unchecked_color = "rgb(222,222,222)"
@@ -646,14 +656,24 @@ class CalendarCheckBox(ui.checkbox):
                 # Interpolation with .25
                 unchecked_color = "rgb(201,213,226)"
 
+        # Customize icon text decoration
+        text = self.day.day
+        decoration = get_streak_icon_text_decoration(
+            self.record.text if self.record else ""
+        )
+
         return (
             icons.SQUARE.format(
                 color=unchecked_color,
-                text=self.day.day,
+                text=text,
                 text_color=unchecked_text_color,
+                decoration=decoration,
             ),
             icons.SQUARE.format(
-                color=checked_color, text=self.day.day, text_color=checked_text_color
+                color=checked_color,
+                text=text,
+                text_color=checked_text_color,
+                decoration=decoration,
             ),
         )
 
@@ -1056,6 +1076,7 @@ def filter_habits_with_tags(active_habits: list[Habit]) -> list[Habit]:
         return active_habits
 
     return filtered_habits
+
 
 def habits_by_tags(active_habits: list[Habit]) -> dict[str, list[Habit]]:
     all_tags = get_all_tags(active_habits)
