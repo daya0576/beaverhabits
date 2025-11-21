@@ -1031,10 +1031,16 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
 
 
 def filter_habits_with_tags(active_habits: list[Habit]) -> list[Habit]:
+    # disable tag filter if no tags
+    if all(not habit.tags for habit in active_habits):
+        return active_habits
+
+    # if no tags selected, return all habits
     selected_tags = TagManager.get_all()
     if not selected_tags:
         return active_habits
 
+    # filter habits by selected tags
     filtered_habits = []
     for habit in active_habits:
         if not habit.tags and "Others" in selected_tags:
