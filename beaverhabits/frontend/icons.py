@@ -55,7 +55,7 @@ img:data:image/svg+xml;charset=utf8,\
 <svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'>\
     <rect x='1' y='1' width='18' height='18' rx='2.5' fill='{color}'/>\
     <text x='10' text-anchor='middle' y='10' dominant-baseline='central' fill='{text_color}' font-size='8' \
-        style='font-family: Roboto,-apple-system,Helvetica Neue,Helvetica,Arial,sans-serif;'\
+        style='font-family: Roboto,-apple-system,Helvetica Neue,Helvetica,Arial,sans-serif;{decoration}'\
     >{text}</text>\
 </svg>\
 """
