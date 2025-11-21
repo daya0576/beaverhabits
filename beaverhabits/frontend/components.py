@@ -14,7 +14,7 @@ from nicegui.elements.button import Button
 
 from beaverhabits import utils
 from beaverhabits.accessibility import index_total_badge_alternative_text
-from beaverhabits.configs import StreakIconText, TagSelectionMode, settings
+from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.frontend import icons

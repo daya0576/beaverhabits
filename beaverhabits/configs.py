@@ -93,9 +93,4 @@ class Settings(BaseSettings):
         return self.TRUSTED_LOCAL_EMAIL
 
 
-class StreakIconText(Enum):
-    SKIP = lambda text: "line-through" if "#skip" in text else ""
-    STAR = lambda text: "underline" if "#star" in text else ""
-
-
 settings = Settings()
