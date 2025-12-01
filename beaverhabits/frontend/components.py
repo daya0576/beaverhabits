@@ -27,11 +27,9 @@ from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import (
     EVERY_DAY,
     Backup,
-    CheckedRecord,
     Habit,
     HabitFrequency,
     HabitList,
-    HabitOrder,
     HabitStatus,
 )
 from beaverhabits.utils import (
@@ -594,17 +592,35 @@ class CalendarHeatmap:
         ]
 
 
-def get_streak_icon_text_decoration(text: str) -> str:
-    decorations = []
-    if "#skip" in text:
-        decorations.append("line-through")
-    if "#star" in text:
-        decorations.append("underline")
+def get_streak_icon_text_decoration(text: str) -> dict:
+    words = text.split()
+    tags = [word[1:] for word in words if word.startswith("#") and len(word) > 1]
 
+    result = {}
+
+    decorations = []
+    if "skip" in tags:
+        decorations.append("line-through")
+        tags.remove("skip")
+    for star in ("star", "mark"):
+        if star in tags:
+            decorations.append("underline")
+            tags.remove(star)
     decoration = " ".join(decorations)
     if decoration:
-        decoration = f"text-decoration: {decoration};"
-    return decoration
+        result["decoration"] = f"text-decoration: {decoration};"
+
+    for tag in tags:
+        if match := utils.hex2rgb(tag):
+            r, g, b = match
+            result["color"] = f"rgb({r},{g},{b})"
+            tags.remove(tag)
+            break
+    
+    if tags:
+        result["text"] = tags[0]
+
+    return result
 
 
 class CalendarCheckBox(ui.checkbox):
@@ -656,25 +672,28 @@ class CalendarCheckBox(ui.checkbox):
                 # Interpolation with .25
                 unchecked_color = "rgb(201,213,226)"
 
-        # Customize icon text decoration
-        text = self.day.day
-        decoration = get_streak_icon_text_decoration(
-            self.record.text if self.record else ""
+        unchecked_style, checked_style = dict(
+            color=unchecked_color,
+            text=self.day.day,
+            text_color=unchecked_text_color,
+            decoration="",
+        ), dict(
+            color=checked_color,
+            text=self.day.day,
+            text_color=checked_text_color,
+            decoration="",
         )
 
+        # Customize icon text decoration
+        customizations = get_streak_icon_text_decoration(
+            self.record.text if self.record else ""
+        )
+        unchecked_style.update(customizations)
+        checked_style.update(customizations)
+
         return (
-            icons.SQUARE.format(
-                color=unchecked_color,
-                text=text,
-                text_color=unchecked_text_color,
-                decoration=decoration,
-            ),
-            icons.SQUARE.format(
-                color=checked_color,
-                text=text,
-                text_color=checked_text_color,
-                decoration=decoration,
-            ),
+            icons.SQUARE.format(**unchecked_style),
+            icons.SQUARE.format(**checked_style),
         )
 
     async def _async_click_task(self, e: events.ValueChangeEventArguments):

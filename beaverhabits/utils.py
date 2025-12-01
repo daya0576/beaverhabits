@@ -327,3 +327,29 @@ def format_date_difference(start: datetime.date, today: datetime.date) -> str:
         parts.append(f"{diff.days} days")
 
     return " ".join(parts)
+
+
+def is_valid_hex_color(color: str) -> bool:
+    color = color.lstrip("#")
+
+    if len(color) not in (3, 6):
+        return False
+
+    try:
+        int(color, 16)
+        return True
+    except ValueError:
+        return False
+
+
+def hex2rgb(color: str) -> tuple[str, str, str] | None:
+    color = color.lstrip("#")
+
+    if len(color) == 3:
+        r, g, b = color[0] * 2, color[1] * 2, color[2] * 2
+    elif len(color) == 6:
+        r, g, b = color[0:2], color[2:4], color[4:6]
+    else:
+        return None
+
+    return r, g, b
