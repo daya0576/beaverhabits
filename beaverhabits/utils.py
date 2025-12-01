@@ -332,7 +332,7 @@ def format_date_difference(start: datetime.date, today: datetime.date) -> str:
 def is_valid_hex_color(color: str) -> bool:
     color = color.lstrip("#")
 
-    if len(color) not in (3, 6):
+    if len(color) != 6:
         return False
 
     try:
