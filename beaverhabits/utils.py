@@ -346,8 +346,28 @@ def hex2rgb(color: str) -> tuple[str, str, str] | None:
     color = color.lstrip("#")
 
     if len(color) == 6:
-        r, g, b = color[0:2], color[2:4], color[4:6]
+        r = str(int(color[0:2], 16))
+        g = str(int(color[2:4], 16))
+        b = str(int(color[4:6], 16))
     else:
         return None
 
     return r, g, b
+
+
+COLORS = {
+    "red": "#f44336",
+    "pink": "#e91e63",
+    "purple": "#9c27b0",
+    "indigo": "#3f51b5",
+    "blue": "#2196f3",
+    "cyan": "#00bcd4",
+    "teal": "#009688",
+    "green": "#4caf50",
+    "lime": "#cddc39",
+    "yellow": "#ffeb3b",
+    "amber": "#ffc107",
+    "orange": "#ff9800",
+    "brown": "#795548",
+    "grey": "#9e9e9e",
+}

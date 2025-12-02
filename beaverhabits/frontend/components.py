@@ -42,6 +42,7 @@ from beaverhabits.utils import (
     W,
     Y,
     get_user_dark_mode,
+    is_valid_hex_color,
     ratelimiter,
 )
 
@@ -611,12 +612,19 @@ def get_streak_icon_text_decoration(text: str) -> dict:
         result["decoration"] = f"text-decoration: {decoration};"
 
     for tag in tags:
-        if match := utils.hex2rgb(tag):
+        if tag in utils.COLORS:
+            color = utils.COLORS[tag]
+        elif utils.is_valid_hex_color(tag):
+            color = tag
+        else:
+            continue
+
+        if match := utils.hex2rgb(color):
             r, g, b = match
             result["color"] = f"rgb({r},{g},{b})"
             tags.remove(tag)
             break
-    
+
     if tags:
         result["text"] = tags[0]
 
