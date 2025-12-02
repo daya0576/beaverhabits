@@ -345,9 +345,7 @@ def is_valid_hex_color(color: str) -> bool:
 def hex2rgb(color: str) -> tuple[str, str, str] | None:
     color = color.lstrip("#")
 
-    if len(color) == 3:
-        r, g, b = color[0] * 2, color[1] * 2, color[2] * 2
-    elif len(color) == 6:
+    if len(color) == 6:
         r, g, b = color[0:2], color[2:4], color[4:6]
     else:
         return None
