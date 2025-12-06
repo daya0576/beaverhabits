@@ -114,6 +114,20 @@ def menu_icon_item(*args, **kwargs):
     return menu_item.props('dense role="menuitem"')
 
 
+def note_append_tag(note: str, chip: str):
+    tag = f"#{chip.strip()}"
+
+    if not note:
+        return tag
+    if tag in note:
+        return note
+
+    last_line = note.splitlines()[-1]
+    if last_line.startswith("#"):
+        return f"{note} {tag}"
+    return f"{note}\n\n{tag}"
+
+
 def habit_tick_dialog(habit: Habit, day: datetime.date):
     record = habit.record_by(day)
 
@@ -138,12 +152,12 @@ def habit_tick_dialog(habit: Habit, day: datetime.date):
             t.style("font-size: 14px;")
 
             with ui.row():
-                ui.button("Yes", on_click=lambda: dialog.submit((True, t.value))).props(
-                    "flat"
-                )
-                ui.button("No", on_click=lambda: dialog.submit((False, t.value))).props(
-                    "flat"
-                )
+                # default options: yes, no
+                # custom options: skip, mark, star, #hex_color, ...
+                for chip in habit.chips:
+                    ui.button(
+                        chip, on_click=lambda c=chip: dialog.submit((c, t.value))
+                    ).props("flat")
 
     # Realtime saving
     async def t_value_change(e: events.ValueChangeEventArguments):
@@ -174,9 +188,14 @@ async def note_tick(
     if result is None:
         return
 
-    yes, text = result
-    record = await habit.tick(day, yes, text)
-    logger.info(f"Habit ticked: {day} {yes}, note: {text}")
+    chip, text = result
+    yes = False if chip.strip().lower() == "no" else True
+    note = text
+    if chip.strip().lower() not in ("yes", "no"):
+        note = note_append_tag(text, chip)
+
+    record = await habit.tick(day, yes, note)
+    logger.info(f"Habit ticked: {day}, {chip} -> {yes}, note: {text} -> {note}")
 
     return record.done
 
@@ -1251,11 +1270,16 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
 
         return True
 
+    def try_update_chips() -> None:
+        habit.chips = chips.value
+        logger.info(f"Habit chips changed to {habit.chips}")
+
     async def save() -> None:
         if habit not in habit.habit_list.habits:
             await habit.habit_list.add(habit.name, tags=habit.tags)
 
         try_update_period()
+        try_update_chips()
 
         dialog.submit(True)
 
@@ -1266,7 +1290,7 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
 
     with ui.dialog() as dialog, ui.card().props("flat") as card:
         dialog.props('backdrop-filter="blur(4px)"')
-        card.classes("w-5/6 max-w-64")
+        card.classes("w-5/6 max-w-96")
 
         with ui.column().classes("w-full"):
             habit_name_input = HabitNameInput(habit, label="Name")
@@ -1282,6 +1306,14 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
                 period_type = ui.select(
                     PERIOD_TYPES_FOR_HUMAN, value=p.period_type, label=" "
                 ).props("dense")
+
+            # Steak status shortcut
+            with ui.row().classes("items-center"):
+                chips = ui.input_chips(
+                    "Status Options",
+                    value=habit.chips,
+                    new_value_mode="add-unique",
+                )
 
             with ui.row():
                 ui.button("Save", on_click=save).props("flat dense")

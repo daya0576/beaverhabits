@@ -161,6 +161,16 @@ class DictHabit(Habit[DictRecord], DictStorage):
         self.data["period"] = value.to_dict()
 
     @property
+    def chips(self) -> list[str]:
+        return self.data.get("chips", []) or ["yes", "no"]
+
+    @chips.setter
+    def chips(self, value: list[str]) -> None:
+        if not value:
+            return
+        self.data["chips"] = value
+
+    @property
     def ticked_days(self) -> list[datetime.date]:
         return self.cache.ticked_days
 
