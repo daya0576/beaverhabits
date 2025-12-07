@@ -25,7 +25,7 @@ from beaverhabits.storage.meta import (
     page_title,
 )
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.version import IDENTITY, VERSION
+from beaverhabits.version import IDENTITY
 
 
 def pwa_headers():
@@ -75,7 +75,7 @@ def show_help_dialog():
         with ui.dialog() as dialog:
             with compat_card().classes("w-96"):
 
-                ui.label(f"beaverhabits {VERSION}").classes("text-lg font-bold")
+                ui.label(f"beaverhabits {IDENTITY}").classes("text-lg font-bold")
                 ui.separator()
 
                 items = {

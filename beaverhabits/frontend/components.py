@@ -128,12 +128,17 @@ def note_append_tag(note: str, chip: str):
     return f"{note}\n\n{tag}"
 
 
-def habit_tick_dialog(habit: Habit, day: datetime.date):
+async def habit_tick_dialog(habit: Habit, day: datetime.date):
     record = habit.record_by(day)
+    
+    today = await utils.get_user_today_date()
 
-    # Textarea label
-    start = min(habit.ticked_days, default=day)
-    label = utils.format_date_difference(start, day)
+    # if one week ago or earlier, show date label
+    if (day + datetime.timedelta(days=10)) > today:
+        start = min(habit.ticked_days, default=day)
+        label = utils.format_date_difference(start, day)
+    else:
+        label = f"{(today - day).days} days ago"
 
     with ui.dialog() as dialog, ui.card().props("flat") as card:
         dialog.props('backdrop-filter="blur(4px)"')
@@ -155,8 +160,12 @@ def habit_tick_dialog(habit: Habit, day: datetime.date):
                 # default options: yes, no
                 # custom options: skip, mark, star, #hex_color, ...
                 for chip in habit.chips:
+                    display = value = chip 
+                    if ":" in chip:
+                        display, value = chip.split(":", 1)
+                    
                     ui.button(
-                        chip, on_click=lambda c=chip: dialog.submit((c, t.value))
+                        display, on_click=lambda c=value: dialog.submit((c, t.value))
                     ).props("flat")
 
     # Realtime saving
@@ -177,7 +186,7 @@ async def note_tick(
     dialog: ui.dialog | None = None,
 ) -> bool | None:
     if not dialog:
-        dialog = habit_tick_dialog(habit, day)
+        dialog = await habit_tick_dialog(habit, day)
 
     # Form submit
     logger.info(f"Waiting for dialog {habit}...")
