@@ -50,9 +50,17 @@ def pwa_headers():
 
 
 def custom_headers():
+    # SEO meta tags
     ui.add_head_html(
-        '<meta name="description" content="A self-hosted habit tracking app without "Goals"">'
+        """
+        <meta name="description" content="A self-hosted habit tracking app without Goals">
+        <meta name="keywords" content="habit, habit tracker, habit tracking, self-hosted, productivity">
+        <meta name="author" content="daya0576">
+        """
     )
+
+    # Long-press event
+    ui.add_head_html('<script src="/statics/libs/long-press-event.min.js"></script>')
 
     # Analytics
     if settings.UMAMI_ANALYTICS_ID:
