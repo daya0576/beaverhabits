@@ -34,6 +34,7 @@ jobs:
           GIT_HASH=$(git rev-parse --short HEAD)
           GIT_TAG=$(git describe --tags --abbrev=0)
           echo "IDENTITY = \"beaverhabits/${GIT_TAG}@${GIT_HASH}\"" > ${{ github.workspace }}/beaverhabits/version.py
+          echo "VERSION = \"${GIT_TAG}\"" > ${{ github.workspace }}/beaverhabits/version.py
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only

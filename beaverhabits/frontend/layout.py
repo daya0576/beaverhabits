@@ -6,8 +6,9 @@ from nicegui import background_tasks, ui
 from beaverhabits import views
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
-from beaverhabits.frontend import css
+from beaverhabits.frontend import css, icons
 from beaverhabits.frontend.components import (
+    compat_card,
     habit_edit_dialog,
     menu_header,
     menu_icon_button,
@@ -24,7 +25,7 @@ from beaverhabits.storage.meta import (
     page_title,
 )
 from beaverhabits.storage.storage import Habit, HabitList
-from beaverhabits.version import IDENTITY
+from beaverhabits.version import IDENTITY, VERSION
 
 
 def pwa_headers():
@@ -49,7 +50,6 @@ def pwa_headers():
 
 
 def custom_headers():
-    # SEO meta tags
     ui.add_head_html(
         '<meta name="description" content="A self-hosted habit tracking app without "Goals"">'
     )
@@ -59,9 +59,6 @@ def custom_headers():
         ui.add_head_html(
             f'<script defer src="{settings.UMAMI_SCRIPT_URL}" data-website-id="{settings.UMAMI_ANALYTICS_ID}"></script>'
         )
-
-    # Long-press event
-    ui.add_head_html('<script src="/statics/libs/long-press-event.min.js"></script>')
 
     # Prevent white flash on page load
     ui.add_css(css.WHITE_FLASH_PREVENT)
@@ -76,22 +73,23 @@ def custom_headers():
 def show_help_dialog():
     with ui.context.client.content:
         with ui.dialog() as dialog:
-            with ui.card().classes("p-4 w-96"):
-                # ui.markdown(
-                #     f"""
-                #     ### About Beaver
+            with compat_card().classes("w-96"):
 
-                #     **Beaver** is a self-hosted habit tracking app without "Goals", focused on simplicity and privacy.
+                ui.label(f"beaverhabits {VERSION}").classes("text-lg font-bold")
+                ui.separator()
 
-                #     - Identity: {IDENTITY}
-                #     - Website: [beaverhabits.com](https://beaverhabits.com)
-                #     - Feedback & Issues: [issues](https://github.com/daya0576/beaverhabits/issues)
-                #     - Help: [wiki](https://github.com/daya0576/beaverhabits/wiki) |
-                #     """
-                # )
-                with ui.row():
-                    ui.label(IDENTITY).classes("text-lg font-bold")
-                    ui.separator()
+                items = {
+                    "Documentation": "https://github.com/daya0576/beaverhabits/wiki",
+                    "Website": "https://www.beaverhabits.com/",
+                    "YouTube": "https://www.youtube.com/@beaverhabits",
+                    "Bugs & Feature Requests": "https://github.com/daya0576/beaverhabits/issues",
+                }
+
+                with ui.grid(columns=2):
+                    for name, link in items.items():
+                        ui.link(name, link, new_tab=True)
+
+        dialog.props('backdrop-filter="blur(4px)"')
         dialog.open()
 
 
