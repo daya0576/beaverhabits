@@ -73,9 +73,10 @@ def custom_headers():
 def show_help_dialog():
     with ui.context.client.content:
         with ui.dialog() as dialog:
-            with compat_card().classes("w-96"):
-
-                ui.label(f"beaverhabits {IDENTITY}").classes("text-lg font-bold")
+            with compat_card().classes("w-[360px]"):
+                title = IDENTITY.replace("/", " ")
+                title = title.split("@")[0] if "@" in title else title
+                ui.label(title).classes("text-lg font-bold")
                 ui.separator()
 
                 items = {
@@ -85,7 +86,7 @@ def show_help_dialog():
                     "Bugs & Feature Requests": "https://github.com/daya0576/beaverhabits/issues",
                 }
 
-                with ui.grid(columns=2):
+                with ui.grid(columns=2).classes("gap-2"):
                     for name, link in items.items():
                         ui.link(name, link, new_tab=True)
 
