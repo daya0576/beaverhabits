@@ -161,3 +161,5 @@ tags
 *.bin
 memray-*
 profile.svg
+
+beaverhabits/version.py

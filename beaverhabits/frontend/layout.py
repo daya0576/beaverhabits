@@ -24,6 +24,7 @@ from beaverhabits.storage.meta import (
     page_title,
 )
 from beaverhabits.storage.storage import Habit, HabitList
+from beaverhabits.version import IDENTITY
 
 
 def pwa_headers():
@@ -72,6 +73,28 @@ def custom_headers():
     views.apply_theme_style()
 
 
+def show_help_dialog():
+    with ui.context.client.content:
+        with ui.dialog() as dialog:
+            with ui.card().classes("p-4 w-96"):
+                # ui.markdown(
+                #     f"""
+                #     ### About Beaver
+
+                #     **Beaver** is a self-hosted habit tracking app without "Goals", focused on simplicity and privacy.
+
+                #     - Identity: {IDENTITY}
+                #     - Website: [beaverhabits.com](https://beaverhabits.com)
+                #     - Feedback & Issues: [issues](https://github.com/daya0576/beaverhabits/issues)
+                #     - Help: [wiki](https://github.com/daya0576/beaverhabits/wiki) |
+                #     """
+                # )
+                with ui.row():
+                    ui.label(IDENTITY).classes("text-lg font-bold")
+                    ui.separator()
+        dialog.open()
+
+
 @ui.refreshable
 def menu_component():
     """Dropdown menu for the top-right corner of the page."""
@@ -85,6 +108,10 @@ def menu_component():
         imp = menu_icon_item("Import", lambda: redirect("import"))
         if is_page_demo():
             imp.classes("disabled")
+        separator()
+
+        # About page
+        menu_icon_item("Help", show_help_dialog)
         separator()
 
         # Login & Logout
