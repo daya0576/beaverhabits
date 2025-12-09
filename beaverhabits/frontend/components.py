@@ -670,15 +670,19 @@ class CalendarCheckBox(ui.checkbox):
                 unchecked_color = "rgb(201,213,226)"
 
         unchecked_style, checked_style = dict(
-            color=unchecked_color,
+            fill_color=unchecked_color,
+            bg_color=unchecked_color,
             text=self.day.day,
             text_color=unchecked_text_color,
             decoration="",
+            mask_height=0,
         ), dict(
-            color=checked_color,
+            fill_color=checked_color,
+            bg_color=unchecked_color,
             text=self.day.day,
             text_color=checked_text_color,
             decoration="",
+            mask_height=0,
         )
 
         # Customize icon text decoration
