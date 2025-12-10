@@ -17,7 +17,7 @@ from beaverhabits.accessibility import index_total_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
-from beaverhabits.core.note import build_square_style_context
+from beaverhabits.core.note import update_square_style_context
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.javascript import force_checkbox_blur
 from beaverhabits.frontend.textarea import Textarea
@@ -691,10 +691,9 @@ class CalendarCheckBox(ui.checkbox):
             tags = [
                 word[1:] for word in words if word.startswith("#") and len(word) > 1
             ]
-            customizations = build_square_style_context(tags)
 
-            unchecked_style.update(customizations)
-            checked_style.update(customizations)
+            # update_square_style_context(tags, unchecked_style)
+            update_square_style_context(tags, checked_style)
 
         return (
             icons.SQUARE.format(**unchecked_style),
