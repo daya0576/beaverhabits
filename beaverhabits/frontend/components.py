@@ -1067,7 +1067,7 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
     if not all_tags:
         return
 
-    with ui.row().classes("gap-0.5 justify-right w-80 hidden") as row:
+    with ui.row().classes("gap-0.5 justify-right") as row:
         for tag_name in all_tags:
             TagChip(tag_name, refresh=refresh)
         TagChip("Others", refresh=refresh)
@@ -1157,8 +1157,8 @@ class TagChip(ui.chip):
     ) -> None:
         super().__init__(
             text=tag_name,
-            color="oklch(0.27 0 0)",
-            text_color="oklch(0.9 0 0)",
+            color="oklch(0.9 0 0)",
+            text_color="oklch(0.27 0 0)",
             selectable=selectable,
             selected=tag_name in TagManager.get_all(),
         )
