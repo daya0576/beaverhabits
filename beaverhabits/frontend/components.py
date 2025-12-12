@@ -17,6 +17,7 @@ from beaverhabits.accessibility import index_total_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
+from beaverhabits.core.note import update_square_style_context
 from beaverhabits.frontend import icons
 from beaverhabits.frontend.javascript import force_checkbox_blur
 from beaverhabits.frontend.textarea import Textarea
@@ -42,7 +43,6 @@ from beaverhabits.utils import (
     W,
     Y,
     get_user_dark_mode,
-    is_valid_hex_color,
     ratelimiter,
 )
 
@@ -130,7 +130,7 @@ def note_append_tag(note: str, chip: str):
 
 async def habit_tick_dialog(habit: Habit, day: datetime.date):
     record = habit.record_by(day)
-    
+
     today = await utils.get_user_today_date()
 
     # if one week ago or earlier, show date label
@@ -160,10 +160,10 @@ async def habit_tick_dialog(habit: Habit, day: datetime.date):
                 # default options: yes, no
                 # custom options: skip, mark, star, #hex_color, ...
                 for chip in habit.chips:
-                    display = value = chip 
+                    display = value = chip
                     if ":" in chip:
                         display, value = chip.split(":", 1)
-                    
+
                     ui.button(
                         display, on_click=lambda c=value: dialog.submit((c, t.value))
                     ).props("flat")
@@ -621,44 +621,6 @@ class CalendarHeatmap:
         ]
 
 
-def get_streak_icon_text_decoration(text: str) -> dict:
-    words = text.split()
-    tags = [word[1:] for word in words if word.startswith("#") and len(word) > 1]
-
-    result = {}
-
-    decorations = []
-    if "skip" in tags:
-        decorations.append("line-through")
-        tags.remove("skip")
-    for star in ("star", "mark"):
-        if star in tags:
-            decorations.append("underline")
-            tags.remove(star)
-    decoration = " ".join(decorations)
-    if decoration:
-        result["decoration"] = f"text-decoration: {decoration};"
-
-    for tag in tags:
-        if tag in utils.COLORS:
-            color = utils.COLORS[tag]
-        elif utils.is_valid_hex_color(tag):
-            color = tag
-        else:
-            continue
-
-        if match := utils.hex2rgb(color):
-            r, g, b = match
-            result["color"] = f"rgb({r},{g},{b})"
-            tags.remove(tag)
-            break
-
-    if tags:
-        result["text"] = tags[0]
-
-    return result
-
-
 class CalendarCheckBox(ui.checkbox):
     def __init__(
         self,
@@ -691,17 +653,16 @@ class CalendarCheckBox(ui.checkbox):
         self.on("long-press", self._async_long_press_task)
 
     def _icon_svg(self):
+        # Customize icon colors
         unchecked_text_color = checked_text_color = "rgb(255,255,255)"
         unchecked_color, checked_color = "rgb(54,54,54)", icons.PRIMARY_COLOR
-
-        # Customize icon colors
         dark = get_user_dark_mode()
         if dark == False:
             unchecked_color = "rgb(222,222,222)"
             unchecked_text_color = "rgb(100,100,100)"
 
+        # Period done -> Normalization + Linear Interpolation
         if CStatus.PERIOD_DONE in self.status:
-            # Normalization + Linear Interpolation
             if dark:
                 unchecked_color = "rgb(40,87,141)"
             else:
@@ -709,23 +670,30 @@ class CalendarCheckBox(ui.checkbox):
                 unchecked_color = "rgb(201,213,226)"
 
         unchecked_style, checked_style = dict(
-            color=unchecked_color,
+            fill_color=unchecked_color,
+            bg_color=unchecked_color,
             text=self.day.day,
             text_color=unchecked_text_color,
             decoration="",
+            mask_height=0,
         ), dict(
-            color=checked_color,
+            fill_color=checked_color,
+            bg_color=unchecked_color,
             text=self.day.day,
             text_color=checked_text_color,
             decoration="",
+            mask_height=0,
         )
 
         # Customize icon text decoration
-        customizations = get_streak_icon_text_decoration(
-            self.record.text if self.record else ""
-        )
-        unchecked_style.update(customizations)
-        checked_style.update(customizations)
+        if self.record and (text := self.record.text):
+            words = text.split()
+            tags = [
+                word[1:] for word in words if word.startswith("#") and len(word) > 1
+            ]
+
+            # update_square_style_context(tags, unchecked_style)
+            update_square_style_context(tags, checked_style)
 
         return (
             icons.SQUARE.format(**unchecked_style),
@@ -1319,7 +1287,7 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
             # Steak status shortcut
             with ui.row().classes("items-center"):
                 chips = ui.input_chips(
-                    "Status Options",
+                    "Completion States",
                     value=habit.chips,
                     new_value_mode="add-unique",
                 )
