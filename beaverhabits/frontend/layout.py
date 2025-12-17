@@ -112,8 +112,8 @@ def menu_component():
         menu_icon_item("Stats", lambda: redirect("stats"))
         separator()
 
-        with menu_icon_item("Tools", auto_close=False).classes("gap-0"):
-            with ui.item_section().props("side"):
+        with menu_icon_item("Tools", auto_close=False).classes("pr-1"):
+            with ui.item_section().props("side").classes("pl-0"):
                 ui.icon("keyboard_arrow_right")
             with ui.menu().props('anchor="top end" self="top start" auto-close'):
                 # Export & import
