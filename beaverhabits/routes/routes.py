@@ -35,6 +35,7 @@ from beaverhabits.frontend.index_page import index_page_ui
 from beaverhabits.frontend.layout import custom_headers, redirect
 from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.frontend.settings_page import settings_page
+from beaverhabits.frontend.stats_page import stats_page_ui
 from beaverhabits.frontend.streaks import heatmap_page
 from beaverhabits.logger import logger
 from beaverhabits.storage import image_storage
@@ -109,6 +110,13 @@ async def index_page(
 async def add_page(user: User = Depends(current_active_user)) -> None:
     habit_list = await views.get_user_habit_list(user)
     add_page_ui(habit_list)
+
+
+@ui.page("/gui/stats")
+async def stats_page(user: User = Depends(current_active_user)) -> None:
+    habit_list = await views.get_user_habit_list(user)
+    today = await get_user_today_date()
+    stats_page_ui(today, habit_list)
 
 
 @ui.page("/gui/order")

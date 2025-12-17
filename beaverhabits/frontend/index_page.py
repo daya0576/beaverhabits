@@ -1,7 +1,4 @@
-import asyncio
 import datetime
-import os
-from collections import OrderedDict
 from typing import List
 
 from nicegui import ui
@@ -13,7 +10,6 @@ from beaverhabits.frontend.components import (
     HabitCheckBox,
     IndexStreakBadge,
     IndexTotalBadge,
-    TagManager,
     filter_habits_with_tags,
     habit_name_menu,
     habits_by_tags,

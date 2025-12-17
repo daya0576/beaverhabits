@@ -109,16 +109,24 @@ def menu_component():
         add_menu()
         separator()
 
-        # Export & import
-        menu_icon_item("Export", lambda: redirect("export"))
-        separator()
-        imp = menu_icon_item("Import", lambda: redirect("import"))
-        if is_page_demo():
-            imp.classes("disabled")
+        menu_icon_item("Stats", lambda: redirect("stats"))
         separator()
 
-        # About page
-        menu_icon_item("Help", show_help_dialog)
+        with menu_icon_item("Tools", auto_close=False).classes("gap-0"):
+            with ui.item_section().props("side"):
+                ui.icon("keyboard_arrow_right")
+            with ui.menu().props('anchor="top end" self="top start" auto-close'):
+                # Export & import
+                menu_icon_item("Export", lambda: redirect("export"))
+                separator()
+                imp = menu_icon_item("Import", lambda: redirect("import"))
+                if is_page_demo():
+                    imp.classes("disabled")
+                separator()
+
+                # About page
+                menu_icon_item("Help", show_help_dialog)
+                separator()
         separator()
 
         # Login & Logout
