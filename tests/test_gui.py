@@ -1,7 +1,7 @@
 import datetime
 
-from nicegui import app, ui
-from nicegui.testing import Screen, User
+from nicegui import ui
+from nicegui.testing import User
 
 from beaverhabits.frontend.add_page import add_page_ui
 from beaverhabits.frontend.habit_page import habit_page_ui
@@ -9,7 +9,6 @@ from beaverhabits.frontend.index_page import index_page_ui
 from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.frontend.stats_page import stats_page_ui
 from beaverhabits.views import dummy_habit_list
-from tests.test_storage import get_or_create_user
 
 # Test cases:
 # https://github.com/zauberzeug/nicegui/tree/main/tests

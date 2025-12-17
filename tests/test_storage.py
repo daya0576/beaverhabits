@@ -2,11 +2,11 @@ import uuid
 
 import pytest
 from nicegui import ui
-from nicegui.testing import Screen
+from nicegui.testing import Screen, User
 
 from beaverhabits import views
 from beaverhabits.app.auth import user_authenticate, user_create
-from beaverhabits.app.db import create_db_and_tables
+from beaverhabits.app.db import create_db_and_tables, engine
 from beaverhabits.configs import StorageType, settings
 from beaverhabits.utils import dummy_days
 
@@ -16,51 +16,56 @@ PASSWORD = "test"
 
 async def get_or_create_user():
     await create_db_and_tables()
+
     user = await user_authenticate(email=EMAIL, password=PASSWORD)
     if not user:
         user = await user_create(email=EMAIL, password=PASSWORD)
     return user
 
 
-@pytest.mark.asyncio
-async def test_user_session(screen: Screen):
+async def test_user_session(user: User):
     @ui.page("/")
     async def page():
         days = await dummy_days(5)
         habit_list = views.get_or_create_session_habit_list(days)
         assert habit_list is not None
 
-    screen.open("/", timeout=60)
+    await user.open("/")
 
 
-@pytest.mark.asyncio
-async def test_user_db(screen: Screen):
+async def test_user_db(user: User):
     settings.HABITS_STORAGE = StorageType.USER_DATABASE
-    user = await get_or_create_user()
+    _user = await get_or_create_user()
 
     @ui.page("/")
     async def page():
         days = await dummy_days(5)
-        habit_list = await views.get_or_create_user_habit_list(user, days)
+        habit_list = await views.get_or_create_user_habit_list(_user, days)
         assert habit_list is not None
 
-        habit_list = await views.get_user_habit_list(user)
+        habit_list = await views.get_user_habit_list(_user)
         assert habit_list is not None
 
-    screen.open("/", timeout=60)
+    await user.open("/")
+
+    # close db connection after test
+
+    await engine.dispose()
 
 
-async def test_user_disk(screen: Screen):
+async def test_user_disk(user: User):
     settings.HABITS_STORAGE = StorageType.USER_DISK
-    user = await get_or_create_user()
+    _user = await get_or_create_user()
 
     @ui.page("/")
     async def page():
         days = await dummy_days(5)
-        habit_list = await views.get_or_create_user_habit_list(user, days)
+        habit_list = await views.get_or_create_user_habit_list(_user, days)
         assert habit_list is not None
 
-        habit_list = await views.get_user_habit_list(user)
+        habit_list = await views.get_user_habit_list(_user)
         assert habit_list is not None
 
-    screen.open("/", timeout=60)
+    await user.open("/")
+    # close db connection after test
+    await engine.dispose()
