@@ -7,6 +7,7 @@ from beaverhabits.frontend.add_page import add_page_ui
 from beaverhabits.frontend.habit_page import habit_page_ui
 from beaverhabits.frontend.index_page import index_page_ui
 from beaverhabits.frontend.order_page import order_page_ui
+from beaverhabits.frontend.stats_page import stats_page_ui
 from beaverhabits.views import dummy_habit_list
 from tests.test_storage import get_or_create_user
 
@@ -68,6 +69,19 @@ async def test_habit_detail_page(user) -> None:
     @ui.page("/")
     def page():
         habit_page_ui(today, habit)
+
+    await user.open("/")
+    await user.should_see("Order pizz")
+
+
+async def test_habit_stats_page(user) -> None:
+    days = dummy_days(7)
+    today = days[-1]
+    habits = dummy_habit_list(days)
+
+    @ui.page("/")
+    def page():
+        stats_page_ui(today, habits)
 
     await user.open("/")
     await user.should_see("Order pizz")

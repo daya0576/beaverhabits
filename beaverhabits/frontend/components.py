@@ -1392,3 +1392,5 @@ def habit_name_menu(
     name.on("contextmenu", menu.open)
 
     return name
+
+
