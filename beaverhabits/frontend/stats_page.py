@@ -6,6 +6,7 @@ from nicegui import ui
 from beaverhabits.frontend.components import (
     CalendarHeatmap,
     habit_heat_map,
+    link,
     redirect,
 )
 from beaverhabits.frontend.habit_page import card, card_title
