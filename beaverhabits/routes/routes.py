@@ -59,6 +59,14 @@ async def demo_add_page() -> None:
     add_page_ui(habit_list)
 
 
+@ui.page("/demo/stats")
+async def demo_stats_page() -> None:
+    days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
+    habit_list = views.get_or_create_session_habit_list(days)
+    today = await get_user_today_date()
+    stats_page_ui(today, habit_list)
+
+
 @ui.page("/demo/order")
 async def demo_order_page() -> None:
     days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
