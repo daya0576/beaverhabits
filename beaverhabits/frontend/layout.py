@@ -17,7 +17,7 @@ from beaverhabits.frontend.components import (
     separator,
 )
 from beaverhabits.frontend.javascript import PREVENT_CONTEXT_MENU
-from beaverhabits.frontend.menu import add_menu, sort_menu
+from beaverhabits.frontend.menu import add_menu, date_pick_menu, sort_menu
 from beaverhabits.storage.meta import (
     get_root_path,
     is_page_demo,
@@ -113,7 +113,7 @@ def menu_component():
         separator()
 
         with menu_icon_item("Tools", auto_close=False).classes("pr-1"):
-            with ui.item_section().props("side").classes("pl-0"):
+            with ui.item_section().props("side").classes("pl-[1px]"):
                 ui.icon("keyboard_arrow_right")
             with ui.menu().props('anchor="top end" self="top start" auto-close'):
                 # Export & import
@@ -138,6 +138,7 @@ def layout(
     title: str | None = None,
     habit: Habit | None = None,
     habit_list: HabitList | None = None,
+    page_ui: ui.refreshable | None = None,
 ):
     # Standard headers
     custom_headers()
@@ -159,6 +160,9 @@ def layout(
             elif habit_list and "add" in page_path():
                 with menu_icon_button("sym_o_swap_vert", tooltip="Sort"):
                     sort_menu(habit_list)
+            elif "stats" in page_path() and page_ui:
+                with menu_icon_button("sym_o_expand_content", tooltip="Date"):
+                    date_pick_menu(page_ui)
 
             with menu_icon_button("sym_o_menu"):
                 menu_component()

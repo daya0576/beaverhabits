@@ -1,3 +1,5 @@
+import enum
+
 from nicegui import ui
 
 from beaverhabits.frontend.components import menu_icon_item
@@ -31,3 +33,19 @@ def sort_menu(habit_list: HabitList):
         manually = menu_icon_item("Manually", set_custom)
         if habit_list.order_by == HabitOrder.MANUALLY:
             manually.props("active")
+
+
+class StatsPeriod(enum.Enum):
+    THREE_MONTHS = 15
+    SIX_MONTHS = 25
+    ONE_YEAR = 42
+
+
+def date_pick_menu(page_ui: ui.refreshable):
+    def refresh_page(period: StatsPeriod):
+        page_ui.refresh(weeks=period.value)
+
+    with ui.menu().props('anchor="top end" self="top start" auto-close'):
+        menu_icon_item("3 Months", lambda: refresh_page(StatsPeriod.THREE_MONTHS))
+        menu_icon_item("6 Months", lambda: refresh_page(StatsPeriod.SIX_MONTHS))
+        menu_icon_item("1 Year", lambda: refresh_page(StatsPeriod.ONE_YEAR))
