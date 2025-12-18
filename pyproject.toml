@@ -6,7 +6,7 @@ name = "beaverhabits"
 dynamic = ["version"]
 requires-python = "<4.0,>=3.12"
 dependencies = [
-    "nicegui>=3.0.0",
+    "nicegui[redis]>=3.0.0",
     "pydantic-settings<3.0.0,>=2.2.1",
     "fastapi-users[sqlalchemy]<15.0.0,>=14.0.0",
     "uvicorn[standard]>=0.28.0,<1.0.0",
