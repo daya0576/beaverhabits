@@ -40,11 +40,12 @@ def grid(classes: str = ""):
 
 
 @contextmanager
-def card(link: str | None = None, padding: float = 3):
+def card(link: str | None = None, padding: float = 3, width: int | None = 350):
     with ui.card().classes("gap-0 no-shadow items-center") as card:
         card.classes(f"p-{padding}")
         card.classes("w-full break-inside-avoid h-fit")
-        card.style("max-width: 350px")
+        if width is not None:
+            card.style(f"max-width: {width}px")
         if link:
             card.classes("cursor-pointer")
             card.on("click", lambda: redirect(link))
@@ -78,7 +79,9 @@ def habit_page(today: datetime.date, habit: Habit):
             card_title("Notes", "#").tooltip("Press and hold to add notes/descriptions")
             habit_notes(habit)
 
-        if habit.period and (habit.period != EVERY_DAY or settings.HABIT_SHOW_EVERY_DAY_STREAKS):
+        if habit.period and (
+            habit.period != EVERY_DAY or settings.HABIT_SHOW_EVERY_DAY_STREAKS
+        ):
             with card():
                 card_title("Best Streaks", target)
                 habit_streak(today, habit)
