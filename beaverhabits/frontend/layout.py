@@ -109,9 +109,6 @@ def menu_component():
         add_menu()
         separator()
 
-        menu_icon_item("Stats", lambda: redirect("stats"))
-        separator()
-
         with menu_icon_item("Tools", auto_close=False).classes("pr-1"):
             with ui.item_section().props("side").classes("pl-[1px]"):
                 ui.icon("keyboard_arrow_right")
@@ -124,9 +121,14 @@ def menu_component():
                     imp.classes("disabled")
                 separator()
 
-                # About page
-                menu_icon_item("Help", show_help_dialog)
+                # Stats for all habtis
+                menu_icon_item("Stats", lambda: redirect("stats"))
                 separator()
+
+        separator()
+
+        # About page
+        menu_icon_item("Help", show_help_dialog)
         separator()
 
         # Login & Logout
