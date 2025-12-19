@@ -1,6 +1,5 @@
 import calendar
 import datetime
-import enum
 
 from nicegui import ui
 

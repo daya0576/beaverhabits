@@ -23,6 +23,7 @@ dependencies = [
     "uvicorn-worker>=0.3.0",
     "python-multipart>=0.0.20",
     "requests>=2.32.4",
+    "httpx[socks]>=0.28.1",
 ]
 description = ""
 readme = "README.md"

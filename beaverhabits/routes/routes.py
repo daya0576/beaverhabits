@@ -1,4 +1,3 @@
-import asyncio
 import io
 from typing import Annotated, Optional
 
@@ -38,6 +37,7 @@ from beaverhabits.frontend.settings_page import settings_page
 from beaverhabits.frontend.stats_page import stats_page_ui
 from beaverhabits.frontend.streaks import heatmap_page
 from beaverhabits.logger import logger
+from beaverhabits.routes.google_one_tap import google_one_tap_login
 from beaverhabits.storage import image_storage
 from beaverhabits.storage.meta import GUI_ROOT_PATH
 from beaverhabits.utils import dummy_days, fetch_user_dark_mode, get_user_today_date
@@ -171,10 +171,14 @@ async def gui_settings(user: User = Depends(current_active_user)) -> None:
 
 
 @ui.page("/login")
-async def login_page(client: Client) -> Optional[RedirectResponse]:
-    custom_headers()
+async def login_page(client: Client, request: Request) -> Optional[RedirectResponse]:
     if await views.is_gui_authenticated():
         return RedirectResponse(GUI_ROOT_PATH)
+
+    custom_headers()
+
+    # Google One Tap Login
+    google_one_tap_login(str(request.base_url))
 
     async def try_login():
         if not email.value:
@@ -188,7 +192,6 @@ async def login_page(client: Client) -> Optional[RedirectResponse]:
         user = await user_authenticate(email=email.value, password=password.value)
         if user:
             await views.login_user(user)
-            await views.cache_user_configs(user)
             ui.navigate.to(GUI_ROOT_PATH)
         else:
             ui.notify("email or password wrong!", color="negative")
@@ -212,10 +215,14 @@ async def login_page(client: Client) -> Optional[RedirectResponse]:
 
 
 @ui.page("/register")
-async def register_page():
-    custom_headers()
+async def register_page(request: Request):
     if await views.is_gui_authenticated():
         return RedirectResponse(GUI_ROOT_PATH)
+
+    custom_headers()
+
+    # Google One Tap Login
+    google_one_tap_login(str(request.base_url))
 
     async def try_register():
         if not email.value:
