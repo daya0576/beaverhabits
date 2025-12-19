@@ -132,7 +132,10 @@ def menu_component():
         separator()
 
         # Login & Logout
-        menu_icon_item("Logout", lambda: user_logout() and ui.navigate.to("/login"))
+        if is_page_demo():
+            menu_icon_item("Login", lambda: redirect("/login"))
+        else:
+            menu_icon_item("Logout", lambda: user_logout() and ui.navigate.to("/login"))
 
 
 @contextmanager

@@ -86,6 +86,14 @@ class Settings(BaseSettings):
     ENABLE_DAILY_BACKUP: bool = False
     DAILY_BACKUP_INTERVAL: int = 60 * 60 * 24
 
+    # Get your Google Client ID from the Google Cloud Console.
+    # See https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#get_your_google_api_client_id.
+    # For local development, you should add http://localhost:8080 to the authorized JavaScript origins.
+    # In production, you should add the domain of your website to the authorized JavaScript origins.
+    # Make sure you include <origin>/google/auth in "Authorized redirect URIs".
+    GOOGLE_ONE_TAP_CLIENT_ID: str = ""
+    GOOGLE_ONE_TAP_ENABLED: bool = False
+
     def is_dev(self):
         return self.ENV == "dev"
 
