@@ -23,6 +23,9 @@ get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
 
 async def user_authenticate(email: str, password: str) -> Optional[User]:
     try:
+        assert email, "Email must be provided"
+        assert password, "Password must be provided"
+
         async with get_async_session_context() as session:
             async with get_user_db_context(session) as user_db:
                 async with get_user_manager_context(user_db) as user_manager:
@@ -108,6 +111,16 @@ async def user_get_by_email(email: str) -> Optional[User]:
     except:
         logger.exception("Unkownn Exception")
         return None
+
+
+async def user_get_or_create_by_email(email: str) -> User:
+    assert email, "Email must be provided"
+
+    user = await user_get_by_email(email)
+    if user is not None:
+        return user
+
+    return await user_create(email=email, password="")
 
 
 async def user_get_by_id(user_id: UUID) -> User:

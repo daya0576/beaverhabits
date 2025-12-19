@@ -151,6 +151,8 @@ async def login_user(user: User) -> None:
     if token is not None:
         app.storage.user.update({"auth_token": token})
 
+    await cache_user_configs(user)
+
 
 async def register_user(email: str, password: str = "") -> User:
     logger.info(f"Registering user {email}...")

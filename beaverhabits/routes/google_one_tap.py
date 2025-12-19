@@ -1,16 +1,15 @@
 import time
-from os import path
 from urllib.parse import urljoin
 
 import httpx
-from fastapi import APIRouter, FastAPI, Form, HTTPException
+from fastapi import Form, HTTPException
 from fastapi.responses import RedirectResponse
 from loguru import logger
 from nicegui import app, ui
 
+from beaverhabits import views
+from beaverhabits.app import auth
 from beaverhabits.configs import settings
-
-router = APIRouter()
 
 
 def google_one_tap_login(endpoint: str) -> None:
@@ -38,16 +37,8 @@ def google_one_tap_login(endpoint: str) -> None:
         )
         return
 
-    ui.label(f'Welcome {user_info.get("name") or user_info.get("email", "")}!')
-    ui.button("Logout", on_click=logout)
 
-
-def logout() -> None:
-    del app.storage.user["user_info"]
-    ui.navigate.to("/")
-
-
-@router.post("/google/auth")
+@app.post("/google/auth")
 async def google_auth(credential: str = Form(...)) -> RedirectResponse:
     logger.info("Authenticating Google One Tap token")
     async with httpx.AsyncClient() as http_client:
@@ -63,13 +54,12 @@ async def google_auth(credential: str = Form(...)) -> RedirectResponse:
     logger.info(
         f"Google One Tap authentication successful for {user_info.get('email')}"
     )
-    # app.storage.user["user_info"] = user_info
 
-    return RedirectResponse("/", status_code=303)
+    app.storage.user["user_info"] = user_info
+    user = await auth.user_get_or_create_by_email(user_info.get("email"))
+    await views.login_user(user)
 
-
-def init_google_one_tap_routes(app: FastAPI) -> None:
-    app.include_router(router)
+    return RedirectResponse("/gui", status_code=303)
 
 
 def _is_valid(user_info: dict) -> bool:

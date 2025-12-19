@@ -192,7 +192,6 @@ async def login_page(client: Client, request: Request) -> Optional[RedirectRespo
         user = await user_authenticate(email=email.value, password=password.value)
         if user:
             await views.login_user(user)
-            await views.cache_user_configs(user)
             ui.navigate.to(GUI_ROOT_PATH)
         else:
             ui.notify("email or password wrong!", color="negative")
