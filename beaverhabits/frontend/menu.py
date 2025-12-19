@@ -37,8 +37,8 @@ def sort_menu(habit_list: HabitList):
 
 class StatsPeriod(enum.Enum):
     THREE_MONTHS = 15
-    SIX_MONTHS = 25
-    ONE_YEAR = 42
+    SIX_MONTHS = 26
+    ONE_YEAR = 53
 
 
 def date_pick_menu(page_ui: ui.refreshable):
