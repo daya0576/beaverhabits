@@ -47,6 +47,9 @@ UNRESTRICTED_PAGE_ROUTES = ("/login", "/register")
 
 @ui.page("/demo")
 async def demo_index_page() -> None:
+    # Google One Tap Login
+    google_one_tap_login()
+
     days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
     habit_list = views.get_or_create_session_habit_list(days)
     index_page_ui(days, habit_list)
