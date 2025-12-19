@@ -93,6 +93,7 @@ class Settings(BaseSettings):
     # Make sure you include <origin>/google/auth in "Authorized redirect URIs".
     GOOGLE_ONE_TAP_CLIENT_ID: str = ""
     GOOGLE_ONE_TAP_ENABLED: bool = False
+    GOOGLE_ONE_TAP_CALLBACK_URL: str = ""
 
     def is_dev(self):
         return self.ENV == "dev"

@@ -17,7 +17,7 @@ from beaverhabits.app.dependencies import (
     get_reset_user,
 )
 from beaverhabits.configs import settings
-from beaverhabits.frontend import javascript, paddle_page
+from beaverhabits.frontend import paddle_page
 from beaverhabits.frontend.add_page import add_page_ui
 from beaverhabits.frontend.admin import admin_page
 from beaverhabits.frontend.components import (
@@ -171,14 +171,14 @@ async def gui_settings(user: User = Depends(current_active_user)) -> None:
 
 
 @ui.page("/login")
-async def login_page(client: Client, request: Request) -> Optional[RedirectResponse]:
+async def login_page(client: Client) -> Optional[RedirectResponse]:
     if await views.is_gui_authenticated():
         return RedirectResponse(GUI_ROOT_PATH)
 
     custom_headers()
 
     # Google One Tap Login
-    google_one_tap_login(str(request.base_url))
+    google_one_tap_login()
 
     async def try_login():
         if not email.value:
@@ -215,14 +215,14 @@ async def login_page(client: Client, request: Request) -> Optional[RedirectRespo
 
 
 @ui.page("/register")
-async def register_page(request: Request):
+async def register_page():
     if await views.is_gui_authenticated():
         return RedirectResponse(GUI_ROOT_PATH)
 
     custom_headers()
 
     # Google One Tap Login
-    google_one_tap_login(str(request.base_url))
+    google_one_tap_login()
 
     async def try_register():
         if not email.value:

@@ -12,16 +12,16 @@ from beaverhabits.app import auth
 from beaverhabits.configs import settings
 
 
-def google_one_tap_login(endpoint: str) -> None:
+def google_one_tap_login() -> None:
     if not settings.GOOGLE_ONE_TAP_ENABLED:
         return
 
     logger.info("Google One Tap login is enabled")
     user_info = app.storage.user.get("user_info", {})
     if not _is_valid(user_info):
-        date_login_uri = urljoin(endpoint, "/google/auth")
         logger.info(
-            f"User not logged in, showing Google One Tap prompt, auth redirect URI: {date_login_uri}"
+            "User not logged in, showing Google One Tap prompt,"
+            f"callback: {settings.GOOGLE_ONE_TAP_CALLBACK_URL}"
         )
         ui.add_head_html(
             '<script src="https://accounts.google.com/gsi/client" async defer></script>'
@@ -30,7 +30,7 @@ def google_one_tap_login(endpoint: str) -> None:
             f"""
             <div id="g_id_onload"
                 data-client_id="{settings.GOOGLE_ONE_TAP_CLIENT_ID}"
-                data-login_uri="{date_login_uri}">
+                data-login_uri="{settings.GOOGLE_ONE_TAP_CALLBACK_URL}">
             </div>
             """,
             sanitize=False,
