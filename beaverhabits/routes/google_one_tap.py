@@ -56,7 +56,13 @@ async def google_auth(credential: str = Form(...)) -> RedirectResponse:
     )
 
     app.storage.user["user_info"] = user_info
-    user = await auth.user_get_or_create_by_email(user_info.get("email"))
+
+    email = user_info.get("email")
+    assert email, "Email must be provided"
+    user = await auth.user_get_by_email(email)
+    if user is None:
+        user = await views.register_user(email=email)
+
     await views.login_user(user)
 
     return RedirectResponse("/gui", status_code=303)

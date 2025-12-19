@@ -109,18 +109,7 @@ async def user_get_by_email(email: str) -> Optional[User]:
                     user = await user_manager.get_by_email(email)
                     return user
     except:
-        logger.exception("Unkownn Exception")
         return None
-
-
-async def user_get_or_create_by_email(email: str) -> User:
-    assert email, "Email must be provided"
-
-    user = await user_get_by_email(email)
-    if user is not None:
-        return user
-
-    return await user_create(email=email, password="")
 
 
 async def user_get_by_id(user_id: UUID) -> User:
