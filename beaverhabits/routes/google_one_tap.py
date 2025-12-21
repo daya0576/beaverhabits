@@ -60,6 +60,7 @@ async def google_auth(credential: str = Form(...)) -> RedirectResponse:
     email = user_info.get("email")
     assert email, "Email must be provided"
     user = await auth.user_get_by_email(email)
+    logger.info(f"Retrieved user from database: {user}")
     if user is None:
         user = await views.register_user(email=email)
 

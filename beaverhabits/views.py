@@ -150,6 +150,7 @@ async def login_user(user: User) -> None:
     token = await user_create_token(user)
     if token is not None:
         app.storage.user.update({"auth_token": token})
+        logger.info(f"User {user.email} logged in successfully, token: {token[:4]}***")
 
     await cache_user_configs(user)
 
