@@ -89,7 +89,7 @@ def show_help_dialog():
 
                 items = {
                     "Documentation": "https://github.com/daya0576/beaverhabits/wiki",
-                    "Website": "https://www.beaverhabits.com/",
+                    "Supporter": "https://www.beaverhabits.com/pricing",
                     "YouTube": "https://www.youtube.com/@beaverhabits",
                     "Bugs & Feature Requests": "https://github.com/daya0576/beaverhabits/issues",
                 }

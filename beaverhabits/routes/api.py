@@ -1,13 +1,20 @@
 from datetime import datetime
+from typing import Literal
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Literal
 
 from beaverhabits import views
 from beaverhabits.app.db import User
 from beaverhabits.app.dependencies import current_active_user
-from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus, Habit, HabitFrequency
+from beaverhabits.core.completions import CStatus, get_habit_date_completion
+from beaverhabits.storage.storage import (
+    Habit,
+    HabitFrequency,
+    HabitList,
+    HabitListBuilder,
+    HabitStatus,
+)
 
 api_router = APIRouter()
 
@@ -82,7 +89,7 @@ class UpdateHabit(BaseModel):
     status: HabitStatus | None = None
     period: UpdateHabitPeriod | None = None
     tags: list[str] | None = None
-    
+
 
 @api_router.put("/habits/{habit_id}", tags=["habits"])
 async def put_habit(
@@ -98,7 +105,9 @@ async def put_habit(
     if habit.status is not None:
         existing_habit.status = habit.status
     if habit.period is not None:
-        existing_habit.period = HabitFrequency.from_str(f"{habit.period.target_count}/{habit.period.period_count}{habit.period.period_type}")
+        existing_habit.period = HabitFrequency.from_str(
+            f"{habit.period.target_count}/{habit.period.period_count}{habit.period.period_type}"
+        )
     if habit.tags is not None:
         existing_habit.tags = habit.tags
 
@@ -113,11 +122,12 @@ async def delete_habit(
     habit = await views.get_user_habit(user, habit_id)
     await views.remove_user_habit(user, habit)
     return format_json_response(habit)
-    
+
 
 @api_router.get("/habits/{habit_id}/completions", tags=["habits"])
 async def get_habit_completions(
     habit_id: str,
+    status: list[CStatus] | None = None,
     date_fmt: str = "%d-%m-%Y",
     date_start: str | None = None,
     date_end: str | None = None,
@@ -125,23 +135,23 @@ async def get_habit_completions(
     sort="asc",
     user: User = Depends(current_active_user),
 ):
-    habit = await views.get_user_habit(user, habit_id)
-    ticked_days = habit.ticked_days
-    if not ticked_days:
-        return []
+    if date_start and date_end:
+        try:
+            start = datetime.strptime(date_start, date_fmt.strip())
+            end = datetime.strptime(date_end, date_fmt.strip())
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format")
+    else:
+        start, end = datetime.min, datetime.max
 
-    if date_start or date_end:
-        if date_start and date_end:
-            try:
-                start = datetime.strptime(date_start, date_fmt.strip())
-                end = datetime.strptime(date_end, date_fmt.strip())
-            except ValueError:
-                raise HTTPException(status_code=400, detail="Invalid date format")
-            ticked_days = [x for x in ticked_days if start.date() <= x <= end.date()]
-        else:
-            raise HTTPException(
-                status_code=400, detail="Both date_start and date_end are required"
-            )
+    if not status:
+        status = [CStatus.DONE]
+
+    habit = await views.get_user_habit(user, habit_id)
+    status_map = get_habit_date_completion(habit, start, end)
+    ticked_days = [
+        day for day, stat in status_map.items() if any(s in stat for s in status)
+    ]
 
     if sort not in ("asc", "desc"):
         raise HTTPException(status_code=400, detail="Invalid sort value")
@@ -175,6 +185,7 @@ async def put_habit_completions(
     await habit.tick(day, tick.done, tick.text)
     return {"day": day.strftime(tick.date_fmt), "done": tick.done}
 
+
 def format_json_response(habit: Habit) -> dict:
     return {
         "id": habit.id,
@@ -185,6 +196,7 @@ def format_json_response(habit: Habit) -> dict:
         "period": habit.period,
         "tags": habit.tags,
     }
+
 
 def init_api_routes(app: FastAPI) -> None:
     app.include_router(api_router, prefix="/api/v1")
