@@ -24,7 +24,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     verification_token_secret = JWT_SECRET
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
-        logger.info(f"User {user.id} has registered.")
+        logger.info(f"User has registered: {user.email}({user.id})")
 
     async def on_after_forgot_password(
         self, user: User, token: str, request: Optional[Request] = None

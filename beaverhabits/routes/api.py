@@ -2,6 +2,7 @@ import datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
+from loguru import logger
 from pydantic import BaseModel
 
 from beaverhabits import views
@@ -68,7 +69,10 @@ async def post_habits(
     habit_list = await views.get_or_create_user_habit_list(
         user, views.dummy_empty_habit_list()
     )
+
     id = await habit_list.add(habit.name)
+    logger.info(f"Created new habit {id} for user {user.email}")
+
     return {"id": id, "name": habit.name}
 
 
@@ -145,8 +149,8 @@ async def get_habit_completions(
         start, end = datetime.date.min, datetime.date.max
     elif date_start and date_end:
         try:
-            start = datetime.date.strptime(date_start, date_fmt.strip())
-            end = datetime.date.strptime(date_end, date_fmt.strip())
+            start = datetime.datetime.strptime(date_start, date_fmt.strip()).date()
+            end = datetime.datetime.strptime(date_end, date_fmt.strip()).date()
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid date format")
     else:
@@ -188,7 +192,7 @@ async def put_habit_completions(
     user: User = Depends(current_active_user),
 ):
     try:
-        day = datetime.date.strptime(tick.date, tick.date_fmt.strip())
+        day = datetime.datetime.strptime(tick.date, tick.date_fmt.strip()).date()
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format")
 

@@ -3,50 +3,106 @@ Test suite for Beaver Habits API based on the official API documentation.
 Tests cover: authentication, habit CRUD operations, and habit completions.
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 import pytest
 from fastapi.testclient import TestClient
+from loguru import logger
+from nicegui import core
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from beaverhabits.app import db
+from beaverhabits.app.db import *
+from beaverhabits.app.db import (
+    Base,
+    User,
+    get_async_session,
+)
 from beaverhabits.main import app
 
-client = TestClient(app)
+PASSWORD = "TestPassword123!"
 
 
 # ============================================================================
 # Test Fixtures and Helpers
 # ============================================================================
+@pytest.fixture(scope="module")
+async def async_session():
+    # Create async database engine with StaticPool for in-memory database
+    from sqlalchemy.pool import StaticPool
 
-
-@pytest.fixture
-def test_user():
-    """Create a test user for API testing."""
-    email = f"testuser_{datetime.now().timestamp()}@test.com"
-    password = "TestPassword123!"
-
-    response = client.post(
-        "/auth/register", json={"email": email, "password": password}
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+        pool_pre_ping=True,
     )
 
-    # Return user credentials
-    return {"email": email, "password": password}
+    original_engine = db.engine
+    original_session_maker = db.async_session_maker
+    db.engine = engine
+    db.async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
+
+    logger.info("Creating database tables...")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    session = db.async_session_maker()
+    yield session
+
+    await session.close()
+    await engine.dispose()
+
+    # restore original engine and session maker
+    db.engine = original_engine
+    db.async_session_maker = original_session_maker
+
+
+@pytest.fixture(name="client", scope="module")
+async def client_fixture(async_session: AsyncSession):
+    # Override to use async session
+    async def get_session_override():
+        yield async_session
+
+    app.dependency_overrides[get_async_session] = get_session_override
+
+    with TestClient(app, raise_server_exceptions=True) as client:
+        yield client
 
 
 @pytest.fixture
-def access_token(test_user):
+async def test_user(client: TestClient):
+    """Set up the database before tests and tear down after."""
+    logger.info("Registering test user...")
+    email = f"testuser_{datetime.datetime.now().timestamp()}@test.com"
+    response = client.post(
+        "/auth/register",
+        json={"email": email, "password": PASSWORD},
+    )
+    assert response.status_code == 201
+    user_data = response.json()
+    user = User(**user_data)
+
+    yield user
+
+
+@pytest.fixture
+async def access_token(test_user: User, client: TestClient):
     """Obtain an access token for the test user (Task 1 from docs)."""
+    logger.info(f"Obtaining access token for user: {test_user.email}")
     response = client.post(
         "/auth/login",
         data={
             "grant_type": "password",
-            "username": test_user["email"],
-            "password": test_user["password"],
+            "username": test_user.email,
+            "password": PASSWORD,
         },
         headers={
             "content-type": "application/x-www-form-urlencoded",
             "accept": "application/json",
         },
     )
+    logger.info(f"Access token response: {response.text}")
 
     assert response.status_code == 200
     data = response.json()
@@ -57,7 +113,7 @@ def access_token(test_user):
 
 
 @pytest.fixture
-def auth_headers(access_token):
+async def auth_headers(access_token):
     """Get authorization headers with access token."""
     return {
         "Authorization": f"Bearer {access_token}",
@@ -66,7 +122,7 @@ def auth_headers(access_token):
 
 
 @pytest.fixture
-def sample_habit(auth_headers):
+async def sample_habit(auth_headers, client: TestClient):
     """Create a sample habit for testing."""
     response = client.post(
         "/api/v1/habits",
@@ -82,10 +138,10 @@ def sample_habit(auth_headers):
 # ============================================================================
 
 
-def test_create_user():
+async def test_create_user(client: TestClient):
     """Test user registration."""
-    email = f"newuser_{datetime.now().timestamp()}@test.com"
-    data = {"email": email, "password": "TestPassword123!"}
+    email = f"newuser_{datetime.datetime.now().timestamp()}@test.com"
+    data = {"email": email, "password": PASSWORD}
     response = client.post("/auth/register", json=data)
 
     assert response.status_code == 201
@@ -93,7 +149,7 @@ def test_create_user():
     assert response.json()["is_active"] == True
 
 
-def test_obtain_access_token(test_user):
+async def test_obtain_access_token(test_user, client: TestClient):
     """
     Task 1 - Obtain an Access Token
     Test authentication with username and password.
@@ -102,8 +158,8 @@ def test_obtain_access_token(test_user):
         "/auth/login",
         data={
             "grant_type": "password",
-            "username": test_user["email"],
-            "password": test_user["password"],
+            "username": test_user.email,
+            "password": PASSWORD,
         },
         headers={"content-type": "application/x-www-form-urlencoded"},
     )
@@ -115,7 +171,7 @@ def test_obtain_access_token(test_user):
     assert len(data["access_token"]) > 0
 
 
-def test_authentication_with_invalid_credentials():
+async def test_authentication_with_invalid_credentials(client: TestClient):
     """Test authentication fails with wrong credentials."""
     response = client.post(
         "/auth/login",
@@ -130,7 +186,7 @@ def test_authentication_with_invalid_credentials():
     assert response.status_code == 400
 
 
-def test_api_without_token():
+async def test_api_without_token(client: TestClient):
     """Test that API endpoints require authentication."""
     response = client.get("/api/v1/habits")
     assert response.status_code == 401
@@ -141,7 +197,7 @@ def test_api_without_token():
 # ============================================================================
 
 
-def test_list_all_habits_empty(auth_headers):
+async def test_list_all_habits_empty(auth_headers, client: TestClient):
     """
     Task 2 - List All the Habits
     Test listing habits when no habits exist.
@@ -157,22 +213,28 @@ def test_list_all_habits_empty(auth_headers):
         assert isinstance(response.json(), list)
 
 
-def test_list_all_habits(auth_headers):
+async def test_list_all_habits(auth_headers, client: TestClient):
     """
     Task 2 - List All the Habits
     Test listing habits with created habits.
     """
+    logger.info(
+        f"nicegui loop: {core.loop}, is_running: {core.loop and core.loop.is_running}"
+    )
+
     # Create some test habits
     habit1 = client.post(
         "/api/v1/habits",
         json={"name": "Order pizza"},
         headers=auth_headers,
     )
+    logger.info(f"Created habit1: {habit1.json()}")
     habit2 = client.post(
         "/api/v1/habits",
         json={"name": "Running"},
         headers=auth_headers,
     )
+    logger.info(f"Created habit2: {habit2.json()}")
 
     # List all habits
     response = client.get(
@@ -191,7 +253,7 @@ def test_list_all_habits(auth_headers):
         assert "name" in habit
 
 
-def test_list_habits_filter_by_status(auth_headers, sample_habit):
+def test_list_habits_filter_by_status(auth_headers, sample_habit, client: TestClient):
     """Test filtering habits by status (active/archived)."""
     # Test with active status
     response = client.get(
@@ -220,7 +282,7 @@ def test_list_habits_filter_by_status(auth_headers, sample_habit):
 # ============================================================================
 
 
-def test_create_habit(auth_headers):
+def test_create_habit(auth_headers, client: TestClient):
     """Test creating a new habit."""
     response = client.post(
         "/api/v1/habits",
@@ -234,7 +296,7 @@ def test_create_habit(auth_headers):
     assert data["name"] == "Morning Exercise"
 
 
-def test_get_habit_detail(auth_headers, sample_habit):
+def test_get_habit_detail(auth_headers, sample_habit, client: TestClient):
     """Test getting detailed information about a specific habit."""
     response = client.get(
         f"/api/v1/habits/{sample_habit['id']}",
@@ -251,7 +313,7 @@ def test_get_habit_detail(auth_headers, sample_habit):
     assert "tags" in data
 
 
-def test_update_habit(auth_headers, sample_habit):
+def test_update_habit(auth_headers, sample_habit, client: TestClient):
     """Test updating habit properties."""
     response = client.put(
         f"/api/v1/habits/{sample_habit['id']}",
@@ -270,7 +332,7 @@ def test_update_habit(auth_headers, sample_habit):
     assert "health" in data["tags"]
 
 
-def test_update_habit_period(auth_headers, sample_habit):
+def test_update_habit_period(auth_headers, sample_habit, client: TestClient):
     """Test updating habit frequency/period."""
     response = client.put(
         f"/api/v1/habits/{sample_habit['id']}",
@@ -285,7 +347,7 @@ def test_update_habit_period(auth_headers, sample_habit):
     assert data["period"]["target_count"] == 3
 
 
-def test_delete_habit(auth_headers, sample_habit):
+def test_delete_habit(auth_headers, sample_habit, client: TestClient):
     """Test deleting a habit."""
     response = client.delete(
         f"/api/v1/habits/{sample_habit['id']}",
@@ -307,7 +369,7 @@ def test_delete_habit(auth_headers, sample_habit):
 # ============================================================================
 
 
-def test_complete_habit(auth_headers, sample_habit):
+def test_complete_habit(auth_headers, sample_habit, client: TestClient):
     """
     Task 3 - Complete Habit
     Test marking a habit as completed for a specific date.
@@ -327,7 +389,7 @@ def test_complete_habit(auth_headers, sample_habit):
     assert data["done"] == True
 
 
-def test_uncomplete_habit(auth_headers, sample_habit):
+def test_uncomplete_habit(auth_headers, sample_habit, client: TestClient):
     """Test marking a habit as not completed (undoing completion)."""
     today = date.today()
     date_str = today.strftime("%d-%m-%Y")
@@ -351,7 +413,7 @@ def test_uncomplete_habit(auth_headers, sample_habit):
     assert data["done"] == False
 
 
-def test_complete_habit_with_note(auth_headers, sample_habit):
+def test_complete_habit_with_note(auth_headers, sample_habit, client: TestClient):
     """Test completing a habit with a text note."""
     today = date.today()
     date_str = today.strftime("%d-%m-%Y")
@@ -370,7 +432,9 @@ def test_complete_habit_with_note(auth_headers, sample_habit):
     assert response.status_code == 200
 
 
-def test_complete_habit_invalid_date_format(auth_headers, sample_habit):
+def test_complete_habit_invalid_date_format(
+    auth_headers, sample_habit, client: TestClient
+):
     """Test that invalid date format returns an error."""
     response = client.post(
         f"/api/v1/habits/{sample_habit['id']}/completions",
@@ -390,7 +454,7 @@ def test_complete_habit_invalid_date_format(auth_headers, sample_habit):
 # ============================================================================
 
 
-def test_show_recent_completions(auth_headers, sample_habit):
+def test_show_recent_completions(auth_headers, sample_habit, client: TestClient):
     """
     Task 4 - Show Recent Habit Completions
     Test retrieving completion history for a habit.
@@ -434,7 +498,7 @@ def test_show_recent_completions(auth_headers, sample_habit):
     assert "16-12-2024" in completions
 
 
-def test_completions_sorted_descending(auth_headers, sample_habit):
+def test_completions_sorted_descending(auth_headers, sample_habit, client: TestClient):
     """Test that completions can be sorted in descending order."""
     # Complete on two dates
     client.post(
@@ -464,12 +528,12 @@ def test_completions_sorted_descending(auth_headers, sample_habit):
     completions = response.json()
     # First item should be more recent than last item
     if len(completions) >= 2:
-        first = datetime.strptime(completions[0], "%d-%m-%Y")
-        last = datetime.strptime(completions[-1], "%d-%m-%Y")
+        first = datetime.date.strptime(completions[0], "%d-%m-%Y")
+        last = datetime.date.strptime(completions[-1], "%d-%m-%Y")
         assert first >= last
 
 
-def test_completions_with_limit(auth_headers, sample_habit):
+def test_completions_with_limit(auth_headers, sample_habit, client: TestClient):
     """Test limiting the number of returned completions."""
     # Complete on multiple dates
     for day in range(1, 11):  # 10 completions
@@ -496,7 +560,9 @@ def test_completions_with_limit(auth_headers, sample_habit):
     assert len(completions) <= 5
 
 
-def test_completions_date_range_validation(auth_headers, sample_habit):
+def test_completions_date_range_validation(
+    auth_headers, sample_habit, client: TestClient
+):
     """Test that date range validation works correctly."""
     # Missing date_end
     response = client.get(
@@ -516,7 +582,7 @@ def test_completions_date_range_validation(auth_headers, sample_habit):
 # ============================================================================
 
 
-def test_get_nonexistent_habit(auth_headers):
+def test_get_nonexistent_habit(auth_headers, client: TestClient):
     """Test accessing a habit that doesn't exist."""
     response = client.get(
         "/api/v1/habits/nonexistent123",
@@ -525,7 +591,7 @@ def test_get_nonexistent_habit(auth_headers):
     assert response.status_code == 404
 
 
-def test_complete_nonexistent_habit(auth_headers):
+def test_complete_nonexistent_habit(auth_headers, client: TestClient):
     """Test completing a habit that doesn't exist."""
     response = client.post(
         "/api/v1/habits/nonexistent123/completions",

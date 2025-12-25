@@ -11,9 +11,14 @@ jobs:
       - name: Install the latest version of uv and set the python version
         uses: astral-sh/setup-uv@v4
         with:
-          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          version: "0.9.18"
+          python-version: "3.14"
+      - name: Install dependencies
+        run: uv sync --group fly
       - name: Test with python
-        run: DATABASE_URL="sqlite+aiosqlite:///:memory:" uv run --frozen pytest
+        run: HABITS_STORAGE="USER_DISK" uv run pytest
 
   # https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
   build:
