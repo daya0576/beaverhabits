@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
@@ -65,7 +65,10 @@ async def post_habits(
     habit: CreateHabit,
     user: User = Depends(current_active_user),
 ):
-    id = await views.create_user_habit(user, habit.name)
+    habit_list = await views.get_or_create_user_habit_list(
+        user, views.dummy_empty_habit_list()
+    )
+    id = await habit_list.add(habit.name)
     return {"id": id, "name": habit.name}
 
 
@@ -105,8 +108,10 @@ async def put_habit(
     if habit.status is not None:
         existing_habit.status = habit.status
     if habit.period is not None:
-        existing_habit.period = HabitFrequency.from_str(
-            f"{habit.period.target_count}/{habit.period.period_count}{habit.period.period_type}"
+        existing_habit.period = HabitFrequency(
+            target_count=habit.period.target_count,
+            period_count=habit.period.period_count,
+            period_type=habit.period.period_type,
         )
     if habit.tags is not None:
         existing_habit.tags = habit.tags
@@ -135,14 +140,20 @@ async def get_habit_completions(
     sort="asc",
     user: User = Depends(current_active_user),
 ):
-    if date_start and date_end:
+
+    if not (date_start or date_end):
+        start, end = datetime.date.min, datetime.date.max
+    elif date_start and date_end:
         try:
-            start = datetime.strptime(date_start, date_fmt.strip())
-            end = datetime.strptime(date_end, date_fmt.strip())
+            start = datetime.date.strptime(date_start, date_fmt.strip())
+            end = datetime.date.strptime(date_end, date_fmt.strip())
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid date format")
     else:
-        start, end = datetime.min, datetime.max
+        raise HTTPException(
+            status_code=400,
+            detail="Both date_start and date_end must be provided",
+        )
 
     if not status:
         status = [CStatus.DONE]
@@ -177,7 +188,7 @@ async def put_habit_completions(
     user: User = Depends(current_active_user),
 ):
     try:
-        day = datetime.strptime(tick.date, tick.date_fmt.strip()).date()
+        day = datetime.date.strptime(tick.date, tick.date_fmt.strip())
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format")
 

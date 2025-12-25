@@ -40,7 +40,9 @@ async def test_user_db(user: User):
     @ui.page("/")
     async def page():
         days = await dummy_days(5)
-        habit_list = await views.get_or_create_user_habit_list(_user, days)
+        habit_list = await views.get_or_create_user_habit_list(
+            _user, views.dummy_habit_list(days)
+        )
         assert habit_list is not None
 
         habit_list = await views.get_user_habit_list(_user)
@@ -60,7 +62,9 @@ async def test_user_disk(user: User):
     @ui.page("/")
     async def page():
         days = await dummy_days(5)
-        habit_list = await views.get_or_create_user_habit_list(_user, days)
+        habit_list = await views.get_or_create_user_habit_list(
+            _user, views.dummy_habit_list(days)
+        )
         assert habit_list is not None
 
         habit_list = await views.get_user_habit_list(_user)
