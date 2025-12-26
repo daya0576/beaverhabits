@@ -443,6 +443,7 @@ def test_show_recent_completions(auth_headers, sample_habit, client: TestClient)
             "date_fmt": "%d-%m-%Y",
             "date_start": "01-12-2024",
             "date_end": "30-12-2024",
+            "status": "PERIOD_DONE,DONE",
             "sort": "asc",
         },
         headers=auth_headers,

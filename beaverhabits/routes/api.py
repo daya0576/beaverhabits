@@ -1,7 +1,7 @@
 import datetime
 from typing import Literal
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
 from loguru import logger
 from pydantic import BaseModel
 
@@ -136,7 +136,7 @@ async def delete_habit(
 @api_router.get("/habits/{habit_id}/completions", tags=["habits"])
 async def get_habit_completions(
     habit_id: str,
-    status: list[CStatus] | None = None,
+    status: str | None = None,
     date_fmt: str = "%d-%m-%Y",
     date_start: str | None = None,
     date_end: str | None = None,
@@ -144,7 +144,6 @@ async def get_habit_completions(
     sort="asc",
     user: User = Depends(current_active_user),
 ):
-
     if not (date_start or date_end):
         start, end = datetime.date.min, datetime.date.max
     elif date_start and date_end:
@@ -159,13 +158,19 @@ async def get_habit_completions(
             detail="Both date_start and date_end must be provided",
         )
 
-    if not status:
-        status = [CStatus.DONE]
+    cstatus_list = [CStatus.DONE]
+    if status:
+        cstatus_list = []
+        for s in status.split(","):
+            try:
+                cstatus_list.append(CStatus[s.strip().upper()])
+            except KeyError:
+                raise HTTPException(status_code=400, detail=f"Invalid status: {s}")
 
     habit = await views.get_user_habit(user, habit_id)
     status_map = get_habit_date_completion(habit, start, end)
     ticked_days = [
-        day for day, stat in status_map.items() if any(s in stat for s in status)
+        day for day, stat in status_map.items() if any(s in stat for s in cstatus_list)
     ]
 
     if sort not in ("asc", "desc"):
