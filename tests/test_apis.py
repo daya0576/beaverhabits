@@ -3,20 +3,14 @@ Test suite for Beaver Habits API based on the official API documentation.
 Tests cover: authentication, habit CRUD operations, and habit completions.
 """
 
-from datetime import date
+from datetime import date, datetime
 
 import pytest
 from fastapi.testclient import TestClient
 from loguru import logger
 from nicegui import core
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from beaverhabits.app import db
-from beaverhabits.app.db import *
-from beaverhabits.app.db import (
-    User,
-    get_async_session,
-)
+from beaverhabits.app.db import User, engine
 from beaverhabits.main import app
 
 PASSWORD = "TestPassword123!"
@@ -39,7 +33,7 @@ async def client_fixture():
 async def test_user(client: TestClient):
     """Set up the database before tests and tear down after."""
     logger.info("Registering test user...")
-    email = f"testuser_{datetime.datetime.now().timestamp()}@test.com"
+    email = f"testuser_{datetime.now().timestamp()}@test.com"
     response = client.post(
         "/auth/register",
         json={"email": email, "password": PASSWORD},
@@ -105,7 +99,7 @@ async def sample_habit(auth_headers, client: TestClient):
 
 async def test_create_user(client: TestClient):
     """Test user registration."""
-    email = f"newuser_{datetime.datetime.now().timestamp()}@test.com"
+    email = f"newuser_{datetime.now().timestamp()}@test.com"
     data = {"email": email, "password": PASSWORD}
     response = client.post("/auth/register", json=data)
 
@@ -493,8 +487,8 @@ def test_completions_sorted_descending(auth_headers, sample_habit, client: TestC
     completions = response.json()
     # First item should be more recent than last item
     if len(completions) >= 2:
-        first = datetime.date.strptime(completions[0], "%d-%m-%Y")
-        last = datetime.date.strptime(completions[-1], "%d-%m-%Y")
+        first = datetime.strptime(completions[0], "%d-%m-%Y")
+        last = datetime.strptime(completions[-1], "%d-%m-%Y")
         assert first >= last
 
 
