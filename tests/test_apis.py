@@ -25,25 +25,14 @@ PASSWORD = "TestPassword123!"
 # ============================================================================
 # Test Fixtures and Helpers
 # ============================================================================
-@pytest.fixture(scope="module")
-async def async_session():
-    session = db.async_session_maker()
-    yield session
-
-    await session.close()
-    await engine.dispose()
 
 
 @pytest.fixture(name="client", scope="module")
-async def client_fixture(async_session: AsyncSession):
-    # Override to use async session
-    async def get_session_override():
-        yield async_session
-
-    app.dependency_overrides[get_async_session] = get_session_override
-
+async def client_fixture():
     with TestClient(app, raise_server_exceptions=True) as client:
         yield client
+
+    await engine.dispose()
 
 
 @pytest.fixture
