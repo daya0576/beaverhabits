@@ -14,7 +14,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from beaverhabits.app import db
 from beaverhabits.app.db import *
 from beaverhabits.app.db import (
-    Base,
     User,
     get_async_session,
 )
@@ -28,34 +27,11 @@ PASSWORD = "TestPassword123!"
 # ============================================================================
 @pytest.fixture(scope="module")
 async def async_session():
-    # # Create async database engine with StaticPool for in-memory database
-    # from sqlalchemy.pool import StaticPool
-
-    # engine = create_async_engine(
-    #     "sqlite+aiosqlite:///:memory:",
-    #     connect_args={"check_same_thread": False},
-    #     poolclass=StaticPool,
-    #     pool_pre_ping=True,
-    # )
-
-    # original_engine = db.engine
-    # original_session_maker = db.async_session_maker
-    # db.engine = engine
-    # db.async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
-
-    # logger.info("Creating database tables...")
-    # async with engine.begin() as conn:
-    #     await conn.run_sync(Base.metadata.create_all)
-
     session = db.async_session_maker()
     yield session
 
     await session.close()
     await engine.dispose()
-
-    # # restore original engine and session maker
-    # db.engine = original_engine
-    # db.async_session_maker = original_session_maker
 
 
 @pytest.fixture(name="client", scope="module")
