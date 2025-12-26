@@ -530,6 +530,7 @@ def test_completions_date_range_validation(
         params={
             "date_fmt": "%d-%m-%Y",
             "date_start": "01-12-2024",
+            "date_end": "01-11-2024",
         },
         headers=auth_headers,
     )

@@ -144,20 +144,24 @@ async def get_habit_completions(
     sort="asc",
     user: User = Depends(current_active_user),
 ):
-    if not (date_start or date_end):
-        start, end = datetime.date.min, datetime.date.max
-    elif date_start and date_end:
+    # Parse date range
+    start, end = datetime.date.min, datetime.date.max
+    if date_start:
         try:
             start = datetime.datetime.strptime(date_start, date_fmt.strip()).date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format")
+    if date_end:
+        try:
             end = datetime.datetime.strptime(date_end, date_fmt.strip()).date()
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid date format")
-    else:
+    if start > end:
         raise HTTPException(
-            status_code=400,
-            detail="Both date_start and date_end must be provided",
+            status_code=400, detail="date_start cannot be after date_end"
         )
 
+    # Parse status filter
     cstatus_list = [CStatus.DONE]
     if status:
         cstatus_list = []
@@ -170,7 +174,9 @@ async def get_habit_completions(
     habit = await views.get_user_habit(user, habit_id)
     status_map = get_habit_date_completion(habit, start, end)
     ticked_days = [
-        day for day, stat in status_map.items() if any(s in stat for s in cstatus_list)
+        day
+        for day, stat in status_map.items()
+        if any(s in stat for s in cstatus_list) and start <= day <= end
     ]
 
     if sort not in ("asc", "desc"):
