@@ -3,7 +3,7 @@ Test suite for Beaver Habits API based on the official API documentation.
 Tests cover: authentication, habit CRUD operations, and habit completions.
 """
 
-from datetime import date, datetime
+from datetime import date
 
 import pytest
 from fastapi.testclient import TestClient
