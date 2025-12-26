@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --group fly
       - name: Test with python
-        run: HABITS_STORAGE="USER_DISK" uv run pytest
+        run: DATABASE_URL="sqlite+aiosqlite:///:memory:" HABITS_STORAGE="USER_DISK" uv run pytest
 
   # https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
   build:
