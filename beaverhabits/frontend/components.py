@@ -1287,7 +1287,7 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
             # Steak status shortcut
             with ui.row().classes("items-center"):
                 chips = ui.input_chips(
-                    "Completion States",
+                    "Completion Options",
                     value=habit.chips,
                     new_value_mode="add-unique",
                 )
