@@ -100,7 +100,26 @@ def get_user_dark_mode() -> bool | None:
 
 async def get_user_today_date() -> datetime.date:
     timezone = await get_or_create_user_timezone()
-    return datetime.datetime.now(pytz.timezone(timezone)).date()
+    today = datetime.datetime.now(pytz.timezone(timezone)).date()
+
+    # Add ALIGN_TODAY_TO_DAY_OF_WEEK config option to allow users to
+    # anchor "today" to a specific day of the week (e.g., Sunday).
+    # This enables displaying a complete week (Monday-Sunday) even
+    # when current day is mid-week.
+    if settings.ALIGN_TODAY_TO_DAY_OF_WEEK is not None:
+        if (
+            settings.ALIGN_TODAY_TO_DAY_OF_WEEK < 0
+            or settings.ALIGN_TODAY_TO_DAY_OF_WEEK > 6
+        ):
+            raise ValueError(
+                "ALIGN_TODAY_TO_DAY_OF_WEEK must be between 0 (Monday) and 6 (Sunday)."
+            )
+        current_weekday = today.weekday()  # 0=Monday, 6=Sunday
+        target_weekday = settings.ALIGN_TODAY_TO_DAY_OF_WEEK
+        delta_days = target_weekday - current_weekday
+        today = today + datetime.timedelta(days=delta_days)
+
+    return today
 
 
 async def dummy_days(days: int) -> list[datetime.date]:
