@@ -6,18 +6,7 @@ on:
 
 jobs:
   pre-deploy-test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.13"]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install the latest version of uv and set the python version
-        uses: astral-sh/setup-uv@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Test with python ${{ matrix.python-version }}
-        run: DATABASE_URL="sqlite+aiosqlite:///:memory:" uv run --frozen pytest
+    uses: ./.github/workflows/pre-deployment-test.yml
 
   deploy:
     name: Deploy app
