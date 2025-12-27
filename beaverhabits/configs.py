@@ -68,6 +68,8 @@ class Settings(BaseSettings):
 
     # Customization
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
+    # Set to 0-6 to align today to specific day of week, e.g., 0 for Monday
+    ALIGN_TODAY_TO_DAY_OF_WEEK: int | None = None
     ENABLE_IOS_STANDALONE: bool = True
     TAG_SELECTION_MODE: TagSelectionMode = TagSelectionMode.MULTI
     ENABLE_TAG_FILTERS: bool = True
