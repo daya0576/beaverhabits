@@ -32,6 +32,10 @@ from beaverhabits.utils import generate_short_hash, ratelimiter, send_email
 user_storage = get_user_dict_storage()
 
 
+def dummy_empty_habit_list() -> DictHabitList:
+    return DictHabitList({"habits": []})
+
+
 def dummy_habit_list(days: list[datetime.date]):
     pick = lambda: random.randint(0, 4) == 0
     items = [
@@ -95,31 +99,21 @@ async def get_user_habit(user: User, habit_id: str) -> Habit:
     return habit
 
 
-async def create_user_habit(user: User, name: str) -> str:
-    habit_list = await get_user_habit_list(user)
-    return await habit_list.add(name)
-
-
 async def remove_user_habit(user: User, habit: Habit) -> None:
     habit_list = await get_user_habit_list(user)
     await habit_list.remove(habit)
 
 
-async def get_or_create_user_habit_list(
-    user: User, days: list[datetime.date]
-) -> HabitList:
+async def get_or_create_user_habit_list(user: User, habit_list: HabitList) -> HabitList:
     try:
         return await get_user_habit_list(user)
     except HTTPException:
         logger.warning(f"Failed to load habit list for user {user.email}")
 
     logger.info(f"Creating dummy habit list for user {user.email}")
-    await user_storage.init_user_habit_list(user, dummy_habit_list(days))
+    await user_storage.init_user_habit_list(user, habit_list)
 
-    habit_list = await get_user_habit_list(user)
-    if habit_list is None:
-        raise Exception("Panic! Failed to load habit list")
-    return habit_list
+    return await get_user_habit_list(user)
 
 
 async def export_user_habit_list(habit_list: HabitList, user_identify: str) -> bool:
@@ -160,7 +154,8 @@ async def register_user(email: str, password: str = "") -> User:
     user = await user_create(email=email, password=password)
     # Create a dummy habit list for the new users
     days = [datetime.date.today() - datetime.timedelta(days=i) for i in range(30)]
-    await get_or_create_user_habit_list(user, days)
+    habit_list = dummy_habit_list(days)
+    await get_or_create_user_habit_list(user, habit_list)
     logger.info(f"User {email} registered successfully")
     return user
 

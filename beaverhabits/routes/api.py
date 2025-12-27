@@ -1,13 +1,21 @@
-from datetime import datetime
-
-from fastapi import APIRouter, Depends, FastAPI, HTTPException
-from pydantic import BaseModel
+import datetime
 from typing import Literal
+
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
+from loguru import logger
+from pydantic import BaseModel
 
 from beaverhabits import views
 from beaverhabits.app.db import User
 from beaverhabits.app.dependencies import current_active_user
-from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus, Habit, HabitFrequency
+from beaverhabits.core.completions import CStatus, get_habit_date_completion
+from beaverhabits.storage.storage import (
+    Habit,
+    HabitFrequency,
+    HabitList,
+    HabitListBuilder,
+    HabitStatus,
+)
 
 api_router = APIRouter()
 
@@ -58,7 +66,13 @@ async def post_habits(
     habit: CreateHabit,
     user: User = Depends(current_active_user),
 ):
-    id = await views.create_user_habit(user, habit.name)
+    habit_list = await views.get_or_create_user_habit_list(
+        user, views.dummy_empty_habit_list()
+    )
+
+    id = await habit_list.add(habit.name)
+    logger.info(f"Created new habit {id} for user {user.email}")
+
     return {"id": id, "name": habit.name}
 
 
@@ -82,7 +96,7 @@ class UpdateHabit(BaseModel):
     status: HabitStatus | None = None
     period: UpdateHabitPeriod | None = None
     tags: list[str] | None = None
-    
+
 
 @api_router.put("/habits/{habit_id}", tags=["habits"])
 async def put_habit(
@@ -98,7 +112,11 @@ async def put_habit(
     if habit.status is not None:
         existing_habit.status = habit.status
     if habit.period is not None:
-        existing_habit.period = HabitFrequency.from_str(f"{habit.period.target_count}/{habit.period.period_count}{habit.period.period_type}")
+        existing_habit.period = HabitFrequency(
+            target_count=habit.period.target_count,
+            period_count=habit.period.period_count,
+            period_type=habit.period.period_type,
+        )
     if habit.tags is not None:
         existing_habit.tags = habit.tags
 
@@ -113,11 +131,12 @@ async def delete_habit(
     habit = await views.get_user_habit(user, habit_id)
     await views.remove_user_habit(user, habit)
     return format_json_response(habit)
-    
+
 
 @api_router.get("/habits/{habit_id}/completions", tags=["habits"])
 async def get_habit_completions(
     habit_id: str,
+    status: str | None = None,
     date_fmt: str = "%d-%m-%Y",
     date_start: str | None = None,
     date_end: str | None = None,
@@ -125,23 +144,40 @@ async def get_habit_completions(
     sort="asc",
     user: User = Depends(current_active_user),
 ):
-    habit = await views.get_user_habit(user, habit_id)
-    ticked_days = habit.ticked_days
-    if not ticked_days:
-        return []
+    # Parse date range
+    start, end = datetime.date.min, datetime.date.max
+    if date_start:
+        try:
+            start = datetime.datetime.strptime(date_start, date_fmt.strip()).date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format")
+    if date_end:
+        try:
+            end = datetime.datetime.strptime(date_end, date_fmt.strip()).date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format")
+    if start > end:
+        raise HTTPException(
+            status_code=400, detail="date_start cannot be after date_end"
+        )
 
-    if date_start or date_end:
-        if date_start and date_end:
+    # Parse status filter
+    cstatus_list = [CStatus.DONE]
+    if status:
+        cstatus_list = []
+        for s in status.split(","):
             try:
-                start = datetime.strptime(date_start, date_fmt.strip())
-                end = datetime.strptime(date_end, date_fmt.strip())
-            except ValueError:
-                raise HTTPException(status_code=400, detail="Invalid date format")
-            ticked_days = [x for x in ticked_days if start.date() <= x <= end.date()]
-        else:
-            raise HTTPException(
-                status_code=400, detail="Both date_start and date_end are required"
-            )
+                cstatus_list.append(CStatus[s.strip().upper()])
+            except KeyError:
+                raise HTTPException(status_code=400, detail=f"Invalid status: {s}")
+
+    habit = await views.get_user_habit(user, habit_id)
+    status_map = get_habit_date_completion(habit, start, end)
+    ticked_days = [
+        day
+        for day, stat in status_map.items()
+        if any(s in stat for s in cstatus_list) and start <= day <= end
+    ]
 
     if sort not in ("asc", "desc"):
         raise HTTPException(status_code=400, detail="Invalid sort value")
@@ -167,13 +203,14 @@ async def put_habit_completions(
     user: User = Depends(current_active_user),
 ):
     try:
-        day = datetime.strptime(tick.date, tick.date_fmt.strip()).date()
+        day = datetime.datetime.strptime(tick.date, tick.date_fmt.strip()).date()
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format")
 
     habit = await views.get_user_habit(user, habit_id)
     await habit.tick(day, tick.done, tick.text)
     return {"day": day.strftime(tick.date_fmt), "done": tick.done}
+
 
 def format_json_response(habit: Habit) -> dict:
     return {
@@ -185,6 +222,7 @@ def format_json_response(habit: Habit) -> dict:
         "period": habit.period,
         "tags": habit.tags,
     }
+
 
 def init_api_routes(app: FastAPI) -> None:
     app.include_router(api_router, prefix="/api/v1")
