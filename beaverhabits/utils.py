@@ -98,14 +98,11 @@ def get_user_dark_mode() -> bool | None:
     return dark
 
 
-async def get_user_today_date() -> datetime.date:
-    timezone = await get_or_create_user_timezone()
-    today = datetime.datetime.now(pytz.timezone(timezone)).date()
+def _align_today(today: datetime.date) -> datetime.date:
+    """Apply ALIGN_TODAY_TO_DAY_OF_WEEK setting to a date and return adjusted date.
 
-    # Add ALIGN_TODAY_TO_DAY_OF_WEEK config option to allow users to
-    # anchor "today" to a specific day of the week (e.g., Sunday).
-    # This enables displaying a complete week (Monday-Sunday) even
-    # when current day is mid-week.
+    If the setting is None, the date is returned unchanged.
+    """
     if settings.ALIGN_TODAY_TO_DAY_OF_WEEK is not None:
         if (
             settings.ALIGN_TODAY_TO_DAY_OF_WEEK < 0
@@ -120,6 +117,39 @@ async def get_user_today_date() -> datetime.date:
         today = today + datetime.timedelta(days=delta_days)
 
     return today
+
+
+def get_or_create_user_timezone_sync() -> str:
+    """Synchronous variant of `get_or_create_user_timezone`.
+
+    Returns the stored timezone if available. If not, registers the
+    async `fetch_user_timezone` to run on next client connect and
+    returns 'UTC' as a safe fallback.
+    """
+    try:
+        if timezone := app.storage.user.get(TIME_ZONE_KEY):
+            return timezone
+    except Exception as e:
+        logger.error(f"Error reading user timezone from storage: {e}")
+
+    try:
+        ui.context.client.on_connect(fetch_user_timezone)
+    except Exception as e:
+        logger.debug(f"Could not register fetch_user_timezone on connect: {e}")
+
+    return "UTC"
+
+
+def get_user_today_date_sync() -> datetime.date:
+    timezone = get_or_create_user_timezone_sync()
+    today = datetime.datetime.now(pytz.timezone(timezone)).date()
+    return _align_today(today)
+
+
+async def get_user_today_date() -> datetime.date:
+    timezone = await get_or_create_user_timezone()
+    today = datetime.datetime.now(pytz.timezone(timezone)).date()
+    return _align_today(today)
 
 
 async def dummy_days(days: int) -> list[datetime.date]:

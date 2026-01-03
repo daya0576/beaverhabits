@@ -643,14 +643,16 @@ class CalendarCheckBox(ui.checkbox):
         self.props(f'unchecked-icon="{unchecked_icon}"')
         self.props(f'checked-icon="{checked_icon}"')
 
+        # Click event
         self.on_value_change(self._async_click_task)
-        if readonly:
-            self.on("mousedown.prevent", lambda: True)
-            self.on("touchstart.prevent", lambda: True)
 
         # Hold on event flag
         self.props(f'data-long-press-delay="{PRESS_DELAY}"')
         self.on("long-press", self._async_long_press_task)
+
+        if readonly:
+            self.on("mousedown.prevent")
+            self.on("touchstart.prevent")
 
     def _icon_svg(self):
         # Customize icon colors
@@ -696,8 +698,8 @@ class CalendarCheckBox(ui.checkbox):
             update_square_style_context(tags, checked_style)
 
         return (
-            icons.SQUARE.format(**unchecked_style),
-            icons.SQUARE.format(**checked_style),
+            icons.get_or_create_square_svg(**unchecked_style),
+            icons.get_or_create_square_svg(**checked_style),
         )
 
     async def _async_click_task(self, e: events.ValueChangeEventArguments):
@@ -1392,5 +1394,3 @@ def habit_name_menu(
     name.on("contextmenu", menu.open)
 
     return name
-
-
