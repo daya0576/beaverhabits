@@ -17,7 +17,7 @@ from beaverhabits.frontend.components import (
     separator,
 )
 from beaverhabits.frontend.javascript import PREVENT_CONTEXT_MENU
-from beaverhabits.frontend.menu import add_menu, date_pick_menu, sort_menu
+from beaverhabits.frontend.menu import add_menu, sort_menu, stats_date_pick_menu
 from beaverhabits.storage.meta import (
     get_root_path,
     is_page_demo,
@@ -164,7 +164,7 @@ def layout(
                     sort_menu(habit_list)
             elif "stats" in page_path() and page_ui:
                 with menu_icon_button("sym_o_expand_content", tooltip="Date"):
-                    date_pick_menu(page_ui)
+                    stats_date_pick_menu()
 
             with menu_icon_button("sym_o_menu"):
                 menu_component()
