@@ -66,7 +66,7 @@ img:data:image/svg+xml;charset=utf8,\
 </svg>\
 """
 
-@lru_cache(maxsize=1024)
+@lru_cache
 def get_or_create_square_svg(*args, **kwargs) -> str:
     return SQUARE.format(*args, **kwargs)
 

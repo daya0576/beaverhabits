@@ -113,6 +113,10 @@ def menu_component():
             with ui.item_section().props("side").classes("pl-[1px]"):
                 ui.icon("keyboard_arrow_right")
             with ui.menu().props('anchor="top end" self="top start" auto-close'):
+                # Stats for all habtis
+                menu_icon_item("Reorder", lambda: redirect("order"))
+                separator()
+
                 # Export & import
                 menu_icon_item("Export", lambda: redirect("export"))
                 separator()
