@@ -18,6 +18,12 @@ logger.info("Starting BeaverHabits...")
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    # Validate configuration
+    if settings.REQUIRE_ADMIN_FOR_REGISTRATION and not settings.ADMIN_EMAIL:
+        raise RuntimeError(
+            "ADMIN_EMAIL must be set when REQUIRE_ADMIN_FOR_REGISTRATION is enabled"
+        )
+
     # Enable warning msg
     if settings.DEBUG:
         logger.info("Debug mode enabled")

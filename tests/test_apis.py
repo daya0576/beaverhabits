@@ -11,6 +11,7 @@ from loguru import logger
 from nicegui import core
 
 from beaverhabits.app.db import User, engine
+from beaverhabits.configs import settings
 from beaverhabits.main import app
 
 PASSWORD = "TestPassword123!"
@@ -106,6 +107,36 @@ async def test_create_user(client: TestClient):
     assert response.status_code == 201
     assert response.json()["email"] == email
     assert response.json()["is_active"] == True
+
+
+async def test_open_registration(client: TestClient):
+    """Test that /auth/register works without auth when REQUIRE_ADMIN_FOR_REGISTRATION=False."""
+    original = settings.REQUIRE_ADMIN_FOR_REGISTRATION
+    settings.REQUIRE_ADMIN_FOR_REGISTRATION = False
+
+    try:
+        email = f"newuser_{datetime.now().timestamp()}@test.com"
+        data = {"email": email, "password": PASSWORD}
+        response = client.post("/auth/register", json=data)
+
+        assert response.status_code == 201
+        assert response.json()["email"] == email
+    finally:
+        settings.REQUIRE_ADMIN_FOR_REGISTRATION = original
+
+
+async def test_register_requires_admin_auth_when_disabled(client: TestClient):
+    """Test that /auth/register requires admin auth when REQUIRE_ADMIN_FOR_REGISTRATION=True."""
+    original = settings.REQUIRE_ADMIN_FOR_REGISTRATION
+    settings.REQUIRE_ADMIN_FOR_REGISTRATION = True
+
+    try:
+        email = f"newuser_{datetime.now().timestamp()}@test.com"
+        data = {"email": email, "password": PASSWORD}
+        response = client.post("/auth/register", json=data)
+        assert response.status_code == 401
+    finally:
+        settings.REQUIRE_ADMIN_FOR_REGISTRATION = original
 
 
 async def test_obtain_access_token(test_user, client: TestClient):
@@ -536,6 +567,112 @@ def test_completions_date_range_validation(
     )
 
     assert response.status_code == 400
+
+
+# ============================================================================
+# Admin API Tests
+# ============================================================================
+
+
+@pytest.fixture
+async def admin_user(client: TestClient):
+    """Create an admin user and enable admin-only registration."""
+    from beaverhabits.configs import settings
+
+    email = f"admin_{datetime.now().timestamp()}@test.com"
+    original_admin_email = settings.ADMIN_EMAIL
+    original_require_admin = settings.REQUIRE_ADMIN_FOR_REGISTRATION
+
+    # First create the admin user with open registration
+    settings.ADMIN_EMAIL = email
+    response = client.post(
+        "/auth/register",
+        json={"email": email, "password": PASSWORD},
+    )
+    assert response.status_code == 201
+    user_data = response.json()
+    user = User(**user_data)
+
+    # Now enable admin-only registration for the tests
+    settings.REQUIRE_ADMIN_FOR_REGISTRATION = True
+
+    yield user
+
+    # Cleanup
+    settings.ADMIN_EMAIL = original_admin_email
+    settings.REQUIRE_ADMIN_FOR_REGISTRATION = original_require_admin
+
+
+@pytest.fixture
+async def admin_headers(admin_user: User, client: TestClient):
+    """Get authorization headers for admin user."""
+    response = client.post(
+        "/auth/login",
+        data={
+            "grant_type": "password",
+            "username": admin_user.email,
+            "password": PASSWORD,
+        },
+        headers={"content-type": "application/x-www-form-urlencoded"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    return {
+        "Authorization": f"Bearer {token}",
+        "accept": "application/json",
+    }
+
+
+async def test_admin_can_register_user(admin_headers, client: TestClient):
+    """Test that admin can register a new user via /auth/register."""
+    new_user_email = f"newuser_{datetime.now().timestamp()}@test.com"
+    response = client.post(
+        "/auth/register",
+        json={"email": new_user_email, "password": PASSWORD},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["email"] == new_user_email
+    assert data["is_active"]
+
+
+async def test_admin_register_duplicate_email_fails(admin_headers, client: TestClient):
+    """Test that registering a user with existing email fails."""
+    email = f"duplicate_{datetime.now().timestamp()}@test.com"
+
+    # Create first user
+    response1 = client.post(
+        "/auth/register",
+        json={"email": email, "password": PASSWORD},
+        headers=admin_headers,
+    )
+    assert response1.status_code == 201
+
+    # Try to create duplicate
+    response2 = client.post(
+        "/auth/register",
+        json={"email": email, "password": PASSWORD},
+        headers=admin_headers,
+    )
+    assert response2.status_code == 400
+
+
+async def test_non_admin_cannot_register_user(auth_headers, client: TestClient):
+    """Test that non-admin users cannot register new users when admin-only mode is enabled."""
+    original = settings.REQUIRE_ADMIN_FOR_REGISTRATION
+    settings.REQUIRE_ADMIN_FOR_REGISTRATION = True
+
+    try:
+        response = client.post(
+            "/auth/register",
+            json={"email": "should_fail@test.com", "password": PASSWORD},
+            headers=auth_headers,
+        )
+        assert response.status_code == 401
+    finally:
+        settings.REQUIRE_ADMIN_FOR_REGISTRATION = original
 
 
 # ============================================================================

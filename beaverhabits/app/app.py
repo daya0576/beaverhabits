@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
+from .dependencies import require_admin_for_registration
 from .schemas import UserCreate, UserRead, UserUpdate
 from .users import auth_backend, fastapi_users
 
@@ -12,6 +13,7 @@ def init_auth_routes(app: FastAPI) -> None:
         fastapi_users.get_register_router(UserRead, UserCreate),
         prefix="/auth",
         tags=["auth"],
+        dependencies=[Depends(require_admin_for_registration)],
     )
     app.include_router(
         fastapi_users.get_reset_password_router(),
