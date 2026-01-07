@@ -14,7 +14,7 @@ if [ "$1" = "prd" ]; then
         export NICEGUI_STORAGE_PATH=".user/.nicegui"
     fi
     # we also use a single worker in production mode so socket.io connections are always handled by the same worker
-    gunicorn beaverhabits.main:app --bind 0.0.0.0:8080 -w 1 -k uvicorn_worker.UvicornWorker --max-requests 5000 --log-level info
+    gunicorn beaverhabits.main:app --bind 0.0.0.0:8080 -w 1 -k uvicorn_worker.UvicornWorker --max-requests 15000 --log-level info
 elif [ "$1" = "dev" ]; then
     echo "Starting Uvicorn server in development mode..."
     # reload implies workers = 1
