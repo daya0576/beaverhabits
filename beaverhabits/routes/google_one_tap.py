@@ -16,6 +16,11 @@ def google_one_tap_login() -> None:
     if not settings.GOOGLE_ONE_TAP_ENABLED:
         return
 
+    assert settings.GOOGLE_ONE_TAP_CLIENT_ID, "GOOGLE_ONE_TAP_CLIENT_ID is not set"
+    assert (
+        settings.GOOGLE_ONE_TAP_CALLBACK_URL
+    ), "GOOGLE_ONE_TAP_CALLBACK_URL is not set"
+
     logger.info("Google One Tap login is enabled")
     user_info = app.storage.user.get("user_info", {})
     if not _is_valid(user_info):
