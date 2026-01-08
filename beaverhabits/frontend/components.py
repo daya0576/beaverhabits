@@ -653,7 +653,6 @@ class CalendarCheckBox(ui.checkbox):
             self.props(f'data-long-press-delay="{PRESS_DELAY}"')
             self.on("long-press", self._async_long_press_task)
 
-
     def _icon_svg(self):
         # Customize icon colors
         unchecked_text_color = checked_text_color = "rgb(255,255,255)"
