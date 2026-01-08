@@ -9,7 +9,7 @@ from beaverhabits.frontend.components import (
     habit_history,
     habit_notes,
 )
-from beaverhabits.frontend.css import CHECK_BOX_CSS, MARKDOWN_CSS
+from beaverhabits.frontend.css import CHECK_BOX_CSS, NOTE_CSS
 from beaverhabits.frontend.layout import layout
 from beaverhabits.storage.storage import Habit
 
@@ -52,7 +52,7 @@ def notes(habit: Habit, limit: int = 100):
 
 def heatmap_page(today: datetime.date, habit: Habit):
     ui.add_css(CHECK_BOX_CSS)
-    ui.add_css(MARKDOWN_CSS)
+    ui.add_css(NOTE_CSS)
 
     # Header
     with layout(title=habit.name):

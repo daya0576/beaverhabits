@@ -39,7 +39,12 @@ HIDE_TIMELINE_TITLE = """\
 }
 """
 
-MARKDOWN_CSS = """
+NOTE_CSS = """
+.q-textarea textarea {
+  field-sizing: content;
+  min-height: 118px;
+}
+
 .q-timeline .q-timeline__content {
     white-space: break-spaces;
 }
@@ -63,6 +68,17 @@ YOUTUBE_CSS = """
     height: 100%;
 }
 """
+
+TEXTAREA_CSS = """
+.textarea-style {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+"""
+
 
 WHITE_FLASH_PREVENT = """\
 :root {
