@@ -286,3 +286,8 @@ def apply_theme_style() -> None:
     if custom_css:
         ui.add_head_html(f"<style>{custom_css}</style>")
         logger.info(f"Applied custom CSS...")
+
+
+async def promote_user_to_pro(email: str, pro: bool = True) -> None:
+    customer = await crud.get_or_create_user_identity(email, email, "", {})
+    await crud.update_user_identity(customer.email, {}, activate=pro)

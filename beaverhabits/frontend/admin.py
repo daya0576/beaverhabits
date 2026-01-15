@@ -1,5 +1,6 @@
-from nicegui import ui
+from nicegui import background_tasks, ui
 
+from beaverhabits import views
 from beaverhabits.app import crud
 from beaverhabits.app.db import User
 from beaverhabits.frontend.layout import layout
@@ -23,3 +24,19 @@ async def admin_page(user: User):
             for customer in customers
         ]
         ui.table(rows=rows)
+
+        ui.separator()
+
+        user_email = ui.input(label="User email")
+        ui.button(
+            "Promote to Pro",
+            on_click=lambda: background_tasks.create_lazy(
+                views.promote_user_to_pro(user_email.value), name="promote_user"
+            ),
+        )
+        ui.button(
+            "Demote from Pro",
+            on_click=lambda: background_tasks.create_lazy(
+                views.promote_user_to_pro(user_email.value, False), name="demote_user"
+            ),
+        )
