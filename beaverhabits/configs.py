@@ -65,6 +65,7 @@ class Settings(BaseSettings):
     TRUSTED_LOCAL_EMAIL: str = ""
     RESET_PASSWORD_TOKEN_SECRET: str = ""
     RESET_PASSWORD_TOKEN_LIFETIME_SECONDS: int = 60 * 60  # 1 hour
+    REQUIRE_ADMIN_FOR_REGISTRATION: bool = False  # Require admin auth to register users
 
     # Customization
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
