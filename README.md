@@ -56,7 +56,7 @@ services:
     user: 1000:1000 # User permissions of your docker or default user.
     environment:
       # See the link below to find all the environment variables
-      # https://github.com/daya0576/beaverhabits/wiki/Development#options
+      # https://github.com/daya0576/beaverhabits/wiki/Environment-variables
       - HABITS_STORAGE=USER_DISK # DATABASE stores in a single SQLite database named habits.db. USER_DISK option saves in a local json file.
       - TRUSTED_LOCAL_EMAIL=your@email.com # Skip authentication
       - INDEX_HABIT_DATE_COLUMNS=5 # Customize the date columns for the index page.
