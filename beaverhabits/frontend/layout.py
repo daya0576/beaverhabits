@@ -114,6 +114,7 @@ def custom_headers():
 
     # Prevent white flash on page load
     ui.add_css(css.WHITE_FLASH_PREVENT)
+    ui.add_css(css.TEXTAREA_CSS)
 
     # prevent context menu
     ui.add_body_html(f"<script>{PREVENT_CONTEXT_MENU}</script>")
