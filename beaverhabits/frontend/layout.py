@@ -50,12 +50,56 @@ def pwa_headers():
 
 
 def custom_headers():
+    # Get current page info
+    page_url = "https://beaverhabits.com" + page_path()
+    
     # SEO meta tags
     ui.add_head_html(
-        """
-        <meta name="description" content="A self-hosted habit tracking app without Goals">
-        <meta name="keywords" content="habit, habit tracker, habit tracking, self-hosted, productivity">
+        f"""
+        <!-- Basic Meta Tags -->
+        <meta name="description" content="A minimal habit tracking app without Goals. Track your daily habits with a simple, privacy-focused interface.">
+        <meta name="keywords" content="habit tracker, habit tracking, self-hosted, productivity, daily habits, habit building, open source">
         <meta name="author" content="daya0576">
+        <meta name="robots" content="index, follow">
+        <link rel="canonical" href="{page_url}">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{page_url}">
+        <meta property="og:title" content="Beaver Habit Tracker">
+        <meta property="og:description" content="A minimal habit tracking app without Goals. Track your daily habits with privacy and simplicity.">
+        <meta property="og:image" content="https://beaverhabits.com/statics/images/apple-touch-icon-v4.png">
+        <meta property="og:site_name" content="Beaver Habit Tracker">
+        
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:url" content="{page_url}">
+        <meta name="twitter:title" content="Beaver Habit Tracker">
+        <meta name="twitter:description" content="A minimal habit tracking app without Goals. Track your daily habits with privacy and simplicity.">
+        <meta name="twitter:image" content="https://beaverhabits.com/statics/images/apple-touch-icon-v4.png">
+        
+        <!-- Structured Data (JSON-LD) -->
+        <script type="application/ld+json">
+        {{
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Beaver Habit Tracker",
+            "url": "https://beaverhabits.com",
+            "description": "A minimal habit tracking app without Goals",
+            "applicationCategory": "ProductivityApplication",
+            "operatingSystem": "Web, iOS, Android",
+            "offers": {{
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            }},
+            "author": {{
+                "@type": "Person",
+                "name": "daya0576",
+                "url": "https://github.com/daya0576"
+            }}
+        }}
+        </script>
         """
     )
 

@@ -334,6 +334,17 @@ if settings.ENABLE_PLAN:
 
 
 def init_gui_routes(fastapi_app: FastAPI):
+    # SEO: robots.txt and sitemap.xml endpoints
+    from fastapi.responses import FileResponse
+    
+    @fastapi_app.get("/robots.txt")
+    async def robots():
+        return FileResponse("statics/robots.txt", media_type="text/plain")
+    
+    @fastapi_app.get("/sitemap.xml")
+    async def sitemap():
+        return FileResponse("statics/sitemap.xml", media_type="application/xml")
+    
     def handle_exception(exception: Exception):
         if isinstance(exception, HTTPException):
             if exception.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
