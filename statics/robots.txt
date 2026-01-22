@@ -1,0 +1,24 @@
+# Beaver Habit Tracker - robots.txt
+
+User-agent: *
+Allow: /
+Allow: /demo
+Allow: /pricing
+Allow: /terms
+Allow: /privacy
+
+# Disallow authenticated pages
+Disallow: /gui/
+Disallow: /login
+Disallow: /register
+Disallow: /admin
+Disallow: /settings
+
+# Disallow API endpoints
+Disallow: /api/
+Disallow: /auth/
+Disallow: /metrics
+Disallow: /health
+
+# Sitemap
+Sitemap: https://beaverhabits.com/sitemap.xml
