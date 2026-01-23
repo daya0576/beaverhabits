@@ -1,9 +1,7 @@
-import contextvars
-from typing import Annotated, Callable, Optional
+from typing import Annotated, Optional
 
 from fastapi import Depends, HTTPException, Request
 from fastapi.security.utils import get_authorization_scheme_param
-from fastapi_users.jwt import decode_jwt
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from beaverhabits import views

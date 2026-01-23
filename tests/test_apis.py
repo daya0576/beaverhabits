@@ -6,12 +6,18 @@ Tests cover: authentication, habit CRUD operations, and habit completions.
 from datetime import date, datetime
 
 import pytest
+from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 from loguru import logger
 from nicegui import core
 
 from beaverhabits.app.db import User, engine
+from beaverhabits.app.dependencies import current_admin_user
+from beaverhabits.app.schemas import UserCreate, UserRead
+from beaverhabits.app.users import auth_backend, fastapi_users
+from beaverhabits.configs import settings
 from beaverhabits.main import app
+from beaverhabits.routes.api import init_api_routes
 
 PASSWORD = "TestPassword123!"
 
@@ -21,12 +27,39 @@ PASSWORD = "TestPassword123!"
 # ============================================================================
 
 
+def create_app_with_admin_registration() -> FastAPI:
+    """Create a fresh FastAPI app with REQUIRE_ADMIN_FOR_REGISTRATION=True."""
+    test_app = FastAPI()
+
+    # Auth routes with admin-protected registration
+    test_app.include_router(
+        fastapi_users.get_auth_router(auth_backend), prefix="/auth", tags=["auth"]
+    )
+    test_app.include_router(
+        fastapi_users.get_register_router(UserRead, UserCreate),
+        prefix="/auth",
+        tags=["auth"],
+        dependencies=[Depends(current_admin_user)],  # Always require admin
+    )
+
+    init_api_routes(test_app)
+    return test_app
+
+
 @pytest.fixture(name="client", scope="module")
 async def client_fixture():
     with TestClient(app, raise_server_exceptions=True) as client:
         yield client
 
     await engine.dispose()
+
+
+@pytest.fixture(name="admin_protected_client", scope="module")
+async def admin_protected_client_fixture():
+    """Client for testing admin-protected registration."""
+    test_app = create_app_with_admin_registration()
+    with TestClient(test_app, raise_server_exceptions=True) as client:
+        yield client
 
 
 @pytest.fixture
@@ -106,6 +139,24 @@ async def test_create_user(client: TestClient):
     assert response.status_code == 201
     assert response.json()["email"] == email
     assert response.json()["is_active"] == True
+
+
+async def test_open_registration(client: TestClient):
+    """Test that /auth/register works without auth when REQUIRE_ADMIN_FOR_REGISTRATION=False (default)."""
+    email = f"newuser_{datetime.now().timestamp()}@test.com"
+    data = {"email": email, "password": PASSWORD}
+    response = client.post("/auth/register", json=data)
+
+    assert response.status_code == 201
+    assert response.json()["email"] == email
+
+
+async def test_register_requires_admin_auth_when_enabled(admin_protected_client: TestClient):
+    """Test that /auth/register requires admin auth when REQUIRE_ADMIN_FOR_REGISTRATION=True."""
+    email = f"newuser_{datetime.now().timestamp()}@test.com"
+    data = {"email": email, "password": PASSWORD}
+    response = admin_protected_client.post("/auth/register", json=data)
+    assert response.status_code == 401
 
 
 async def test_obtain_access_token(test_user, client: TestClient):
@@ -536,6 +587,106 @@ def test_completions_date_range_validation(
     )
 
     assert response.status_code == 400
+
+
+# ============================================================================
+# Admin API Tests
+# ============================================================================
+
+
+@pytest.fixture
+async def admin_user(client: TestClient):
+    """Create an admin user using open registration (default client)."""
+    email = f"admin_{datetime.now().timestamp()}@test.com"
+    original_admin_email = settings.ADMIN_EMAIL
+
+    # Set this user as admin
+    settings.ADMIN_EMAIL = email
+
+    # Create the admin user with open registration
+    response = client.post(
+        "/auth/register",
+        json={"email": email, "password": PASSWORD},
+    )
+    assert response.status_code == 201
+    user_data = response.json()
+    user = User(**user_data)
+
+    yield user
+
+    # Cleanup
+    settings.ADMIN_EMAIL = original_admin_email
+
+
+@pytest.fixture
+async def admin_access_token(admin_user: User, client: TestClient):
+    """Get access token for admin user."""
+    response = client.post(
+        "/auth/login",
+        data={
+            "grant_type": "password",
+            "username": admin_user.email,
+            "password": PASSWORD,
+        },
+        headers={"content-type": "application/x-www-form-urlencoded"},
+    )
+    assert response.status_code == 200
+    return response.json()["access_token"]
+
+
+@pytest.fixture
+async def admin_headers(admin_access_token: str):
+    """Get authorization headers for admin user."""
+    return {
+        "Authorization": f"Bearer {admin_access_token}",
+        "accept": "application/json",
+    }
+
+
+async def test_admin_can_register_user(admin_headers, admin_protected_client: TestClient):
+    """Test that admin can register a new user via /auth/register when admin-protected."""
+    new_user_email = f"newuser_{datetime.now().timestamp()}@test.com"
+    response = admin_protected_client.post(
+        "/auth/register",
+        json={"email": new_user_email, "password": PASSWORD},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["email"] == new_user_email
+    assert data["is_active"]
+
+
+async def test_admin_register_duplicate_email_fails(admin_headers, admin_protected_client: TestClient):
+    """Test that registering a user with existing email fails."""
+    email = f"duplicate_{datetime.now().timestamp()}@test.com"
+
+    # Create first user
+    response1 = admin_protected_client.post(
+        "/auth/register",
+        json={"email": email, "password": PASSWORD},
+        headers=admin_headers,
+    )
+    assert response1.status_code == 201
+
+    # Try to create duplicate
+    response2 = admin_protected_client.post(
+        "/auth/register",
+        json={"email": email, "password": PASSWORD},
+        headers=admin_headers,
+    )
+    assert response2.status_code == 400
+
+
+async def test_non_admin_cannot_register_user(auth_headers, admin_protected_client: TestClient):
+    """Test that non-admin users cannot register new users when admin-only mode is enabled."""
+    response = admin_protected_client.post(
+        "/auth/register",
+        json={"email": "should_fail@test.com", "password": PASSWORD},
+        headers=auth_headers,
+    )
+    assert response.status_code == 401
 
 
 # ============================================================================
