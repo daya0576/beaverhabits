@@ -2,7 +2,7 @@ import io
 from typing import Annotated, Optional
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile, status
-from fastapi.responses import RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 from nicegui import Client, app, ui
 
 from beaverhabits import const, views
@@ -306,39 +306,8 @@ async def get_note_image(image_id: str, user: User = Depends(current_active_user
     return StreamingResponse(io.BytesIO(img.blob), media_type="image/png")
 
 
-if settings.ENABLE_PLAN:
-    from beaverhabits.frontend.paddle_page import PRIVACY, TERMS
-
-    @ui.page("/terms")
-    def terms_page():
-        paddle_page.markdown(TERMS)
-
-    @ui.page("/privacy")
-    def privacy_page():
-        paddle_page.markdown(PRIVACY)
-
-    @ui.page("/admin", include_in_schema=False)
-    async def admin(user: User = Depends(current_admin_user)):
-        await admin_page(user)
-
-    @ui.page("/admin/backup", include_in_schema=False)
-    async def manual_backup(user: User = Depends(current_admin_user)):
-        logger.info(f"Starting backup, triggered by {user.email}")
-        await views.backup_all_users()
-
 
 def init_gui_routes(fastapi_app: FastAPI):
-    # SEO: robots.txt and sitemap.xml endpoints
-    from fastapi.responses import FileResponse
-    
-    @fastapi_app.get("/robots.txt")
-    async def robots():
-        return FileResponse("statics/robots.txt", media_type="text/plain")
-    
-    @fastapi_app.get("/sitemap.xml")
-    async def sitemap():
-        return FileResponse("statics/sitemap.xml", media_type="application/xml")
-    
     def handle_exception(exception: Exception):
         if isinstance(exception, HTTPException):
             if exception.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
