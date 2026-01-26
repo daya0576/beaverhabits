@@ -18,6 +18,12 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
+      - name: Fetch beaverhabits-landing dist
+        run: |
+          rm -rf statics/astro/dist
+          git clone --depth 1 --branch dist https://github.com/daya0576/beaverhabits-landing.git statics/astro/dist
+          rm -rf statics/astro/dist/.git
+
       - name: Generate Version Info
         run: |
           GIT_HASH=$(git rev-parse --short HEAD)
