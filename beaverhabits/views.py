@@ -145,8 +145,12 @@ async def login_user(user: User) -> None:
     if token is not None:
         app.storage.user.update({"auth_token": token})
         logger.info(f"User {user.email} logged in successfully, token: {token[:4]}***")
+        # Set email in cookie for cross-app usage
+        ui.run_javascript(f'document.cookie = "email={user.email}; path=/; SameSite=Lax";')
 
     await cache_user_configs(user)
+
+    
 
 
 async def register_user(email: str, password: str = "") -> User:

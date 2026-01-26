@@ -18,11 +18,17 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
-      - name: Fetch beaverhabits-landing dist
+      - name: Build beaverhabits-landing and copy dist
         run: |
           rm -rf statics/astro/dist
-          git clone --depth 1 --branch dist https://oauth2:${{ secrets.GH_PAT }}@github.com/daya0576/beaverhabits-landing.git statics/astro/dist
-          rm -rf statics/astro/dist/.git
+          git clone --depth 1 --branch main https://oauth2:${{ secrets.GH_PAT }}@github.com/daya0576/beaverhabits-landing.git landing_tmp
+          cd landing_tmp
+          npm ci
+          npm run build
+          cd ..
+          mkdir -p statics/astro/dist
+          cp -r landing_tmp/dist/* statics/astro/dist/
+          rm -rf landing_tmp
 
       - name: Generate Version Info
         run: |

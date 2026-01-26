@@ -18,6 +18,7 @@ from beaverhabits.frontend.components import (
 )
 from beaverhabits.frontend.javascript import PREVENT_CONTEXT_MENU
 from beaverhabits.frontend.menu import add_menu, sort_menu, stats_date_pick_menu
+from beaverhabits.plan import plan
 from beaverhabits.storage.meta import (
     get_root_path,
     is_page_demo,
@@ -52,7 +53,7 @@ def pwa_headers():
 def custom_headers():
     # Get current page info
     page_url = "https://beaverhabits.com" + page_path()
-    
+
     # SEO meta tags
     ui.add_head_html(
         f"""

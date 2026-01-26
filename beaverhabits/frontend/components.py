@@ -382,13 +382,14 @@ class HabitNameInput(ui.input):
 
     async def _on_keydown_enter(self):
         await self._save(self.value)
-        ui.notify("Habit name saved")
 
     async def _on_blur(self):
         await self._save(self.value)
 
+    @plan.pro_required("Update pro to edit habit name and tags")
     async def _save(self, value: str):
         name, tags = self.decode_name(value)
+
         self.habit.name = name
         logger.info(f"Habit Name changed to {name}")
         self.habit.tags = tags
@@ -399,6 +400,8 @@ class HabitNameInput(ui.input):
         if self.habit.tags:
             if self.refresh:
                 self.refresh()
+        
+        ui.notify("Habit name saved")
 
     def _validate(self, value: str) -> Optional[str]:
         if not value:
