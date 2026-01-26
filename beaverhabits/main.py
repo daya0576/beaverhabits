@@ -9,6 +9,7 @@ from beaverhabits.app.db import create_db_and_tables
 from beaverhabits.configs import settings
 from beaverhabits.logger import logger
 from beaverhabits.routes.api import init_api_routes
+from beaverhabits.routes.astro import init_astro_routes
 from beaverhabits.routes.metrics import init_metrics_routes
 from beaverhabits.routes.routes import init_gui_routes
 from beaverhabits.scheduler import daily_backup_task
@@ -54,6 +55,9 @@ if settings.ENABLE_PLAN:
 
     init_paddle_routes(app)
 init_gui_routes(app)
+# Mount Astro last so other routes take precedence
+if settings.ENABLE_PLAN:
+    init_astro_routes(app)
 
 
 if settings.SENTRY_DSN:
