@@ -29,6 +29,9 @@ jobs:
           mkdir -p statics/astro/dist
           cp -r landing_tmp/dist/* statics/astro/dist/
           rm -rf landing_tmp
+        env:
+          PADDLE_CLIENT_SIDE_TOKEN: ${{ vars.PADDLE_CLIENT_SIDE_TOKEN }}
+          PADDLE_PRICE_ID: ${{ vars.PADDLE_PRICE_ID }}
 
       - name: Generate Version Info
         run: |
