@@ -23,7 +23,7 @@ async def checkout():
 
 def redirect_pricing(msg: str):
     ui.notify(msg, color="negative")
-    ui.timer(1.5, lambda: ui.navigate.to("/pricing"), once=True)
+    ui.timer(1.5, lambda: ui.navigate.to("/pricing#pricing"), once=True)
 
 
 async def check_pro() -> bool:
