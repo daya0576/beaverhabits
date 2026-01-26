@@ -308,12 +308,6 @@ async def get_note_image(image_id: str, user: User = Depends(current_active_user
 
 if settings.ENABLE_PLAN:
     from beaverhabits.frontend.paddle_page import PRIVACY, TERMS
-    from beaverhabits.frontend.pricing_page import landing_page
-
-    @ui.page("/")
-    @ui.page("/pricing")
-    async def pricing_page():
-        await landing_page()
 
     @ui.page("/terms")
     def terms_page():
