@@ -55,11 +55,13 @@ def init_astro_routes(fastapi_app: FastAPI) -> None:
             "/_astro", "statics/astro/dist/_astro", max_cache_age=7 * 24 * 60 * 60
         )
         app.add_static_files(
-            "/pricing", "statics/astro/dist/pricing", max_cache_age=7 * 24 * 60 * 60
+            "/landing", "statics/astro/dist/landing", max_cache_age=7 * 24 * 60 * 60
         )
 
         # Add explicit routes for landing page
         @fastapi_app.get("/")
+        @fastapi_app.get("/pricing")
+        @fastapi_app.get("/pricing/")
         async def landing_index():
             return FileResponse("statics/astro/dist/index.html", media_type="text/html")
 
