@@ -21,7 +21,7 @@ jobs:
       - name: Fetch beaverhabits-landing dist
         run: |
           rm -rf statics/astro/dist
-          git clone --depth 1 --branch dist https://oauth2:${{ secrets.GITHUB_TOKEN }}@github.com/daya0576/beaverhabits-landing.git statics/astro/dist
+          git clone --depth 1 --branch dist https://oauth2:${{ secrets.GH_PAT }}@github.com/daya0576/beaverhabits-landing.git statics/astro/dist
           rm -rf statics/astro/dist/.git
 
       - name: Generate Version Info
