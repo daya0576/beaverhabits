@@ -145,12 +145,8 @@ async def login_user(user: User) -> None:
     if token is not None:
         app.storage.user.update({"auth_token": token})
         logger.info(f"User {user.email} logged in successfully, token: {token[:4]}***")
-        # Set email in cookie for cross-app usage
-        ui.run_javascript(f'document.cookie = "email={user.email}; path=/; SameSite=Lax";')
 
     await cache_user_configs(user)
-
-    
 
 
 async def register_user(email: str, password: str = "") -> User:
@@ -295,3 +291,20 @@ def apply_theme_style() -> None:
 async def promote_user_to_pro(email: str, pro: bool = True) -> None:
     customer = await crud.get_or_create_user_identity(email, email, "", {})
     await crud.update_user_identity(customer.email, {}, activate=pro)
+
+
+async def set_user_cookies(user: User) -> None:
+    """Set user-related cookies for cross-app usage via JavaScript."""
+    if settings.ENABLE_PLAN is False:
+        return
+    
+    async def set_cookies_task():
+        # Set email cookie (add more properties as needed)
+        ui.run_javascript(f'document.cookie = "email={user.email}; path=/; SameSite=Lax";')
+
+        customer = await crud.get_user_identity(user.email)
+        is_pro = customer.activated if customer else False
+        ui.run_javascript(f'document.cookie = "is_pro={str(is_pro).lower()}; path=/; SameSite=Lax";')
+    
+    ui.timer(0.1, set_cookies_task, once=True)
+

@@ -116,6 +116,8 @@ async def index_page(
     habit_list = await views.get_user_habit_list(user)
     index_page_ui(days, habit_list)
 
+    await views.set_user_cookies(user)
+
 
 @ui.page("/gui/add")
 async def add_page(user: User = Depends(current_active_user)) -> None:
