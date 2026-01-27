@@ -1,0 +1,3 @@
+[submodule "statics/astro"]
+	path = statics/astro
+	url = https://github.com/daya0576/beaverhabits-landing.git
