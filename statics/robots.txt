@@ -4,13 +4,13 @@ User-agent: *
 Allow: /
 Allow: /demo
 Allow: /pricing
+Allow: /login
+Allow: /register
 Allow: /terms
 Allow: /privacy
 
 # Disallow authenticated pages
 Disallow: /gui/
-Disallow: /login
-Disallow: /register
 Disallow: /admin
 Disallow: /settings
 
@@ -20,5 +20,9 @@ Disallow: /auth/
 Disallow: /metrics
 Disallow: /health
 
+# Crawl delay to be polite
+Crawl-delay: 1
+
 # Sitemap
 Sitemap: https://beaverhabits.com/sitemap.xml
+Sitemap: https://beaverhabits.com/sitemap_index.xml
