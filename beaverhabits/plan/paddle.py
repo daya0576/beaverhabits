@@ -59,11 +59,10 @@ async def customer_created(data: dict) -> None:
 
 @callback("transaction.completed")
 async def transaction(data: dict) -> None:
-    email, customer_id = data["email"], data["id"]
-    await crud.get_or_create_user_identity(
-        email, customer_id, provider="paddle", data=data
-    )
-
+    customer_id = data.get("customer_id") or data.get("customer", {}).get("id")
+    if not customer_id:
+        logger.warning("Transaction completed missing customer_id in payload")
+        return
     await crud.update_user_identity(customer_id, data=data, activate=True)
     logger.info(f"Transaction completed for customer_id: {customer_id}")
 
