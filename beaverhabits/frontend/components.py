@@ -400,8 +400,6 @@ class HabitNameInput(ui.input):
         if self.habit.tags:
             if self.refresh:
                 self.refresh()
-        
-        ui.notify("Habit name saved")
 
     def _validate(self, value: str) -> Optional[str]:
         if not value:
