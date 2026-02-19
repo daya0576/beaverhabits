@@ -308,7 +308,6 @@ async def get_note_image(image_id: str, user: User = Depends(current_active_user
     return StreamingResponse(io.BytesIO(img.blob), media_type="image/png")
 
 
-
 def init_gui_routes(fastapi_app: FastAPI):
     def handle_exception(exception: Exception):
         if isinstance(exception, HTTPException):
@@ -332,7 +331,7 @@ def init_gui_routes(fastapi_app: FastAPI):
         if response.status_code == 401:
             # root_path = request.scope["root_path"]
             # app.storage.user["referrer_path"] = request.url.path.removeprefix(root_path)
-            return RedirectResponse(request.url_for(login_page.__name__))
+            return RedirectResponse("/login")
 
         return response
 
