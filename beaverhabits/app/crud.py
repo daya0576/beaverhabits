@@ -10,6 +10,7 @@ from beaverhabits.logger import logger
 from .db import (
     HabitListModel,
     User,
+    UserApiTokenModel,
     UserConfigsModel,
     UserIdentityModel,
     UserNoteImageModel,
@@ -198,4 +199,69 @@ async def get_user_image(uuid: UUID, user: User) -> UserNoteImageModel | None:
             logger.info(f"[CRUD] User {user} image retrieved: {user_image.unique_id}")
         else:
             logger.warning(f"[CRUD] User {user.id} image not found: {uuid}")
+
+
+async def get_user_api_token(user: User) -> str | None:
+    async with get_async_session_context() as session:
+        stmt = select(UserApiTokenModel).where(UserApiTokenModel.user_id == user.id)
+        result = await session.execute(stmt)
+        token_model = result.scalar()
+        if token_model:
+            return token_model.token
+        return None
+
+
+async def create_user_api_token(user: User) -> str:
+    import secrets
+
+    token = secrets.token_urlsafe(32)
+    async with get_async_session_context() as session:
+        token_model = UserApiTokenModel(token=token, user_id=user.id)
+        session.add(token_model)
+        await session.commit()
+        logger.info(f"[CRUD] User {user.id} API token created")
+        return token
+
+
+async def reset_user_api_token(user: User) -> str:
+    import secrets
+
+    new_token = secrets.token_urlsafe(32)
+    async with get_async_session_context() as session:
+        stmt = select(UserApiTokenModel).where(UserApiTokenModel.user_id == user.id)
+        result = await session.execute(stmt)
+        token_model = result.scalar()
+        if token_model:
+            token_model.token = new_token
+            await session.commit()
+            logger.info(f"[CRUD] User {user.id} API token reset")
+        else:
+            token_model = UserApiTokenModel(token=new_token, user_id=user.id)
+            session.add(token_model)
+            await session.commit()
+            logger.info(f"[CRUD] User {user.id} API token created (via reset)")
+        return new_token
+
+
+async def delete_user_api_token(user: User) -> None:
+    async with get_async_session_context() as session:
+        stmt = select(UserApiTokenModel).where(UserApiTokenModel.user_id == user.id)
+        result = await session.execute(stmt)
+        token_model = result.scalar()
+        if token_model:
+            await session.delete(token_model)
+            await session.commit()
+            logger.info(f"[CRUD] User {user.id} API token deleted")
+
+
+async def get_user_by_api_token(token: str) -> User | None:
+    async with get_async_session_context() as session:
+        stmt = select(UserApiTokenModel).where(UserApiTokenModel.token == token)
+        result = await session.execute(stmt)
+        token_model = result.scalar()
+        if token_model:
+            user_stmt = select(User).where(User.id == token_model.user_id)
+            user_result = await session.execute(user_stmt)
+            return user_result.scalar()
+        return None
         return user_image

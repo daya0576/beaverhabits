@@ -92,6 +92,18 @@ class UserNoteImageModel(TimestampMixin, Base):
     extra: Mapped[dict] = mapped_column(JSON, nullable=True)
 
 
+class UserApiTokenModel(TimestampMixin, Base):
+    """Standalone API token table. No ORM relationship to User — query by user_id."""
+
+    __tablename__ = "user_api_tokens"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    token: Mapped[str] = mapped_column(unique=True, index=True)
+    user_id = mapped_column(GUID, ForeignKey("user.id"), unique=True, index=True)
+    name: Mapped[str | None] = mapped_column(default=None)
+    extra: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+
 # SSL Mode: https://www.postgresql.org/docs/9.0/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS
 # p.s. asyncpg us ssl instead of sslmode: https://github.com/tortoise/aerich/issues/310
 connect_args = {}

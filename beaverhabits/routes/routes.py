@@ -36,6 +36,7 @@ from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.frontend.settings_page import settings_page
 from beaverhabits.frontend.stats_page import stats_page_ui
 from beaverhabits.frontend.streaks import heatmap_page
+from beaverhabits.frontend.tokens_page import tokens_page
 from beaverhabits.logger import logger
 from beaverhabits.routes.google_one_tap import google_one_tap_login
 from beaverhabits.storage import image_storage
@@ -173,6 +174,11 @@ async def gui_import(user: User = Depends(current_active_user)) -> None:
 @ui.page("/gui/settings")
 async def gui_settings(user: User = Depends(current_active_user)) -> None:
     await settings_page(user)
+
+
+@ui.page("/gui/tokens")
+async def gui_tokens(user: User = Depends(current_active_user)) -> None:
+    await tokens_page(user)
 
 
 @ui.page("/login")
