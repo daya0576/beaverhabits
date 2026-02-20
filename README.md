@@ -19,6 +19,7 @@ A self-hosted habit tracking app without "Goals"
 - [Apple Shortcut](https://github.com/daya0576/beaverhabits/discussions/50#discussion-7746029): A shortcut for sharing the App on iPhone
 - [Home Assistant Switch](https://github.com/daya0576/beaverhabits/issues/55#issuecomment-2569685687): A switch for home assistant to mark a habit as done
 - [CalDAV bridge](https://github.com/daya0576/beaverhabits/discussions/114): Run a calDAV server that hosts the habits as tasks
+- [OpenClaw Skill](https://clawhub.ai/daya0576/beaverhabits): An AI skill for managing habits via natural language
 - ...
 
 
