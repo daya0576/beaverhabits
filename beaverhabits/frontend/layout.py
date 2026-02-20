@@ -175,6 +175,10 @@ def menu_component():
                 menu_icon_item("Stats", lambda: redirect("stats"))
                 separator()
 
+                # API Tokens
+                menu_icon_item("API Tokens", lambda: redirect("tokens"))
+                separator()
+
         separator()
 
         # About page

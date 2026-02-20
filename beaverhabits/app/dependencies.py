@@ -10,6 +10,7 @@ from beaverhabits.app.auth import (
     user_from_token,
     user_get_by_email,
 )
+from beaverhabits.app.crud import get_user_by_api_token
 from beaverhabits.app.db import User
 from beaverhabits.configs import settings
 from beaverhabits.logger import logger
@@ -61,6 +62,10 @@ async def current_active_user(
         return user
 
     if credentials and (user := await user_from_token(credentials)):
+        return user
+
+    # Check API token (permanent tokens for integrations)
+    if credentials and (user := await get_user_by_api_token(credentials)):
         return user
 
     # ref: fastapi.security.oauth2.OAuth2PasswordBearer
