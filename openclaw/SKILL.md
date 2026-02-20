@@ -18,6 +18,8 @@ metadata:
 
 Track and manage your daily habits using the [Beaver Habit Tracker](https://beaverhabits.com) API.
 
+API documentation: [https://beaverhabits.com/docs](https://beaverhabits.com/docs)
+
 ## Setup
 
 ### Environment Variables
@@ -36,23 +38,35 @@ Track and manage your daily habits using the [Beaver Habit Tracker](https://beav
 
 ## Tools
 
-### list_habits
+### list_habits (overview)
 
-List all active habits.
+List all habits and show a weekly ASCII overview. This is the **default response** for any habit-related query.
+
+**Step 1** — Get all habits:
 
 ```bash
 curl -s -H "Authorization: Bearer $BEAVERHABITS_API_KEY" \
   "${SERVER_URL:-https://beaverhabits.com}/api/v1/habits"
 ```
 
-**Response:**
+**Step 2** — For each habit, get completions over the last 5 days:
 
-```json
-[
-  {"id": "f41e44", "name": "Running"},
-  {"id": "87e537", "name": "Reading"}
-]
+```bash
+curl -s -H "Authorization: Bearer $BEAVERHABITS_API_KEY" \
+  "${SERVER_URL:-https://beaverhabits.com}/api/v1/habits/{habit_id}/completions?date_fmt=%25d-%25m-%25Y&date_start={start}&date_end={end}&limit=100&sort=asc"
 ```
+
+**Step 3** — Render as ASCII table:
+
+```
+              Mon   Tue   Wed   Thu   Fri
+Clean          ✗     ✗     ✓     ✓     ✓
+Call mom       ✗     ✗     ✗     ✗     ✗
+Table Tennis   ✗     ✗     ✗     ✗     ✗
+Reading        ✗     ✗     ✗     ✗     ✗
+```
+
+Use `✓`/`✗` for done/not done. Default to 5 days ending today.
 
 ### complete_habit
 
@@ -77,32 +91,10 @@ curl -s -X POST \
 {"day": "20-02-2026", "done": true}
 ```
 
-### get_completions
-
-Show recent habit completions for a given habit.
-
-**Parameters:**
-- `habit_id` (resolved): Automatically resolved by calling `list_habits` and matching the user's habit name. Never ask the user for this value.
-- `date_start` (optional): Start date in DD-MM-YYYY format
-- `date_end` (optional): End date in DD-MM-YYYY format
-- `limit` (optional): Max number of results (default: 10)
-- `sort` (optional): `asc` or `desc` (default: `asc`)
-
-```bash
-curl -s -H "Authorization: Bearer $BEAVERHABITS_API_KEY" \
-  "${SERVER_URL:-https://beaverhabits.com}/api/v1/habits/{habit_id}/completions?date_fmt=%25d-%25m-%25Y&sort=desc&limit=10"
-```
-
-**Response:**
-
-```json
-["20-02-2026", "19-02-2026", "18-02-2026"]
-```
 
 ## Usage Instructions
 
-- **Always call `list_habits` first** before any other tool to resolve habit names to IDs. The user will refer to habits by name — never ask them for a `habit_id`.
-- When completing a habit, always use today's date unless the user specifies otherwise. Use `date_fmt=%d-%m-%Y` format.
-- When showing completions, default to the last 10 entries sorted descending (most recent first) unless the user asks differently.
-- If multiple habits match the user's input, ask the user to clarify which one they mean.
-- Always confirm the action taken (e.g., "Marked 'Running' as done for today").
+- When the user asks to list, show, or check habits, always respond with the ASCII overview table (not a plain list).
+- After completing or uncompleting a habit, always re-render the overview table to show the updated state.
+- Resolve habit names → IDs via `list_habits`. Never ask the user for a `habit_id`.
+- Default to today's date for completions unless specified. Use `date_fmt=%d-%m-%Y`.
