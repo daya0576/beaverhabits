@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh pr view:*)",
+      "Bash(git pull:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(git -C \"/Users/henry/repo/private/beaver_habits\" log --oneline -10)",
+      "Bash(uv:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(chmod:*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/henry/repo/private/beaver_habits/.claude/hooks/session_start.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}
