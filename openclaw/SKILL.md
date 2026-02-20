@@ -59,7 +59,7 @@ curl -s -H "Authorization: Bearer $BEAVERHABITS_API_KEY" \
 Mark a habit as done (or undone) for a specific date.
 
 **Parameters:**
-- `habit_id` (required): The habit ID from `list_habits`
+- `habit_id` (resolved): Automatically resolved by calling `list_habits` and matching the user's habit name. Never ask the user for this value.
 - `date` (required): Date in DD-MM-YYYY format
 - `done` (optional): `true` to complete, `false` to uncomplete (default: `true`)
 
@@ -82,7 +82,7 @@ curl -s -X POST \
 Show recent habit completions for a given habit.
 
 **Parameters:**
-- `habit_id` (required): The habit ID from `list_habits`
+- `habit_id` (resolved): Automatically resolved by calling `list_habits` and matching the user's habit name. Never ask the user for this value.
 - `date_start` (optional): Start date in DD-MM-YYYY format
 - `date_end` (optional): End date in DD-MM-YYYY format
 - `limit` (optional): Max number of results (default: 10)
@@ -101,8 +101,8 @@ curl -s -H "Authorization: Bearer $BEAVERHABITS_API_KEY" \
 
 ## Usage Instructions
 
-- When the user asks to see their habits, use `list_habits` first.
+- **Always call `list_habits` first** before any other tool to resolve habit names to IDs. The user will refer to habits by name — never ask them for a `habit_id`.
 - When completing a habit, always use today's date unless the user specifies otherwise. Use `date_fmt=%d-%m-%Y` format.
 - When showing completions, default to the last 10 entries sorted descending (most recent first) unless the user asks differently.
-- If a habit name is given instead of an ID, use `list_habits` to find the matching ID first.
+- If multiple habits match the user's input, ask the user to clarify which one they mean.
 - Always confirm the action taken (e.g., "Marked 'Running' as done for today").
