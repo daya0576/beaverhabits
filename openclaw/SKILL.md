@@ -56,26 +56,30 @@ curl -s -H "Authorization: Bearer $BEAVERHABITS_API_KEY" \
   "${SERVER_URL:-https://beaverhabits.com}/api/v1/habits/{habit_id}/completions?date_fmt=%25d-%25m-%25Y&date_start={start}&date_end={end}&limit=100&sort=asc"
 ```
 
+Response format: `["16-02-2026", "18-02-2026"]` (array of completed date strings)
+
 **Step 3** — Render as ASCII table:
 
+Example output:
 ```
-              Mon   Tue   Wed   Thu   Fri
-Clean          ✗     ✗     ✓     ✓     ✓
-Call mom       ✗     ✗     ✗     ✗     ✗
-Table Tennis   ✗     ✗     ✗     ✗     ✗
-Reading        ✗     ✗     ✗     ✗     ✗
+              Mon   Tue   Wed   Thu   Fri   
+Exercise       ✗     ✗     ✗     ✗     ✗     
+English        ✓     ✗     ✗     ✗     ✗     
+paipai         ✗     ✗     ✗     ✗     ✓     
+Reading        ✗     ✗     ✗     ✗     ✗     
+Table Tennis   ✗     ✗     ✗     ✗     ✗     
 ```
 
-Use `✓`/`✗` for done/not done. Default to 5 days ending today.
+Use `✓` for done, `✗` for not done. Default to 5 days ending today. Emoji are stripped from habit names for proper alignment.
 
 ### complete_habit
 
 Mark a habit as done (or undone) for a specific date.
 
-**Parameters:**
-- `habit_id` (resolved): Automatically resolved by calling `list_habits` and matching the user's habit name. Never ask the user for this value.
+Parameters:
+- `habit_id` (resolved): Automatically resolved by calling list_habits and matching the user's habit name. Never ask the user for this value.
 - `date` (required): Date in DD-MM-YYYY format
-- `done` (optional): `true` to complete, `false` to uncomplete (default: `true`)
+- `done` (optional): true to complete, false to uncomplete (default: `true`)
 
 ```bash
 curl -s -X POST \
@@ -85,16 +89,11 @@ curl -s -X POST \
   "${SERVER_URL:-https://beaverhabits.com}/api/v1/habits/{habit_id}/completions"
 ```
 
-**Response:**
-
-```json
-{"day": "20-02-2026", "done": true}
-```
-
+Response: `{"day": "20-02-2026", "done": true}`
 
 ## Usage Instructions
 
 - When the user asks to list, show, or check habits, always respond with the ASCII overview table (not a plain list).
 - After completing or uncompleting a habit, always re-render the overview table to show the updated state.
-- Resolve habit names → IDs via `list_habits`. Never ask the user for a `habit_id`.
+- Resolve habit names → IDs via list_habits. Never ask the user for a habit_id.
 - Default to today's date for completions unless specified. Use `date_fmt=%d-%m-%Y`.
