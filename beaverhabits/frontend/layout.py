@@ -176,7 +176,7 @@ def menu_component():
                 separator()
 
                 # API Tokens
-                menu_icon_item("API Tokens", lambda: redirect("tokens"))
+                menu_icon_item("Tokens", lambda: redirect("tokens"))
                 separator()
 
         separator()
