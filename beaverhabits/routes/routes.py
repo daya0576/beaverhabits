@@ -33,6 +33,7 @@ from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.index_page import index_page_ui
 from beaverhabits.frontend.layout import custom_headers, redirect
 from beaverhabits.frontend.order_page import order_page_ui
+from beaverhabits.frontend.chip_sets_page import chip_sets_page
 from beaverhabits.frontend.settings_page import settings_page
 from beaverhabits.frontend.stats_page import stats_page_ui
 from beaverhabits.frontend.streaks import heatmap_page
@@ -179,6 +180,11 @@ async def gui_settings(user: User = Depends(current_active_user)) -> None:
 @ui.page("/gui/tokens")
 async def gui_tokens(user: User = Depends(current_active_user)) -> None:
     await tokens_page(user)
+
+
+@ui.page("/gui/chip-sets")
+async def gui_chip_sets(user: User = Depends(current_active_user)) -> None:
+    await chip_sets_page(user)
 
 
 @ui.page("/login")

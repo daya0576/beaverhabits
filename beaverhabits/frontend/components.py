@@ -159,7 +159,11 @@ async def habit_tick_dialog(habit: Habit, day: datetime.date):
             with ui.row():
                 # default options: yes, no
                 # custom options: skip, mark, star, #hex_color, ...
-                for chip in habit.chips:
+                # Fall back to user's default chips if habit has no custom chips
+                chips = habit.chips
+                if not chips:
+                    chips = app.storage.user.get("default_chips", [])
+                for chip in chips:
                     display = value = chip
                     if ":" in chip:
                         display, value = chip.split(":", 1)
@@ -200,7 +204,17 @@ async def note_tick(
     chip, text = result
     yes = False if chip.strip().lower() == "no" else True
     note = text
-    if chip.strip().lower() not in ("yes", "no"):
+
+    # Apply default chips mapping (e.g. "skip" -> "#amber #skip")
+    chips_mapping = app.storage.user.get("default_chips_mapping", {})
+    mapped_tag = chips_mapping.get(chip.strip())
+    if mapped_tag:
+        # Mapping value is raw text (e.g. "#amber #skip"), append directly
+        for tag in mapped_tag.split():
+            tag_clean = tag.lstrip("#").strip()
+            if tag_clean:
+                note = note_append_tag(note, tag_clean)
+    elif chip.strip().lower() not in ("yes", "no"):
         note = note_append_tag(text, chip)
 
     record = await habit.tick(day, yes, note)
@@ -1266,6 +1280,7 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
         period_type.value = EVERY_DAY.period_type
         period_count.value = str(EVERY_DAY.period_count)
         target_count.value = str(EVERY_DAY.target_count)
+        chips.value = app.storage.user.get("default_chips", [])
 
     with ui.dialog() as dialog, ui.card().props("flat") as card:
         dialog.props('backdrop-filter="blur(4px)"')
@@ -1287,11 +1302,17 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
                 ).props("dense")
 
             # Steak status shortcut
-            with ui.row().classes("items-center"):
+            with ui.row().classes("items-center w-full no-wrap"):
+                chips_value = habit.chips or app.storage.user.get("default_chips", [])
                 chips = ui.input_chips(
-                    "Completion Options",
-                    value=habit.chips,
+                    "Completion Status",
+                    value=chips_value,
                     new_value_mode="add-unique",
+                ).classes("flex-grow")
+                ui.icon("help_outline", size="xs").classes(
+                    "cursor-pointer opacity-30 hover:opacity-80"
+                ).style("margin-top: 20px").tooltip("Edit default completion status").on(
+                    "click", lambda: redirect("chip-sets")
                 )
 
             with ui.row():

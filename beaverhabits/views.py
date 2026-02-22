@@ -247,12 +247,16 @@ async def reset_password(user: User, password: str) -> None:
 @dataclass
 class UserConfigs:
     custom_css: str | None = None
+    default_chips: list[str] | None = None
+    default_chips_mapping: dict[str, str] | None = None
 
 
 async def get_user_configs(user: User) -> UserConfigs:
     configs = await crud.get_user_configs(user) or {}
     return UserConfigs(
         custom_css=configs.get("css", None),
+        default_chips=configs.get("default_chips", None),
+        default_chips_mapping=configs.get("default_chips_mapping", None),
     )
 
 
@@ -261,6 +265,8 @@ async def cache_user_configs(user: User) -> None:
     app.storage.user.update(
         {
             "custom_css": configs.custom_css or "",
+            "default_chips": configs.default_chips or [],
+            "default_chips_mapping": configs.default_chips_mapping or {},
         }
     )
 
@@ -272,6 +278,21 @@ async def update_custom_css(user: User, css: str) -> None:
         user,
         {
             "css": css,
+        },
+    )
+
+
+async def update_default_chips(
+    user: User, chips: list[str], mapping: dict[str, str]
+) -> None:
+    app.storage.user["default_chips"] = chips
+    app.storage.user["default_chips_mapping"] = mapping
+
+    await crud.update_user_configs(
+        user,
+        {
+            "default_chips": chips,
+            "default_chips_mapping": mapping,
         },
     )
 
