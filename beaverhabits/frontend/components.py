@@ -1264,6 +1264,11 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
         return True
 
     def try_update_chips() -> None:
+        # If habit had no custom chips and user didn't change the defaults, skip update
+        if not habit.chips:
+            default_chips = app.storage.user.get("default_chips", [])
+            if chips.value == default_chips:
+                return
         habit.chips = chips.value
         logger.info(f"Habit chips changed to {habit.chips}")
 
