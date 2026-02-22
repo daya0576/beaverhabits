@@ -162,12 +162,10 @@ class DictHabit(Habit[DictRecord], DictStorage):
 
     @property
     def chips(self) -> list[str]:
-        return self.data.get("chips", []) or ["yes", "no"]
+        return self.data.get("chips", [])
 
     @chips.setter
     def chips(self, value: list[str]) -> None:
-        if not value:
-            return
         self.data["chips"] = value
 
     @property
