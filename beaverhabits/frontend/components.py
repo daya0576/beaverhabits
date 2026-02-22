@@ -1317,7 +1317,7 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
                 ui.icon("help_outline", size="xs").classes(
                     "cursor-pointer opacity-30 hover:opacity-80"
                 ).style("margin-top: 20px").tooltip("Edit default completion status").on(
-                    "click", lambda: redirect("chip-sets")
+                    "click", lambda: redirect("completion-status")
                 )
 
             with ui.row():

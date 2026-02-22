@@ -182,7 +182,7 @@ async def gui_tokens(user: User = Depends(current_active_user)) -> None:
     await tokens_page(user)
 
 
-@ui.page("/gui/chip-sets")
+@ui.page("/gui/completion-status")
 async def gui_chip_sets(user: User = Depends(current_active_user)) -> None:
     await chip_sets_page(user)
 
