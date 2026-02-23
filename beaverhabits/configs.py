@@ -84,6 +84,7 @@ class Settings(BaseSettings):
     HABIT_SHOW_EVERY_DAY_STREAKS: bool = False
 
     DAILY_NOTE_MAX_LENGTH: int = 1024
+    DEFAULT_COMPLETION_STATUS_LIST: list[str] = ["yes", "no"]
 
     # Backup inverval(in seconds), default is oneday
     ENABLE_DAILY_BACKUP: bool = False

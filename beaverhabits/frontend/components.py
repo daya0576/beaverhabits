@@ -12,7 +12,7 @@ from nicegui import app, events, ui
 from nicegui.element import Element
 from nicegui.elements.button import Button
 
-from beaverhabits import utils
+from beaverhabits import utils, views
 from beaverhabits.accessibility import index_total_badge_alternative_text
 from beaverhabits.configs import TagSelectionMode, settings
 from beaverhabits.core.backup import backup_to_telegram
@@ -162,7 +162,7 @@ async def habit_tick_dialog(habit: Habit, day: datetime.date):
                 # Fall back to user's default chips if habit has no custom chips
                 chips = habit.chips
                 if not chips:
-                    chips = app.storage.user.get("default_chips", [])
+                    chips = views.get_default_chips()
                 for chip in chips:
                     display = value = chip
                     if ":" in chip:
@@ -206,7 +206,7 @@ async def note_tick(
     note = text
 
     # Apply default chips mapping (e.g. "skip" -> "#amber #skip")
-    chips_mapping = app.storage.user.get("default_chips_mapping", {})
+    chips_mapping = views.get_default_chips_mapping()
     mapped_tag = chips_mapping.get(chip.strip())
     if mapped_tag:
         # Mapping value is raw text (e.g. "#amber #skip"), append directly
@@ -1266,7 +1266,7 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
     def try_update_chips() -> None:
         # If habit had no custom chips and user didn't change the defaults, skip update
         if not habit.chips:
-            default_chips = app.storage.user.get("default_chips", [])
+            default_chips = views.get_default_chips()
             if chips.value == default_chips:
                 return
         habit.chips = chips.value
@@ -1285,7 +1285,7 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
         period_type.value = EVERY_DAY.period_type
         period_count.value = str(EVERY_DAY.period_count)
         target_count.value = str(EVERY_DAY.target_count)
-        chips.value = app.storage.user.get("default_chips", [])
+        chips.value = views.get_default_chips()
 
     with ui.dialog() as dialog, ui.card().props("flat") as card:
         dialog.props('backdrop-filter="blur(4px)"')
@@ -1308,7 +1308,7 @@ def habit_edit_dialog(habit: Habit) -> ui.dialog:
 
             # Steak status shortcut
             with ui.row().classes("items-center w-full no-wrap"):
-                chips_value = habit.chips or app.storage.user.get("default_chips", [])
+                chips_value = habit.chips or views.get_default_chips()
                 chips = ui.input_chips(
                     "Completion Status",
                     value=chips_value,

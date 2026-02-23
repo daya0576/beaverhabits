@@ -32,8 +32,8 @@ from beaverhabits.frontend.habit_page import habit_page_ui
 from beaverhabits.frontend.import_page import import_ui_page
 from beaverhabits.frontend.index_page import index_page_ui
 from beaverhabits.frontend.layout import custom_headers, redirect
-from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.frontend.chip_sets_page import chip_sets_page
+from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.frontend.settings_page import settings_page
 from beaverhabits.frontend.stats_page import stats_page_ui
 from beaverhabits.frontend.streaks import heatmap_page
@@ -98,6 +98,11 @@ async def demo_habit_page_heatmap(habit_id: str) -> None:
         redirect("")
         return
     heatmap_page(today, habit)
+
+
+@ui.page("/demo/completion-status")
+async def demo_chip_sets() -> None:
+    await chip_sets_page()
 
 
 @ui.page("/demo/export")

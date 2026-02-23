@@ -282,19 +282,28 @@ async def update_custom_css(user: User, css: str) -> None:
     )
 
 
+def get_default_chips() -> list[str]:
+    return app.storage.user.get("default_chips", settings.DEFAULT_COMPLETION_STATUS_LIST)
+
+
+def get_default_chips_mapping() -> dict[str, str]:
+    return app.storage.user.get("default_chips_mapping", {})
+
+
 async def update_default_chips(
-    user: User, chips: list[str], mapping: dict[str, str]
+    user: User | None, chips: list[str], mapping: dict[str, str]
 ) -> None:
     app.storage.user["default_chips"] = chips
     app.storage.user["default_chips_mapping"] = mapping
 
-    await crud.update_user_configs(
-        user,
-        {
-            "default_chips": chips,
-            "default_chips_mapping": mapping,
-        },
-    )
+    if user:
+        await crud.update_user_configs(
+            user,
+            {
+                "default_chips": chips,
+                "default_chips_mapping": mapping,
+            },
+        )
 
 
 def apply_theme_style() -> None:

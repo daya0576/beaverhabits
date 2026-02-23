@@ -1,3 +1,5 @@
+from typing import Optional
+
 from nicegui import ui
 
 from beaverhabits import views
@@ -21,10 +23,9 @@ def _chips_to_mapping(chips: list[str]) -> dict[str, str]:
     return mapping
 
 
-async def chip_sets_page(user: User):
-    configs = await views.get_user_configs(user)
-    current_chips = configs.default_chips or []
-    current_mapping = configs.default_chips_mapping or {}
+async def chip_sets_page(user: Optional[User] = None):
+    current_chips = views.get_default_chips()
+    current_mapping = views.get_default_chips_mapping()
 
     with layout():
         with ui.column().classes("w-full max-w-[600px] px-4 gap-4"):
