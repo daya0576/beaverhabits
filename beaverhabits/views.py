@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import json
 import random
+import re
 from dataclasses import dataclass
 from typing import Sequence
 
@@ -271,7 +272,13 @@ async def cache_user_configs(user: User) -> None:
     )
 
 
+def sanitize_css(css: str) -> str:
+    """Strip any HTML tags from user-supplied CSS to prevent XSS via </style> injection."""
+    return re.sub(r"<[^>]*>", "", css)
+
+
 async def update_custom_css(user: User, css: str) -> None:
+    css = sanitize_css(css)
     app.storage.user["custom_css"] = css
 
     await crud.update_user_configs(
@@ -314,7 +321,7 @@ def apply_theme_style() -> None:
         return None
 
     if custom_css:
-        ui.add_head_html(f"<style>{custom_css}</style>")
+        ui.add_head_html(f"<style>{sanitize_css(custom_css)}</style>")
         logger.info(f"Applied custom CSS...")
 
 
