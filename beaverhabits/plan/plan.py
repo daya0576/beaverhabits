@@ -3,6 +3,7 @@ import random
 
 from nicegui import app, ui
 
+from beaverhabits.frontend.javascript import run_js
 from beaverhabits.app import crud
 from beaverhabits.app.auth import user_from_token
 from beaverhabits.configs import settings
@@ -18,7 +19,7 @@ async def checkout():
     email = user.email if user else ""
     logger.info(f"Checkout email: {email}")
 
-    ui.run_javascript(f"openCheckout('{email}')")
+    run_js(f"openCheckout('{email}')", name="open_checkout")
 
 
 def redirect_pricing(msg: str):

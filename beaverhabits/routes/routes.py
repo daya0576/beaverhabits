@@ -42,7 +42,7 @@ from beaverhabits.logger import logger
 from beaverhabits.routes.google_one_tap import google_one_tap_login
 from beaverhabits.storage import image_storage
 from beaverhabits.storage.meta import GUI_ROOT_PATH
-from beaverhabits.utils import dummy_days, fetch_user_dark_mode, get_user_today_date
+from beaverhabits.utils import dummy_days, fetch_user_dark_mode, get_user_today_date, register_on_connect_monitoring
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register")
 
@@ -119,6 +119,7 @@ async def demo_export() -> None:
 async def index_page(
     user: User = Depends(current_active_user),
 ) -> None:
+    register_on_connect_monitoring()
     days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
     habit_list = await views.get_user_habit_list(user)
     index_page_ui(days, habit_list)
@@ -202,6 +203,12 @@ async def login_page(client: Client) -> Optional[RedirectResponse]:
     # Google One Tap Login
     google_one_tap_login()
 
+    # Register on_connect monitoring with current trace context (links js.* spans to /login)
+    register_on_connect_monitoring()
+
+    # Fetch user count during HTTP phase (warm DB connection, before WebSocket wait)
+    user_count = await get_user_count()
+
     async def try_login():
         if not email.value:
             ui.notify("Email is required", color="negative")
@@ -232,7 +239,7 @@ async def login_page(client: Client) -> Optional[RedirectResponse]:
         with ui.row().classes("gap-2 w-full items-center"):
             auth_forgot_password(email, views.forgot_password)
             ui.space()
-            if not await get_user_count() >= settings.MAX_USER_COUNT > 0:
+            if not user_count >= settings.MAX_USER_COUNT > 0:
                 auth_redirect("Create account", "/register")
 
 
@@ -364,7 +371,7 @@ def init_gui_routes(fastapi_app: FastAPI):
     oneyear = 365 * 24 * 60 * 60
     app.add_static_files("/statics", "statics", max_cache_age=oneyear)
     app.on_exception(handle_exception)
-    app.on_connect(fetch_user_dark_mode)
+    app.on_connect(fetch_user_dark_mode)  # fallback: no trace context, fires for all pages
     # app.on_connect(views.apply_theme_style)
 
     ui.run_with(
