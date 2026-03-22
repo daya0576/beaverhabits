@@ -19,6 +19,7 @@ from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.core.note import update_square_style_context
 from beaverhabits.frontend import icons
+from beaverhabits.frontend.javascript import run_js
 from beaverhabits.frontend.javascript import force_checkbox_blur
 from beaverhabits.frontend.textarea import Textarea
 from beaverhabits.logger import logger
@@ -1057,7 +1058,7 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
         TagChip("Others", refresh=refresh)
 
         row.classes("tag-filter")
-        ui.run_javascript(
+        run_js(
             """
             const element = document.querySelector(".tag-filter");
         
@@ -1085,7 +1086,8 @@ def tag_filter_component(active_habits: list[Habit], refresh: Callable):
                     element.classList.remove("hidden");
                 }
             }, { passive: true  });
-            """
+            """,
+            name="tag_filter_scroll",
         )
 
 

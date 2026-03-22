@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     ENV: str = "dev"
     DEBUG: bool = False
 
+    # OpenTelemetry
+    OTEL_ENDPOINT: str = ""  # e.g. http://localhost:4317 (Jaeger OTLP gRPC)
+    OTEL_SERVICE_NAME: str = "beaverhabits"
+
     # SaaS
     APP_URL: str = ""
     SENTRY_DSN: str = ""

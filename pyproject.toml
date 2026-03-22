@@ -49,6 +49,12 @@ fly = [
     "highlight-io>=0.9.3",
     # "guppy3>=3.1.5",
     "memray>=1.17.2",
+    # OpenTelemetry
+    "opentelemetry-sdk>=1.25.0",
+    "opentelemetry-instrumentation-fastapi>=0.46b0",
+    "opentelemetry-instrumentation-sqlalchemy>=0.46b0",
+    "opentelemetry-instrumentation-httpx>=0.46b0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.25.0",
 ]
 
 [project.scripts]
