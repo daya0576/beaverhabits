@@ -290,7 +290,7 @@ async def update_custom_css(user: User, css: str) -> None:
 
 
 def get_default_chips() -> list[str]:
-    return app.storage.user.get("default_chips", settings.DEFAULT_COMPLETION_STATUS_LIST)
+    return app.storage.user.get("default_chips", None) or settings.DEFAULT_COMPLETION_STATUS_LIST
 
 
 def get_default_chips_mapping() -> dict[str, str]:
