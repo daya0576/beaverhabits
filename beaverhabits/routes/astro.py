@@ -65,6 +65,11 @@ def init_astro_routes(fastapi_app: FastAPI) -> None:
         async def landing_index():
             return FileResponse("statics/astro/dist/index.html", media_type="text/html")
 
+        @fastapi_app.get("/privacy/ios")
+        @fastapi_app.get("/privacy/ios/")
+        async def ios_privacy():
+            return FileResponse("statics/astro/dist/privacy/ios/index.html", media_type="text/html")
+
     else:
         logger.warning(
             f"Astro dist path not found: {ASTRO_DIST_PATH}, skipping static file mount"
