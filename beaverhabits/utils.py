@@ -18,6 +18,9 @@ from cachetools import TTLCache
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 from nicegui import app, ui
+
+from beaverhabits.frontend.javascript import run_js_async
+from beaverhabits.telemetry import carry_trace_context
 from psutil._common import bytes2human
 from starlette import status
 
@@ -45,8 +48,9 @@ def on_connect_task(fn):
 
 @on_connect_task
 async def fetch_user_timezone() -> None:
-    timezone = await ui.run_javascript(
-        "Intl.DateTimeFormat().resolvedOptions().timeZone"
+    timezone = await run_js_async(
+        "Intl.DateTimeFormat().resolvedOptions().timeZone",
+        name="fetch_timezone",
     )
     app.storage.user[TIME_ZONE_KEY] = timezone
     logger.info(f"User timezone from browser: {timezone}")
@@ -56,7 +60,7 @@ async def get_or_create_user_timezone() -> str:
     if timezone := app.storage.user.get(TIME_ZONE_KEY):
         return timezone
 
-    ui.context.client.on_connect(fetch_user_timezone)
+    ui.context.client.on_connect(carry_trace_context(fetch_user_timezone))
 
     return "UTC"
 
@@ -67,7 +71,7 @@ async def fetch_user_dark_mode() -> None:
         return
 
     try:
-        dark = await ui.run_javascript("Quasar.Dark.isActive")
+        dark = await run_js_async("Quasar.Dark.isActive", name="fetch_dark_mode")
         app.storage.user[DARK_MODE_KEY] = dark
         logger.info(f"User dark mode from browser: {dark}")
     except Exception as e:
@@ -83,6 +87,19 @@ def set_user_dark_mode(dark: bool) -> None:
         logger.info(f"User dark mode set to: {dark}")
     except Exception as e:
         logger.error(f"Error setting user dark mode: {e}")
+
+
+def register_on_connect_monitoring() -> None:
+    """
+    Register on_connect monitoring tasks for the current NiceGUI client,
+    carrying the current OTel trace context so js.* spans appear under the
+    page's HTTP span in Jaeger.
+
+    Call this from within a @ui.page handler (after the HTTP span is active).
+    The global app.on_connect(fetch_user_dark_mode) acts as a no-trace fallback
+    for pages that don't call this explicitly.
+    """
+    ui.context.client.on_connect(carry_trace_context(fetch_user_dark_mode))
 
 
 def get_user_dark_mode() -> bool | None:
@@ -133,7 +150,7 @@ def get_or_create_user_timezone_sync() -> str:
         logger.error(f"Error reading user timezone from storage: {e}")
 
     try:
-        ui.context.client.on_connect(fetch_user_timezone)
+        ui.context.client.on_connect(carry_trace_context(fetch_user_timezone))
     except Exception as e:
         logger.debug(f"Could not register fetch_user_timezone on connect: {e}")
 

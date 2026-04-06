@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import select
 
 from beaverhabits.logger import logger
+from beaverhabits.telemetry import traced
 
 from .db import (
     HabitListModel,
@@ -20,6 +21,7 @@ from .db import (
 get_async_session_context = contextlib.asynccontextmanager(get_async_session)
 
 
+@traced
 async def update_user_habit_list(user: User, data: dict) -> None:
     async with get_async_session_context() as session:
         assert data, "Habit list data cannot be empty"
@@ -46,6 +48,7 @@ async def update_user_habit_list(user: User, data: dict) -> None:
         logger.info(f"[CRUD] User {user.id} habit list updated")
 
 
+@traced
 async def get_user_habit_list(user: User) -> HabitListModel | None:
     async with get_async_session_context() as session:
         stmt = select(HabitListModel).where(HabitListModel.user_id == user.id)

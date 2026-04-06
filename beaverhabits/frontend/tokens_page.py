@@ -2,6 +2,7 @@ from nicegui import ui
 
 from beaverhabits.app import crud
 from beaverhabits.app.db import User
+from beaverhabits.frontend.javascript import run_js
 from beaverhabits.frontend.layout import layout
 
 
@@ -34,8 +35,9 @@ async def tokens_page(user: User):
                             ui.button(
                                 "Copy",
                                 on_click=lambda: (
-                                    ui.run_javascript(
-                                        f"navigator.clipboard.writeText('{token}')"
+                                    run_js(
+                                        f"navigator.clipboard.writeText('{token}')",
+                                        name="copy_token",
                                     ),
                                     ui.notify("Copied to clipboard", color="positive"),
                                 ),
