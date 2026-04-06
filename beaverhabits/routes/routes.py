@@ -2,7 +2,7 @@ import io
 from typing import Annotated, Optional
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile, status
-from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, RedirectResponse, Response, StreamingResponse
 from nicegui import Client, app, ui
 
 from beaverhabits import const, views
@@ -36,6 +36,7 @@ from beaverhabits.frontend.chip_sets_page import chip_sets_page
 from beaverhabits.frontend.order_page import order_page_ui
 from beaverhabits.frontend.settings_page import settings_page
 from beaverhabits.frontend.stats_page import stats_page_ui
+from beaverhabits.core.streak_svg import generate_streak_svg
 from beaverhabits.frontend.streaks import heatmap_page
 from beaverhabits.frontend.tokens_page import tokens_page
 from beaverhabits.logger import logger
@@ -160,6 +161,22 @@ async def gui_habit_page_heatmap(
     habit = await views.get_user_habit(user, habit_id)
     today = await get_user_today_date()
     heatmap_page(today, habit)
+
+
+@app.get("/gui/habits/{habit_id}/streak.svg")
+async def gui_habit_streak_svg(
+    habit_id: str,
+    request: Request,
+    weeks: int = 15,
+    dark: bool = True,
+    user: User = Depends(current_active_user),
+) -> Response:
+    habit = await views.get_user_habit(user, habit_id)
+    today = await get_user_today_date()
+    ticked = set(habit.ticked_days)
+    habit_url = str(request.url_for("habit_page", habit_id=habit_id))
+    svg = generate_streak_svg(habit.name, ticked, today, weeks=weeks, habit_url=habit_url, dark=dark)
+    return Response(content=svg, media_type="image/svg+xml")
 
 
 @ui.page("/gui/export")
