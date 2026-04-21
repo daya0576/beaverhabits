@@ -53,6 +53,9 @@ async def fetch_user_timezone() -> None:
 
 
 async def get_or_create_user_timezone() -> str:
+    if settings.TIME_ZONE:
+        return settings.TIME_ZONE
+
     if timezone := app.storage.user.get(TIME_ZONE_KEY):
         return timezone
 
@@ -126,6 +129,9 @@ def get_or_create_user_timezone_sync() -> str:
     async `fetch_user_timezone` to run on next client connect and
     returns 'UTC' as a safe fallback.
     """
+    if settings.TIME_ZONE:
+        return settings.TIME_ZONE
+
     try:
         if timezone := app.storage.user.get(TIME_ZONE_KEY):
             return timezone

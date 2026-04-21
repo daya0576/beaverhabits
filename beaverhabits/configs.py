@@ -3,6 +3,8 @@ import logging
 from enum import Enum
 
 import dotenv
+import pytz
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 logging.getLogger("niceGUI").setLevel(logging.INFO)
@@ -67,6 +69,11 @@ class Settings(BaseSettings):
     RESET_PASSWORD_TOKEN_LIFETIME_SECONDS: int = 60 * 60  # 1 hour
     REQUIRE_ADMIN_FOR_REGISTRATION: bool = False  # Require admin auth to register users
 
+    # Timezone: if set, overrides the browser-detected timezone for all users.
+    # Use standard IANA timezone names, e.g. "America/New_York", "Europe/London", "Asia/Tokyo".
+    # When not set, timezone is detected from the user's browser.
+    TIME_ZONE: str = ""
+
     # Customization
     FIRST_DAY_OF_WEEK: int = calendar.MONDAY
     # Set to 0-6 to align today to specific day of week, e.g., 0 for Monday
@@ -104,6 +111,16 @@ class Settings(BaseSettings):
 
     def is_trusted_env(self):
         return self.TRUSTED_LOCAL_EMAIL
+
+    @field_validator("TIME_ZONE")
+    @classmethod
+    def validate_time_zone(cls, v: str) -> str:
+        if v and v not in pytz.all_timezones_set:
+            raise ValueError(
+                f"Invalid TIME_ZONE '{v}'. Must be a valid IANA timezone name "
+                f"(e.g. 'America/New_York', 'Europe/London', 'Asia/Tokyo')."
+            )
+        return v
 
 
 settings = Settings()
