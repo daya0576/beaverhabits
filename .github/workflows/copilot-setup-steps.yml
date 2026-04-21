@@ -1,0 +1,23 @@
+name: "Copilot Setup Steps"
+
+on:
+    workflow_dispatch:
+    push:
+        paths:
+            - .github/workflows/copilot-setup-steps.yml
+    pull_request:
+        paths:
+            - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+    copilot-setup-steps:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+
+        steps:
+            - name: Configure git credentials for wiki
+              run: |
+                  git config --global credential.helper store
+                  echo "https://x-access-token:${{ secrets.WIKI_TOKEN }}@github.com" > ~/.git-credentials
