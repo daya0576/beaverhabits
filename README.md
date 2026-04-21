@@ -62,7 +62,6 @@ services:
       - TRUSTED_LOCAL_EMAIL=your@email.com # Skip authentication
       - INDEX_HABIT_DATE_COLUMNS=5 # Customize the date columns for the index page.
       - ENABLE_IOS_STANDALONE=true
-      - TIME_ZONE=America/New_York # Optional: override browser-detected timezone (IANA name, e.g. "Europe/London", "Asia/Tokyo")
     volumes:
       - ./beaver/:/app/.user/ # Change directory to match your docker file scheme.
     ports:
