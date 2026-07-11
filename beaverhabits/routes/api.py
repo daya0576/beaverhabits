@@ -14,6 +14,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from beaverhabits import views
+from beaverhabits.app import crud
 from beaverhabits.app.auth import user_from_token
 from beaverhabits.app.crud import get_user_by_api_token
 from beaverhabits.app.db import User
@@ -104,13 +105,31 @@ async def post_habits(
 
 @api_router.get("/habits/export", tags=["habits"])
 async def export_habit_list(user: User = Depends(current_active_user)):
-    # Go through the storage layer (views.user_storage) so this works for both
-    # USER_DISK and USER_DATABASE backends. A brand-new account has no list yet.
     try:
         habit_list = await views.user_storage.get_user_habit_list(user)
     except HabitListNotFoundError:
         return {"habits": []}
     return habit_list.data
+
+
+class ImportHabitList(BaseModel):
+    model_config = {"extra": "allow"}  # passthrough unknown top-level keys
+
+    habits: list[dict]
+    order: list[str] | None = None
+    order_by: int | None = None
+
+
+@api_router.post("/habits/import", tags=["habits"])
+async def import_habit_list(
+    payload: ImportHabitList,
+    user: User = Depends(current_active_user),
+):
+    data = payload.model_dump()
+    if not data.get("habits"):
+        data["habits"] = []
+    await crud.update_user_habit_list(user, data)
+    return {"ok": True, "count": len(data["habits"])}
 
 
 @api_router.get("/habits/{habit_id}", tags=["habits"])
