@@ -6,8 +6,8 @@ from loguru import logger
 from pydantic import BaseModel
 
 from beaverhabits import views
-from beaverhabits.app import crud
 from beaverhabits.app.db import User
+from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.storage.storage import (
@@ -93,8 +93,11 @@ async def post_habits(
 
 @api_router.get("/habits/export", tags=["habits"])
 async def export_habit_list(user: User = Depends(current_active_user)):
-    habit_list = await crud.get_user_habit_list(user)
-    if habit_list is None or not habit_list.data:
+    # Go through the storage layer (views.user_storage) so this works for both
+    # USER_DISK and USER_DATABASE backends. A brand-new account has no list yet.
+    try:
+        habit_list = await views.user_storage.get_user_habit_list(user)
+    except Exception:
         return {"habits": []}
     return habit_list.data
 
@@ -116,7 +119,17 @@ async def import_habit_list(
     data = payload.model_dump()
     if not data.get("habits"):
         data["habits"] = []
-    await crud.update_user_habit_list(user, data)
+
+    # Replace the whole dict through the storage layer so persistence is
+    # backend-agnostic: the DictHabitList's data is an ObservableDict, so
+    # mutating it in place triggers the on_change backup (file or DB).
+    try:
+        habit_list = await views.user_storage.get_user_habit_list(user)
+        habit_list.data.clear()
+        habit_list.data.update(data)
+    except Exception:
+        await views.user_storage.init_user_habit_list(user, DictHabitList(data))
+
     return {"ok": True, "count": len(data["habits"])}
 
 
