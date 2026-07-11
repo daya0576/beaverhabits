@@ -197,20 +197,22 @@ class DictHabit(Habit[DictRecord], DictStorage):
     ) -> CheckedRecord:
         # Find the record in the cache
         record = self.ticked_data.get(day)
+        timestamp = time.time_ns() // 1_000_000
 
+        # Apply all record fields in one observable mutation to schedule one DB backup.
         if record is not None:
-            # Update only if necessary to avoid unnecessary writes
-            new_data = {}
+            new_data = {"timestamp": timestamp}
             if record.done != done:
                 new_data["done"] = done
             if text is not None and record.text != text:
                 new_data["text"] = text
-            if new_data:
-                record.data.update(new_data)
-
+            record.data.update(new_data)
         else:
-            # Update storage once
-            data = {"day": day.strftime(DAY_MASK), "done": done}
+            data = {
+                "day": day.strftime(DAY_MASK),
+                "done": done,
+                "timestamp": timestamp,
+            }
             if text is not None:
                 data["text"] = text
             self.data["records"].append(data)
@@ -219,7 +221,6 @@ class DictHabit(Habit[DictRecord], DictStorage):
         self.cache.refresh()
 
         record = self.ticked_data[day]
-        record.data["timestamp"] = time.time_ns() // 1_000_000
         if user_id := getattr(self.habit_list, "sync_user_id", ""):
             publish(
                 TickChanged(
