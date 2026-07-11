@@ -3,6 +3,7 @@ from collections import defaultdict
 from fastapi import WebSocket
 
 from beaverhabits.events import TickChanged, subscribe
+from beaverhabits.logger import logger
 
 
 class ConnectionManager:
@@ -30,8 +31,17 @@ class ConnectionManager:
         for connection in list(self._connections.get(event.user_id, ())):
             try:
                 await connection.send_json(message)
-            except Exception:
+            except Exception as error:
+                logger.warning(
+                    f"[ws] broadcast failed user={event.user_id} "
+                    f"habit={event.habit_id} day={message['day']} error={error}"
+                )
                 self.disconnect(event.user_id, connection)
+            else:
+                logger.info(
+                    f"[ws] broadcast tick_changed user={event.user_id} "
+                    f"habit={event.habit_id} day={message['day']}"
+                )
 
 
 manager = ConnectionManager()

@@ -297,6 +297,12 @@ async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None))
             if msg.get("type") != "push_tick":
                 continue
 
+            logger.info(
+                f"[ws] received push_tick user={user_id} "
+                f"request={msg.get('request_id')} habit={msg.get('habit_id')} "
+                f"day={msg.get('day')}"
+            )
+
             # Persist the tick, reusing the existing storage path.
             try:
                 day = datetime.datetime.strptime(msg["day"], "%Y-%m-%d").date()
