@@ -1,4 +1,5 @@
 import datetime
+from collections import defaultdict
 from typing import Literal
 
 from fastapi import (
@@ -300,6 +301,7 @@ def format_json_response(habit: Habit) -> dict:
 # pull is needed. Single worker (gunicorn -w 1) => in-process broadcast, no
 # external broker required.
 # ---------------------------------------------------------------------------
+
 
 
 async def _authenticate_ws(token: str | None) -> User | None:

@@ -790,3 +790,54 @@ def test_import_roundtrip_preserves_unknown_fields(auth_headers, client: TestCli
     rec = h["records"][0]
     assert rec["updated_at"] == "2026-07-08T21:00:00.000Z"
     assert rec["text"] == "ch.3"
+
+
+# ============================================================================
+# WebSocket realtime tick (fan-out to a user's other connections)
+# ============================================================================
+
+
+def _ws_url(token: str) -> str:
+    return f"/api/v1/sync/ws?token={token}"
+
+
+def test_ws_requires_valid_token(client: TestClient):
+    """Connecting without a valid token is rejected."""
+    import pytest as _pytest
+    from starlette.websockets import WebSocketDisconnect
+
+    with _pytest.raises(WebSocketDisconnect):
+        with client.websocket_connect(_ws_url("garbage")) as ws:
+            ws.receive_text()
+
+
+def test_ws_tick_broadcasts_to_other_connection_and_persists(
+    access_token, auth_headers, client: TestClient
+):
+    """A tick sent by one connection reaches the user's other connection and is stored."""
+    # ensure the user has a habit list
+    habit = client.post("/api/v1/habits", json={"name": "Run"}, headers=auth_headers).json()
+
+    with client.websocket_connect(_ws_url(access_token)) as ws_a, \
+         client.websocket_connect(_ws_url(access_token)) as ws_b:
+        ws_a.send_json({
+            "type": "tick",
+            "habit_id": habit["id"],
+            "day": "2026-07-10",
+            "done": True,
+            "text": "5km",
+            "hlc": "1",
+        })
+        # B receives the same tick
+        msg = ws_b.receive_json()
+        assert msg["type"] == "tick"
+        assert msg["habit_id"] == habit["id"]
+        assert msg["day"] == "2026-07-10"
+        assert msg["done"] is True
+        assert msg["text"] == "5km"
+
+    # tick was persisted -> export shows it
+    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
+    run = next(h for h in data["habits"] if h["id"] == habit["id"])
+    assert any(r["day"] == "2026-07-10" and r["done"] and r.get("text") == "5km"
+               for r in run["records"])
