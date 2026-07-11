@@ -1,6 +1,8 @@
 import datetime
+import time
 from dataclasses import dataclass, field
 
+from beaverhabits.events import TickChanged, publish
 from beaverhabits.logger import logger
 from beaverhabits.storage.storage import (
     Backup,
@@ -59,6 +61,10 @@ class DictRecord(CheckedRecord, DictStorage):
     @text.setter
     def text(self, value: str) -> None:
         self.data["text"] = value
+
+    @property
+    def timestamp(self) -> int:
+        return self.data.get("timestamp", 0)
 
 
 class HabitDataCache:
@@ -212,7 +218,20 @@ class DictHabit(Habit[DictRecord], DictStorage):
         # Update the cache
         self.cache.refresh()
 
-        return self.ticked_data[day]
+        record = self.ticked_data[day]
+        record.data["timestamp"] = time.time_ns() // 1_000_000
+        if user_id := getattr(self.habit_list, "sync_user_id", ""):
+            publish(
+                TickChanged(
+                    user_id=user_id,
+                    habit_id=self.id,
+                    day=day,
+                    done=record.done,
+                    text=record.text or None,
+                    timestamp=record.timestamp,
+                )
+            )
+        return record
 
     async def merge(self, other: "DictHabit") -> None:
         self_ticks = {r.day for r in self.records if r.done}

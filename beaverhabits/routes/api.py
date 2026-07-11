@@ -19,7 +19,7 @@ from beaverhabits.app.crud import get_user_by_api_token
 from beaverhabits.app.db import User
 from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
-from beaverhabits.realtime import apply_tick, manager
+from beaverhabits.realtime import manager
 from beaverhabits.storage.storage import (
     Habit,
     HabitFrequency,
@@ -245,7 +245,7 @@ async def put_habit_completions(
         raise HTTPException(status_code=400, detail="Invalid date format")
 
     habit = await views.get_user_habit(user, habit_id)
-    await apply_tick(habit, day, tick.done, tick.text, user_id=str(user.id))
+    await habit.tick(day, tick.done, tick.text)
     return {"day": day.strftime(tick.date_fmt), "done": tick.done}
 
 
@@ -301,21 +301,20 @@ async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None))
             try:
                 day = datetime.datetime.strptime(msg["day"], "%Y-%m-%d").date()
                 habit = await views.get_user_habit(user, msg["habit_id"])
-                event = await apply_tick(
-                    habit,
+                record = await habit.tick(
                     day,
                     bool(msg.get("done", False)),
                     msg.get("text"),
-                    user_id=user_id,
-                    exclude=websocket,
                 )
-                await websocket.send_json({
-                    "type": "tick_ack",
-                    "request_id": msg["request_id"],
-                    "timestamp": event.timestamp,
-                })
+                await websocket.send_json(
+                    {
+                        "type": "tick_ack",
+                        "request_id": msg["request_id"],
+                        "timestamp": record.timestamp,
+                    }
+                )
             except Exception as e:
-                logger.warning(f"[ws] failed to apply tick for {user.email}: {e}")
+                logger.warning(f"[ws] failed to tick habit for {user.email}: {e}")
                 continue
 
     except WebSocketDisconnect:

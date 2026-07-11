@@ -30,6 +30,9 @@ class CheckedRecord(Protocol):
     @text.setter
     def text(self, value: str) -> None: ...
 
+    @property
+    def timestamp(self) -> int: ...
+
     def __str__(self):
         return f"{self.day} {'[x]' if self.done else '[ ]'}"
 
