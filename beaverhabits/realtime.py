@@ -1,56 +1,71 @@
 import asyncio
 import datetime
-import uuid
+import time
 from collections import defaultdict
+from dataclasses import dataclass
+from typing import Awaitable, Callable
 
 from fastapi import WebSocket
 
-from beaverhabits.storage.storage import CheckedRecord, Habit
+from beaverhabits.storage.storage import Habit
+
+
+@dataclass(frozen=True)
+class TickChanged:
+    user_id: str
+    habit_id: str
+    day: datetime.date
+    done: bool
+    text: str | None
+    timestamp: int
 
 
 class ConnectionManager:
     def __init__(self) -> None:
-        self._conns: dict[str, set[WebSocket]] = defaultdict(set)
+        self._connections: dict[str, set[WebSocket]] = defaultdict(set)
 
     async def connect(self, user_id: str, websocket: WebSocket) -> None:
         await websocket.accept()
-        self._conns[user_id].add(websocket)
+        self._connections[user_id].add(websocket)
 
     def disconnect(self, user_id: str, websocket: WebSocket) -> None:
-        self._conns[user_id].discard(websocket)
-        if not self._conns[user_id]:
-            self._conns.pop(user_id, None)
+        self._connections[user_id].discard(websocket)
+        if not self._connections[user_id]:
+            self._connections.pop(user_id, None)
 
     async def broadcast(
         self,
-        user_id: str,
-        message: dict,
-        *,
-        exclude: WebSocket | None = None,
+        event: TickChanged,
+        exclude: WebSocket | None,
     ) -> None:
-        for connection in list(self._conns.get(user_id, ())):
+        message = {
+            "type": "tick_changed",
+            "habit_id": event.habit_id,
+            "day": event.day.strftime("%Y-%m-%d"),
+            "done": event.done,
+            "text": event.text,
+            "timestamp": event.timestamp,
+        }
+        for connection in list(self._connections.get(event.user_id, ())):
             if connection is exclude:
                 continue
             try:
                 await connection.send_json(message)
             except Exception:
-                self.disconnect(user_id, connection)
+                self.disconnect(event.user_id, connection)
 
 
 manager = ConnectionManager()
+TickChangedHandler = Callable[[TickChanged, WebSocket | None], Awaitable[None]]
+_tick_changed_handlers: list[TickChangedHandler] = [manager.broadcast]
 _background_tasks: set[asyncio.Task] = set()
 
 
-def emit_tick_event(
-    user_id: str,
-    message: dict,
-    *,
-    exclude: WebSocket | None = None,
-) -> None:
-    """Fan out after persistence without blocking the originating UI mutation."""
-    task = asyncio.create_task(manager.broadcast(user_id, message, exclude=exclude))
-    _background_tasks.add(task)
-    task.add_done_callback(_background_tasks.discard)
+def emit_tick_changed(event: TickChanged, exclude: WebSocket | None = None) -> None:
+    for handler in _tick_changed_handlers:
+        task = asyncio.create_task(handler(event, exclude))
+        _background_tasks.add(task)
+        task.add_done_callback(_background_tasks.discard)
 
 
 async def apply_tick(
@@ -61,33 +76,21 @@ async def apply_tick(
     *,
     user_id: str | None = None,
     exclude: WebSocket | None = None,
-    event_id: str | None = None,
-) -> CheckedRecord:
-    """Persist one tick and broadcast the authoritative value to native clients."""
-    event_id = event_id or str(uuid.uuid4())
-    updated_at = (
-        datetime.datetime.now(datetime.UTC)
-        .isoformat(timespec="milliseconds")
-        .replace("+00:00", "Z")
-    )
+) -> TickChanged:
     record = await habit.tick(day, done, text)
+    timestamp = time.time_ns() // 1_000_000
     record_data = getattr(record, "data", None)
     if isinstance(record_data, dict):
-        record_data["updated_at"] = updated_at
+        record_data["timestamp"] = timestamp
 
-    resolved_user_id = user_id or getattr(habit.habit_list, "sync_user_id", None)
-    if resolved_user_id:
-        emit_tick_event(
-            resolved_user_id,
-            {
-                "type": "tick",
-                "event_id": event_id,
-                "habit_id": habit.id,
-                "day": day.strftime("%Y-%m-%d"),
-                "done": record.done,
-                "text": record.text or None,
-                "updated_at": updated_at,
-            },
-            exclude=exclude,
-        )
-    return record
+    event = TickChanged(
+        user_id=user_id or getattr(habit.habit_list, "sync_user_id", ""),
+        habit_id=habit.id,
+        day=day,
+        done=record.done,
+        text=record.text or None,
+        timestamp=timestamp,
+    )
+    if event.user_id:
+        emit_tick_changed(event, exclude)
+    return event

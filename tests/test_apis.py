@@ -780,74 +780,115 @@ def test_ws_requires_valid_token(client: TestClient):
             ws.receive_text()
 
 
-def test_rest_tick_broadcasts_to_websocket(
-    access_token, auth_headers, client: TestClient
-):
-    """Non-WebSocket writers (including Web UI) use the same broadcast path."""
-    habit = client.post(
+def _create_habit(auth_headers, client: TestClient) -> str:
+    return client.post(
         "/api/v1/habits", json={"name": "Run"}, headers=auth_headers
-    ).json()
-
-    with client.websocket_connect(_ws_url(access_token)) as ws:
-        response = client.post(
-            f"/api/v1/habits/{habit['id']}/completions",
-            json={
-                "date_fmt": "%Y-%m-%d",
-                "date": "2026-07-11",
-                "done": True,
-                "text": "from web",
-            },
-            headers=auth_headers,
-        )
-        assert response.status_code == 200
-        message = ws.receive_json()
-        assert message["type"] == "tick"
-        assert message["habit_id"] == habit["id"]
-        assert message["day"] == "2026-07-11"
-        assert message["done"] is True
-        assert message["text"] == "from web"
-        assert datetime.fromisoformat(message["updated_at"].replace("Z", "+00:00"))
-
-    exported = client.get("/api/v1/habits/export", headers=auth_headers).json()
-    saved = next(item for item in exported["habits"] if item["id"] == habit["id"])
-    record = next(item for item in saved["records"] if item["day"] == "2026-07-11")
-    assert record["done"] is True
-    assert record["text"] == "from web"
-    assert record["updated_at"] == message["updated_at"]
+    ).json()["id"]
 
 
-def test_ws_tick_broadcasts_to_other_connection_and_persists(
+def _web_tick(habit_id: str, day: str, auth_headers, client: TestClient):
+    return client.post(
+        f"/api/v1/habits/{habit_id}/completions",
+        json={
+            "date_fmt": "%Y-%m-%d",
+            "date": day,
+            "done": True,
+            "text": f"web-{day}",
+        },
+        headers=auth_headers,
+    )
+
+
+# Single tick
+
+def test_single_ios_tick_is_visible_to_web_refresh(
     access_token, auth_headers, client: TestClient
 ):
-    """A tick sent by one connection reaches the user's other connection and is stored."""
-    # ensure the user has a habit list
-    habit = client.post("/api/v1/habits", json={"name": "Run"}, headers=auth_headers).json()
-
-    with client.websocket_connect(_ws_url(access_token)) as ws_a, \
-         client.websocket_connect(_ws_url(access_token)) as ws_b:
-        ws_a.send_json({
-            "type": "tick",
-            "event_id": "event-1",
-            "habit_id": habit["id"],
+    habit_id = _create_habit(auth_headers, client)
+    with client.websocket_connect(_ws_url(access_token)) as websocket:
+        websocket.send_json({
+            "type": "push_tick",
+            "request_id": "request-1",
+            "habit_id": habit_id,
             "day": "2026-07-10",
             "done": True,
-            "text": "5km",
+            "text": "ios",
         })
-        ack = ws_a.receive_json()
-        assert ack["type"] == "ack"
-        assert ack["event_id"] == "event-1"
-        assert ack["updated_at"]
+        ack = websocket.receive_json()
+        assert ack["type"] == "tick_ack"
+        assert ack["request_id"] == "request-1"
+        assert isinstance(ack["timestamp"], int)
 
-        # B receives the same tick
-        msg = ws_b.receive_json()
-        assert msg["type"] == "tick"
-        assert msg["habit_id"] == habit["id"]
-        assert msg["day"] == "2026-07-10"
-        assert msg["done"] is True
-        assert msg["text"] == "5km"
-
-    # tick was persisted -> export shows it
     data = client.get("/api/v1/habits/export", headers=auth_headers).json()
-    run = next(h for h in data["habits"] if h["id"] == habit["id"])
-    assert any(r["day"] == "2026-07-10" and r["done"] and r.get("text") == "5km"
-               for r in run["records"])
+    record = data["habits"][0]["records"][0]
+    assert record["done"] is True
+    assert record["text"] == "ios"
+
+
+def test_single_web_tick_reaches_ios_realtime(
+    access_token, auth_headers, client: TestClient
+):
+    habit_id = _create_habit(auth_headers, client)
+    with client.websocket_connect(_ws_url(access_token)) as websocket:
+        assert _web_tick(habit_id, "2026-07-10", auth_headers, client).status_code == 200
+        event = websocket.receive_json()
+        assert event["type"] == "tick_changed"
+        assert "request_id" not in event
+        assert event["habit_id"] == habit_id
+        assert event["done"] is True
+        assert isinstance(event["timestamp"], int)
+
+
+def test_single_web_tick_is_visible_to_full_pull(auth_headers, client: TestClient):
+    habit_id = _create_habit(auth_headers, client)
+    assert _web_tick(habit_id, "2026-07-10", auth_headers, client).status_code == 200
+
+    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
+    assert data["habits"][0]["records"][0]["done"] is True
+
+
+# Multiple ticks
+
+def test_multiple_ios_ticks_are_visible_to_web_refresh(
+    access_token, auth_headers, client: TestClient
+):
+    habit_id = _create_habit(auth_headers, client)
+    with client.websocket_connect(_ws_url(access_token)) as websocket:
+        for index, day in enumerate(("2026-07-10", "2026-07-11")):
+            websocket.send_json({
+                "type": "push_tick",
+                "request_id": f"request-{index}",
+                "habit_id": habit_id,
+                "day": day,
+                "done": True,
+            })
+            ack = websocket.receive_json()
+            assert ack["request_id"] == f"request-{index}"
+
+    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
+    assert {record["day"] for record in data["habits"][0]["records"]} == {
+        "2026-07-10", "2026-07-11"
+    }
+
+
+def test_multiple_web_ticks_reach_ios_realtime(
+    access_token, auth_headers, client: TestClient
+):
+    habit_id = _create_habit(auth_headers, client)
+    with client.websocket_connect(_ws_url(access_token)) as websocket:
+        for day in ("2026-07-10", "2026-07-11"):
+            assert _web_tick(habit_id, day, auth_headers, client).status_code == 200
+            event = websocket.receive_json()
+            assert event["type"] == "tick_changed"
+            assert event["day"] == day
+
+
+def test_multiple_web_ticks_are_visible_to_full_pull(auth_headers, client: TestClient):
+    habit_id = _create_habit(auth_headers, client)
+    for day in ("2026-07-10", "2026-07-11"):
+        assert _web_tick(habit_id, day, auth_headers, client).status_code == 200
+
+    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
+    assert {record["day"] for record in data["habits"][0]["records"]} == {
+        "2026-07-10", "2026-07-11"
+    }

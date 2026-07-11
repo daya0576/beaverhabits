@@ -294,26 +294,25 @@ async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None))
     try:
         while True:
             msg = await websocket.receive_json()
-            if msg.get("type") != "tick":
+            if msg.get("type") != "push_tick":
                 continue
 
             # Persist the tick, reusing the existing storage path.
             try:
                 day = datetime.datetime.strptime(msg["day"], "%Y-%m-%d").date()
                 habit = await views.get_user_habit(user, msg["habit_id"])
-                record = await apply_tick(
+                event = await apply_tick(
                     habit,
                     day,
                     bool(msg.get("done", False)),
                     msg.get("text"),
                     user_id=user_id,
                     exclude=websocket,
-                    event_id=msg.get("event_id"),
                 )
                 await websocket.send_json({
-                    "type": "ack",
-                    "event_id": msg.get("event_id"),
-                    "updated_at": record.data["updated_at"],
+                    "type": "tick_ack",
+                    "request_id": msg["request_id"],
+                    "timestamp": event.timestamp,
                 })
             except Exception as e:
                 logger.warning(f"[ws] failed to apply tick for {user.email}: {e}")
