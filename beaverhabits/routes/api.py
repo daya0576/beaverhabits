@@ -244,7 +244,7 @@ async def put_habit_completions(
         raise HTTPException(status_code=400, detail="Invalid date format")
 
     habit = await views.get_user_habit(user, habit_id)
-    await apply_tick(habit, day, tick.done, tick.text, user_id=str(user.id))
+    await habit.tick(day, tick.done, tick.text)
     return {"day": day.strftime(tick.date_fmt), "done": tick.done}
 
 
