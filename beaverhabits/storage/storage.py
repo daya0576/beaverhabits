@@ -10,6 +10,10 @@ from beaverhabits.app.db import User
 from beaverhabits.utils import PERIOD_TYPES, D
 
 
+class HabitListNotFoundError(Exception):
+    """The user has no initialized habit list."""
+
+
 class CheckedRecord(Protocol):
     @property
     def day(self) -> datetime.date: ...
@@ -224,6 +228,8 @@ class UserStorage[L: HabitList](Protocol):
     async def get_user_habit_list(self, user: User) -> L: ...
 
     async def init_user_habit_list(self, user: User, habit_list: L) -> None: ...
+
+    async def replace_user_habit_list(self, user: User, habit_list: L) -> None: ...
 
 
 class HabitListBuilder:

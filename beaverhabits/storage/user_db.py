@@ -5,7 +5,7 @@ from nicegui.storage import observables
 from beaverhabits.app import crud
 from beaverhabits.app.db import User
 from beaverhabits.storage.dict import DictHabitList
-from beaverhabits.storage.storage import UserStorage
+from beaverhabits.storage.storage import HabitListNotFoundError, UserStorage
 
 
 class DatabasePersistentDict(observables.ObservableDict):
@@ -35,7 +35,9 @@ class UserDatabaseStorage(UserStorage[DictHabitList]):
     async def get_user_habit_list(self, user: User) -> DictHabitList:
         user_habit_list = await crud.get_user_habit_list(user)
         if user_habit_list is None:
-            raise Exception(f"User habit list not found for user {user.email}")
+            raise HabitListNotFoundError(
+                f"User habit list not found for user {user.email}"
+            )
 
         d = DatabasePersistentDict(user, user_habit_list.data)
         return DictHabitList(d)
@@ -47,4 +49,9 @@ class UserDatabaseStorage(UserStorage[DictHabitList]):
                 f"User habit list already exists for user {user.email}, cannot overwrite"
             )
 
+        await crud.update_user_habit_list(user, habit_list.data)
+
+    async def replace_user_habit_list(
+        self, user: User, habit_list: DictHabitList
+    ) -> None:
         await crud.update_user_habit_list(user, habit_list.data)

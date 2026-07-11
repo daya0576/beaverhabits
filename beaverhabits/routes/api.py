@@ -26,6 +26,7 @@ from beaverhabits.storage.storage import (
     HabitFrequency,
     HabitList,
     HabitListBuilder,
+    HabitListNotFoundError,
     HabitStatus,
 )
 
@@ -108,7 +109,7 @@ async def export_habit_list(user: User = Depends(current_active_user)):
     # USER_DISK and USER_DATABASE backends. A brand-new account has no list yet.
     try:
         habit_list = await views.user_storage.get_user_habit_list(user)
-    except Exception:
+    except HabitListNotFoundError:
         return {"habits": []}
     return habit_list.data
 
@@ -121,25 +122,61 @@ class ImportHabitList(BaseModel):
     order_by: int | None = None
 
 
+_NATIVE_TOP_LEVEL_FIELDS = {"habits", "order", "order_by"}
+_NATIVE_HABIT_FIELDS = {
+    "id", "name", "star", "status", "period", "tags", "reminders",
+    "created_at", "updated_at", "records",
+}
+_NATIVE_RECORD_FIELDS = {"day", "done", "text", "updated_at"}
+
+
+def _preserve_server_extensions(data: dict, existing: dict) -> None:
+    """Keep fields outside the native sync schema during a typed-client replace."""
+    for key, value in existing.items():
+        if key not in _NATIVE_TOP_LEVEL_FIELDS and key not in data:
+            data[key] = value
+
+    existing_by_id = {
+        habit.get("id"): habit
+        for habit in existing.get("habits", [])
+        if habit.get("id")
+    }
+    for habit in data.get("habits", []):
+        previous = existing_by_id.get(habit.get("id"), {})
+        for key, value in previous.items():
+            if key not in _NATIVE_HABIT_FIELDS and key not in habit:
+                habit[key] = value
+
+        previous_records = {
+            record.get("day"): record
+            for record in previous.get("records", [])
+            if record.get("day")
+        }
+        for record in habit.get("records", []):
+            previous_record = previous_records.get(record.get("day"), {})
+            for key, value in previous_record.items():
+                if key not in _NATIVE_RECORD_FIELDS and key not in record:
+                    record[key] = value
+
+
 @api_router.post("/habits/import", tags=["habits"])
 async def import_habit_list(
     payload: ImportHabitList,
     user: User = Depends(current_active_user),
 ):
-    # Preserve every field verbatim, including keys not declared on the model.
     data = payload.model_dump()
     if not data.get("habits"):
         data["habits"] = []
 
-    # Replace the whole dict through the storage layer so persistence is
-    # backend-agnostic: the DictHabitList's data is an ObservableDict, so
-    # mutating it in place triggers the on_change backup (file or DB).
+    # Replace through the configured storage backend. Only a genuinely missing
+    # list initializes storage; operational failures must propagate.
     try:
         habit_list = await views.user_storage.get_user_habit_list(user)
-        habit_list.data.clear()
-        habit_list.data.update(data)
-    except Exception:
+    except HabitListNotFoundError:
         await views.user_storage.init_user_habit_list(user, DictHabitList(data))
+    else:
+        _preserve_server_extensions(data, habit_list.data)
+        await views.user_storage.replace_user_habit_list(user, DictHabitList(data))
 
     return {"ok": True, "count": len(data["habits"])}
 
