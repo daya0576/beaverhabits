@@ -319,11 +319,6 @@ async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None))
                         "timestamp": record.timestamp,
                     }
                 )
-                await websocket.send_json({
-                    "type": "ack",
-                    "event_id": msg.get("event_id"),
-                    "updated_at": record.data["updated_at"],
-                })
             except Exception as e:
                 logger.warning(f"[ws] failed to tick habit for {user.email}: {e}")
                 continue
