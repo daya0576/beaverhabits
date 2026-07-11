@@ -23,6 +23,7 @@ from beaverhabits.frontend.javascript import force_checkbox_blur
 from beaverhabits.frontend.textarea import Textarea
 from beaverhabits.logger import logger
 from beaverhabits.plan import plan
+from beaverhabits.realtime import apply_tick
 from beaverhabits.storage.dict import DAY_MASK, MONTH_MASK
 from beaverhabits.storage.meta import get_root_path
 from beaverhabits.storage.storage import (
@@ -177,7 +178,7 @@ async def habit_tick_dialog(habit: Habit, day: datetime.date):
         if record:
             if abs(len(e.value) - len(record.text)) < 24:
                 return
-        await habit.tick(day, record.done if record else False, e.value)
+        await apply_tick(habit, day, record.done if record else False, e.value)
 
     t.on_value_change(t_value_change)
 
@@ -217,7 +218,7 @@ async def note_tick(
     elif chip.strip().lower() not in ("yes", "no"):
         note = note_append_tag(text, chip)
 
-    record = await habit.tick(day, yes, note)
+    record = await apply_tick(habit, day, yes, note)
     logger.info(f"Habit ticked: {day}, {chip} -> {yes}, note: {text} -> {note}")
 
     return record.done
@@ -232,7 +233,7 @@ async def habit_tick(habit: Habit, day: datetime.date, value: bool):
         return
 
     # Transaction start
-    await habit.tick(day, value)
+    await apply_tick(habit, day, value)
     logger.info(f"Day {day} ticked: {value}")
 
 
@@ -718,7 +719,7 @@ class CalendarCheckBox(ui.checkbox):
 
     async def _async_click_task(self, e: events.ValueChangeEventArguments):
         # Update persistent storage
-        await self.habit.tick(self.day, e.value)
+        await apply_tick(self.habit, self.day, e.value)
         logger.info(f"Day {self.day} ticked: {e.value}")
 
         if self.refresh:
