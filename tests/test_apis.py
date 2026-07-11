@@ -711,3 +711,82 @@ def test_complete_nonexistent_habit(auth_headers, client: TestClient):
         headers=auth_headers,
     )
     assert response.status_code == 404
+
+
+# ============================================================================
+# Export / Import Tests (full-sync endpoints for native clients)
+# ============================================================================
+
+
+def test_export_empty_returns_empty_dict(auth_headers, client: TestClient):
+    """A brand-new account with no habit list should export an empty dict, not 404."""
+    response = client.get("/api/v1/habits/export", headers=auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data.get("habits") == []
+
+
+def test_export_returns_full_dict_with_records(auth_headers, client: TestClient):
+    """Export must include full records with note text (unlike GET /habits)."""
+    habit = client.post(
+        "/api/v1/habits", json={"name": "Run"}, headers=auth_headers
+    ).json()
+    client.post(
+        f"/api/v1/habits/{habit['id']}/completions",
+        json={"date_fmt": "%Y-%m-%d", "date": "2026-07-10", "done": True, "text": "5km"},
+        headers=auth_headers,
+    )
+
+    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
+
+    habits = data["habits"]
+    assert any(h["id"] == habit["id"] for h in habits)
+    run = next(h for h in habits if h["id"] == habit["id"])
+    recs = run["records"]
+    assert any(r["day"] == "2026-07-10" and r["done"] and r.get("text") == "5km" for r in recs)
+
+
+def test_import_replaces_full_dict(auth_headers, client: TestClient):
+    """Import replaces the whole habit dict; a subsequent export reads it back."""
+    payload = {
+        "habits": [
+            {
+                "id": "aaa111",
+                "name": "Meditate",
+                "records": [{"day": "2026-07-09", "done": True}],
+            }
+        ],
+        "order": ["aaa111"],
+    }
+    resp = client.post("/api/v1/habits/import", json=payload, headers=auth_headers)
+    assert resp.status_code == 200
+
+    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
+    ids = [h["id"] for h in data["habits"]]
+    assert ids == ["aaa111"]
+    assert data["habits"][0]["name"] == "Meditate"
+
+
+def test_import_roundtrip_preserves_unknown_fields(auth_headers, client: TestClient):
+    """Passthrough: client-only fields (updated_at, reminders) must survive import->export."""
+    payload = {
+        "habits": [
+            {
+                "id": "bbb222",
+                "name": "Read",
+                "reminders": [{"hour": 21, "minute": 30}],
+                "records": [
+                    {"day": "2026-07-08", "done": True, "text": "ch.3",
+                     "updated_at": "2026-07-08T21:00:00.000Z"}
+                ],
+            }
+        ],
+    }
+    client.post("/api/v1/habits/import", json=payload, headers=auth_headers)
+    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
+
+    h = data["habits"][0]
+    assert h["reminders"] == [{"hour": 21, "minute": 30}]
+    rec = h["records"][0]
+    assert rec["updated_at"] == "2026-07-08T21:00:00.000Z"
+    assert rec["text"] == "ch.3"

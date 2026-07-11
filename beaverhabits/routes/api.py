@@ -6,6 +6,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from beaverhabits import views
+from beaverhabits.app import crud
 from beaverhabits.app.db import User
 from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
@@ -74,6 +75,49 @@ async def post_habits(
     logger.info(f"Created new habit {id} for user {user.email}")
 
     return {"id": id, "name": habit.name}
+
+
+# ---------------------------------------------------------------------------
+# Full-sync endpoints for native clients (whole-dict passthrough).
+#
+# export/import operate on the raw stored dict
+# ({habits:[...], order, order_by, ...}) verbatim, so client-only fields
+# (e.g. records[].updated_at, reminders) round-trip losslessly. This is
+# distinct from the web import flow (which renames collisions and merges
+# server-side); here the client has already merged and sends the final state.
+#
+# NOTE: defined before /habits/{habit_id} so "export"/"import" are not captured
+# as a habit_id path param.
+# ---------------------------------------------------------------------------
+
+
+@api_router.get("/habits/export", tags=["habits"])
+async def export_habit_list(user: User = Depends(current_active_user)):
+    habit_list = await crud.get_user_habit_list(user)
+    if habit_list is None or not habit_list.data:
+        return {"habits": []}
+    return habit_list.data
+
+
+class ImportHabitList(BaseModel):
+    model_config = {"extra": "allow"}  # passthrough unknown top-level keys
+
+    habits: list[dict]
+    order: list[str] | None = None
+    order_by: int | None = None
+
+
+@api_router.post("/habits/import", tags=["habits"])
+async def import_habit_list(
+    payload: ImportHabitList,
+    user: User = Depends(current_active_user),
+):
+    # Preserve every field verbatim, including keys not declared on the model.
+    data = payload.model_dump()
+    if not data.get("habits"):
+        data["habits"] = []
+    await crud.update_user_habit_list(user, data)
+    return {"ok": True, "count": len(data["habits"])}
 
 
 @api_router.get("/habits/{habit_id}", tags=["habits"])
