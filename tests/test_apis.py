@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 from loguru import logger
 from nicegui import core
 
+from beaverhabits import views
 from beaverhabits.app.db import User, engine
 from beaverhabits.app.dependencies import current_admin_user
 from beaverhabits.app.schemas import UserCreate, UserRead
@@ -790,6 +791,58 @@ def test_import_roundtrip_preserves_unknown_fields(auth_headers, client: TestCli
     rec = h["records"][0]
     assert rec["updated_at"] == "2026-07-08T21:00:00.000Z"
     assert rec["text"] == "ch.3"
+
+
+def test_native_import_preserves_server_only_fields(auth_headers, client: TestClient):
+    """A typed native payload must not erase fields it does not understand."""
+    original = {
+        "habits": [{
+            "id": "ccc333", "name": "Read",
+            "records": [{
+                "day": "2026-07-10", "done": True, "future_record_field": "keep",
+            }],
+            "chips": ["book"], "future_habit_field": {"enabled": True},
+        }],
+        "backup": {"enabled": True},
+        "future_top_level_field": "keep-me",
+    }
+    client.post("/api/v1/habits/import", json=original, headers=auth_headers)
+
+    native_payload = {
+        "habits": [{
+            "id": "ccc333", "name": "Read More",
+            "records": [{"day": "2026-07-10", "done": False}],
+        }],
+        "order": ["ccc333"],
+        "order_by": 3,
+    }
+    response = client.post(
+        "/api/v1/habits/import", json=native_payload, headers=auth_headers
+    )
+    assert response.status_code == 200
+
+    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
+    assert data["backup"] == {"enabled": True}
+    assert data["future_top_level_field"] == "keep-me"
+    assert data["habits"][0]["chips"] == ["book"]
+    assert data["habits"][0]["future_habit_field"] == {"enabled": True}
+    assert data["habits"][0]["records"][0]["future_record_field"] == "keep"
+    assert data["habits"][0]["records"][0]["done"] is False
+    assert data["habits"][0]["name"] == "Read More"
+
+
+def test_export_does_not_hide_storage_failures(
+    auth_headers, client: TestClient, monkeypatch
+):
+    """Only a missing list is empty; operational storage errors must surface."""
+    import pytest as _pytest
+
+    async def fail(_user):
+        raise RuntimeError("storage unavailable")
+
+    monkeypatch.setattr(views.user_storage, "get_user_habit_list", fail)
+    with _pytest.raises(RuntimeError, match="storage unavailable"):
+        client.get("/api/v1/habits/export", headers=auth_headers)
 
 
 # ============================================================================

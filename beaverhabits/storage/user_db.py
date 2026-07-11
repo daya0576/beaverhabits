@@ -56,3 +56,8 @@ class UserDatabaseStorage(UserStorage[DictHabitList]):
             )
 
         await crud.update_user_habit_list(user, habit_list.data)
+
+    async def replace_user_habit_list(
+        self, user: User, habit_list: DictHabitList
+    ) -> None:
+        await crud.update_user_habit_list(user, habit_list.data)
