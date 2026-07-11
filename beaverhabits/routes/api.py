@@ -1,11 +1,22 @@
 import datetime
+from collections import defaultdict
 from typing import Literal
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
+from fastapi import (
+    APIRouter,
+    Depends,
+    FastAPI,
+    HTTPException,
+    Query,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from loguru import logger
 from pydantic import BaseModel
 
 from beaverhabits import views
+from beaverhabits.app.auth import user_from_token
+from beaverhabits.app.crud import get_user_by_api_token
 from beaverhabits.app.db import User
 from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.app.dependencies import current_active_user
@@ -279,6 +290,85 @@ def format_json_response(habit: Habit) -> dict:
         "period": habit.period,
         "tags": habit.tags,
     }
+
+
+# ---------------------------------------------------------------------------
+# Realtime tick over WebSocket.
+#
+# Each device opens one authenticated socket (?token=<jwt|api_token>). A tick
+# is persisted (reusing habit.tick) and fanned out to the user's OTHER sockets,
+# which apply it directly -- the payload is self-contained, so no follow-up
+# pull is needed. Single worker (gunicorn -w 1) => in-process broadcast, no
+# external broker required.
+# ---------------------------------------------------------------------------
+
+
+class ConnectionManager:
+    def __init__(self) -> None:
+        self._conns: dict[str, set[WebSocket]] = defaultdict(set)
+
+    async def connect(self, user_id: str, ws: WebSocket) -> None:
+        await ws.accept()
+        self._conns[user_id].add(ws)
+
+    def disconnect(self, user_id: str, ws: WebSocket) -> None:
+        self._conns[user_id].discard(ws)
+        if not self._conns[user_id]:
+            self._conns.pop(user_id, None)
+
+    async def broadcast(self, user_id: str, message: dict, *, exclude: WebSocket) -> None:
+        for conn in list(self._conns.get(user_id, ())):
+            if conn is exclude:
+                continue
+            try:
+                await conn.send_json(message)
+            except Exception:
+                self.disconnect(user_id, conn)
+
+
+manager = ConnectionManager()
+
+
+async def _authenticate_ws(token: str | None) -> User | None:
+    if not token:
+        return None
+    if user := await user_from_token(token):
+        return user
+    if user := await get_user_by_api_token(token):
+        return user
+    return None
+
+
+@api_router.websocket("/sync/ws")
+async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None)):
+    user = await _authenticate_ws(token)
+    if user is None:
+        await websocket.close(code=1008)  # policy violation
+        return
+
+    user_id = str(user.id)
+    await manager.connect(user_id, websocket)
+    try:
+        while True:
+            msg = await websocket.receive_json()
+            if msg.get("type") != "tick":
+                continue
+
+            # Persist the tick, reusing the existing storage path.
+            try:
+                day = datetime.datetime.strptime(msg["day"], "%Y-%m-%d").date()
+                habit = await views.get_user_habit(user, msg["habit_id"])
+                await habit.tick(day, bool(msg.get("done", False)), msg.get("text"))
+            except Exception as e:
+                logger.warning(f"[ws] failed to apply tick for {user.email}: {e}")
+                continue
+
+            # Fan out to the user's other connections.
+            await manager.broadcast(user_id, msg, exclude=websocket)
+    except WebSocketDisconnect:
+        pass
+    finally:
+        manager.disconnect(user_id, websocket)
 
 
 def init_api_routes(app: FastAPI) -> None:
