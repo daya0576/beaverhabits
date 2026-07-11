@@ -1,4 +1,6 @@
+import asyncio
 import datetime
+import uuid
 from collections import defaultdict
 
 from fastapi import WebSocket
@@ -36,6 +38,19 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
+_background_tasks: set[asyncio.Task] = set()
+
+
+def emit_tick_event(
+    user_id: str,
+    message: dict,
+    *,
+    exclude: WebSocket | None = None,
+) -> None:
+    """Fan out after persistence without blocking the originating UI mutation."""
+    task = asyncio.create_task(manager.broadcast(user_id, message, exclude=exclude))
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
 
 
 async def apply_tick(
@@ -46,19 +61,32 @@ async def apply_tick(
     *,
     user_id: str | None = None,
     exclude: WebSocket | None = None,
+    event_id: str | None = None,
 ) -> CheckedRecord:
     """Persist one tick and broadcast the authoritative value to native clients."""
+    event_id = event_id or str(uuid.uuid4())
+    updated_at = (
+        datetime.datetime.now(datetime.UTC)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z")
+    )
     record = await habit.tick(day, done, text)
+    record_data = getattr(record, "data", None)
+    if isinstance(record_data, dict):
+        record_data["updated_at"] = updated_at
+
     resolved_user_id = user_id or getattr(habit.habit_list, "sync_user_id", None)
     if resolved_user_id:
-        await manager.broadcast(
+        emit_tick_event(
             resolved_user_id,
             {
                 "type": "tick",
+                "event_id": event_id,
                 "habit_id": habit.id,
                 "day": day.strftime("%Y-%m-%d"),
                 "done": record.done,
                 "text": record.text or None,
+                "updated_at": updated_at,
             },
             exclude=exclude,
         )

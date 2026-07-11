@@ -1,5 +1,4 @@
 import datetime
-import json
 from typing import Literal
 
 from fastapi import (
@@ -18,7 +17,6 @@ from beaverhabits import views
 from beaverhabits.app.auth import user_from_token
 from beaverhabits.app.crud import get_user_by_api_token
 from beaverhabits.app.db import User
-from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.realtime import apply_tick, manager
@@ -113,106 +111,6 @@ async def export_habit_list(user: User = Depends(current_active_user)):
     except HabitListNotFoundError:
         return {"habits": []}
     return habit_list.data
-
-
-class ImportHabitList(BaseModel):
-    model_config = {"extra": "allow"}  # passthrough unknown top-level keys
-
-    habits: list[dict]
-    order: list[str] | None = None
-    order_by: int | None = None
-
-
-def _plain_copy(value):
-    """Detach NiceGUI observable containers before building the merged result."""
-    return json.loads(json.dumps(value))
-
-
-def _merge_records(existing: list[dict], incoming: list[dict]) -> list[dict]:
-    merged = _plain_copy(existing)
-    by_day = {record.get("day"): record for record in merged if record.get("day")}
-    for record in incoming:
-        day = record.get("day")
-        if day and day in by_day:
-            by_day[day].update(record)
-        else:
-            new_record = _plain_copy(record)
-            merged.append(new_record)
-            if day:
-                by_day[day] = new_record
-    return merged
-
-
-def _merge_habit_dict(existing: dict, incoming: dict) -> None:
-    incoming_records = incoming.get("records")
-    for key, value in incoming.items():
-        if key != "records":
-            existing[key] = _plain_copy(value)
-    if incoming_records is not None:
-        existing["records"] = _merge_records(
-            existing.get("records", []), incoming_records
-        )
-
-
-def _merge_habit_lists(existing: dict, incoming: dict) -> dict:
-    """Merge a native payload without deleting data omitted by the client."""
-    merged = _plain_copy(existing)
-    merged_habits = merged.setdefault("habits", [])
-    by_id = {
-        habit.get("id"): habit for habit in merged_habits if habit.get("id")
-    }
-
-    for habit in incoming.get("habits", []):
-        habit_id = habit.get("id")
-        if habit_id and habit_id in by_id:
-            _merge_habit_dict(by_id[habit_id], habit)
-        else:
-            new_habit = _plain_copy(habit)
-            merged_habits.append(new_habit)
-            if habit_id:
-                by_id[habit_id] = new_habit
-
-    for key, value in incoming.items():
-        if key not in {"habits", "order"}:
-            merged[key] = _plain_copy(value)
-
-    if "order" in incoming and incoming["order"] is not None:
-        requested = incoming["order"]
-        remaining = [
-            habit_id
-            for habit_id in merged.get("order", [])
-            if habit_id not in requested
-        ]
-        unordered = [
-            habit.get("id")
-            for habit in merged_habits
-            if habit.get("id") not in requested and habit.get("id") not in remaining
-        ]
-        merged["order"] = requested + remaining + unordered
-
-    return merged
-
-
-@api_router.post("/habits/import", tags=["habits"])
-async def import_habit_list(
-    payload: ImportHabitList,
-    user: User = Depends(current_active_user),
-):
-    data = payload.model_dump(exclude_unset=True)
-    data.setdefault("habits", [])
-
-    # Only a genuinely missing list initializes storage. Existing data is merged
-    # first so a stale, partial, or accidentally empty payload cannot erase it.
-    try:
-        habit_list = await views.user_storage.get_user_habit_list(user)
-    except HabitListNotFoundError:
-        merged = data
-        await views.user_storage.init_user_habit_list(user, DictHabitList(merged))
-    else:
-        merged = _merge_habit_lists(habit_list.data, data)
-        await views.user_storage.replace_user_habit_list(user, DictHabitList(merged))
-
-    return {"ok": True, "count": len(merged["habits"])}
 
 
 @api_router.get("/habits/{habit_id}", tags=["habits"])
@@ -403,14 +301,24 @@ async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None))
             try:
                 day = datetime.datetime.strptime(msg["day"], "%Y-%m-%d").date()
                 habit = await views.get_user_habit(user, msg["habit_id"])
-                await apply_tick(
+                record = await apply_tick(
                     habit,
                     day,
                     bool(msg.get("done", False)),
                     msg.get("text"),
                     user_id=user_id,
                     exclude=websocket,
+                    event_id=msg.get("event_id"),
                 )
+                await views.user_storage.replace_user_habit_list(
+                    user,
+                    habit.habit_list,
+                )
+                await websocket.send_json({
+                    "type": "ack",
+                    "event_id": msg.get("event_id"),
+                    "updated_at": record.data["updated_at"],
+                })
             except Exception as e:
                 logger.warning(f"[ws] failed to apply tick for {user.email}: {e}")
                 continue

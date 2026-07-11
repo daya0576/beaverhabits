@@ -747,126 +747,6 @@ def test_export_returns_full_dict_with_records(auth_headers, client: TestClient)
     assert any(r["day"] == "2026-07-10" and r["done"] and r.get("text") == "5km" for r in recs)
 
 
-def test_import_initializes_full_dict(auth_headers, client: TestClient):
-    """The first import initializes the habit dictionary."""
-    payload = {
-        "habits": [
-            {
-                "id": "aaa111",
-                "name": "Meditate",
-                "records": [{"day": "2026-07-09", "done": True}],
-            }
-        ],
-        "order": ["aaa111"],
-    }
-    resp = client.post("/api/v1/habits/import", json=payload, headers=auth_headers)
-    assert resp.status_code == 200
-
-    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
-    ids = [h["id"] for h in data["habits"]]
-    assert ids == ["aaa111"]
-    assert data["habits"][0]["name"] == "Meditate"
-
-
-def test_import_merges_without_deleting_omitted_habits(auth_headers, client: TestClient):
-    """A stale or partial client payload must never erase server habits."""
-    original = {
-        "habits": [
-            {"id": "aaa111", "name": "A", "records": []},
-            {"id": "bbb222", "name": "B", "records": []},
-        ],
-        "order": ["aaa111", "bbb222"],
-    }
-    client.post("/api/v1/habits/import", json=original, headers=auth_headers)
-
-    partial = {
-        "habits": [{"id": "aaa111", "name": "A updated", "records": []}],
-        "order": ["aaa111"],
-    }
-    client.post("/api/v1/habits/import", json=partial, headers=auth_headers)
-
-    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
-    assert [habit["id"] for habit in data["habits"]] == ["aaa111", "bbb222"]
-    assert data["habits"][0]["name"] == "A updated"
-    assert data["order"] == ["aaa111", "bbb222"]
-
-
-def test_empty_import_does_not_clear_server_habits(auth_headers, client: TestClient):
-    """An accidental empty import is a no-op for existing habits."""
-    original = {
-        "habits": [{"id": "aaa111", "name": "A", "records": []}],
-        "order": ["aaa111"],
-    }
-    client.post("/api/v1/habits/import", json=original, headers=auth_headers)
-    client.post("/api/v1/habits/import", json={"habits": []}, headers=auth_headers)
-
-    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
-    assert [habit["id"] for habit in data["habits"]] == ["aaa111"]
-
-
-def test_import_roundtrip_preserves_unknown_fields(auth_headers, client: TestClient):
-    """Passthrough: client-only fields (updated_at, reminders) must survive import->export."""
-    payload = {
-        "habits": [
-            {
-                "id": "bbb222",
-                "name": "Read",
-                "reminders": [{"hour": 21, "minute": 30}],
-                "records": [
-                    {"day": "2026-07-08", "done": True, "text": "ch.3",
-                     "updated_at": "2026-07-08T21:00:00.000Z"}
-                ],
-            }
-        ],
-    }
-    client.post("/api/v1/habits/import", json=payload, headers=auth_headers)
-    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
-
-    h = data["habits"][0]
-    assert h["reminders"] == [{"hour": 21, "minute": 30}]
-    rec = h["records"][0]
-    assert rec["updated_at"] == "2026-07-08T21:00:00.000Z"
-    assert rec["text"] == "ch.3"
-
-
-def test_native_import_preserves_server_only_fields(auth_headers, client: TestClient):
-    """A typed native payload must not erase fields it does not understand."""
-    original = {
-        "habits": [{
-            "id": "ccc333", "name": "Read",
-            "records": [{
-                "day": "2026-07-10", "done": True, "future_record_field": "keep",
-            }],
-            "chips": ["book"], "future_habit_field": {"enabled": True},
-        }],
-        "backup": {"enabled": True},
-        "future_top_level_field": "keep-me",
-    }
-    client.post("/api/v1/habits/import", json=original, headers=auth_headers)
-
-    native_payload = {
-        "habits": [{
-            "id": "ccc333", "name": "Read More",
-            "records": [{"day": "2026-07-10", "done": False}],
-        }],
-        "order": ["ccc333"],
-        "order_by": 3,
-    }
-    response = client.post(
-        "/api/v1/habits/import", json=native_payload, headers=auth_headers
-    )
-    assert response.status_code == 200
-
-    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
-    assert data["backup"] == {"enabled": True}
-    assert data["future_top_level_field"] == "keep-me"
-    assert data["habits"][0]["chips"] == ["book"]
-    assert data["habits"][0]["future_habit_field"] == {"enabled": True}
-    assert data["habits"][0]["records"][0]["future_record_field"] == "keep"
-    assert data["habits"][0]["records"][0]["done"] is False
-    assert data["habits"][0]["name"] == "Read More"
-
-
 def test_export_does_not_hide_storage_failures(
     auth_headers, client: TestClient, monkeypatch
 ):
@@ -921,13 +801,19 @@ def test_rest_tick_broadcasts_to_websocket(
         )
         assert response.status_code == 200
         message = ws.receive_json()
-        assert message == {
-            "type": "tick",
-            "habit_id": habit["id"],
-            "day": "2026-07-11",
-            "done": True,
-            "text": "from web",
-        }
+        assert message["type"] == "tick"
+        assert message["habit_id"] == habit["id"]
+        assert message["day"] == "2026-07-11"
+        assert message["done"] is True
+        assert message["text"] == "from web"
+        assert datetime.fromisoformat(message["updated_at"].replace("Z", "+00:00"))
+
+    exported = client.get("/api/v1/habits/export", headers=auth_headers).json()
+    saved = next(item for item in exported["habits"] if item["id"] == habit["id"])
+    record = next(item for item in saved["records"] if item["day"] == "2026-07-11")
+    assert record["done"] is True
+    assert record["text"] == "from web"
+    assert record["updated_at"] == message["updated_at"]
 
 
 def test_ws_tick_broadcasts_to_other_connection_and_persists(
@@ -941,12 +827,17 @@ def test_ws_tick_broadcasts_to_other_connection_and_persists(
          client.websocket_connect(_ws_url(access_token)) as ws_b:
         ws_a.send_json({
             "type": "tick",
+            "event_id": "event-1",
             "habit_id": habit["id"],
             "day": "2026-07-10",
             "done": True,
             "text": "5km",
-            "hlc": "1",
         })
+        ack = ws_a.receive_json()
+        assert ack["type"] == "ack"
+        assert ack["event_id"] == "event-1"
+        assert ack["updated_at"]
+
         # B receives the same tick
         msg = ws_b.receive_json()
         assert msg["type"] == "tick"
