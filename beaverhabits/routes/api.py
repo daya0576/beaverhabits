@@ -18,6 +18,7 @@ from beaverhabits.app import crud
 from beaverhabits.app.auth import user_from_token
 from beaverhabits.app.crud import get_user_by_api_token
 from beaverhabits.app.db import User
+from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
 from beaverhabits.realtime import manager
@@ -128,7 +129,17 @@ async def import_habit_list(
     data = payload.model_dump()
     if not data.get("habits"):
         data["habits"] = []
-    await crud.update_user_habit_list(user, data)
+
+    # Replace the whole dict through the storage layer so persistence is
+    # backend-agnostic: the DictHabitList's data is an ObservableDict, so
+    # mutating it in place triggers the on_change backup (file or DB).
+    try:
+        habit_list = await views.user_storage.get_user_habit_list(user)
+        habit_list.data.clear()
+        habit_list.data.update(data)
+    except Exception:
+        await views.user_storage.init_user_habit_list(user, DictHabitList(data))
+
     return {"ok": True, "count": len(data["habits"])}
 
 
