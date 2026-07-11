@@ -31,6 +31,7 @@ def health_payload():
         loop=loop.__class__.__module__,
         python_version=platform.python_version(),
         identity=IDENTITY,
+        ios_sync_supported=True,
         nicegui_version=nicegui.__version__,
     )
 

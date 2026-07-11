@@ -1,19 +1,31 @@
 import datetime
 from typing import Literal
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
+from fastapi import (
+    APIRouter,
+    Depends,
+    FastAPI,
+    HTTPException,
+    Query,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from loguru import logger
 from pydantic import BaseModel
 
 from beaverhabits import views
+from beaverhabits.app.auth import user_from_token
+from beaverhabits.app.crud import get_user_by_api_token
 from beaverhabits.app.db import User
 from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
+from beaverhabits.realtime import manager
 from beaverhabits.storage.storage import (
     Habit,
     HabitFrequency,
     HabitList,
     HabitListBuilder,
+    HabitListNotFoundError,
     HabitStatus,
 )
 
@@ -74,6 +86,31 @@ async def post_habits(
     logger.info(f"Created new habit {id} for user {user.email}")
 
     return {"id": id, "name": habit.name}
+
+
+# ---------------------------------------------------------------------------
+# Full-sync endpoints for native clients (whole-dict passthrough).
+#
+# export/import operate on the raw stored dict
+# ({habits:[...], order, order_by, ...}) verbatim, so client-only fields
+# (e.g. records[].updated_at, reminders) round-trip losslessly. This is
+# distinct from the web import flow (which renames collisions and merges
+# server-side); here the client has already merged and sends the final state.
+#
+# NOTE: defined before /habits/{habit_id} so "export"/"import" are not captured
+# as a habit_id path param.
+# ---------------------------------------------------------------------------
+
+
+@api_router.get("/habits/export", tags=["habits"])
+async def export_habit_list(user: User = Depends(current_active_user)):
+    # Go through the storage layer (views.user_storage) so this works for both
+    # USER_DISK and USER_DATABASE backends. A brand-new account has no list yet.
+    try:
+        habit_list = await views.user_storage.get_user_habit_list(user)
+    except HabitListNotFoundError:
+        return {"habits": []}
+    return habit_list.data
 
 
 @api_router.get("/habits/{habit_id}", tags=["habits"])
@@ -222,6 +259,74 @@ def format_json_response(habit: Habit) -> dict:
         "period": habit.period,
         "tags": habit.tags,
     }
+
+
+# ---------------------------------------------------------------------------
+# Realtime tick over WebSocket.
+#
+# Each device opens one authenticated socket (?token=<jwt|api_token>). A tick
+# is persisted (reusing habit.tick) and fanned out to the user's OTHER sockets,
+# which apply it directly -- the payload is self-contained, so no follow-up
+# pull is needed. Single worker (gunicorn -w 1) => in-process broadcast, no
+# external broker required.
+# ---------------------------------------------------------------------------
+
+
+async def _authenticate_ws(token: str | None) -> User | None:
+    if not token:
+        return None
+    if user := await user_from_token(token):
+        return user
+    if user := await get_user_by_api_token(token):
+        return user
+    return None
+
+
+@api_router.websocket("/sync/ws")
+async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None)):
+    user = await _authenticate_ws(token)
+    if user is None:
+        await websocket.close(code=1008)  # policy violation
+        return
+
+    user_id = str(user.id)
+    await manager.connect(user_id, websocket)
+    try:
+        while True:
+            msg = await websocket.receive_json()
+            if msg.get("type") != "push_tick":
+                continue
+
+            logger.info(
+                f"[ws] received push_tick user={user_id} "
+                f"request={msg.get('request_id')} habit={msg.get('habit_id')} "
+                f"day={msg.get('day')}"
+            )
+
+            # Persist the tick, reusing the existing storage path.
+            try:
+                day = datetime.datetime.strptime(msg["day"], "%Y-%m-%d").date()
+                habit = await views.get_user_habit(user, msg["habit_id"])
+                record = await habit.tick(
+                    day,
+                    bool(msg.get("done", False)),
+                    msg.get("text"),
+                )
+                await websocket.send_json(
+                    {
+                        "type": "tick_ack",
+                        "request_id": msg["request_id"],
+                        "timestamp": record.timestamp,
+                    }
+                )
+            except Exception as e:
+                logger.warning(f"[ws] failed to tick habit for {user.email}: {e}")
+                continue
+
+    except WebSocketDisconnect:
+        pass
+    finally:
+        manager.disconnect(user_id, websocket)
 
 
 def init_api_routes(app: FastAPI) -> None:

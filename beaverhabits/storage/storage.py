@@ -10,6 +10,10 @@ from beaverhabits.app.db import User
 from beaverhabits.utils import PERIOD_TYPES, D
 
 
+class HabitListNotFoundError(Exception):
+    """The user has no initialized habit list."""
+
+
 class CheckedRecord(Protocol):
     @property
     def day(self) -> datetime.date: ...
@@ -25,6 +29,9 @@ class CheckedRecord(Protocol):
 
     @text.setter
     def text(self, value: str) -> None: ...
+
+    @property
+    def timestamp(self) -> int: ...
 
     def __str__(self):
         return f"{self.day} {'[x]' if self.done else '[ ]'}"

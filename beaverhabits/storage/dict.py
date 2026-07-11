@@ -1,6 +1,8 @@
 import datetime
+import time
 from dataclasses import dataclass, field
 
+from beaverhabits.events import TickChanged, publish
 from beaverhabits.logger import logger
 from beaverhabits.storage.storage import (
     Backup,
@@ -59,6 +61,10 @@ class DictRecord(CheckedRecord, DictStorage):
     @text.setter
     def text(self, value: str) -> None:
         self.data["text"] = value
+
+    @property
+    def timestamp(self) -> int:
+        return self.data.get("timestamp", 0)
 
 
 class HabitDataCache:
@@ -191,20 +197,22 @@ class DictHabit(Habit[DictRecord], DictStorage):
     ) -> CheckedRecord:
         # Find the record in the cache
         record = self.ticked_data.get(day)
+        timestamp = time.time_ns() // 1_000_000
 
+        # Apply all record fields in one observable mutation to schedule one DB backup.
         if record is not None:
-            # Update only if necessary to avoid unnecessary writes
-            new_data = {}
+            new_data = {"timestamp": timestamp}
             if record.done != done:
                 new_data["done"] = done
             if text is not None and record.text != text:
                 new_data["text"] = text
-            if new_data:
-                record.data.update(new_data)
-
+            record.data.update(new_data)
         else:
-            # Update storage once
-            data = {"day": day.strftime(DAY_MASK), "done": done}
+            data = {
+                "day": day.strftime(DAY_MASK),
+                "done": done,
+                "timestamp": timestamp,
+            }
             if text is not None:
                 data["text"] = text
             self.data["records"].append(data)
@@ -212,7 +220,19 @@ class DictHabit(Habit[DictRecord], DictStorage):
         # Update the cache
         self.cache.refresh()
 
-        return self.ticked_data[day]
+        record = self.ticked_data[day]
+        if user_id := getattr(self.habit_list, "sync_user_id", ""):
+            publish(
+                TickChanged(
+                    user_id=user_id,
+                    habit_id=self.id,
+                    day=day,
+                    done=record.done,
+                    text=record.text or None,
+                    timestamp=record.timestamp,
+                )
+            )
+        return record
 
     async def merge(self, other: "DictHabit") -> None:
         self_ticks = {r.day for r in self.records if r.done}
