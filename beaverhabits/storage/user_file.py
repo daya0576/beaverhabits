@@ -89,8 +89,3 @@ class UserDiskStorage(UserStorage[DictHabitList]):
             )
 
         d[KEY_NAME] = habit_list.data
-
-    async def replace_user_habit_list(
-        self, user: User, habit_list: DictHabitList
-    ) -> None:
-        self._get_persistent_dict(user)[KEY_NAME] = habit_list.data

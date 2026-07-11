@@ -319,10 +319,6 @@ async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None))
                         "timestamp": record.timestamp,
                     }
                 )
-                await views.user_storage.replace_user_habit_list(
-                    user,
-                    habit.habit_list,
-                )
                 await websocket.send_json({
                     "type": "ack",
                     "event_id": msg.get("event_id"),
