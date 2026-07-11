@@ -229,8 +229,6 @@ class UserStorage[L: HabitList](Protocol):
 
     async def init_user_habit_list(self, user: User, habit_list: L) -> None: ...
 
-    async def replace_user_habit_list(self, user: User, habit_list: L) -> None: ...
-
 
 class HabitListBuilder:
     def __init__(self, habit_list: HabitList):
