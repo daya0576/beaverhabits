@@ -1,5 +1,5 @@
 import datetime
-from collections import defaultdict
+import json
 from typing import Literal
 
 from fastapi import (
@@ -21,6 +21,7 @@ from beaverhabits.app.db import User
 from beaverhabits.storage.dict import DictHabitList
 from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
+from beaverhabits.realtime import apply_tick, manager
 from beaverhabits.storage.storage import (
     Habit,
     HabitFrequency,
@@ -122,41 +123,74 @@ class ImportHabitList(BaseModel):
     order_by: int | None = None
 
 
-_NATIVE_TOP_LEVEL_FIELDS = {"habits", "order", "order_by"}
-_NATIVE_HABIT_FIELDS = {
-    "id", "name", "star", "status", "period", "tags", "reminders",
-    "created_at", "updated_at", "records",
-}
-_NATIVE_RECORD_FIELDS = {"day", "done", "text", "updated_at"}
+def _plain_copy(value):
+    """Detach NiceGUI observable containers before building the merged result."""
+    return json.loads(json.dumps(value))
 
 
-def _preserve_server_extensions(data: dict, existing: dict) -> None:
-    """Keep fields outside the native sync schema during a typed-client replace."""
-    for key, value in existing.items():
-        if key not in _NATIVE_TOP_LEVEL_FIELDS and key not in data:
-            data[key] = value
+def _merge_records(existing: list[dict], incoming: list[dict]) -> list[dict]:
+    merged = _plain_copy(existing)
+    by_day = {record.get("day"): record for record in merged if record.get("day")}
+    for record in incoming:
+        day = record.get("day")
+        if day and day in by_day:
+            by_day[day].update(record)
+        else:
+            new_record = _plain_copy(record)
+            merged.append(new_record)
+            if day:
+                by_day[day] = new_record
+    return merged
 
-    existing_by_id = {
-        habit.get("id"): habit
-        for habit in existing.get("habits", [])
-        if habit.get("id")
+
+def _merge_habit_dict(existing: dict, incoming: dict) -> None:
+    incoming_records = incoming.get("records")
+    for key, value in incoming.items():
+        if key != "records":
+            existing[key] = _plain_copy(value)
+    if incoming_records is not None:
+        existing["records"] = _merge_records(
+            existing.get("records", []), incoming_records
+        )
+
+
+def _merge_habit_lists(existing: dict, incoming: dict) -> dict:
+    """Merge a native payload without deleting data omitted by the client."""
+    merged = _plain_copy(existing)
+    merged_habits = merged.setdefault("habits", [])
+    by_id = {
+        habit.get("id"): habit for habit in merged_habits if habit.get("id")
     }
-    for habit in data.get("habits", []):
-        previous = existing_by_id.get(habit.get("id"), {})
-        for key, value in previous.items():
-            if key not in _NATIVE_HABIT_FIELDS and key not in habit:
-                habit[key] = value
 
-        previous_records = {
-            record.get("day"): record
-            for record in previous.get("records", [])
-            if record.get("day")
-        }
-        for record in habit.get("records", []):
-            previous_record = previous_records.get(record.get("day"), {})
-            for key, value in previous_record.items():
-                if key not in _NATIVE_RECORD_FIELDS and key not in record:
-                    record[key] = value
+    for habit in incoming.get("habits", []):
+        habit_id = habit.get("id")
+        if habit_id and habit_id in by_id:
+            _merge_habit_dict(by_id[habit_id], habit)
+        else:
+            new_habit = _plain_copy(habit)
+            merged_habits.append(new_habit)
+            if habit_id:
+                by_id[habit_id] = new_habit
+
+    for key, value in incoming.items():
+        if key not in {"habits", "order"}:
+            merged[key] = _plain_copy(value)
+
+    if "order" in incoming and incoming["order"] is not None:
+        requested = incoming["order"]
+        remaining = [
+            habit_id
+            for habit_id in merged.get("order", [])
+            if habit_id not in requested
+        ]
+        unordered = [
+            habit.get("id")
+            for habit in merged_habits
+            if habit.get("id") not in requested and habit.get("id") not in remaining
+        ]
+        merged["order"] = requested + remaining + unordered
+
+    return merged
 
 
 @api_router.post("/habits/import", tags=["habits"])
@@ -164,21 +198,21 @@ async def import_habit_list(
     payload: ImportHabitList,
     user: User = Depends(current_active_user),
 ):
-    data = payload.model_dump()
-    if not data.get("habits"):
-        data["habits"] = []
+    data = payload.model_dump(exclude_unset=True)
+    data.setdefault("habits", [])
 
-    # Replace through the configured storage backend. Only a genuinely missing
-    # list initializes storage; operational failures must propagate.
+    # Only a genuinely missing list initializes storage. Existing data is merged
+    # first so a stale, partial, or accidentally empty payload cannot erase it.
     try:
         habit_list = await views.user_storage.get_user_habit_list(user)
     except HabitListNotFoundError:
-        await views.user_storage.init_user_habit_list(user, DictHabitList(data))
+        merged = data
+        await views.user_storage.init_user_habit_list(user, DictHabitList(merged))
     else:
-        _preserve_server_extensions(data, habit_list.data)
-        await views.user_storage.replace_user_habit_list(user, DictHabitList(data))
+        merged = _merge_habit_lists(habit_list.data, data)
+        await views.user_storage.replace_user_habit_list(user, DictHabitList(merged))
 
-    return {"ok": True, "count": len(data["habits"])}
+    return {"ok": True, "count": len(merged["habits"])}
 
 
 @api_router.get("/habits/{habit_id}", tags=["habits"])
@@ -313,7 +347,7 @@ async def put_habit_completions(
         raise HTTPException(status_code=400, detail="Invalid date format")
 
     habit = await views.get_user_habit(user, habit_id)
-    await habit.tick(day, tick.done, tick.text)
+    await apply_tick(habit, day, tick.done, tick.text, user_id=str(user.id))
     return {"day": day.strftime(tick.date_fmt), "done": tick.done}
 
 
@@ -338,32 +372,6 @@ def format_json_response(habit: Habit) -> dict:
 # pull is needed. Single worker (gunicorn -w 1) => in-process broadcast, no
 # external broker required.
 # ---------------------------------------------------------------------------
-
-
-class ConnectionManager:
-    def __init__(self) -> None:
-        self._conns: dict[str, set[WebSocket]] = defaultdict(set)
-
-    async def connect(self, user_id: str, ws: WebSocket) -> None:
-        await ws.accept()
-        self._conns[user_id].add(ws)
-
-    def disconnect(self, user_id: str, ws: WebSocket) -> None:
-        self._conns[user_id].discard(ws)
-        if not self._conns[user_id]:
-            self._conns.pop(user_id, None)
-
-    async def broadcast(self, user_id: str, message: dict, *, exclude: WebSocket) -> None:
-        for conn in list(self._conns.get(user_id, ())):
-            if conn is exclude:
-                continue
-            try:
-                await conn.send_json(message)
-            except Exception:
-                self.disconnect(user_id, conn)
-
-
-manager = ConnectionManager()
 
 
 async def _authenticate_ws(token: str | None) -> User | None:
@@ -395,13 +403,18 @@ async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None))
             try:
                 day = datetime.datetime.strptime(msg["day"], "%Y-%m-%d").date()
                 habit = await views.get_user_habit(user, msg["habit_id"])
-                await habit.tick(day, bool(msg.get("done", False)), msg.get("text"))
+                await apply_tick(
+                    habit,
+                    day,
+                    bool(msg.get("done", False)),
+                    msg.get("text"),
+                    user_id=user_id,
+                    exclude=websocket,
+                )
             except Exception as e:
                 logger.warning(f"[ws] failed to apply tick for {user.email}: {e}")
                 continue
 
-            # Fan out to the user's other connections.
-            await manager.broadcast(user_id, msg, exclude=websocket)
     except WebSocketDisconnect:
         pass
     finally:

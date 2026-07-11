@@ -747,8 +747,8 @@ def test_export_returns_full_dict_with_records(auth_headers, client: TestClient)
     assert any(r["day"] == "2026-07-10" and r["done"] and r.get("text") == "5km" for r in recs)
 
 
-def test_import_replaces_full_dict(auth_headers, client: TestClient):
-    """Import replaces the whole habit dict; a subsequent export reads it back."""
+def test_import_initializes_full_dict(auth_headers, client: TestClient):
+    """The first import initializes the habit dictionary."""
     payload = {
         "habits": [
             {
@@ -766,6 +766,42 @@ def test_import_replaces_full_dict(auth_headers, client: TestClient):
     ids = [h["id"] for h in data["habits"]]
     assert ids == ["aaa111"]
     assert data["habits"][0]["name"] == "Meditate"
+
+
+def test_import_merges_without_deleting_omitted_habits(auth_headers, client: TestClient):
+    """A stale or partial client payload must never erase server habits."""
+    original = {
+        "habits": [
+            {"id": "aaa111", "name": "A", "records": []},
+            {"id": "bbb222", "name": "B", "records": []},
+        ],
+        "order": ["aaa111", "bbb222"],
+    }
+    client.post("/api/v1/habits/import", json=original, headers=auth_headers)
+
+    partial = {
+        "habits": [{"id": "aaa111", "name": "A updated", "records": []}],
+        "order": ["aaa111"],
+    }
+    client.post("/api/v1/habits/import", json=partial, headers=auth_headers)
+
+    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
+    assert [habit["id"] for habit in data["habits"]] == ["aaa111", "bbb222"]
+    assert data["habits"][0]["name"] == "A updated"
+    assert data["order"] == ["aaa111", "bbb222"]
+
+
+def test_empty_import_does_not_clear_server_habits(auth_headers, client: TestClient):
+    """An accidental empty import is a no-op for existing habits."""
+    original = {
+        "habits": [{"id": "aaa111", "name": "A", "records": []}],
+        "order": ["aaa111"],
+    }
+    client.post("/api/v1/habits/import", json=original, headers=auth_headers)
+    client.post("/api/v1/habits/import", json={"habits": []}, headers=auth_headers)
+
+    data = client.get("/api/v1/habits/export", headers=auth_headers).json()
+    assert [habit["id"] for habit in data["habits"]] == ["aaa111"]
 
 
 def test_import_roundtrip_preserves_unknown_fields(auth_headers, client: TestClient):
@@ -862,6 +898,36 @@ def test_ws_requires_valid_token(client: TestClient):
     with _pytest.raises(WebSocketDisconnect):
         with client.websocket_connect(_ws_url("garbage")) as ws:
             ws.receive_text()
+
+
+def test_rest_tick_broadcasts_to_websocket(
+    access_token, auth_headers, client: TestClient
+):
+    """Non-WebSocket writers (including Web UI) use the same broadcast path."""
+    habit = client.post(
+        "/api/v1/habits", json={"name": "Run"}, headers=auth_headers
+    ).json()
+
+    with client.websocket_connect(_ws_url(access_token)) as ws:
+        response = client.post(
+            f"/api/v1/habits/{habit['id']}/completions",
+            json={
+                "date_fmt": "%Y-%m-%d",
+                "date": "2026-07-11",
+                "done": True,
+                "text": "from web",
+            },
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
+        message = ws.receive_json()
+        assert message == {
+            "type": "tick",
+            "habit_id": habit["id"],
+            "day": "2026-07-11",
+            "done": True,
+            "text": "from web",
+        }
 
 
 def test_ws_tick_broadcasts_to_other_connection_and_persists(

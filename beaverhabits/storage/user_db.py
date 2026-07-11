@@ -40,7 +40,9 @@ class UserDatabaseStorage(UserStorage[DictHabitList]):
             )
 
         d = DatabasePersistentDict(user, user_habit_list.data)
-        return DictHabitList(d)
+        habit_list = DictHabitList(d)
+        habit_list.sync_user_id = str(user.id)
+        return habit_list
 
     async def init_user_habit_list(self, user: User, habit_list: DictHabitList) -> None:
         user_habit_list = await crud.get_user_habit_list(user)

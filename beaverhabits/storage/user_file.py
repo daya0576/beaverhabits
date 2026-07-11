@@ -77,7 +77,9 @@ class UserDiskStorage(UserStorage[DictHabitList]):
             raise HabitListNotFoundError(
                 f"User {user.email} does not have a habit list, cannot load it."
             )
-        return DictHabitList(d)
+        habit_list = DictHabitList(d)
+        habit_list.sync_user_id = str(user.id)
+        return habit_list
 
     async def init_user_habit_list(self, user: User, habit_list: DictHabitList) -> None:
         d = self._get_persistent_dict(user)
