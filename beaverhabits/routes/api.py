@@ -244,7 +244,8 @@ async def put_habit_completions(
         raise HTTPException(status_code=400, detail="Invalid date format")
 
     habit = await views.get_user_habit(user, habit_id)
-    await habit.tick(day, tick.done, tick.text)
+    text = "" if "text" in tick.model_fields_set and tick.text is None else tick.text
+    await habit.tick(day, tick.done, text)
     return {"day": day.strftime(tick.date_fmt), "done": tick.done}
 
 
@@ -307,10 +308,11 @@ async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None))
             try:
                 day = datetime.datetime.strptime(msg["day"], "%Y-%m-%d").date()
                 habit = await views.get_user_habit(user, msg["habit_id"])
+                text = _websocket_tick_text(msg)
                 record = await habit.tick(
                     day,
                     bool(msg.get("done", False)),
-                    msg.get("text"),
+                    text,
                 )
                 await websocket.send_json(
                     {
