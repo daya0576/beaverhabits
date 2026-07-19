@@ -274,6 +274,11 @@ def format_json_response(habit: Habit) -> dict:
 
 
 
+def _websocket_tick_text(message: dict) -> str | None:
+    text = message.get("text")
+    return "" if "text" in message and text is None else text
+
+
 async def _authenticate_ws(token: str | None) -> User | None:
     if not token:
         return None

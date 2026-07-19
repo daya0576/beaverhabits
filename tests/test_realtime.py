@@ -3,12 +3,8 @@ import datetime
 from beaverhabits.events import TickChanged
 from beaverhabits.logger import logger
 from beaverhabits.realtime import ConnectionManager
+from beaverhabits.routes.api import _websocket_tick_text
 from beaverhabits.storage.dict import DictHabit
-
-
-def _websocket_tick_text(message: dict) -> str | None:
-    text = message.get("text")
-    return "" if "text" in message and text is None else text
 
 
 class FakeWebSocket:
