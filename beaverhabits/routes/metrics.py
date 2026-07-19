@@ -11,7 +11,7 @@ from psutil._common import bytes2human
 
 try:
     from beaverhabits.version import IDENTITY
-except:
+except ImportError:
     IDENTITY = "unknown"
 
 # fmt: off
