@@ -17,6 +17,14 @@ class TickChanged:
     timestamp: int
 
 
+@dataclass(frozen=True)
+class HabitListChanged:
+    user_id: str
+    # Serialized habit list metadata (no records). Passed through verbatim to
+    # other connected devices so they can apply it without a full pull.
+    payload: dict
+
+
 Event = TypeVar("Event")
 Handler = Callable[[object], Awaitable[None]]
 _handlers: dict[type, list[Handler]] = defaultdict(list)

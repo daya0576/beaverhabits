@@ -20,6 +20,7 @@ from beaverhabits.app.crud import get_user_by_api_token
 from beaverhabits.app.db import User
 from beaverhabits.app.dependencies import current_active_user
 from beaverhabits.core.completions import CStatus, get_habit_date_completion
+from beaverhabits.events import HabitListChanged, publish
 from beaverhabits.realtime import manager
 from beaverhabits.storage.storage import (
     Habit,
@@ -283,6 +284,58 @@ async def _authenticate_ws(token: str | None) -> User | None:
     return None
 
 
+async def _apply_push_habit_list(user: User, msg: dict) -> None:
+    """Merge incoming habit metadata into the stored list, preserving all records."""
+    habit_list = await views.get_user_habit_list(user)
+    if habit_list is None:
+        return
+
+    incoming_habits: list[dict] = msg.get("habits", [])
+    incoming_by_id = {h["id"]: h for h in incoming_habits if "id" in h}
+
+    # Update metadata for existing habits; add new ones.
+    existing_ids = {str(h.id) for h in habit_list.habits}
+    for h in habit_list.habits:
+        if (incoming := incoming_by_id.get(str(h.id))) is None:
+            continue
+        if "name" in incoming:
+            h.name = incoming["name"]
+        if "star" in incoming:
+            h.star = incoming["star"]
+        if "status" in incoming:
+            from beaverhabits.storage.storage import HabitStatus as _HS
+            try:
+                h.status = _HS(incoming["status"])
+            except ValueError:
+                pass
+        if "period" in incoming:
+            from beaverhabits.storage.storage import HabitFrequency as _HF
+            p = incoming["period"]
+            h.period = _HF.from_dict(p) if p else None
+        if "tags" in incoming:
+            h.tags = incoming["tags"]
+        if "reminders" in incoming:
+            h.data["reminders"] = incoming["reminders"]
+
+    for habit_id, incoming in incoming_by_id.items():
+        if habit_id not in existing_ids:
+            await habit_list.add(incoming.get("name", ""), tags=incoming.get("tags"))
+            # Set id to client-generated value.
+            for h in habit_list.habits:
+                if h.name == incoming.get("name") and str(h.id) != habit_id:
+                    h.id = habit_id
+                    break
+
+    if "order" in msg:
+        habit_list.order = msg["order"]
+    if "order_by" in msg:
+        from beaverhabits.storage.storage import HabitOrder as _HO
+        try:
+            habit_list.order_by = _HO(msg["order_by"])
+        except (ValueError, KeyError):
+            pass
+
+
 @api_router.websocket("/sync/ws")
 async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None)):
     user = await _authenticate_ws(token)
@@ -295,35 +348,49 @@ async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None))
     try:
         while True:
             msg = await websocket.receive_json()
-            if msg.get("type") != "push_tick":
-                continue
+            msg_type = msg.get("type")
 
-            logger.info(
-                f"[ws] received push_tick user={user_id} "
-                f"request={msg.get('request_id')} habit={msg.get('habit_id')} "
-                f"day={msg.get('day')}"
-            )
+            if msg_type == "push_tick":
+                logger.info(
+                    f"[ws] received push_tick user={user_id} "
+                    f"request={msg.get('request_id')} habit={msg.get('habit_id')} "
+                    f"day={msg.get('day')}"
+                )
+                try:
+                    day = datetime.datetime.strptime(msg["day"], "%Y-%m-%d").date()
+                    habit = await views.get_user_habit(user, msg["habit_id"])
+                    text = _websocket_tick_text(msg)
+                    record = await habit.tick(day, bool(msg.get("done", False)), text)
+                    await websocket.send_json(
+                        {
+                            "type": "tick_ack",
+                            "request_id": msg["request_id"],
+                            "timestamp": record.timestamp,
+                        }
+                    )
+                except Exception as e:
+                    logger.warning(f"[ws] failed to tick habit for {user.email}: {e}")
 
-            # Persist the tick, reusing the existing storage path.
-            try:
-                day = datetime.datetime.strptime(msg["day"], "%Y-%m-%d").date()
-                habit = await views.get_user_habit(user, msg["habit_id"])
-                text = _websocket_tick_text(msg)
-                record = await habit.tick(
-                    day,
-                    bool(msg.get("done", False)),
-                    text,
+            elif msg_type == "push_habit_list":
+                logger.info(
+                    f"[ws] received push_habit_list user={user_id} "
+                    f"request={msg.get('request_id')} "
+                    f"habits={len(msg.get('habits', []))}"
                 )
-                await websocket.send_json(
-                    {
-                        "type": "tick_ack",
-                        "request_id": msg["request_id"],
-                        "timestamp": record.timestamp,
-                    }
-                )
-            except Exception as e:
-                logger.warning(f"[ws] failed to tick habit for {user.email}: {e}")
-                continue
+                try:
+                    await _apply_push_habit_list(user, msg)
+                    timestamp = int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000)
+                    await websocket.send_json(
+                        {
+                            "type": "habit_list_ack",
+                            "request_id": msg["request_id"],
+                            "timestamp": timestamp,
+                        }
+                    )
+                    payload = {k: v for k, v in msg.items() if k not in ("type", "request_id")}
+                    publish(HabitListChanged(user_id=user_id, payload=payload))
+                except Exception as e:
+                    logger.warning(f"[ws] failed to apply habit list for {user.email}: {e}")
 
     except WebSocketDisconnect:
         pass
