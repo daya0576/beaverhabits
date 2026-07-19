@@ -37,7 +37,7 @@ async def user_authenticate(email: str, password: str) -> Optional[User]:
                     if user is None or not user.is_active:
                         return None
                     return user
-    except:
+    except Exception:
         logger.exception("Unkownn Exception")
         return None
 
@@ -53,7 +53,7 @@ async def user_create_token(user: User) -> Optional[str]:
                         return token
                     else:
                         return None
-    except:
+    except Exception:
         return None
 
 
@@ -67,7 +67,7 @@ async def user_check_token(token: str | None) -> bool:
                     strategy = get_jwt_strategy()
                     user = await strategy.read_token(token, user_manager)
                     return bool(user and user.is_active)
-    except:
+    except Exception:
         return False
 
 
@@ -108,7 +108,7 @@ async def user_get_by_email(email: str) -> Optional[User]:
                 async with get_user_manager_context(user_db) as user_manager:
                     user = await user_manager.get_by_email(email)
                     return user
-    except:
+    except Exception:
         return None
 
 
