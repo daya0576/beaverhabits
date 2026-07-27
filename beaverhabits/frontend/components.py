@@ -2,7 +2,6 @@ import asyncio
 import calendar
 import datetime
 import os
-from collections import OrderedDict
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Callable, Optional, Self
@@ -32,6 +31,7 @@ from beaverhabits.storage.storage import (
     HabitFrequency,
     HabitList,
     HabitStatus,
+    habits_by_tags as _habits_by_tags,
 )
 from beaverhabits.utils import (
     PERIOD_TYPE,
@@ -1118,21 +1118,7 @@ def filter_habits_with_tags(active_habits: list[Habit]) -> list[Habit]:
 
 
 def habits_by_tags(active_habits: list[Habit]) -> dict[str, list[Habit]]:
-    all_tags = get_all_tags(active_habits)
-    if not all_tags:
-        return {"": active_habits}
-
-    all_tags.append("Others")
-
-    habits = OrderedDict()
-    # with tags
-    for habit in active_habits:
-        for tag in habit.tags:
-            habits.setdefault(tag, []).append(habit)
-    # without tags
-    habits["Others"] = [h for h in active_habits if not h.tags]
-
-    return habits
+    return _habits_by_tags(active_habits)
 
 
 class TagChip(ui.chip):

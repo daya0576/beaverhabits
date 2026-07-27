@@ -270,6 +270,36 @@ class HabitListBuilder:
         return habits
 
 
+def habits_by_tags(active_habits: list[Habit]) -> dict[str, list[Habit]]:
+    tags: list[str] = []
+    for habit in active_habits:
+        for tag in habit.tags:
+            if tag not in tags:
+                tags.append(tag)
+
+    if not tags:
+        return {"": active_habits}
+
+    groups = {
+        tag: [habit for habit in active_habits if tag in habit.tags]
+        for tag in tags
+    }
+    groups["Others"] = [habit for habit in active_habits if not habit.tags]
+    return groups
+
+
+def habits_in_group_order(active_habits: list[Habit]) -> list[Habit]:
+    result: list[Habit] = []
+    seen: set[str] = set()
+    for group in habits_by_tags(active_habits).values():
+        for habit in group:
+            habit_id = str(habit.id)
+            if habit_id not in seen:
+                result.append(habit)
+                seen.add(habit_id)
+    return result
+
+
 @dataclass
 class ImageObject(DataClassJsonMixin):
     id: str

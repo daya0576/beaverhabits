@@ -17,7 +17,8 @@ from beaverhabits.app.schemas import UserCreate, UserRead
 from beaverhabits.app.users import auth_backend, fastapi_users
 from beaverhabits.configs import settings
 from beaverhabits.main import app
-from beaverhabits.routes.api import init_api_routes
+from beaverhabits.routes.api import _habit_list_export_data, init_api_routes
+from beaverhabits.storage.dict import DictHabitList
 
 PASSWORD = "TestPassword123!"
 
@@ -285,6 +286,28 @@ def test_list_habits_filter_by_status(auth_headers, sample_habit, client: TestCl
         headers=auth_headers,
     )
     assert response.status_code == 200
+
+
+def test_habit_export_uses_web_group_order_without_duplicates():
+    habit_list = DictHabitList({
+        "habits": [
+            {"id": "exercise", "name": "Exercise", "tags": ["daily"], "records": []},
+            {"id": "paipai", "name": "paipai", "tags": [], "records": []},
+            {"id": "reading", "name": "Reading", "tags": ["daily"], "records": []},
+            {"id": "table", "name": "Table Tennis", "tags": ["sport"], "records": []},
+            {"id": "rubber", "name": "Rubber", "tags": ["sport"], "records": []},
+            {"id": "life", "name": "Daily Life", "tags": [], "records": []},
+        ],
+        "order": ["exercise", "paipai", "reading", "table", "rubber", "life"],
+        "order_by": 3,
+    })
+
+    exported = _habit_list_export_data(habit_list)
+    expected = ["exercise", "reading", "table", "rubber", "paipai", "life"]
+
+    assert [habit["id"] for habit in exported["habits"]] == expected
+    assert exported["order"] == expected
+    assert len(exported["habits"]) == len(habit_list.habits)
 
 
 # ============================================================================

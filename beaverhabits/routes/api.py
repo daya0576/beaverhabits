@@ -1,4 +1,5 @@
 import datetime
+from copy import deepcopy
 from typing import Literal
 
 from fastapi import (
@@ -29,6 +30,7 @@ from beaverhabits.storage.storage import (
     HabitListBuilder,
     HabitListNotFoundError,
     HabitStatus,
+    habits_in_group_order,
 )
 
 api_router = APIRouter()
@@ -91,11 +93,10 @@ async def post_habits(
 
 
 # ---------------------------------------------------------------------------
-# Full-sync endpoints for native clients (whole-dict passthrough).
+# Full-sync endpoints for native clients.
 #
-# export/import operate on the raw stored dict
-# ({habits:[...], order, order_by, ...}) verbatim, so client-only fields
-# (e.g. records[].updated_at, reminders) round-trip losslessly. This is
+# Export preserves the raw records but arranges habits in the same grouped
+# order as the web homepage. Import remains a whole-dict passthrough. This is
 # distinct from the web import flow (which renames collisions and merges
 # server-side); here the client has already merged and sends the final state.
 #
@@ -104,13 +105,42 @@ async def post_habits(
 # ---------------------------------------------------------------------------
 
 
+def _habit_list_export_data(habit_list: HabitList) -> dict:
+    snapshot = deepcopy(habit_list.data)
+    active_habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
+    grouped_active = habits_in_group_order(active_habits)
+    all_habits = HabitListBuilder(habit_list).build()
+
+    ordered_ids = [str(habit.id) for habit in grouped_active]
+    seen = set(ordered_ids)
+    for habit in all_habits:
+        habit_id = str(habit.id)
+        if habit_id not in seen:
+            ordered_ids.append(habit_id)
+            seen.add(habit_id)
+
+    raw_habits = snapshot.get("habits", [])
+    by_id = {str(habit["id"]): habit for habit in raw_habits if "id" in habit}
+    for habit in raw_habits:
+        habit_id = str(habit.get("id"))
+        if habit_id not in seen:
+            ordered_ids.append(habit_id)
+            seen.add(habit_id)
+
+    snapshot["habits"] = [
+        by_id[habit_id] for habit_id in ordered_ids if habit_id in by_id
+    ]
+    snapshot["order"] = ordered_ids
+    return snapshot
+
+
 @api_router.get("/habits/export", tags=["habits"])
 async def export_habit_list(user: User = Depends(current_active_user)):
     try:
         habit_list = await views.user_storage.get_user_habit_list(user)
     except HabitListNotFoundError:
         return {"habits": []}
-    return habit_list.data
+    return _habit_list_export_data(habit_list)
 
 
 @api_router.get("/habits/{habit_id}", tags=["habits"])
