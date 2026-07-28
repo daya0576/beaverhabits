@@ -1,8 +1,27 @@
+from typing import Any
+
 from jinja2 import Environment
 from loguru import logger
 from nicegui import ui
 
 from beaverhabits.configs import settings
+from beaverhabits.telemetry import get_tracer
+
+_tracer = get_tracer(__name__)
+
+
+def run_js(code: str, *, name: str = "") -> None:
+    """Fire-and-forget: schedule JS in the browser, don't wait for result."""
+    span_name = f"js.{name}" if name else "js.run"
+    with _tracer.start_as_current_span(span_name):
+        ui.run_javascript(code)
+
+
+async def run_js_async(code: str, *, name: str = "") -> Any:
+    """Await JS execution and return the result (browser round-trip)."""
+    span_name = f"js.{name}" if name else "js.run_async"
+    with _tracer.start_as_current_span(span_name):
+        return await ui.run_javascript(code)
 
 PREVENT_CONTEXT_MENU = """\
 document.body.style.webkitTouchCallout='none';
@@ -79,31 +98,33 @@ PADDLE_JS = env.from_string(PADDLE_JS_TEMPLATE).render(
 
 def prevent_context_menu():
     logger.info("Run javascript to prevent context menu for iOS")
-    ui.run_javascript(PREVENT_CONTEXT_MENU)
+    run_js(PREVENT_CONTEXT_MENU, name="prevent_context_menu")
 
 
 def unhover_checkboxes():
-    ui.run_javascript(UNHOVER_CHECKBOXES)
+    run_js(UNHOVER_CHECKBOXES, name="unhover_checkboxes")
 
 
 def show_icons():
     logger.info("Showing icons in the menu")
-    ui.run_javascript(
+    run_js(
         """
         const icons = document.querySelectorAll('.theme-icon-lazy');
         icons.forEach(icon => {
             icon.classList.remove("invisible");
         });
-        """
+        """,
+        name="show_icons",
     )
 
 
 async def force_checkbox_blur():
     # Resolve ripple issue
     # https://github.com/quasarframework/quasar/blob/dev/ui/src/components/checkbox/QCheckbox.sass
-    await ui.run_javascript(
+    await run_js_async(
         """
        const checkboxes = document.querySelectorAll('.q-checkbox');
        checkboxes.forEach(checkbox => {checkbox.blur()});
-       """
+       """,
+        name="force_checkbox_blur",
     )

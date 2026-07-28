@@ -12,6 +12,7 @@ from beaverhabits.routes.api import init_api_routes
 from beaverhabits.routes.metrics import init_metrics_routes
 from beaverhabits.routes.routes import init_gui_routes
 from beaverhabits.scheduler import daily_backup_task
+from beaverhabits.telemetry import init_telemetry
 
 logger.info("Starting BeaverHabits...")
 
@@ -44,6 +45,8 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# OpenTelemetry – must be called before routes are added
+init_telemetry(app)
 
 # auth
 init_metrics_routes(app)

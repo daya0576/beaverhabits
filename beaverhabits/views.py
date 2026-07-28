@@ -23,6 +23,7 @@ from beaverhabits.app.db import User
 from beaverhabits.configs import settings
 from beaverhabits.core.backup import backup_to_telegram
 from beaverhabits.frontend.components import redirect
+from beaverhabits.frontend.javascript import run_js
 from beaverhabits.logger import logger
 from beaverhabits.storage import get_user_dict_storage, session_storage
 from beaverhabits.storage.dict import DAY_MASK, DictHabitList
@@ -84,6 +85,7 @@ async def get_user_habit_list(user: User) -> HabitList:
     try:
         return await user_storage.get_user_habit_list(user)
     except Exception:
+        logger.exception("Failed to get habit list for user %s", user.email)
         raise HTTPException(
             status_code=404,
             detail="The habit list data may be broken or missing, please contact the administrator.",
@@ -337,11 +339,11 @@ async def set_user_cookies(user: User) -> None:
     
     async def set_cookies_task():
         # Set email cookie (add more properties as needed)
-        ui.run_javascript(f'document.cookie = "email={user.email}; path=/; SameSite=Lax";')
+        run_js(f'document.cookie = "email={user.email}; path=/; SameSite=Lax";', name="set_cookie_email")
 
         customer = await crud.get_user_identity(user.email)
         is_pro = customer.activated if customer else False
-        ui.run_javascript(f'document.cookie = "is_pro={str(is_pro).lower()}; path=/; SameSite=Lax";')
+        run_js(f'document.cookie = "is_pro={str(is_pro).lower()}; path=/; SameSite=Lax";', name="set_cookie_is_pro")
     
     ui.timer(0.1, set_cookies_task, once=True)
 
