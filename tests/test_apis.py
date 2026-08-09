@@ -10,8 +10,19 @@ from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 from loguru import logger
 from nicegui import core
+from sqlalchemy import select
 
+from beaverhabits.app import crud
+from beaverhabits.app.auth import user_get_by_email
 from beaverhabits.app.db import User, engine
+from beaverhabits.app.db import (
+    HabitListModel,
+    UserApiTokenModel,
+    UserConfigsModel,
+    UserIdentityModel,
+    UserNoteImageModel,
+    async_session_maker,
+)
 from beaverhabits.app.dependencies import current_admin_user
 from beaverhabits.app.schemas import UserCreate, UserRead
 from beaverhabits.app.users import auth_backend, fastapi_users
@@ -152,7 +163,9 @@ async def test_open_registration(client: TestClient):
     assert response.json()["email"] == email
 
 
-async def test_register_requires_admin_auth_when_enabled(admin_protected_client: TestClient):
+async def test_register_requires_admin_auth_when_enabled(
+    admin_protected_client: TestClient,
+):
     """Test that /auth/register requires admin auth when REQUIRE_ADMIN_FOR_REGISTRATION=True."""
     email = f"newuser_{datetime.now().timestamp()}@test.com"
     data = {"email": email, "password": PASSWORD}
@@ -200,6 +213,82 @@ async def test_authentication_with_invalid_credentials(client: TestClient):
 async def test_api_without_token(client: TestClient):
     """Test that API endpoints require authentication."""
     response = client.get("/api/v1/habits")
+    assert response.status_code == 401
+
+
+async def test_authenticated_user_can_delete_own_account(client: TestClient):
+    email = f"delete_me_{datetime.now().timestamp()}@test.com"
+    register_response = client.post(
+        "/auth/register",
+        json={"email": email, "password": PASSWORD},
+    )
+    assert register_response.status_code == 201
+    user_id = register_response.json()["id"]
+
+    user = await user_get_by_email(email)
+    assert user is not None
+    await crud.update_user_habit_list(
+        user,
+        {"habits": [{"id": "delete-me", "name": "Delete me", "records": []}]},
+    )
+    await crud.update_user_configs(user, {"timezone": "UTC"})
+    await crud.save_user_image(user, b"delete me")
+    api_token = await crud.create_user_api_token(user)
+    await crud.get_or_create_user_identity(email, email, "", {})
+
+    login_response = client.post(
+        "/auth/login",
+        data={
+            "grant_type": "password",
+            "username": email,
+            "password": PASSWORD,
+        },
+        headers={"content-type": "application/x-www-form-urlencoded"},
+    )
+    assert login_response.status_code == 200
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    delete_response = client.delete("/api/v1/account", headers=headers)
+    assert delete_response.status_code == 204
+    assert delete_response.content == b""
+
+    rejected_response = client.get("/users/me", headers=headers)
+    assert rejected_response.status_code == 401
+    rejected_export = client.get("/api/v1/habits/export", headers=headers)
+    assert rejected_export.status_code == 401
+
+    api_token_response = client.get(
+        "/api/v1/habits",
+        headers={"Authorization": f"Bearer {api_token}"},
+    )
+    assert api_token_response.status_code == 401
+
+    async with async_session_maker() as session:
+        archived_user_result = await session.execute(
+            select(User).where(User.id == user_id)
+        )
+        archived_user = archived_user_result.scalar_one()
+        assert archived_user.is_active is False
+        assert archived_user.is_superuser is False
+        assert archived_user.is_verified is False
+        assert archived_user.email == f"deleted+{user_id}@deleted.invalid"
+        assert archived_user.email != email
+
+        deleted_data_checks = (
+            select(HabitListModel).where(HabitListModel.user_id == user_id),
+            select(UserConfigsModel).where(UserConfigsModel.user_id == user_id),
+            select(UserNoteImageModel).where(UserNoteImageModel.user_id == user_id),
+            select(UserApiTokenModel).where(UserApiTokenModel.user_id == user_id),
+            select(UserIdentityModel).where(UserIdentityModel.email == email),
+        )
+        for statement in deleted_data_checks:
+            result = await session.execute(statement)
+            assert result.scalar_one_or_none() is None
+
+
+async def test_delete_account_requires_authentication(client: TestClient):
+    response = client.delete("/api/v1/account")
     assert response.status_code == 401
 
 
@@ -289,18 +378,30 @@ def test_list_habits_filter_by_status(auth_headers, sample_habit, client: TestCl
 
 
 def test_habit_export_uses_web_group_order_without_duplicates():
-    habit_list = DictHabitList({
-        "habits": [
-            {"id": "exercise", "name": "Exercise", "tags": ["daily"], "records": []},
-            {"id": "paipai", "name": "paipai", "tags": [], "records": []},
-            {"id": "reading", "name": "Reading", "tags": ["daily"], "records": []},
-            {"id": "table", "name": "Table Tennis", "tags": ["sport"], "records": []},
-            {"id": "rubber", "name": "Rubber", "tags": ["sport"], "records": []},
-            {"id": "life", "name": "Daily Life", "tags": [], "records": []},
-        ],
-        "order": ["exercise", "paipai", "reading", "table", "rubber", "life"],
-        "order_by": 3,
-    })
+    habit_list = DictHabitList(
+        {
+            "habits": [
+                {
+                    "id": "exercise",
+                    "name": "Exercise",
+                    "tags": ["daily"],
+                    "records": [],
+                },
+                {"id": "paipai", "name": "paipai", "tags": [], "records": []},
+                {"id": "reading", "name": "Reading", "tags": ["daily"], "records": []},
+                {
+                    "id": "table",
+                    "name": "Table Tennis",
+                    "tags": ["sport"],
+                    "records": [],
+                },
+                {"id": "rubber", "name": "Rubber", "tags": ["sport"], "records": []},
+                {"id": "life", "name": "Daily Life", "tags": [], "records": []},
+            ],
+            "order": ["exercise", "paipai", "reading", "table", "rubber", "life"],
+            "order_by": 3,
+        }
+    )
 
     exported = _habit_list_export_data(habit_list)
     expected = ["exercise", "reading", "table", "rubber", "paipai", "life"]
@@ -666,7 +767,9 @@ async def admin_headers(admin_access_token: str):
     }
 
 
-async def test_admin_can_register_user(admin_headers, admin_protected_client: TestClient):
+async def test_admin_can_register_user(
+    admin_headers, admin_protected_client: TestClient
+):
     """Test that admin can register a new user via /auth/register when admin-protected."""
     new_user_email = f"newuser_{datetime.now().timestamp()}@test.com"
     response = admin_protected_client.post(
@@ -681,7 +784,9 @@ async def test_admin_can_register_user(admin_headers, admin_protected_client: Te
     assert data["is_active"]
 
 
-async def test_admin_register_duplicate_email_fails(admin_headers, admin_protected_client: TestClient):
+async def test_admin_register_duplicate_email_fails(
+    admin_headers, admin_protected_client: TestClient
+):
     """Test that registering a user with existing email fails."""
     email = f"duplicate_{datetime.now().timestamp()}@test.com"
 
@@ -702,7 +807,9 @@ async def test_admin_register_duplicate_email_fails(admin_headers, admin_protect
     assert response2.status_code == 400
 
 
-async def test_non_admin_cannot_register_user(auth_headers, admin_protected_client: TestClient):
+async def test_non_admin_cannot_register_user(
+    auth_headers, admin_protected_client: TestClient
+):
     """Test that non-admin users cannot register new users when admin-only mode is enabled."""
     response = admin_protected_client.post(
         "/auth/register",

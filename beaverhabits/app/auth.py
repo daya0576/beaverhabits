@@ -1,4 +1,6 @@
 import contextlib
+import datetime
+import secrets
 from typing import Optional
 from uuid import UUID
 
@@ -79,7 +81,7 @@ async def user_from_token(token: str | None) -> User | None:
                     return None
                 strategy = get_jwt_strategy()
                 user = await strategy.read_token(token, user_manager)
-                return user
+                return user if user and user.is_active else None
 
 
 async def user_create(
@@ -181,3 +183,22 @@ async def user_deletion(user: User) -> None:
         async with get_user_db_context(session) as user_db:
             async with get_user_manager_context(user_db) as user_manager:
                 await user_manager.delete(user)
+
+
+async def user_archive(user: User) -> User:
+    """Disable and anonymize an account while retaining a non-personal tombstone."""
+    archived_email = f"deleted+{user.id}@deleted.invalid"
+    async with get_async_session_context() as session:
+        async with get_user_db_context(session) as user_db:
+            async with get_user_manager_context(user_db) as user_manager:
+                return await user_manager._update(
+                    user,
+                    {
+                        "email": archived_email,
+                        "password": secrets.token_urlsafe(48),
+                        "is_active": False,
+                        "is_superuser": False,
+                        "is_verified": False,
+                        "updated_at": datetime.datetime.now(datetime.timezone.utc),
+                    },
+                )

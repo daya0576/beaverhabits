@@ -232,6 +232,8 @@ class UserStorage[L: HabitList](Protocol):
 
     async def init_user_habit_list(self, user: User, habit_list: L) -> None: ...
 
+    async def delete_user_habit_list(self, user: User) -> None: ...
+
 
 class HabitListBuilder:
     def __init__(self, habit_list: HabitList):
@@ -281,8 +283,7 @@ def habits_by_tags(active_habits: list[Habit]) -> dict[str, list[Habit]]:
         return {"": active_habits}
 
     groups = {
-        tag: [habit for habit in active_habits if tag in habit.tags]
-        for tag in tags
+        tag: [habit for habit in active_habits if tag in habit.tags] for tag in tags
     }
     groups["Others"] = [habit for habit in active_habits if not habit.tags]
     return groups

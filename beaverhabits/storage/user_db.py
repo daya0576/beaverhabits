@@ -1,3 +1,5 @@
+import asyncio
+
 from loguru import logger
 from nicegui import background_tasks, core
 from nicegui.storage import observables
@@ -12,16 +14,24 @@ class DatabasePersistentDict(observables.ObservableDict):
 
     def __init__(self, user: User, data: dict) -> None:
         self.user = user
+        self._deleted = False
+        self._backup_lock = asyncio.Lock()
         super().__init__(data, on_change=self.backup)
 
     def backup(self) -> None:
+        if self._deleted:
+            return
+
         async def async_backup() -> None:
-            try:
-                await crud.update_user_habit_list(self.user, self)
-            except Exception as e:
-                logger.exception(
-                    f"[backup]failed to update habit list for user {self.user.email}: {e}"
-                )
+            async with self._backup_lock:
+                if self._deleted:
+                    return
+                try:
+                    await crud.update_user_habit_list(self.user, self)
+                except Exception as e:
+                    logger.exception(
+                        f"[backup]failed to update habit list for user {self.user.email}: {e}"
+                    )
 
         if core.loop and core.loop.is_running():
             background_tasks.create_lazy(
@@ -29,6 +39,12 @@ class DatabasePersistentDict(observables.ObservableDict):
             )
         else:
             raise RuntimeError("No event loop found for scheduling backup")
+
+    async def delete(self) -> None:
+        """Stop future database backups and wait for any active backup to finish."""
+        self._deleted = True
+        async with self._backup_lock:
+            pass
 
 
 class UserDatabaseStorage(UserStorage[DictHabitList]):
@@ -56,3 +72,8 @@ class UserDatabaseStorage(UserStorage[DictHabitList]):
             )
 
         await crud.update_user_habit_list(user, habit_list.data)
+
+    async def delete_user_habit_list(self, user: User) -> None:
+        persistent_dict = self.user.pop(user.id, None)
+        if persistent_dict is not None:
+            await persistent_dict.delete()

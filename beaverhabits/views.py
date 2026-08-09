@@ -15,6 +15,7 @@ from beaverhabits.app.auth import (
     user_create,
     user_create_reset_token,
     user_create_token,
+    user_archive,
     user_get_by_email,
     user_reset_password,
 )
@@ -115,6 +116,15 @@ async def get_or_create_user_habit_list(user: User, habit_list: HabitList) -> Ha
     await user_storage.init_user_habit_list(user, habit_list)
 
     return await get_user_habit_list(user)
+
+
+async def delete_user_account(user: User) -> None:
+    """Delete personal data and retain only an anonymous, disabled tombstone."""
+    await user_storage.delete_user_habit_list(user)
+    await crud.delete_user_api_token(user)
+    await crud.delete_user_identity(user.email)
+    await crud.delete_user_owned_data(user)
+    await user_archive(user)
 
 
 async def export_user_habit_list(habit_list: HabitList, user_identify: str) -> bool:
@@ -290,7 +300,9 @@ async def update_custom_css(user: User, css: str) -> None:
 
 
 def get_default_chips() -> list[str]:
-    return app.storage.user.get("default_chips", settings.DEFAULT_COMPLETION_STATUS_LIST)
+    return app.storage.user.get(
+        "default_chips", settings.DEFAULT_COMPLETION_STATUS_LIST
+    )
 
 
 def get_default_chips_mapping() -> dict[str, str]:
@@ -334,14 +346,17 @@ async def set_user_cookies(user: User) -> None:
     """Set user-related cookies for cross-app usage via JavaScript."""
     if settings.ENABLE_PLAN is False:
         return
-    
+
     async def set_cookies_task():
         # Set email cookie (add more properties as needed)
-        ui.run_javascript(f'document.cookie = "email={user.email}; path=/; SameSite=Lax";')
+        ui.run_javascript(
+            f'document.cookie = "email={user.email}; path=/; SameSite=Lax";'
+        )
 
         customer = await crud.get_user_identity(user.email)
         is_pro = customer.activated if customer else False
-        ui.run_javascript(f'document.cookie = "is_pro={str(is_pro).lower()}; path=/; SameSite=Lax";')
-    
-    ui.timer(0.1, set_cookies_task, once=True)
+        ui.run_javascript(
+            f'document.cookie = "is_pro={str(is_pro).lower()}; path=/; SameSite=Lax";'
+        )
 
+    ui.timer(0.1, set_cookies_task, once=True)

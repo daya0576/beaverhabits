@@ -1,7 +1,6 @@
 from nicegui import ui
 
 from beaverhabits import const, views
-from beaverhabits.app.auth import user_deletion
 from beaverhabits.app.db import User
 from beaverhabits.frontend.components import compat_card, habit_backup_dialog
 from beaverhabits.frontend.layout import layout
@@ -52,7 +51,7 @@ def delete_account(habit_list: HabitList, user: User):
 
         await export_json()
 
-        await user_deletion(user)
+        await views.delete_user_account(user)
 
         ui.navigate.reload()
 

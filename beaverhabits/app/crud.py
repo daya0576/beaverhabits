@@ -3,7 +3,7 @@ import uuid
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from beaverhabits.logger import logger
 
@@ -145,6 +145,26 @@ async def update_user_identity(customer_id: str, data: dict, activate: bool) -> 
         user_identity.activated = activate
         await session.commit()
         logger.info(f"[CRUD] User identity updated: {user_identity}")
+
+
+async def delete_user_identity(email: str) -> None:
+    async with get_async_session_context() as session:
+        stmt = select(UserIdentityModel).where(UserIdentityModel.email == email)
+        result = await session.execute(stmt)
+        user_identity = result.scalar()
+        if user_identity:
+            await session.delete(user_identity)
+            await session.commit()
+            logger.info(f"[CRUD] User identity deleted: {email}")
+
+
+async def delete_user_owned_data(user: User) -> None:
+    """Delete personal data linked to a user before archiving the account row."""
+    async with get_async_session_context() as session:
+        for model in (UserNoteImageModel, UserConfigsModel, HabitListModel):
+            await session.execute(delete(model).where(model.user_id == user.id))
+        await session.commit()
+        logger.info(f"[CRUD] User {user.id} owned data deleted")
 
 
 async def get_user_configs(user: User) -> dict | None:

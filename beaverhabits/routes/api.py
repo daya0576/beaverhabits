@@ -8,6 +8,7 @@ from fastapi import (
     FastAPI,
     HTTPException,
     Query,
+    Response,
     WebSocket,
     WebSocketDisconnect,
 )
@@ -34,6 +35,13 @@ from beaverhabits.storage.storage import (
 )
 
 api_router = APIRouter()
+
+
+@api_router.delete("/account", status_code=204, tags=["account"])
+async def delete_account(user: User = Depends(current_active_user)) -> Response:
+    """Remove personal data and archive an anonymous disabled account record."""
+    await views.delete_user_account(user)
+    return Response(status_code=204)
 
 
 async def current_habit_list(user: User = Depends(current_active_user)) -> HabitList:
@@ -303,7 +311,6 @@ def format_json_response(habit: Habit) -> dict:
 # ---------------------------------------------------------------------------
 
 
-
 def _websocket_tick_text(message: dict) -> str | None:
     text = message.get("text")
     return "" if "text" in message and text is None else text
@@ -339,12 +346,14 @@ async def _apply_push_habit_list(user: User, msg: dict) -> None:
             h.star = incoming["star"]
         if "status" in incoming:
             from beaverhabits.storage.storage import HabitStatus as _HS
+
             try:
                 h.status = _HS(incoming["status"])
             except ValueError:
                 pass
         if "period" in incoming:
             from beaverhabits.storage.storage import HabitFrequency as _HF
+
             p = incoming["period"]
             h.period = _HF.from_dict(p) if p else None
         if "tags" in incoming:
@@ -365,9 +374,10 @@ async def _apply_push_habit_list(user: User, msg: dict) -> None:
         habit_list.order = msg["order"]
     if "order_by" in msg:
         from beaverhabits.storage.storage import HabitOrder as _HO
+
         try:
             habit_list.order_by = _HO(msg["order_by"])
-        except (ValueError, KeyError):
+        except ValueError, KeyError:
             pass
 
 
@@ -414,7 +424,9 @@ async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None))
                 )
                 try:
                     await _apply_push_habit_list(user, msg)
-                    timestamp = int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000)
+                    timestamp = int(
+                        datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000
+                    )
                     await websocket.send_json(
                         {
                             "type": "habit_list_ack",
@@ -422,10 +434,14 @@ async def sync_ws(websocket: WebSocket, token: str | None = Query(default=None))
                             "timestamp": timestamp,
                         }
                     )
-                    payload = {k: v for k, v in msg.items() if k not in ("type", "request_id")}
+                    payload = {
+                        k: v for k, v in msg.items() if k not in ("type", "request_id")
+                    }
                     publish(HabitListChanged(user_id=user_id, payload=payload))
                 except Exception as e:
-                    logger.warning(f"[ws] failed to apply habit list for {user.email}: {e}")
+                    logger.warning(
+                        f"[ws] failed to apply habit list for {user.email}: {e}"
+                    )
 
     except WebSocketDisconnect:
         pass
