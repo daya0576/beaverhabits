@@ -37,6 +37,9 @@ def add_ui(habit_list: HabitList):
 
 def add_page_ui(habit_list: HabitList):
     with layout(habit_list=habit_list):
+        with ui.element('p'):
+          ui.icon('lightbulb_outline', size="1.5em").props('aria-label="Hint"')
+          ui.html('You can use hashtags to #group your items', sanitize=False, tag='em')
         with ui.column().classes("items-center w-full").props("role=list"):
             add_ui(habit_list)
 
