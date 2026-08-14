@@ -43,3 +43,6 @@ def add_page_ui(habit_list: HabitList):
         with ui.grid(columns=10, rows=1).classes("w-full gap-0 items-center"):
             add = HabitAddButton(habit_list, add_ui.refresh)
             add.classes("col-span-8")
+        ui.button("Save").props("flat").on_click(
+            lambda: ui.navigate.to("/gui")
+        )
