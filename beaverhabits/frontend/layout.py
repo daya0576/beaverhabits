@@ -123,6 +123,219 @@ def custom_headers():
     # custom css styles
     views.apply_theme_style()
 
+    # Green martian terminal theme
+    ui.add_head_html(
+        """
+        <style>
+        /* Green martian terminal theme */
+        :root, body {
+            --q-primary: #00ff66;
+            --q-secondary: #1f8a4c;
+            --q-accent: #00ff41;
+        }
+
+        body, h1, h2, h3, h4, h5, h6,
+        input, textarea, select, button,
+        .q-btn, .q-field, .q-item, .q-card, .q-menu, .q-dialog {
+            font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, "Courier New", monospace !important;
+        }
+
+        body, body.body--dark, .q-layout, .q-page-container, .q-page {
+            background-color: #040804 !important;
+            color: #00ff41;
+        }
+
+        h1, h2, h3, h4, h5, h6, a {
+            color: #00ff41 !important;
+            text-shadow: 0 0 6px rgba(0, 255, 65, 0.35);
+        }
+
+        .text-grey, .text-muted, .q-item__label--caption {
+            color: #1f8a4c !important;
+        }
+
+        .q-card {
+            background-color: #0a100a !important;
+            border: 1px solid #123f1f !important;
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.06) !important;
+            color: #00ff41;
+        }
+
+        .q-checkbox .q-checkbox__label,
+        .q-checkbox {
+            color: #1f8a4c;
+        }
+        .q-checkbox.q-checkbox--active,
+        .q-checkbox.q-checkbox--active .q-checkbox__label,
+        .q-checkbox.q-checkbox--active .q-checkbox__inner {
+            color: #00ff66 !important;
+            text-shadow: 0 0 6px rgba(0, 255, 102, 0.5);
+            filter: drop-shadow(0 0 3px rgba(0, 255, 102, 0.4));
+        }
+
+        .q-btn {
+            background-color: #0a140a !important;
+            border: 1px solid #123f1f !important;
+            color: #00ff41 !important;
+            box-shadow: none !important;
+        }
+        .q-btn:hover {
+            border-color: #00ff66 !important;
+            box-shadow: 0 0 8px rgba(0, 255, 102, 0.25) !important;
+        }
+        .q-btn.bg-primary, .q-btn--primary, .q-btn.text-primary {
+            background-color: #0a140a !important;
+            border-color: #00ff66 !important;
+            color: #00ff66 !important;
+        }
+
+        .q-header {
+            background-color: #030603 !important;
+            border-bottom: 1px solid #123f1f !important;
+        }
+
+        .q-dialog .q-card, .q-menu {
+            background-color: #0a100a !important;
+            border: 1px solid #123f1f !important;
+            color: #00ff41;
+        }
+        .q-item {
+            background-color: transparent;
+            color: #00ff41;
+        }
+        .q-item:hover, .q-item.q-item--active {
+            background-color: #0d1a0d !important;
+        }
+
+        .q-input .q-field__control,
+        .q-select .q-field__control,
+        .q-textarea .q-field__control,
+        .q-field .q-field__control {
+            background-color: #060a06 !important;
+            border: 1px solid #123f1f !important;
+            color: #00ff41 !important;
+        }
+        .q-field__native, .q-field__input, .q-field__label {
+            color: #00ff41 !important;
+            caret-color: #00ff41;
+        }
+        .q-field__label {
+            color: #1f8a4c !important;
+        }
+
+        .q-toggle.q-toggle--active .q-toggle__inner,
+        .q-toggle.q-toggle--active .q-toggle__track,
+        .q-toggle.q-toggle--active .q-toggle__thumb {
+            color: #00ff66 !important;
+        }
+        .q-toggle.q-toggle--active .q-toggle__track {
+            background-color: #123f1f !important;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #040804;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #123f1f;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1f8a4c;
+        }
+        html {
+            scrollbar-color: #123f1f #040804;
+        }
+
+        ::selection {
+            background: #00ff41;
+            color: #040804;
+        }
+
+        /* Scanlines overlay; pointer-events none so it never blocks clicks. */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 99999;
+            background: repeating-linear-gradient(
+                to bottom,
+                rgba(0, 255, 65, 0.03) 0px,
+                rgba(0, 255, 65, 0.03) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+        }
+
+        /* Fixes for components still using the app primary rgb(88, 152, 212). */
+        .q-checkbox__inner:before {
+            border-color: #1f8a4c !important;
+            color: #1f8a4c !important;
+        }
+        .q-checkbox__inner:hover:before {
+            border-color: #00ff66 !important;
+        }
+        .q-checkbox[aria-checked="true"] .q-checkbox__inner:before,
+        .q-checkbox--active .q-checkbox__inner:before {
+            border-color: #00ff66 !important;
+            color: #00ff66 !important;
+            box-shadow: 0 0 6px rgba(0, 255, 102, 0.4);
+        }
+        .q-checkbox__inner svg,
+        .q-checkbox__inner svg path {
+            fill: #00ff66 !important;
+            stroke: #00ff66 !important;
+        }
+
+        .text-primary {
+            color: #00ff66 !important;
+        }
+        .bg-primary {
+            background-color: #00ff66 !important;
+        }
+
+        .q-btn.text-primary,
+        .q-btn .q-icon,
+        .q-btn__content {
+            color: #00ff41 !important;
+        }
+
+        .q-toggle .q-toggle__inner {
+            color: #1f8a4c !important;
+        }
+        .q-toggle[aria-checked="true"] .q-toggle__inner,
+        .q-toggle.q-toggle--active .q-toggle__inner {
+            color: #00ff66 !important;
+        }
+        .q-toggle[aria-checked="true"] .q-toggle__track,
+        .q-toggle.q-toggle--active .q-toggle__track {
+            background-color: #123f1f !important;
+        }
+
+        a, .q-item.q-item--active, .q-item.q-router-link--active {
+            color: #00ff66 !important;
+        }
+
+        .q-pagination .q-btn--standard,
+        .q-pagination .q-btn[aria-current="true"],
+        .q-pagination .q-btn.text-primary {
+            color: #00ff66 !important;
+            border-color: #00ff66 !important;
+        }
+
+        .q-linear-progress, .q-circular-progress {
+            color: #00ff66 !important;
+        }
+        </style>
+        """
+    )
+
 
 def show_help_dialog():
     with ui.context.client.content:

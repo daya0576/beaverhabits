@@ -376,7 +376,7 @@ def init_gui_routes(fastapi_app: FastAPI):
         fastapi_app,
         title=const.PAGE_TITLE,
         storage_secret=settings.NICEGUI_STORAGE_SECRET,
-        favicon="statics/images/favicon.svg",
+        favicon="👽",
         dark=settings.DARK_MODE,
         reconnect_timeout=10,
         # Viewport Settings for Web Applications
