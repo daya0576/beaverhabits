@@ -38,6 +38,10 @@ Zero configuration, high availability, and low latency powered by global edge ne
 
 Simply search for "Beaver Habit Tracker" in the Community Apps store!
 
+### Easypanel
+
+[Easypanel](https://easypanel.io/) can deploy Beaver Habit Tracker with one click using its [official template](https://easypanel.io/templates/beaverhabits), which runs the Docker image above with a persistent volume for you.
+
 ### Ship with Docker
 
 ```bash
