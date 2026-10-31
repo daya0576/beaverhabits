@@ -106,11 +106,16 @@ def habit_list_ui(days: list[datetime.date], active_habits: List[Habit]):
         # Habit Rows
         groups = habits_by_tags(active_habits)
 
+        # A habit with multiple tags belongs to several groups; render it only
+        # once, in the first group it appears in.
+        rendered: set[str] = set()
         for tag, habit_list in groups.items():
+            habit_list = [h for h in habit_list if str(h.id) not in rendered]
             if not habit_list:
                 continue
 
             for habit in habit_list:
+                rendered.add(str(habit.id))
                 with ui.card().classes(COMPAT_CLASSES).classes("theme-card-shadow"):
                     with grid(columns, 1):
                         habit_row(habit, tag, days)

@@ -1,5 +1,3 @@
-from itertools import chain
-
 from nicegui import ui
 
 from beaverhabits.frontend import components
@@ -8,17 +6,21 @@ from beaverhabits.frontend.components import (
     HabitDeleteButton,
     HabitNameInput,
     HabitStarCheckbox,
-    habits_by_tags,
 )
 from beaverhabits.frontend.layout import layout
-from beaverhabits.storage.storage import HabitList, HabitListBuilder, HabitStatus
+from beaverhabits.storage.storage import (
+    HabitList,
+    HabitListBuilder,
+    HabitStatus,
+    habits_in_group_order,
+)
 
 
 @ui.refreshable
 def add_ui(habit_list: HabitList):
     habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
-    groups = habits_by_tags(habits)
-    for item in chain.from_iterable(groups.values()):
+    # A habit with multiple tags belongs to several groups; list it only once.
+    for item in habits_in_group_order(habits):
         with components.grid(columns=10).props("role=listitem"):
             with HabitNameInput(item, refresh=add_ui.refresh) as name:
                 name.classes("col-span-8 break-all")
