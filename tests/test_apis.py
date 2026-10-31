@@ -12,6 +12,7 @@ from loguru import logger
 from nicegui import core
 from sqlalchemy import select
 
+from beaverhabits import views
 from beaverhabits.app import crud
 from beaverhabits.app.auth import user_get_by_email
 from beaverhabits.app.db import User, engine
@@ -285,6 +286,19 @@ async def test_authenticated_user_can_delete_own_account(client: TestClient):
         for statement in deleted_data_checks:
             result = await session.execute(statement)
             assert result.scalar_one_or_none() is None
+
+
+async def test_admin_delete_user_account(client: TestClient):
+    email = f"admin_delete_{datetime.now().timestamp()}@test.com"
+    register_response = client.post(
+        "/auth/register",
+        json={"email": email, "password": PASSWORD},
+    )
+    assert register_response.status_code == 201
+
+    assert await views.admin_delete_user_account(f" {email} ")
+    assert await user_get_by_email(email) is None
+    assert not await views.admin_delete_user_account(email)
 
 
 async def test_delete_account_requires_authentication(client: TestClient):

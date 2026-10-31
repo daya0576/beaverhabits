@@ -127,6 +127,15 @@ async def delete_user_account(user: User) -> None:
     await user_archive(user)
 
 
+async def admin_delete_user_account(email: str) -> bool:
+    """Delete the account registered with email; return False if none exists."""
+    user = await user_get_by_email(email.strip())
+    if user is None:
+        return False
+    await delete_user_account(user)
+    return True
+
+
 async def export_user_habit_list(habit_list: HabitList, user_identify: str) -> bool:
     habits = HabitListBuilder(habit_list).status(HabitStatus.ACTIVE).build()
 

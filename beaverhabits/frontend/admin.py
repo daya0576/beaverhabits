@@ -40,3 +40,15 @@ async def admin_page(user: User):
                 views.promote_user_to_pro(user_email.value, False), name="demote_user"
             ),
         )
+
+        async def delete_account():
+            email = (user_email.value or "").strip()
+            if not email or email == user.email:
+                ui.notify("Invalid email", color="negative")
+                return
+            if await views.admin_delete_user_account(email):
+                ui.notify(f"Deleted account {email}", color="positive")
+            else:
+                ui.notify(f"User {email} not found", color="negative")
+
+        ui.button("Delete account", color="negative", on_click=delete_account)
