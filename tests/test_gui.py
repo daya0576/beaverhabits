@@ -4,6 +4,7 @@ from nicegui import ui
 from nicegui.testing import User
 
 from beaverhabits.frontend.add_page import add_page_ui
+from beaverhabits.frontend.components import HabitCheckBox, HabitNameInput
 from beaverhabits.frontend.habit_page import habit_page_ui
 from beaverhabits.frontend.index_page import index_page_ui
 from beaverhabits.frontend.order_page import order_page_ui
@@ -84,3 +85,31 @@ async def test_habit_stats_page(user) -> None:
 
     await user.open("/")
     await user.should_see("Order pizz")
+
+
+async def test_add_page_lists_multi_tag_habit_once(user) -> None:
+    days = dummy_days(7)
+    habits = dummy_habit_list(days)
+    habits.habits[0].tags = ["Category", "Another", "Three"]
+
+    @ui.page("/")
+    def page():
+        add_page_ui(habits)
+
+    await user.open("/")
+    inputs = user.find(HabitNameInput).elements
+    assert len(inputs) == len(habits.habits)
+
+
+async def test_index_page_lists_multi_tag_habit_once(user) -> None:
+    days = dummy_days(7)
+    habits = dummy_habit_list(days)
+    habits.habits[0].tags = ["Category", "Another", "Three"]
+
+    @ui.page("/")
+    def page():
+        index_page_ui(days, habits)
+
+    await user.open("/")
+    checkboxes = user.find(HabitCheckBox).elements
+    assert len(checkboxes) == len(habits.habits) * len(days)
