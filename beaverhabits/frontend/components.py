@@ -395,9 +395,16 @@ class HabitNameInput(ui.input):
             self.on("keydown.enter", self._on_keydown_enter)
 
     async def _on_keydown_enter(self):
+        # Keep the rejected text so the user can correct it.
+        if self._validate(self.value):
+            return
         await self._save(self.value)
 
     async def _on_blur(self):
+        # Discard a rejected edit and restore the saved name.
+        if self._validate(self.value):
+            self.value = self.encode_name(self.habit)
+            return
         await self._save(self.value)
 
     @plan.pro_required("Update pro to edit habit name and tags")
@@ -416,7 +423,8 @@ class HabitNameInput(ui.input):
                 self.refresh()
 
     def _validate(self, value: str) -> Optional[str]:
-        if not value:
+        name, _ = self.decode_name(value or "")
+        if not name.strip():
             return "Name is required"
         if len(value) > 50:
             return "Too long"
