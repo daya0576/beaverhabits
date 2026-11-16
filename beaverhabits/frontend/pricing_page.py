@@ -153,7 +153,7 @@ def footer():
         ui.space()
         link = lambda text, url: ui.link(text, url, True)
         link("Wiki", "https://github.com/daya0576/beaverhabits/wiki")
-        link("Contact", "mailto:daya0576@gmail.com")
+        link("Contact", "mailto:hello@beaverhabits.com")
         link("Privacy Policy", "/privacy")
         link("Terms of Service", "/terms")
         ui.space()

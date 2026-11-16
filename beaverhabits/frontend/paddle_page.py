@@ -4,7 +4,9 @@ TERMS = """\
 ## Terms of Service
 Terms of Service for Beaver Habit Tracker
 
-Effective Date: 03/16/2025
+Effective Date: 11/16/2026
+
+Beaver Habit Tracker is operated by Beaver Studio LLC, a Wyoming limited liability company ("we", "us").
 
 #### Acceptance of Terms
 
@@ -36,18 +38,20 @@ We reserve the right to modify these Terms of Service at any time. We will notif
 
 #### Governing Law
 
-These Terms of Service shall be governed by and construed in accordance with the laws of [Your State/Country].
+These Terms of Service shall be governed by and construed in accordance with the laws of the State of Wyoming, United States.
 
 #### Contact Us
 
 If you have any questions regarding these Terms of Service, please contact us at:
 
-- Email: daya0576@gmail.com
+- Email: hello@beaverhabits.com
 """
 
 PRIVACY = """\
 ## Privacy Policy
-Effective Date: 03/16/2025
+Effective Date: 11/16/2026
+
+Beaver Habit Tracker is operated by Beaver Studio LLC, a Wyoming limited liability company ("we", "us").
 
 #### Introduction
 
@@ -93,7 +97,7 @@ We may update this Privacy Policy from time to time. We encourage you to review 
 
 If you have any questions or concerns about this Privacy Policy, please contact us at:
 
-- Email: daya0576@gmail.com
+- Email: hello@beaverhabits.com
 """
 
 
