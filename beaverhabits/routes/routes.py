@@ -1,4 +1,5 @@
 import io
+import time
 from typing import Annotated, Optional
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile, status
@@ -48,6 +49,36 @@ from beaverhabits.storage.meta import GUI_ROOT_PATH
 from beaverhabits.utils import dummy_days, fetch_user_dark_mode, get_user_today_date
 
 UNRESTRICTED_PAGE_ROUTES = ("/login", "/register")
+SESSION_REFRESH_KEY = "refreshed_at"
+STATIC_PATH_PREFIXES = ("/_nicegui/", "/statics/")
+
+
+def maybe_refresh_session(
+    request: Request,
+    *,
+    now: int | None = None,
+    refresh_interval: int | None = None,
+) -> bool:
+    if request.url.path.startswith(STATIC_PATH_PREFIXES):
+        return False
+    if "session" not in request.scope:
+        return False
+    interval = (
+        settings.NICEGUI_SESSION_REFRESH_INTERVAL_SECONDS
+        if refresh_interval is None
+        else refresh_interval
+    )
+    if interval <= 0:
+        return False
+    current_time = int(time.time()) if now is None else now
+    last_refreshed = request.session.get(SESSION_REFRESH_KEY)
+    if (
+        isinstance(last_refreshed, (int, float))
+        and current_time - last_refreshed < interval
+    ):
+        return False
+    request.session[SESSION_REFRESH_KEY] = current_time
+    return True
 
 
 @ui.page("/demo")
@@ -355,6 +386,9 @@ def init_gui_routes(fastapi_app: FastAPI):
             # app.storage.user["referrer_path"] = request.url.path.removeprefix(root_path)
             return RedirectResponse("/login")
 
+        if response.status_code < 400 and app.storage.user.get("auth_token"):
+            maybe_refresh_session(request)
+
         return response
 
     @app.middleware("http")
@@ -372,10 +406,15 @@ def init_gui_routes(fastapi_app: FastAPI):
     app.on_connect(fetch_user_dark_mode)
     # app.on_connect(views.apply_theme_style)
 
+    session_middleware_kwargs = {
+        "max_age": settings.NICEGUI_SESSION_MAX_AGE_SECONDS,
+        "https_only": settings.NICEGUI_SESSION_HTTPS_ONLY,
+    }
     ui.run_with(
         fastapi_app,
         title=const.PAGE_TITLE,
         storage_secret=settings.NICEGUI_STORAGE_SECRET,
+        session_middleware_kwargs=session_middleware_kwargs,
         favicon="statics/images/favicon.svg",
         dark=settings.DARK_MODE,
         reconnect_timeout=10,

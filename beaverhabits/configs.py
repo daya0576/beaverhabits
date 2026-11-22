@@ -51,6 +51,9 @@ class Settings(BaseSettings):
 
     # NiceGUI
     NICEGUI_STORAGE_SECRET: str = "dev"
+    NICEGUI_SESSION_MAX_AGE_SECONDS: int = 365 * 24 * 60 * 60  # 365 days
+    NICEGUI_SESSION_REFRESH_INTERVAL_SECONDS: int = 24 * 60 * 60  # 1 day
+    NICEGUI_SESSION_HTTPS_ONLY: bool = False
     GUI_MOUNT_PATH: str = "/gui"
     DEMO_MOUNT_PATH: str = "/demo"
     DARK_MODE: bool | None = None
