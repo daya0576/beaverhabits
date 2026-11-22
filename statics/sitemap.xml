@@ -4,10 +4,10 @@
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
-  <!-- Homepage / Pricing Page -->
+  <!-- Homepage -->
   <url>
     <loc>https://beaverhabits.com/</loc>
-    <lastmod>2026-01-29</lastmod>
+    <lastmod>2026-11-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -15,39 +15,23 @@
   <!-- Demo Page -->
   <url>
     <loc>https://beaverhabits.com/demo</loc>
-    <lastmod>2026-01-29</lastmod>
+    <lastmod>2026-11-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
-  </url>
-
-  <!-- Pricing Page -->
-  <url>
-    <loc>https://beaverhabits.com/pricing</loc>
-    <lastmod>2026-01-29</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
-  </url>
-
-  <!-- Login Page -->
-  <url>
-    <loc>https://beaverhabits.com/login</loc>
-    <lastmod>2026-01-29</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Register Page -->
-  <url>
-    <loc>https://beaverhabits.com/register</loc>
-    <lastmod>2026-01-29</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
 
   <!-- Privacy Policy -->
   <url>
     <loc>https://beaverhabits.com/privacy</loc>
-    <lastmod>2026-01-29</lastmod>
+    <lastmod>2026-11-22</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <!-- iOS Privacy Policy -->
+  <url>
+    <loc>https://beaverhabits.com/privacy/ios</loc>
+    <lastmod>2026-11-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
@@ -55,7 +39,7 @@
   <!-- Terms of Service -->
   <url>
     <loc>https://beaverhabits.com/terms</loc>
-    <lastmod>2026-01-29</lastmod>
+    <lastmod>2026-11-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

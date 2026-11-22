@@ -2,12 +2,6 @@
 
 User-agent: *
 Allow: /
-Allow: /demo
-Allow: /pricing
-Allow: /login
-Allow: /register
-Allow: /terms
-Allow: /privacy
 
 # Disallow authenticated pages
 Disallow: /gui/
@@ -25,4 +19,3 @@ Crawl-delay: 1
 
 # Sitemap
 Sitemap: https://beaverhabits.com/sitemap.xml
-Sitemap: https://beaverhabits.com/sitemap_index.xml

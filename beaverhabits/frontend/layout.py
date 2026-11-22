@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from nicegui import background_tasks, ui
 
-from beaverhabits import views
+from beaverhabits import const, views
 from beaverhabits.app.auth import user_logout
 from beaverhabits.configs import settings
 from beaverhabits.frontend import css, icons
@@ -50,33 +50,47 @@ def pwa_headers():
         ui.add_head_html('<link rel="manifest" href="/statics/pwa/manifest.json">')
 
 
-def custom_headers():
+def custom_headers(
+    *,
+    title: str | None = None,
+    description: str | None = None,
+    robots: str | None = None,
+):
     # Get current page info
-    page_url = "https://beaverhabits.com" + page_path()
+    path = page_path()
+    page_url = "https://beaverhabits.com" + path
+    is_demo_home = path == "/demo"
+    meta_title = title or ("Live Demo - Beaver Habit Tracker" if is_demo_home else const.PAGE_TITLE)
+    meta_description = description or (
+        "Try the interactive Beaver Habit Tracker demo in your browser. Track daily habits without goals, no sign-up required."
+        if is_demo_home
+        else "A minimal habit tracking app without Goals. Track your daily habits with a simple, privacy-focused interface."
+    )
+    meta_robots = robots or ("index, follow" if is_demo_home else "noindex, nofollow")
 
     # SEO meta tags
     ui.add_head_html(
         f"""
         <!-- Basic Meta Tags -->
-        <meta name="description" content="A minimal habit tracking app without Goals. Track your daily habits with a simple, privacy-focused interface.">
+        <meta name="description" content="{meta_description}">
         <meta name="keywords" content="habit tracker, habit tracking, self-hosted, productivity, daily habits, habit building, open source">
         <meta name="author" content="daya0576">
-        <meta name="robots" content="index, follow">
+        <meta name="robots" content="{meta_robots}">
         <link rel="canonical" href="{page_url}">
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="{page_url}">
-        <meta property="og:title" content="Beaver Habit Tracker">
-        <meta property="og:description" content="A minimal habit tracking app without Goals. Track your daily habits with privacy and simplicity.">
+        <meta property="og:title" content="{meta_title}">
+        <meta property="og:description" content="{meta_description}">
         <meta property="og:image" content="https://beaverhabits.com/statics/images/apple-touch-icon-v4.png">
         <meta property="og:site_name" content="Beaver Habit Tracker">
         
         <!-- Twitter -->
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:url" content="{page_url}">
-        <meta name="twitter:title" content="Beaver Habit Tracker">
-        <meta name="twitter:description" content="A minimal habit tracking app without Goals. Track your daily habits with privacy and simplicity.">
+        <meta name="twitter:title" content="{meta_title}">
+        <meta name="twitter:description" content="{meta_description}">
         <meta name="twitter:image" content="https://beaverhabits.com/statics/images/apple-touch-icon-v4.png">
         
         <!-- Structured Data (JSON-LD) -->

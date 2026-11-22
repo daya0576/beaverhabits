@@ -1,7 +1,7 @@
 import os
 
 from fastapi import Depends, FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from nicegui import app, ui
 
 from beaverhabits import views
@@ -15,13 +15,21 @@ from beaverhabits.logger import logger
 
 
 # Add NiceGUI pages for terms, privacy, and admin
-@ui.page("/terms")
+@ui.page("/terms", title="Terms of Service - Beaver Habit Tracker")
 def terms_page():
+    ui.add_head_html(
+        '<meta name="description" content="Terms of Service for Beaver Habit Tracker.">'
+        '<link rel="canonical" href="https://beaverhabits.com/terms">'
+    )
     paddle_page.markdown(TERMS)
 
 
-@ui.page("/privacy")
+@ui.page("/privacy", title="Privacy Policy - Beaver Habit Tracker")
 def privacy_page():
+    ui.add_head_html(
+        '<meta name="description" content="Privacy Policy for Beaver Habit Tracker.">'
+        '<link rel="canonical" href="https://beaverhabits.com/privacy">'
+    )
     paddle_page.markdown(PRIVACY)
 
 
@@ -60,10 +68,13 @@ def init_astro_routes(fastapi_app: FastAPI) -> None:
 
         # Add explicit routes for landing page
         @fastapi_app.get("/")
-        @fastapi_app.get("/pricing")
-        @fastapi_app.get("/pricing/")
         async def landing_index():
             return FileResponse("statics/astro/dist/index.html", media_type="text/html")
+
+        @fastapi_app.get("/pricing")
+        @fastapi_app.get("/pricing/")
+        async def pricing_redirect():
+            return RedirectResponse(url="/#pricing", status_code=301)
 
         @fastapi_app.get("/privacy/ios")
         @fastapi_app.get("/privacy/ios/")

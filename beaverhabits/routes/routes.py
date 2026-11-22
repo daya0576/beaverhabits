@@ -81,7 +81,7 @@ def maybe_refresh_session(
     return True
 
 
-@ui.page("/demo")
+@ui.page("/demo", title="Live Demo - Beaver Habit Tracker")
 async def demo_index_page() -> None:
     days = await dummy_days(settings.INDEX_HABIT_DATE_COLUMNS)
     habit_list = views.get_or_create_session_habit_list(days)
@@ -228,12 +228,16 @@ async def gui_chip_sets(user: User = Depends(current_active_user)) -> None:
     await chip_sets_page(user)
 
 
-@ui.page("/login")
+@ui.page("/login", title="Sign In - Beaver Habit Tracker")
 async def login_page(client: Client) -> Optional[RedirectResponse]:
     if await views.is_gui_authenticated():
         return RedirectResponse(GUI_ROOT_PATH)
 
-    custom_headers()
+    custom_headers(
+        title="Sign In - Beaver Habit Tracker",
+        description="Sign in to your Beaver Habit Tracker account.",
+        robots="noindex, nofollow",
+    )
 
     # Google One Tap Login
     google_one_tap_login()
@@ -272,12 +276,16 @@ async def login_page(client: Client) -> Optional[RedirectResponse]:
                 auth_redirect("Create account", "/register")
 
 
-@ui.page("/register")
+@ui.page("/register", title="Sign Up - Beaver Habit Tracker")
 async def register_page():
     if await views.is_gui_authenticated():
         return RedirectResponse(GUI_ROOT_PATH)
 
-    custom_headers()
+    custom_headers(
+        title="Sign Up - Beaver Habit Tracker",
+        description="Create a free Beaver Habit Tracker account.",
+        robots="noindex, nofollow",
+    )
 
     # Google One Tap Login
     google_one_tap_login()
@@ -318,9 +326,13 @@ async def register_page():
             auth_redirect("Sign in", "/login")
 
 
-@ui.page("/reset-password")
+@ui.page("/reset-password", title="Reset Password - Beaver Habit Tracker")
 async def forgot_password_page(user: User = Depends(get_reset_user)):
-    custom_headers()
+    custom_headers(
+        title="Reset Password - Beaver Habit Tracker",
+        description="Reset your Beaver Habit Tracker password.",
+        robots="noindex, nofollow",
+    )
 
     async def try_reset():
         if not password1.value or not password2.value:
